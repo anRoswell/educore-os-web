@@ -623,9 +623,9 @@ import { KpiRectoria } from '../../core/models';
             <div class="card-title-bar">
               <div>
                 <h3>📈 Proyecciones Pruebas Saber 11°</h3>
-                <p>Meta institucional: 360 pts | Clasificación ICFES: {{ saber11()?.clasificacionIcfesProyectada || 'Categoría A+ (Muy Superior)' }}</p>
+                <p>Meta institucional: 360 pts • {{ saber11()?.clasificacionIcfesProyectada || 'Categoría A+ (Muy Superior)' }}</p>
               </div>
-              <span class="badge badge-purple">{{ saber11()?.puntajeGlobalPromedio || 342 }} pts Global</span>
+              <span class="badge badge-purple" style="white-space: nowrap;">{{ saber11()?.puntajeGlobalPromedio || 342 }} pts Global</span>
             </div>
 
             <div class="saber-bars-list">
@@ -661,6 +661,16 @@ import { KpiRectoria } from '../../core/models';
 
               <div class="saber-bar-item">
                 <div class="bar-info">
+                  <span>Sociales & Ciudadanas</span>
+                  <strong>{{ saber11()?.componentes?.socialesCiudadanas || 66 }} pts</strong>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill amber" [style.width.%]="saber11()?.componentes?.socialesCiudadanas || 66"></div>
+                </div>
+              </div>
+
+              <div class="saber-bar-item">
+                <div class="bar-info">
                   <span>Inglés (Bilingüismo)</span>
                   <strong>{{ saber11()?.componentes?.ingles || 74 }} pts</strong>
                 </div>
@@ -673,7 +683,7 @@ import { KpiRectoria } from '../../core/models';
             <div class="ai-box mt-4">
               <div class="ai-box-header">
                 <span class="ai-icon">✨</span>
-                <strong>EduCore AI — Alertas Tempranas de Riesgo</strong>
+                <strong>EduCore AI — Alertas Tempranas de Rendimiento</strong>
               </div>
               <p class="ai-text">
                 @if (alertasDesercion().length > 0) {

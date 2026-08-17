@@ -19,6 +19,12 @@ import { CalificacionLoteItem } from '../../core/models';
           <p>Registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
         <div class="header-actions">
+          <button (click)="abrirModalNuevoGrado()" class="btn btn-secondary">
+            <span>🏛️ Crear Grado</span>
+          </button>
+          <button (click)="abrirModalNuevoGrupo()" class="btn btn-secondary">
+            <span>🚪 Crear Salón / Grupo</span>
+          </button>
           <button (click)="abrirModalNuevaActividad()" class="btn btn-secondary">
             <span>➕ Nueva Actividad</span>
           </button>
@@ -36,7 +42,10 @@ import { CalificacionLoteItem } from '../../core/models';
         <div class="filters-grid">
           <!-- 1. Grado -->
           <div class="form-group">
-            <label class="form-label">Grado</label>
+            <div class="filter-label-row">
+              <label class="form-label">Grado</label>
+              <button (click)="abrirModalNuevoGrado()" class="btn-link-action" title="Crear Grado">+ Nuevo</button>
+            </div>
             <select
               class="form-select"
               [ngModel]="selectedGradoId()"
@@ -52,7 +61,10 @@ import { CalificacionLoteItem } from '../../core/models';
 
           <!-- 2. Grupo -->
           <div class="form-group">
-            <label class="form-label">Grupo</label>
+            <div class="filter-label-row">
+              <label class="form-label">Grupo</label>
+              <button (click)="abrirModalNuevoGrupo()" class="btn-link-action" title="Crear Grupo">+ Nuevo</button>
+            </div>
             <select
               class="form-select"
               [ngModel]="selectedGrupoId()"
@@ -68,7 +80,10 @@ import { CalificacionLoteItem } from '../../core/models';
 
           <!-- 3. Asignatura -->
           <div class="form-group">
-            <label class="form-label">Asignatura</label>
+            <div class="filter-label-row">
+              <label class="form-label">Asignatura</label>
+              <button (click)="abrirModalNuevaAsignatura()" class="btn-link-action" title="Crear Asignatura">+ Nueva</button>
+            </div>
             <select
               class="form-select"
               [ngModel]="selectedAsignaturaId()"
@@ -91,7 +106,7 @@ import { CalificacionLoteItem } from '../../core/models';
               (ngModelChange)="onPeriodoChange($event)"
             >
               @for (p of periodosList(); track p.id) {
-                <option [value]="p.id">{{ p.nombre }} ({{ p.porcentaje }}%)</option>
+                <option [value]="p.id">{{ p.nombre }} ({{ p.porcentaje || p.pesoPorcentual || 25 }}%)</option>
               } @empty {
                 <option value="b1b2c3d4-1111-4111-8111-000000000002">Primer Periodo (25%)</option>
               }
@@ -117,7 +132,7 @@ import { CalificacionLoteItem } from '../../core/models';
       <div class="table-container mt-4">
         @if (isLoadingPlanilla()) {
           <div class="p-8 text-center text-slate-500">
-            <p>⏳ Cargando planilla de calificaciones desde el servidor...</p>
+            <p>⏳ Cargando planilla de calificaciones desde PostgreSQL...</p>
           </div>
         } @else {
           <table class="data-table">
@@ -186,7 +201,205 @@ import { CalificacionLoteItem } from '../../core/models';
         }
       </div>
 
-      <!-- MODAL CREACIÓN: NUEVA ACTIVIDAD EVALUATIVA -->
+      <!-- ========================================== -->
+      <!-- MODAL 1: CREAR GRADO ESCOLAR              -->
+      <!-- ========================================== -->
+      @if (modalNuevoGrado()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 500px;">
+            <div class="modal-header">
+              <h3>🏛️ Crear Grado Escolar</h3>
+              <button (click)="modalNuevoGrado.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Nombre del Grado *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoGrado.nombre"
+                  placeholder="Ej: Noveno (9°)"
+                />
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label">Nivel Educativo *</label>
+                <select class="form-select" [(ngModel)]="nuevoGrado.nivelId">
+                  @for (nivel of nivelesList(); track nivel.id) {
+                    <option [value]="nivel.id">{{ nivel.nombre }}</option>
+                  } @empty {
+                    <option value="81000000-0000-4000-8000-000000000001">Media Académica</option>
+                  }
+                </select>
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código SIMAT (MEN)</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrado.codigoSimat"
+                    placeholder="Ej: 09"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Orden Cronológico</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrado.orden"
+                    min="0"
+                    max="15"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoGrado()" class="btn btn-primary">
+                💾 Guardar Grado
+              </button>
+              <button (click)="modalNuevoGrado.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 2: CREAR GRUPO / SALÓN              -->
+      <!-- ========================================== -->
+      @if (modalNuevoGrupo()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 500px;">
+            <div class="modal-header">
+              <h3>🚪 Crear Grupo / Salón</h3>
+              <button (click)="modalNuevoGrupo.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Grado Asociado *</label>
+                <select class="form-select" [(ngModel)]="nuevoGrupo.gradoId">
+                  @for (grado of gradosList(); track grado.id) {
+                    <option [value]="grado.id">{{ grado.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label">Nombre del Grupo / Salón *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoGrupo.nombre"
+                  placeholder="Ej: 10-B, 9-A, 11-C"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Cupo Máximo</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrupo.cupoMaximo"
+                    min="1"
+                    max="60"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Salón Físico</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrupo.salon"
+                    placeholder="Ej: 202"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoGrupo()" class="btn btn-primary">
+                💾 Guardar Grupo
+              </button>
+              <button (click)="modalNuevoGrupo.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 3: CREAR ASIGNATURA                 -->
+      <!-- ========================================== -->
+      @if (modalNuevaAsignatura()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 500px;">
+            <div class="modal-header">
+              <h3>📚 Crear Asignatura Curricular</h3>
+              <button (click)="modalNuevaAsignatura.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Área del Conocimiento (Ley 115) *</label>
+                <select class="form-select" [(ngModel)]="nuevaAsignatura.areaId">
+                  @for (area of areasList(); track area.id) {
+                    <option [value]="area.id">{{ area.nombre }}</option>
+                  } @empty {
+                    <option value="0a000000-0000-4000-8000-000000000001">Matemáticas & Ciencias Exactas</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label">Nombre de la Asignatura *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevaAsignatura.nombre"
+                  placeholder="Ej: Física Clásica, Lengua Castellana"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaAsignatura.codigo"
+                    placeholder="Ej: FIS-10"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Peso en Área (%)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevaAsignatura.pesoAreaPorcentaje"
+                    min="1"
+                    max="100"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevaAsignatura()" class="btn btn-primary">
+                💾 Guardar Asignatura
+              </button>
+              <button (click)="modalNuevaAsignatura.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 4: CREAR ACTIVIDAD EVALUATIVA       -->
+      <!-- ========================================== -->
       @if (modalNuevaActividad()) {
         <div class="modal-backdrop animate-fade-in">
           <div class="modal-card card card-glass" style="max-width: 500px;">
@@ -264,6 +477,28 @@ import { CalificacionLoteItem } from '../../core/models';
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
+    }
+
+    .filter-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .btn-link-action {
+      background: none;
+      border: none;
+      color: #4f46e5;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .btn-link-action:hover {
+      color: #3730a3;
     }
 
     .escala-banner {
@@ -351,6 +586,8 @@ export class AcademicoComponent implements OnInit {
   readonly todosGruposList = signal<any[]>([]);
   readonly asignaturasList = signal<any[]>([]);
   readonly periodosList = signal<any[]>([]);
+  readonly nivelesList = signal<any[]>([]);
+  readonly areasList = signal<any[]>([]);
 
   // Filtros seleccionados
   readonly selectedGradoId = signal<string>('');
@@ -366,10 +603,35 @@ export class AcademicoComponent implements OnInit {
     return all.filter((g) => g.gradoId === gradoId || g.grado_id === gradoId);
   });
 
-  // Estados de interfaz
+  // Estados de interfaz y Modales
   readonly isSaving = signal(false);
   readonly isLoadingPlanilla = signal(false);
+  readonly modalNuevoGrado = signal(false);
+  readonly modalNuevoGrupo = signal(false);
+  readonly modalNuevaAsignatura = signal(false);
   readonly modalNuevaActividad = signal(false);
+
+  // Formularios de Creación
+  nuevoGrado = {
+    nombre: '',
+    nivelId: '',
+    codigoSimat: '',
+    orden: 1,
+  };
+
+  nuevoGrupo = {
+    gradoId: '',
+    nombre: '',
+    cupoMaximo: 35,
+    salon: '',
+  };
+
+  nuevaAsignatura = {
+    areaId: '',
+    nombre: '',
+    codigo: '',
+    pesoAreaPorcentaje: 100,
+  };
 
   nuevaActividad = {
     titulo: '',
@@ -382,6 +644,27 @@ export class AcademicoComponent implements OnInit {
 
   ngOnInit() {
     this.cargarFiltrosIniciales();
+    this.cargarNivelesYAreas();
+  }
+
+  cargarNivelesYAreas() {
+    this.api.get<any[]>('academico/niveles').subscribe({
+      next: (niveles) => {
+        if (niveles && niveles.length > 0) {
+          this.nivelesList.set(niveles);
+          this.nuevoGrado.nivelId = niveles[0].id;
+        }
+      },
+    });
+
+    this.api.get<any[]>('academico/areas').subscribe({
+      next: (areas) => {
+        if (areas && areas.length > 0) {
+          this.areasList.set(areas);
+          this.nuevaAsignatura.areaId = areas[0].id;
+        }
+      },
+    });
   }
 
   cargarFiltrosIniciales() {
@@ -390,9 +673,9 @@ export class AcademicoComponent implements OnInit {
       next: (grados) => {
         if (grados && grados.length > 0) {
           this.gradosList.set(grados);
-          // Seleccionar por defecto grado 10° si existe, o el primero
           const decimo = grados.find((g) => g.nombre?.includes('10') || g.numero === 10);
           this.selectedGradoId.set(decimo ? decimo.id : grados[0].id);
+          this.nuevoGrupo.gradoId = this.selectedGradoId();
         }
       },
     });
@@ -517,6 +800,104 @@ export class AcademicoComponent implements OnInit {
       default:
         return 'badge badge-danger';
     }
+  }
+
+  // --- CRUD: CREAR GRADO ---
+  abrirModalNuevoGrado() {
+    this.nuevoGrado = {
+      nombre: '',
+      nivelId: this.nivelesList()[0]?.id || '81000000-0000-4000-8000-000000000001',
+      codigoSimat: '',
+      orden: (this.gradosList().length || 0) + 1,
+    };
+    this.modalNuevoGrado.set(true);
+  }
+
+  guardarNuevoGrado() {
+    if (!this.nuevoGrado.nombre) {
+      this.toast.error('Campo Requerido', 'Por favor ingrese el nombre del grado.');
+      return;
+    }
+
+    this.api.post<any>('academico/grados', this.nuevoGrado).subscribe({
+      next: (gradoCreado) => {
+        this.modalNuevoGrado.set(false);
+        this.toast.success('¡Grado Creado!', `El grado '${gradoCreado.nombre}' ha sido registrado exitosamente.`);
+        this.api.get<any[]>('academico/grados').subscribe((grados) => {
+          this.gradosList.set(grados);
+          this.selectedGradoId.set(gradoCreado.id);
+          this.onGradoChange(gradoCreado.id);
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear grado', err?.error?.message || 'No fue posible crear el grado.');
+      },
+    });
+  }
+
+  // --- CRUD: CREAR GRUPO ---
+  abrirModalNuevoGrupo() {
+    this.nuevoGrupo = {
+      gradoId: this.selectedGradoId() || this.gradosList()[0]?.id || '',
+      nombre: '',
+      cupoMaximo: 35,
+      salon: '',
+    };
+    this.modalNuevoGrupo.set(true);
+  }
+
+  guardarNuevoGrupo() {
+    if (!this.nuevoGrupo.nombre) {
+      this.toast.error('Campo Requerido', 'Por favor ingrese el nombre del grupo.');
+      return;
+    }
+
+    this.api.post<any>('academico/grupos', this.nuevoGrupo).subscribe({
+      next: (grupoCreado) => {
+        this.modalNuevoGrupo.set(false);
+        this.toast.success('¡Grupo Creado!', `El grupo / salón '${grupoCreado.nombre}' ha sido registrado.`);
+        this.api.get<any[]>('academico/grupos').subscribe((grupos) => {
+          this.todosGruposList.set(grupos);
+          this.selectedGrupoId.set(grupoCreado.id);
+          this.cargarPlanilla();
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear grupo', err?.error?.message || 'No fue posible crear el grupo.');
+      },
+    });
+  }
+
+  // --- CRUD: CREAR ASIGNATURA ---
+  abrirModalNuevaAsignatura() {
+    this.nuevaAsignatura = {
+      areaId: this.areasList()[0]?.id || '0a000000-0000-4000-8000-000000000001',
+      nombre: '',
+      codigo: '',
+      pesoAreaPorcentaje: 100,
+    };
+    this.modalNuevaAsignatura.set(true);
+  }
+
+  guardarNuevaAsignatura() {
+    if (!this.nuevaAsignatura.nombre) {
+      this.toast.error('Campo Requerido', 'Por favor ingrese el nombre de la asignatura.');
+      return;
+    }
+
+    this.api.post<any>('academico/asignaturas', this.nuevaAsignatura).subscribe({
+      next: (asigCreada) => {
+        this.modalNuevaAsignatura.set(false);
+        this.toast.success('¡Asignatura Creada!', `La asignatura '${asigCreada.nombre}' fue agregada al plan de estudios.`);
+        this.api.get<any[]>('academico/asignaturas').subscribe((asigs) => {
+          this.asignaturasList.set(asigs);
+          this.selectedAsignaturaId.set(asigCreada.id);
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear asignatura', err?.error?.message || 'No fue posible crear la asignatura.');
+      },
+    });
   }
 
   // --- CRUD: ACTUALIZAR / GUARDAR PLANILLA EN LOTE ---

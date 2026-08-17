@@ -482,7 +482,7 @@ export class AcademicoComponent implements OnInit {
             matriculaId: i.matriculaId || i.id,
             estudianteNombre: i.estudianteNombre,
             documento: i.documento,
-            nota: Number(i.nota) || 3.8,
+            nota: Math.round((Number(i.nota) || 3.8) * 10) / 10,
             desempeno: i.desempeno || 'BASICO',
             observaciones: i.observaciones || 'Desempeño satisfactorio en periodo.',
           }));

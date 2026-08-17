@@ -16,37 +16,170 @@ import { CalificacionLoteItem } from '../../core/models';
       <div class="page-header">
         <div>
           <h1>Gestión Académica & Planilla Decreto 1290</h1>
-          <p>Registro y control de calificaciones, escala nacional y consolidación de boletines</p>
+          <p>Estructura curricular, registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
-        <div class="header-actions">
-          <button (click)="abrirModalNuevoNivel()" class="btn btn-secondary" title="1. Definir Niveles Educativos (Preescolar, Primaria, Secundaria, Media)">
-            <span>🎓 1. Nivel</span>
-          </button>
-          <button (click)="abrirModalNuevoGrado()" class="btn btn-secondary" title="2. Crear Grados Escolares">
-            <span>🏛️ 2. Grado</span>
-          </button>
-          <button (click)="abrirModalNuevoGrupo()" class="btn btn-secondary" title="3. Abrir Salones / Grupos">
-            <span>🚪 3. Grupo</span>
-          </button>
-          <button (click)="abrirModalNuevaArea()" class="btn btn-secondary" title="4. Definir Áreas del Conocimiento (Ley 115)">
-            <span>📐 4. Área</span>
-          </button>
-          <button (click)="abrirModalNuevaAsignatura()" class="btn btn-secondary" title="5. Crear Asignaturas Curriculares">
-            <span>📚 5. Asignatura</span>
-          </button>
-          <button (click)="abrirModalNuevoPeriodo()" class="btn btn-secondary" title="6. Programar Periodos Académicos">
-            <span>📅 6. Periodo</span>
-          </button>
-          <button (click)="abrirModalNuevaActividad()" class="btn btn-secondary" title="7. Crear Actividades Evaluativas (SIEE)">
-            <span>➕ 7. Actividad</span>
+        <div class="header-actions-wrapper">
+          <button (click)="mostrarGuiaPasos.set(!mostrarGuiaPasos())" class="btn btn-outline" title="Ver guía de configuración paso a paso">
+            <span>💡 {{ mostrarGuiaPasos() ? 'Ocultar Guía de Pasos' : 'Ver Guía de Pasos' }}</span>
           </button>
           <button (click)="guardarCalificaciones()" class="btn btn-primary" [disabled]="isSaving() || planilla().length === 0">
             <span>💾 {{ isSaving() ? 'Guardando...' : 'Guardar Planilla' }}</span>
           </button>
-          <button (click)="descargarBoletinDemo()" class="btn btn-secondary">
+          <button (click)="descargarBoletinDemo()" class="btn btn-secondary" title="Descargar Boletín Consolidado">
             <span>📄 Boletín PDF</span>
           </button>
         </div>
+      </div>
+
+      <!-- Guía Interactiva de Creación Cronológica (Paso a Paso) -->
+      @if (mostrarGuiaPasos()) {
+        <div class="card setup-guide-card animate-fade-in mb-4">
+          <div class="setup-guide-header">
+            <div class="flex items-center gap-2">
+              <span class="guide-badge">Ruta Pedagógica</span>
+              <h3>Flujo Oficial de Configuración Académica (Ley 115 & Decreto 1290)</h3>
+            </div>
+            <span class="text-xs text-slate-500">Haz clic en cualquier paso para crearlo directamente</span>
+          </div>
+
+          <div class="steps-grid">
+            <!-- Paso 1 -->
+            <div class="step-card" (click)="abrirModalNuevoNivel()">
+              <div class="step-header">
+                <span class="step-num">1</span>
+                <span class="step-icon">🎓</span>
+                <strong>Nivel Educativo</strong>
+              </div>
+              <p class="step-desc">Define los niveles globales del colegio (Preescolar, Primaria, Secundaria, Media).</p>
+              <button class="step-action-btn">+ Crear Nivel</button>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="step-card" (click)="abrirModalNuevoGrado()">
+              <div class="step-header">
+                <span class="step-num">2</span>
+                <span class="step-icon">🏛️</span>
+                <strong>Grado Escolar</strong>
+              </div>
+              <p class="step-desc">Crea los grados asociados a un nivel (ej: Transición, 1° a 5°, 6° a 9°, 10°, 11°).</p>
+              <button class="step-action-btn">+ Crear Grado</button>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="step-card" (click)="abrirModalNuevoGrupo()">
+              <div class="step-header">
+                <span class="step-num">3</span>
+                <span class="step-icon">🚪</span>
+                <strong>Grupo / Salón</strong>
+              </div>
+              <p class="step-desc">Abre los salones específicos por grado (ej: 10-A, 10-B) con sus cupos y aula física.</p>
+              <button class="step-action-btn">+ Crear Salón</button>
+            </div>
+
+            <!-- Paso 4 -->
+            <div class="step-card" (click)="abrirModalNuevaArea()">
+              <div class="step-header">
+                <span class="step-num">4</span>
+                <span class="step-icon">📐</span>
+                <strong>Área (Ley 115)</strong>
+              </div>
+              <p class="step-desc">Establece las 9 áreas fundamentales obligatorias (Matemáticas, Ciencias, Humanidades).</p>
+              <button class="step-action-btn">+ Crear Área</button>
+            </div>
+
+            <!-- Paso 5 -->
+            <div class="step-card" (click)="abrirModalNuevaAsignatura()">
+              <div class="step-header">
+                <span class="step-num">5</span>
+                <span class="step-icon">📚</span>
+                <strong>Asignatura</strong>
+              </div>
+              <p class="step-desc">Crea las asignaturas pertenecientes a cada área (ej: Álgebra, Química, Inglés) y su peso %.</p>
+              <button class="step-action-btn">+ Crear Asignatura</button>
+            </div>
+
+            <!-- Paso 6 -->
+            <div class="step-card" (click)="abrirModalNuevoPeriodo()">
+              <div class="step-header">
+                <span class="step-num">6</span>
+                <span class="step-icon">📅</span>
+                <strong>Periodo</strong>
+              </div>
+              <p class="step-desc">Programa los periodos del año escolar, sus fechas de inicio, fin y plazo para docentes.</p>
+              <button class="step-action-btn">+ Crear Periodo</button>
+            </div>
+
+            <!-- Paso 7 -->
+            <div class="step-card" (click)="abrirModalNuevaActividad()">
+              <div class="step-header">
+                <span class="step-num">7</span>
+                <span class="step-icon">➕</span>
+                <strong>Actividad SIEE</strong>
+              </div>
+              <p class="step-desc">Programa evaluaciones, tareas o talleres (Cognitivo, Procedimental, Actitudinal).</p>
+              <button class="step-action-btn">+ Crear Actividad</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Barra de Acciones Rápidas con Subtítulos Explicativos -->
+      <div class="action-buttons-bar mb-4">
+        <button (click)="abrirModalNuevoNivel()" class="action-card-btn" title="Paso 1: Crear Nivel Educativo (Preescolar, Primaria, Secundaria, Media)">
+          <span class="ac-icon">🎓</span>
+          <div class="ac-text">
+            <span class="ac-title">1. Nivel</span>
+            <span class="ac-hint">Preescolar, Primaria, Media</span>
+          </div>
+        </button>
+
+        <button (click)="abrirModalNuevoGrado()" class="action-card-btn" title="Paso 2: Crear Grados Escolares (Transición, 1° a 11°)">
+          <span class="ac-icon">🏛️</span>
+          <div class="ac-text">
+            <span class="ac-title">2. Grado</span>
+            <span class="ac-hint">Transición a 11° (SIMAT)</span>
+          </div>
+        </button>
+
+        <button (click)="abrirModalNuevoGrupo()" class="action-card-btn" title="Paso 3: Abrir Salones / Grupos (10-A, 10-B)">
+          <span class="ac-icon">🚪</span>
+          <div class="ac-text">
+            <span class="ac-title">3. Grupo</span>
+            <span class="ac-hint">Salones y Cupos</span>
+          </div>
+        </button>
+
+        <button (click)="abrirModalNuevaArea()" class="action-card-btn" title="Paso 4: Crear Áreas Fundamentales (Ley 115)">
+          <span class="ac-icon">📐</span>
+          <div class="ac-text">
+            <span class="ac-title">4. Área</span>
+            <span class="ac-hint">Ley 115 Art. 23</span>
+          </div>
+        </button>
+
+        <button (click)="abrirModalNuevaAsignatura()" class="action-card-btn" title="Paso 5: Crear Asignaturas Curriculares del Plan de Estudios">
+          <span class="ac-icon">📚</span>
+          <div class="ac-text">
+            <span class="ac-title">5. Asignatura</span>
+            <span class="ac-hint">Materias del Plan</span>
+          </div>
+        </button>
+
+        <button (click)="abrirModalNuevoPeriodo()" class="action-card-btn" title="Paso 6: Configurar Periodos Académicos del Calendario">
+          <span class="ac-icon">📅</span>
+          <div class="ac-text">
+            <span class="ac-title">6. Periodo</span>
+            <span class="ac-hint">Fechas y Ponderación</span>
+          </div>
+        </button>
+
+        <button (click)="abrirModalNuevaActividad()" class="action-card-btn" title="Paso 7: Crear Actividades Evaluativas (SIEE)">
+          <span class="ac-icon">➕</span>
+          <div class="ac-text">
+            <span class="ac-title">7. Actividad</span>
+            <span class="ac-hint">Tareas y Quizes SIEE</span>
+          </div>
+        </button>
       </div>
 
       <!-- Filtros Académicos Dinámicos en Cascada -->
@@ -55,7 +188,7 @@ import { CalificacionLoteItem } from '../../core/models';
           <!-- 1. Grado -->
           <div class="form-group">
             <div class="filter-label-row">
-              <label class="form-label">Grado</label>
+              <label class="form-label">Grado Escolar</label>
               <button (click)="abrirModalNuevoGrado()" class="btn-link-action" title="Crear Grado">+ Nuevo</button>
             </div>
             <select
@@ -74,7 +207,7 @@ import { CalificacionLoteItem } from '../../core/models';
           <!-- 2. Grupo -->
           <div class="form-group">
             <div class="filter-label-row">
-              <label class="form-label">Grupo</label>
+              <label class="form-label">Grupo / Salón</label>
               <button (click)="abrirModalNuevoGrupo()" class="btn-link-action" title="Crear Grupo">+ Nuevo</button>
             </div>
             <select
@@ -93,7 +226,7 @@ import { CalificacionLoteItem } from '../../core/models';
           <!-- 3. Asignatura -->
           <div class="form-group">
             <div class="filter-label-row">
-              <label class="form-label">Asignatura</label>
+              <label class="form-label">Asignatura Curricular</label>
               <button (click)="abrirModalNuevaAsignatura()" class="btn-link-action" title="Crear Asignatura">+ Nueva</button>
             </div>
             <select
@@ -217,19 +350,385 @@ import { CalificacionLoteItem } from '../../core/models';
       </div>
 
       <!-- ========================================== -->
-      <!-- MODAL -1: CREAR PERIODO ACADÉMICO          -->
+      <!-- MODAL 1: CREAR NIVEL EDUCATIVO (MEN)       -->
+      <!-- ========================================== -->
+      @if (modalNuevoNivel()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <div>
+                <h3>🎓 Paso 1: Crear Nivel Educativo</h3>
+                <span class="modal-subtitle">Estructura macro según la Ley General de Educación (Ley 115 de 1994)</span>
+              </div>
+              <button (click)="modalNuevoNivel.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Qué debes ingresar?</strong> Registra los bloques educativos del colegio. Ejemplo: <em>Educación Preescolar</em> (código <code>PRE</code>), <em>Básica Primaria</em> (código <code>PRI</code>), <em>Básica Secundaria</em> (código <code>SEC</code>), <em>Media Académica</em> (código <code>MED</code>).</p>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Nombre del Nivel Educativo *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoNivel.nombre"
+                  placeholder="Ej: Educación Preescolar, Básica Primaria, Media Técnica"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código del Nivel *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoNivel.codigo"
+                    placeholder="Ej: PRE, PRI, SEC, MED"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Orden Cronológico (1 - 10)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoNivel.orden"
+                    min="1"
+                    max="10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoNivel()" class="btn btn-primary">
+                💾 Guardar Nivel
+              </button>
+              <button (click)="modalNuevoNivel.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 2: CREAR GRADO ESCOLAR              -->
+      <!-- ========================================== -->
+      @if (modalNuevoGrado()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <div>
+                <h3>🏛️ Paso 2: Crear Grado Escolar</h3>
+                <span class="modal-subtitle">Grados organizados por nivel y código oficial SIMAT</span>
+              </div>
+              <button (click)="modalNuevoGrado.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Qué debes ingresar?</strong> Asocia el grado a un nivel educativo creado en el Paso 1. Ejemplo: <em>Transición (00)</em> en Preescolar, <em>Primero a Quinto (01-05)</em> en Primaria, <em>Décimo (10)</em> u <em>Once (11)</em> en Media.</p>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Nombre del Grado *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoGrado.nombre"
+                  placeholder="Ej: Noveno (9°), Transición, Décimo (10°)"
+                />
+              </div>
+
+              <div class="form-group mt-3">
+                <div class="filter-label-row">
+                  <label class="form-label">Nivel Educativo Asociado *</label>
+                  <button (click)="abrirModalNuevoNivel()" class="btn-link-action" title="Crear Nivel">+ Nuevo Nivel</button>
+                </div>
+                <select class="form-select" [(ngModel)]="nuevoGrado.nivelId">
+                  @for (nivel of nivelesList(); track nivel.id) {
+                    <option [value]="nivel.id">{{ nivel.nombre }}</option>
+                  } @empty {
+                    <option value="81000000-0000-4000-8000-000000000001">Media Académica</option>
+                  }
+                </select>
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código SIMAT (MEN)</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrado.codigoSimat"
+                    placeholder="Ej: 09, 10, 11"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Orden Cronológico</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrado.orden"
+                    min="0"
+                    max="15"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoGrado()" class="btn btn-primary">
+                💾 Guardar Grado
+              </button>
+              <button (click)="modalNuevoGrado.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 3: CREAR GRUPO / SALÓN              -->
+      <!-- ========================================== -->
+      @if (modalNuevoGrupo()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <div>
+                <h3>🚪 Paso 3: Crear Grupo / Salón</h3>
+                <span class="modal-subtitle">Apertura de cursos o secciones por grado académico</span>
+              </div>
+              <button (click)="modalNuevoGrupo.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Qué debes ingresar?</strong> Selecciona el grado y asigna el nombre de la sección o salón (ej: <em>10-A</em>, <em>10-B</em>, <em>9-1</em>), el cupo máximo permitido y el número de aula física para control de aforo.</p>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Grado Asociado *</label>
+                <select class="form-select" [(ngModel)]="nuevoGrupo.gradoId">
+                  @for (grado of gradosList(); track grado.id) {
+                    <option [value]="grado.id">{{ grado.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label">Nombre del Grupo / Salón *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoGrupo.nombre"
+                  placeholder="Ej: 10-B, 9-A, 11-C"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Cupo Máximo</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrupo.cupoMaximo"
+                    min="1"
+                    max="60"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Salón Físico</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoGrupo.salon"
+                    placeholder="Ej: Aula 202"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoGrupo()" class="btn btn-primary">
+                💾 Guardar Grupo
+              </button>
+              <button (click)="modalNuevoGrupo.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 4: CREAR ÁREA (LEY 115)             -->
+      <!-- ========================================== -->
+      @if (modalNuevaArea()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <div>
+                <h3>📐 Paso 4: Crear Área Fundamental (Ley 115)</h3>
+                <span class="modal-subtitle">Áreas obligatorias del Art. 23 o áreas optativas del PEI</span>
+              </div>
+              <button (click)="modalNuevaArea.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Qué debes ingresar?</strong> Registra las áreas marco del conocimiento donde se agruparán las materias. Ejemplo: <em>Ciencias Naturales</em> (<code>CN</code>), <em>Humanidades</em> (<code>HUM</code>), <em>Matemáticas</em> (<code>MAT</code>), <em>Tecnología</em> (<code>TEC</code>).</p>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Nombre del Área del Conocimiento *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevaArea.nombre"
+                  placeholder="Ej: Ciencias Naturales y Educación Ambiental"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código del Área *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaArea.codigo"
+                    placeholder="Ej: CN, HUM, SOC, MAT"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Orden en Boletín</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevaArea.orden"
+                    min="1"
+                    max="20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevaArea()" class="btn btn-primary">
+                💾 Guardar Área
+              </button>
+              <button (click)="modalNuevaArea.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 5: CREAR ASIGNATURA                 -->
+      <!-- ========================================== -->
+      @if (modalNuevaAsignatura()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <div>
+                <h3>📚 Paso 5: Crear Asignatura Curricular</h3>
+                <span class="modal-subtitle">Materias con peso porcentual dentro de su respectiva área</span>
+              </div>
+              <button (click)="modalNuevaAsignatura.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Qué debes ingresar?</strong> Selecciona el área matriz y nombra la materia específica. Ejemplo: En el área <em>Ciencias Naturales</em> puedes crear <em>Física</em> (50%) y <em>Química</em> (50%), o materias al 100% como <em>Matemáticas</em>.</p>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <div class="filter-label-row">
+                  <label class="form-label">Área del Conocimiento (Ley 115) *</label>
+                  <button (click)="abrirModalNuevaArea()" class="btn-link-action" title="Crear Área">+ Nueva Área</button>
+                </div>
+                <select class="form-select" [(ngModel)]="nuevaAsignatura.areaId">
+                  @for (area of areasList(); track area.id) {
+                    <option [value]="area.id">{{ area.nombre }}</option>
+                  } @empty {
+                    <option value="0a000000-0000-4000-8000-000000000001">Matemáticas & Ciencias Exactas</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label">Nombre de la Asignatura *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevaAsignatura.nombre"
+                  placeholder="Ej: Física Clásica, Lengua Castellana, Trigonometría"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código de Asignatura</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaAsignatura.codigo"
+                    placeholder="Ej: FIS-10, ESP-09"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Peso en Área (%)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevaAsignatura.pesoAreaPorcentaje"
+                    min="1"
+                    max="100"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevaAsignatura()" class="btn btn-primary">
+                💾 Guardar Asignatura
+              </button>
+              <button (click)="modalNuevaAsignatura.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 6: CREAR PERIODO ACADÉMICO          -->
       <!-- ========================================== -->
       @if (modalNuevoPeriodo()) {
         <div class="modal-backdrop animate-fade-in">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
-              <h3>📅 Crear Periodo Académico</h3>
+              <div>
+                <h3>📅 Paso 6: Crear Periodo Académico</h3>
+                <span class="modal-subtitle">Configuración de calendario escolar, ponderación y fechas límite</span>
+              </div>
               <button (click)="modalNuevoPeriodo.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Qué debes ingresar?</strong> Define el periodo del año escolar (ej: <em>Primer Periodo</em> con peso del 25%), sus fechas de inicio y cierre de clases, y la fecha límite en la que los docentes pueden digitar notas.</p>
             </div>
 
             <div class="modal-body">
               <div class="form-group">
-                <label class="form-label">Año Lectivo *</label>
+                <label class="form-label">Año Lectivo Institucional *</label>
                 <select class="form-select" [(ngModel)]="nuevoPeriodo.anioLectivoId">
                   @for (anio of aniosLectivosList(); track anio.id) {
                     <option [value]="anio.id">{{ anio.nombre }} ({{ anio.anio }})</option>
@@ -322,348 +821,47 @@ import { CalificacionLoteItem } from '../../core/models';
       }
 
       <!-- ========================================== -->
-      <!-- MODAL 0: CREAR NIVEL EDUCATIVO (MEN)       -->
-      <!-- ========================================== -->
-      @if (modalNuevoNivel()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 500px;">
-            <div class="modal-header">
-              <h3>🎓 Crear Nivel Educativo (MEN)</h3>
-              <button (click)="modalNuevoNivel.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Nombre del Nivel Educativo *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="nuevoNivel.nombre"
-                  placeholder="Ej: Educación Preescolar, Básica Primaria, Básica Secundaria"
-                />
-              </div>
-
-              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                <div class="form-group">
-                  <label class="form-label">Código del Nivel *</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevoNivel.codigo"
-                    placeholder="Ej: PRE, PRI, SEC, MED"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Orden Cronológico</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="nuevoNivel.orden"
-                    min="1"
-                    max="10"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevoNivel()" class="btn btn-primary">
-                💾 Guardar Nivel
-              </button>
-              <button (click)="modalNuevoNivel.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- ========================================== -->
-      <!-- MODAL 1: CREAR ÁREA (LEY 115)             -->
-      <!-- ========================================== -->
-      @if (modalNuevaArea()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 520px;">
-            <div class="modal-header">
-              <h3>📐 Crear Área Fundamental (Ley 115 de 1994)</h3>
-              <button (click)="modalNuevaArea.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Nombre del Área del Conocimiento *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="nuevaArea.nombre"
-                  placeholder="Ej: Ciencias Naturales y Educación Ambiental"
-                />
-              </div>
-
-              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                <div class="form-group">
-                  <label class="form-label">Código del Área *</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevaArea.codigo"
-                    placeholder="Ej: CN, HUM, SOC"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Orden en Boletín</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="nuevaArea.orden"
-                    min="1"
-                    max="20"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevaArea()" class="btn btn-primary">
-                💾 Guardar Área
-              </button>
-              <button (click)="modalNuevaArea.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- ========================================== -->
-      <!-- MODAL 2: CREAR GRADO ESCOLAR              -->
-      <!-- ========================================== -->
-      @if (modalNuevoGrado()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 500px;">
-            <div class="modal-header">
-              <h3>🏛️ Crear Grado Escolar</h3>
-              <button (click)="modalNuevoGrado.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Nombre del Grado *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="nuevoGrado.nombre"
-                  placeholder="Ej: Noveno (9°)"
-                />
-              </div>
-
-              <div class="form-group mt-3">
-                <div class="filter-label-row">
-                  <label class="form-label">Nivel Educativo *</label>
-                  <button (click)="abrirModalNuevoNivel()" class="btn-link-action" title="Crear Nivel">+ Nuevo Nivel</button>
-                </div>
-                <select class="form-select" [(ngModel)]="nuevoGrado.nivelId">
-                  @for (nivel of nivelesList(); track nivel.id) {
-                    <option [value]="nivel.id">{{ nivel.nombre }}</option>
-                  } @empty {
-                    <option value="81000000-0000-4000-8000-000000000001">Media Académica</option>
-                  }
-                </select>
-              </div>
-
-              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                <div class="form-group">
-                  <label class="form-label">Código SIMAT (MEN)</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevoGrado.codigoSimat"
-                    placeholder="Ej: 09"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Orden Cronológico</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="nuevoGrado.orden"
-                    min="0"
-                    max="15"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevoGrado()" class="btn btn-primary">
-                💾 Guardar Grado
-              </button>
-              <button (click)="modalNuevoGrado.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- ========================================== -->
-      <!-- MODAL 3: CREAR GRUPO / SALÓN              -->
-      <!-- ========================================== -->
-      @if (modalNuevoGrupo()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 500px;">
-            <div class="modal-header">
-              <h3>🚪 Crear Grupo / Salón</h3>
-              <button (click)="modalNuevoGrupo.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Grado Asociado *</label>
-                <select class="form-select" [(ngModel)]="nuevoGrupo.gradoId">
-                  @for (grado of gradosList(); track grado.id) {
-                    <option [value]="grado.id">{{ grado.nombre }}</option>
-                  }
-                </select>
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Nombre del Grupo / Salón *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="nuevoGrupo.nombre"
-                  placeholder="Ej: 10-B, 9-A, 11-C"
-                />
-              </div>
-
-              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                <div class="form-group">
-                  <label class="form-label">Cupo Máximo</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="nuevoGrupo.cupoMaximo"
-                    min="1"
-                    max="60"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Salón Físico</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevoGrupo.salon"
-                    placeholder="Ej: 202"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevoGrupo()" class="btn btn-primary">
-                💾 Guardar Grupo
-              </button>
-              <button (click)="modalNuevoGrupo.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- ========================================== -->
-      <!-- MODAL 4: CREAR ASIGNATURA                 -->
-      <!-- ========================================== -->
-      @if (modalNuevaAsignatura()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 500px;">
-            <div class="modal-header">
-              <h3>📚 Crear Asignatura Curricular</h3>
-              <button (click)="modalNuevaAsignatura.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <div class="filter-label-row">
-                  <label class="form-label">Área del Conocimiento (Ley 115) *</label>
-                  <button (click)="abrirModalNuevaArea()" class="btn-link-action" title="Crear Área">+ Nueva Área</button>
-                </div>
-                <select class="form-select" [(ngModel)]="nuevaAsignatura.areaId">
-                  @for (area of areasList(); track area.id) {
-                    <option [value]="area.id">{{ area.nombre }}</option>
-                  } @empty {
-                    <option value="0a000000-0000-4000-8000-000000000001">Matemáticas & Ciencias Exactas</option>
-                  }
-                </select>
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Nombre de la Asignatura *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="nuevaAsignatura.nombre"
-                  placeholder="Ej: Física Clásica, Lengua Castellana"
-                />
-              </div>
-
-              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                <div class="form-group">
-                  <label class="form-label">Código</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevaAsignatura.codigo"
-                    placeholder="Ej: FIS-10"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Peso en Área (%)</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="nuevaAsignatura.pesoAreaPorcentaje"
-                    min="1"
-                    max="100"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevaAsignatura()" class="btn btn-primary">
-                💾 Guardar Asignatura
-              </button>
-              <button (click)="modalNuevaAsignatura.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- ========================================== -->
-      <!-- MODAL 5: CREAR ACTIVIDAD EVALUATIVA       -->
+      <!-- MODAL 7: CREAR ACTIVIDAD EVALUATIVA       -->
       <!-- ========================================== -->
       @if (modalNuevaActividad()) {
         <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 500px;">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
-              <h3>➕ Crear Actividad Evaluativa</h3>
+              <div>
+                <h3>➕ Paso 7: Crear Actividad Evaluativa</h3>
+                <span class="modal-subtitle">Evaluación formativa según las 3 dimensiones del SIEE</span>
+              </div>
               <button (click)="modalNuevaActividad.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Qué debes ingresar?</strong> Registra una tarea, taller, quiz o proyecto asignándole su dimensión formativa: <em>Cognitiva (Saber)</em>, <em>Procedimental (Hacer)</em> o <em>Actitudinal (Ser)</em> con su ponderación porcentual.</p>
             </div>
 
             <div class="modal-body">
               <div class="form-group">
                 <label class="form-label">Título de la Actividad *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevaActividad.titulo" placeholder="Ej: Taller de Álgebra Lineal" />
+                <input type="text" class="form-control" [(ngModel)]="nuevaActividad.titulo" placeholder="Ej: Taller de Álgebra Lineal, Quiz de Cinemática" />
               </div>
               <div class="form-group mt-3">
                 <label class="form-label">Dimensión Formativa (SIEE) *</label>
                 <select class="form-select" [(ngModel)]="nuevaActividad.dimension">
-                  <option value="COGNITIVO">Cognitiva (Saber) - 40%</option>
-                  <option value="PROCEDIMENTAL">Procedimental (Hacer) - 40%</option>
-                  <option value="ACTITUDINAL">Actitudinal / Convivencial (Ser) - 20%</option>
+                  <option value="COGNITIVO">Cognitiva (Saber - Evaluaciones, Quizes) - 40%</option>
+                  <option value="PROCEDIMENTAL">Procedimental (Hacer - Talleres, Proyectos) - 40%</option>
+                  <option value="ACTITUDINAL">Actitudinal / Convivencial (Ser - Asistencia, Participación) - 20%</option>
                 </select>
               </div>
-              <div class="form-group mt-3">
-                <label class="form-label">Peso Porcentual (%) *</label>
-                <input type="number" class="form-control" [(ngModel)]="nuevaActividad.pesoPorcentaje" min="1" max="100" />
-              </div>
-              <div class="form-group mt-3">
-                <label class="form-label">Fecha Límite de Entrega</label>
-                <input type="date" class="form-control" [(ngModel)]="nuevaActividad.fechaEntrega" />
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Peso Porcentual (%) *</label>
+                  <input type="number" class="form-control" [(ngModel)]="nuevaActividad.pesoPorcentaje" min="1" max="100" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fecha Límite de Entrega</label>
+                  <input type="date" class="form-control" [(ngModel)]="nuevaActividad.fechaEntrega" />
+                </div>
               </div>
             </div>
 
@@ -683,7 +881,7 @@ import { CalificacionLoteItem } from '../../core/models';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
       flex-wrap: wrap;
       gap: 1rem;
     }
@@ -698,12 +896,217 @@ import { CalificacionLoteItem } from '../../core/models';
       color: #64748b;
     }
 
-    .header-actions {
+    .header-actions-wrapper {
       display: flex;
       gap: 0.75rem;
       flex-wrap: wrap;
+      align-items: center;
     }
 
+    /* Barra de Tarjetas de Acción Rápida */
+    .action-buttons-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.65rem;
+    }
+
+    .action-card-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .action-card-btn:hover {
+      border-color: #4f46e5;
+      background: #f8fafc;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+    }
+
+    .ac-icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .ac-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .ac-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ac-hint {
+      font-size: 0.68rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Guía de Pasos */
+    .setup-guide-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #cbd5e1;
+      padding: 1.25rem;
+      border-radius: 14px;
+    }
+
+    .setup-guide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .setup-guide-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .guide-badge {
+      background: #4f46e5;
+      color: #ffffff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .step-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .step-card:hover {
+      border-color: #4f46e5;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .step-num {
+      background: #e0e7ff;
+      color: #4338ca;
+      font-size: 0.7rem;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-icon {
+      font-size: 0.95rem;
+    }
+
+    .step-header strong {
+      font-size: 0.8rem;
+      color: #0f172a;
+    }
+
+    .step-desc {
+      font-size: 0.72rem;
+      color: #64748b;
+      line-height: 1.25;
+      margin: 0.25rem 0 0.65rem 0;
+      flex-grow: 1;
+    }
+
+    .step-action-btn {
+      background: #f1f5f9;
+      color: #4f46e5;
+      border: none;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .step-action-btn:hover {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    /* Modal Help Banner */
+    .modal-help-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 0.75rem 0.95rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-help-banner .help-icon {
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .modal-help-banner p {
+      font-size: 0.8rem;
+      color: #1e3a8a;
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .modal-subtitle {
+      font-size: 0.75rem;
+      color: #64748b;
+      display: block;
+      margin-top: 0.2rem;
+    }
+
+    /* Filtros & Escala */
     .filter-bar {
       padding: 1.25rem;
       min-width: 0;
@@ -767,6 +1170,7 @@ import { CalificacionLoteItem } from '../../core/models';
     .font-bold { font-weight: 700; }
     .mt-4 { margin-top: 1rem; }
     .mt-3 { margin-top: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
 
     .modal-backdrop {
       position: fixed;
@@ -783,15 +1187,23 @@ import { CalificacionLoteItem } from '../../core/models';
     .modal-card {
       width: 100%;
       background-color: #ffffff;
-      padding: 2rem;
+      padding: 1.75rem;
       border-radius: 16px;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.25rem;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .modal-header h3 {
+      font-size: 1.15rem;
+      color: #0f172a;
+      margin: 0;
     }
 
     .close-btn {
@@ -800,6 +1212,7 @@ import { CalificacionLoteItem } from '../../core/models';
       font-size: 1.5rem;
       cursor: pointer;
       color: #64748b;
+      line-height: 1;
     }
 
     .modal-footer {
@@ -816,6 +1229,9 @@ export class AcademicoComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
+
+  // Control de interfaz y Guía de Pasos
+  readonly mostrarGuiaPasos = signal<boolean>(true);
 
   // Listas de datos para filtros
   readonly aniosLectivosList = signal<any[]>([]);
@@ -1080,44 +1496,6 @@ export class AcademicoComponent implements OnInit {
     }
   }
 
-  // --- CRUD: CREAR PERIODO ---
-  abrirModalNuevoPeriodo() {
-    const totalActual = this.periodosList().length || 0;
-    this.nuevoPeriodo = {
-      anioLectivoId: this.aniosLectivosList()[0]?.id || 'a1a1a1a1-1111-4111-8111-000000002026',
-      numero: totalActual + 1,
-      nombre: `Periodo ${totalActual + 1}`,
-      pesoPorcentual: 25,
-      fechaInicio: '2026-07-06',
-      fechaFin: '2026-09-11',
-      fechaLimiteDocentes: '2026-09-18',
-      estado: 'ABIERTO',
-    };
-    this.modalNuevoPeriodo.set(true);
-  }
-
-  guardarNuevoPeriodo() {
-    if (!this.nuevoPeriodo.nombre || !this.nuevoPeriodo.fechaInicio || !this.nuevoPeriodo.fechaFin) {
-      this.toast.error('Campos Requeridos', 'Por favor complete el nombre, fechas de inicio y fin del periodo.');
-      return;
-    }
-
-    this.api.post<any>('academico/periodos', this.nuevoPeriodo).subscribe({
-      next: (periodoCreado) => {
-        this.modalNuevoPeriodo.set(false);
-        this.toast.success('¡Periodo Creado!', `El '${periodoCreado.nombre}' (${periodoCreado.pesoPorcentual}%) fue programado exitosamente.`);
-        this.api.get<any[]>('academico/periodos').subscribe((periodos) => {
-          this.periodosList.set(periodos);
-          this.selectedPeriodoId.set(periodoCreado.id);
-          this.cargarPlanilla();
-        });
-      },
-      error: (err) => {
-        this.toast.error('Error al crear periodo', err?.error?.message || 'No fue posible crear el periodo académico.');
-      },
-    });
-  }
-
   // --- CRUD: CREAR NIVEL EDUCATIVO ---
   abrirModalNuevoNivel() {
     this.nuevoNivel = {
@@ -1145,37 +1523,6 @@ export class AcademicoComponent implements OnInit {
       },
       error: (err) => {
         this.toast.error('Error al crear nivel', err?.error?.message || 'No fue posible crear el nivel educativo.');
-      },
-    });
-  }
-
-  // --- CRUD: CREAR ÁREA (LEY 115) ---
-  abrirModalNuevaArea() {
-    this.nuevaArea = {
-      nombre: '',
-      codigo: '',
-      orden: (this.areasList().length || 0) + 1,
-    };
-    this.modalNuevaArea.set(true);
-  }
-
-  guardarNuevaArea() {
-    if (!this.nuevaArea.nombre || !this.nuevaArea.codigo) {
-      this.toast.error('Campos Requeridos', 'Por favor ingrese el nombre y código del área fundamental.');
-      return;
-    }
-
-    this.api.post<any>('academico/areas', this.nuevaArea).subscribe({
-      next: (areaCreada) => {
-        this.modalNuevaArea.set(false);
-        this.toast.success('¡Área Creada!', `El área '${areaCreada.nombre}' (Ley 115) ha sido registrada exitosamente.`);
-        this.api.get<any[]>('academico/areas').subscribe((areas) => {
-          this.areasList.set(areas);
-          this.nuevaAsignatura.areaId = areaCreada.id;
-        });
-      },
-      error: (err) => {
-        this.toast.error('Error al crear área', err?.error?.message || 'No fue posible crear el área.');
       },
     });
   }
@@ -1246,6 +1593,37 @@ export class AcademicoComponent implements OnInit {
     });
   }
 
+  // --- CRUD: CREAR ÁREA (LEY 115) ---
+  abrirModalNuevaArea() {
+    this.nuevaArea = {
+      nombre: '',
+      codigo: '',
+      orden: (this.areasList().length || 0) + 1,
+    };
+    this.modalNuevaArea.set(true);
+  }
+
+  guardarNuevaArea() {
+    if (!this.nuevaArea.nombre || !this.nuevaArea.codigo) {
+      this.toast.error('Campos Requeridos', 'Por favor ingrese el nombre y código del área fundamental.');
+      return;
+    }
+
+    this.api.post<any>('academico/areas', this.nuevaArea).subscribe({
+      next: (areaCreada) => {
+        this.modalNuevaArea.set(false);
+        this.toast.success('¡Área Creada!', `El área '${areaCreada.nombre}' (Ley 115) ha sido registrada exitosamente.`);
+        this.api.get<any[]>('academico/areas').subscribe((areas) => {
+          this.areasList.set(areas);
+          this.nuevaAsignatura.areaId = areaCreada.id;
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear área', err?.error?.message || 'No fue posible crear el área.');
+      },
+    });
+  }
+
   // --- CRUD: CREAR ASIGNATURA ---
   abrirModalNuevaAsignatura() {
     this.nuevaAsignatura = {
@@ -1278,6 +1656,68 @@ export class AcademicoComponent implements OnInit {
     });
   }
 
+  // --- CRUD: CREAR PERIODO ---
+  abrirModalNuevoPeriodo() {
+    const totalActual = this.periodosList().length || 0;
+    this.nuevoPeriodo = {
+      anioLectivoId: this.aniosLectivosList()[0]?.id || 'a1a1a1a1-1111-4111-8111-000000002026',
+      numero: totalActual + 1,
+      nombre: `Periodo ${totalActual + 1}`,
+      pesoPorcentual: 25,
+      fechaInicio: '2026-07-06',
+      fechaFin: '2026-09-11',
+      fechaLimiteDocentes: '2026-09-18',
+      estado: 'ABIERTO',
+    };
+    this.modalNuevoPeriodo.set(true);
+  }
+
+  guardarNuevoPeriodo() {
+    if (!this.nuevoPeriodo.nombre || !this.nuevoPeriodo.fechaInicio || !this.nuevoPeriodo.fechaFin) {
+      this.toast.error('Campos Requeridos', 'Por favor complete el nombre, fechas de inicio y fin del periodo.');
+      return;
+    }
+
+    this.api.post<any>('academico/periodos', this.nuevoPeriodo).subscribe({
+      next: (periodoCreado) => {
+        this.modalNuevoPeriodo.set(false);
+        this.toast.success('¡Periodo Creado!', `El '${periodoCreado.nombre}' (${periodoCreado.pesoPorcentual}%) fue programado exitosamente.`);
+        this.api.get<any[]>('academico/periodos').subscribe((periodos) => {
+          this.periodosList.set(periodos);
+          this.selectedPeriodoId.set(periodoCreado.id);
+          this.cargarPlanilla();
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear periodo', err?.error?.message || 'No fue posible crear el periodo académico.');
+      },
+    });
+  }
+
+  // --- CRUD: CREAR ACTIVIDAD EVALUATIVA ---
+  abrirModalNuevaActividad() {
+    this.nuevaActividad = {
+      titulo: '',
+      dimension: 'COGNITIVO',
+      pesoPorcentaje: 20,
+      fechaEntrega: '2026-03-30',
+    };
+    this.modalNuevaActividad.set(true);
+  }
+
+  guardarNuevaActividad() {
+    if (!this.nuevaActividad.titulo) {
+      this.toast.error('Campo Requerido', 'Por favor ingrese el título de la actividad.');
+      return;
+    }
+
+    this.modalNuevaActividad.set(false);
+    this.toast.success(
+      '¡Actividad Creada!',
+      `La actividad evaluativa '${this.nuevaActividad.titulo}' (${this.nuevaActividad.pesoPorcentaje}%) fue programada exitosamente.`
+    );
+  }
+
   // --- CRUD: ACTUALIZAR / GUARDAR PLANILLA EN LOTE ---
   guardarCalificaciones() {
     this.isSaving.set(true);
@@ -1308,30 +1748,6 @@ export class AcademicoComponent implements OnInit {
         );
       },
     });
-  }
-
-  // --- CRUD: CREAR ACTIVIDAD EVALUATIVA ---
-  abrirModalNuevaActividad() {
-    this.nuevaActividad = {
-      titulo: '',
-      dimension: 'COGNITIVO',
-      pesoPorcentaje: 20,
-      fechaEntrega: '2026-03-30',
-    };
-    this.modalNuevaActividad.set(true);
-  }
-
-  guardarNuevaActividad() {
-    if (!this.nuevaActividad.titulo) {
-      this.toast.error('Campo Requerido', 'Por favor ingrese el título de la actividad.');
-      return;
-    }
-
-    this.modalNuevaActividad.set(false);
-    this.toast.success(
-      '¡Actividad Creada!',
-      `La actividad evaluativa '${this.nuevaActividad.titulo}' (${this.nuevaActividad.pesoPorcentaje}%) fue programada exitosamente.`
-    );
   }
 
   // --- CRUD: LIMPIAR / RESTABLECER NOTA ---

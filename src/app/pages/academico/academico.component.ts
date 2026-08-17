@@ -19,8 +19,11 @@ import { CalificacionLoteItem } from '../../core/models';
           <p>Registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
         <div class="header-actions">
+          <button (click)="abrirModalNuevoNivel()" class="btn btn-secondary">
+            <span>🎓 Crear Nivel</span>
+          </button>
           <button (click)="abrirModalNuevaArea()" class="btn btn-secondary">
-            <span>📐 Crear Área (Ley 115)</span>
+            <span>📐 Crear Área</span>
           </button>
           <button (click)="abrirModalNuevoGrado()" class="btn btn-secondary">
             <span>🏛️ Crear Grado</span>
@@ -205,6 +208,61 @@ import { CalificacionLoteItem } from '../../core/models';
       </div>
 
       <!-- ========================================== -->
+      <!-- MODAL 0: CREAR NIVEL EDUCATIVO (MEN)       -->
+      <!-- ========================================== -->
+      @if (modalNuevoNivel()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 500px;">
+            <div class="modal-header">
+              <h3>🎓 Crear Nivel Educativo (MEN)</h3>
+              <button (click)="modalNuevoNivel.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Nombre del Nivel Educativo *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoNivel.nombre"
+                  placeholder="Ej: Educación Preescolar, Básica Primaria, Básica Secundaria"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código del Nivel *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoNivel.codigo"
+                    placeholder="Ej: PRE, PRI, SEC, MED"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Orden Cronológico</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoNivel.orden"
+                    min="1"
+                    max="10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoNivel()" class="btn btn-primary">
+                💾 Guardar Nivel
+              </button>
+              <button (click)="modalNuevoNivel.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
       <!-- MODAL 1: CREAR ÁREA (LEY 115)             -->
       <!-- ========================================== -->
       @if (modalNuevaArea()) {
@@ -282,7 +340,10 @@ import { CalificacionLoteItem } from '../../core/models';
               </div>
 
               <div class="form-group mt-3">
-                <label class="form-label">Nivel Educativo *</label>
+                <div class="filter-label-row">
+                  <label class="form-label">Nivel Educativo *</label>
+                  <button (click)="abrirModalNuevoNivel()" class="btn-link-action" title="Crear Nivel">+ Nuevo Nivel</button>
+                </div>
                 <select class="form-select" [(ngModel)]="nuevoGrado.nivelId">
                   @for (nivel of nivelesList(); track nivel.id) {
                     <option [value]="nivel.id">{{ nivel.nombre }}</option>
@@ -667,6 +728,7 @@ export class AcademicoComponent implements OnInit {
   // Estados de interfaz y Modales
   readonly isSaving = signal(false);
   readonly isLoadingPlanilla = signal(false);
+  readonly modalNuevoNivel = signal(false);
   readonly modalNuevaArea = signal(false);
   readonly modalNuevoGrado = signal(false);
   readonly modalNuevoGrupo = signal(false);
@@ -674,6 +736,12 @@ export class AcademicoComponent implements OnInit {
   readonly modalNuevaActividad = signal(false);
 
   // Formularios de Creación
+  nuevoNivel = {
+    nombre: '',
+    codigo: '',
+    orden: 1,
+  };
+
   nuevaArea = {
     nombre: '',
     codigo: '',
@@ -721,6 +789,7 @@ export class AcademicoComponent implements OnInit {
         if (niveles && niveles.length > 0) {
           this.nivelesList.set(niveles);
           this.nuevoGrado.nivelId = niveles[0].id;
+          this.nuevoNivel.orden = niveles.length + 1;
         }
       },
     });
@@ -869,6 +938,37 @@ export class AcademicoComponent implements OnInit {
       default:
         return 'badge badge-danger';
     }
+  }
+
+  // --- CRUD: CREAR NIVEL EDUCATIVO ---
+  abrirModalNuevoNivel() {
+    this.nuevoNivel = {
+      nombre: '',
+      codigo: '',
+      orden: (this.nivelesList().length || 0) + 1,
+    };
+    this.modalNuevoNivel.set(true);
+  }
+
+  guardarNuevoNivel() {
+    if (!this.nuevoNivel.nombre || !this.nuevoNivel.codigo) {
+      this.toast.error('Campos Requeridos', 'Por favor ingrese el nombre y código del nivel educativo.');
+      return;
+    }
+
+    this.api.post<any>('academico/niveles', this.nuevoNivel).subscribe({
+      next: (nivelCreado) => {
+        this.modalNuevoNivel.set(false);
+        this.toast.success('¡Nivel Creado!', `El nivel educativo '${nivelCreado.nombre}' ha sido registrado exitosamente.`);
+        this.api.get<any[]>('academico/niveles').subscribe((niveles) => {
+          this.nivelesList.set(niveles);
+          this.nuevoGrado.nivelId = nivelCreado.id;
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear nivel', err?.error?.message || 'No fue posible crear el nivel educativo.');
+      },
+    });
   }
 
   // --- CRUD: CREAR ÁREA (LEY 115) ---

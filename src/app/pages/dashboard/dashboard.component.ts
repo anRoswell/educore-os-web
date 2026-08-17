@@ -580,7 +580,7 @@ import { KpiRectoria } from '../../core/models';
               <span class="badge badge-info">Periodo 1</span>
             </div>
 
-            <div class="heatmap-table-container">
+            <div class="heatmap-table-container table-container">
               <table class="data-table">
                 <thead>
                   <tr>
@@ -594,11 +594,11 @@ import { KpiRectoria } from '../../core/models';
                 <tbody>
                   @for (materia of mapaCalor(); track materia.asignatura) {
                     <tr>
-                      <td><strong>{{ materia.grado }}</strong></td>
+                      <td style="white-space: nowrap;"><strong>{{ materia.grado }}</strong></td>
                       <td>{{ materia.asignatura }}</td>
-                      <td><strong>{{ materia.promedio }}</strong> / 5.0</td>
-                      <td>{{ materia.tasaReprobacion || 0 }}%</td>
-                      <td>
+                      <td style="white-space: nowrap;"><strong>{{ materia.promedio }}</strong> / 5.0</td>
+                      <td style="white-space: nowrap;">{{ materia.tasaReprobacion || 0 }}%</td>
+                      <td style="white-space: nowrap;">
                         @if (materia.alertaCritica) {
                           <span class="badge badge-danger">Crítico</span>
                         } @else {
@@ -903,6 +903,28 @@ import { KpiRectoria } from '../../core/models';
       padding: 0.15rem 0.5rem;
       border-radius: 9999px;
       font-size: 0.7rem;
+    }
+
+    .heatmap-card {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .heatmap-table-container {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      background-color: #ffffff;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .heatmap-table-container .data-table th,
+    .heatmap-table-container .data-table td {
+      padding: 0.65rem 0.75rem;
+      font-size: 0.815rem;
     }
 
     .mt-6 { margin-top: 1.5rem; }

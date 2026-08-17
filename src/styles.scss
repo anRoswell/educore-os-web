@@ -341,14 +341,19 @@ textarea.input-custom {
 /* Grid y Layouts */
 .grid-cols-4 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.25rem;
 }
 
 .grid-cols-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.25rem;
+}
+
+.grid-cols-2 > *,
+.grid-cols-4 > * {
+  min-width: 0;
 }
 
 /* Micro-animaciones */

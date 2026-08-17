@@ -19,29 +19,32 @@ import { CalificacionLoteItem } from '../../core/models';
           <p>Registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
         <div class="header-actions">
-          <button (click)="abrirModalNuevoPeriodo()" class="btn btn-secondary">
-            <span>📅 Crear Periodo</span>
+          <button (click)="abrirModalNuevoNivel()" class="btn btn-secondary" title="1. Definir Niveles Educativos (Preescolar, Primaria, Secundaria, Media)">
+            <span>🎓 1. Nivel</span>
           </button>
-          <button (click)="abrirModalNuevoNivel()" class="btn btn-secondary">
-            <span>🎓 Crear Nivel</span>
+          <button (click)="abrirModalNuevoGrado()" class="btn btn-secondary" title="2. Crear Grados Escolares">
+            <span>🏛️ 2. Grado</span>
           </button>
-          <button (click)="abrirModalNuevaArea()" class="btn btn-secondary">
-            <span>📐 Crear Área</span>
+          <button (click)="abrirModalNuevoGrupo()" class="btn btn-secondary" title="3. Abrir Salones / Grupos">
+            <span>🚪 3. Grupo</span>
           </button>
-          <button (click)="abrirModalNuevoGrado()" class="btn btn-secondary">
-            <span>🏛️ Crear Grado</span>
+          <button (click)="abrirModalNuevaArea()" class="btn btn-secondary" title="4. Definir Áreas del Conocimiento (Ley 115)">
+            <span>📐 4. Área</span>
           </button>
-          <button (click)="abrirModalNuevoGrupo()" class="btn btn-secondary">
-            <span>🚪 Crear Salón / Grupo</span>
+          <button (click)="abrirModalNuevaAsignatura()" class="btn btn-secondary" title="5. Crear Asignaturas Curriculares">
+            <span>📚 5. Asignatura</span>
           </button>
-          <button (click)="abrirModalNuevaActividad()" class="btn btn-secondary">
-            <span>➕ Nueva Actividad</span>
+          <button (click)="abrirModalNuevoPeriodo()" class="btn btn-secondary" title="6. Programar Periodos Académicos">
+            <span>📅 6. Periodo</span>
           </button>
-          <button (click)="descargarBoletinDemo()" class="btn btn-secondary">
-            <span>📄 Boletín PDF</span>
+          <button (click)="abrirModalNuevaActividad()" class="btn btn-secondary" title="7. Crear Actividades Evaluativas (SIEE)">
+            <span>➕ 7. Actividad</span>
           </button>
           <button (click)="guardarCalificaciones()" class="btn btn-primary" [disabled]="isSaving() || planilla().length === 0">
             <span>💾 {{ isSaving() ? 'Guardando...' : 'Guardar Planilla' }}</span>
+          </button>
+          <button (click)="descargarBoletinDemo()" class="btn btn-secondary">
+            <span>📄 Boletín PDF</span>
           </button>
         </div>
       </div>

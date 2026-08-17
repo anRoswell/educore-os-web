@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -221,16 +221,30 @@ interface JornadaInfo {
               </div>
 
               <div class="form-group mt-3">
-                <label class="form-label">Cargo a Elegir *</label>
+                <label class="form-label">Cargo a Elegir (Ley 115) *</label>
                 <select class="form-select" [(ngModel)]="nuevaJornada.cargo">
-                  <option value="PERSONERO">Personero Estudiantil</option>
-                  <option value="CONTRALOR">Contralor Estudiantil</option>
+                  <option value="PERSONERO">Personero Estudiantil (Grado 11°)</option>
+                  <option value="CONTRALOR">Contralor Escolar</option>
                   <option value="CABILDANTE">Cabildante Estudiantil</option>
-                  <option value="CONSEJO_ESTUDIANTIL">Consejo Estudiantil</option>
-                  <option value="REPRESENTANTE_DOCENTES">Representante de Docentes</option>
-                  <option value="CONSEJO_DIRECTIVO">Representante Consejo Directivo</option>
+                  <option value="CONSEJO_ESTUDIANTIL">Representante de los Estudiantes</option>
+                  <option value="REPRESENTANTE_DOCENTES">Representante de Docentes al Consejo</option>
+                  <option value="CONSEJO_DIRECTIVO">Representante al Consejo Directivo</option>
+                  <option value="COMISARIO_CONVIVENCIA">Comisario de Convivencia Escolar</option>
+                  <option value="OTRO">✏️ Otro Cargo Personalizado...</option>
                 </select>
               </div>
+
+              @if (nuevaJornada.cargo === 'OTRO') {
+                <div class="form-group mt-2">
+                  <label class="form-label">Nombre del Cargo Personalizado *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaJornada.cargoPersonalizado"
+                    placeholder="Ej: Presidente Club de Robótica, Líder de Paz, etc."
+                  />
+                </div>
+              }
 
               <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
@@ -899,10 +913,10 @@ export class GobiernoEscolarComponent {
   readonly modalNuevoCandidato = signal(false);
   readonly candidatoEnEdicion = signal<CandidatoTarjeton | null>(null);
   readonly candidatoParaEliminar = signal<CandidatoTarjeton | null>(null);
-
   nuevaJornada = {
     nombre: 'Elecciones de Contralor Estudiantil 2026',
     cargo: 'CONTRALOR',
+    cargoPersonalizado: '',
     fechaApertura: '2026-03-01T08:00',
     fechaCierre: '2026-03-01T16:00',
     incluirVotoBlanco: true,
@@ -944,6 +958,44 @@ export class GobiernoEscolarComponent {
     },
   ]);
 
+  // Cómputos dinámicos del escrutinio en tiempo real
+  readonly virtualGanador = computed(() => {
+    const list = this.candidatos();
+    if (!list || list.length === 0) return null;
+    const sorted = [...list].sort((a, b) => b.votos - a.votos);
+    return sorted[0];
+  });
+
+  readonly segundoLugar = computed(() => {
+    const list = this.candidatos();
+    if (!list || list.length < 2) return null;
+    const sorted = [...list].sort((a, b) => b.votos - a.votos);
+    return sorted[1];
+  });
+
+  ngOnInit() {
+    this.cargarJornadaBackend();
+  }
+
+  cargarJornadaBackend() {
+    this.api.get<any[]>('gobierno-escolar/jornadas').subscribe({
+      next: (res) => {
+        if (res && res.length > 0) {
+          const j = res[0];
+          this.jornadaActual.set({
+            id: j.id,
+            nombre: j.nombre,
+            cargo: j.cargoEleccion,
+            fechaApertura: j.fechaApertura,
+            fechaCierre: j.fechaCierre,
+            estado: j.estado,
+          });
+        }
+      },
+      error: () => {},
+    });
+  }
+
   getCargoLabel(cargo: string): string {
     const labels: Record<string, string> = {
       PERSONERO: 'Personero Estudiantil',
@@ -967,11 +1019,12 @@ export class GobiernoEscolarComponent {
     this.selectedCandidatoId.set(id);
   }
 
-  // --- BOTÓN 1: CREAR NUEVA ELECCIÓN DESDE CERO ---
+  // --- BOTÓN 1: CONFIGURAR NUEVA ELECCIÓN ---
   abrirModalNuevaJornada() {
     this.nuevaJornada = {
       nombre: '',
       cargo: 'PERSONERO',
+      cargoPersonalizado: '',
       fechaApertura: new Date().toISOString().slice(0, 16),
       fechaCierre: new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 16),
       incluirVotoBlanco: true,
@@ -985,41 +1038,59 @@ export class GobiernoEscolarComponent {
       return;
     }
 
-    const nuevaJornadaObj: JornadaInfo = {
-      id: `jornada-${Date.now()}`,
+    const cargoFinal = this.nuevaJornada.cargo === 'OTRO' && this.nuevaJornada.cargoPersonalizado.trim()
+      ? this.nuevaJornada.cargoPersonalizado.trim()
+      : this.nuevaJornada.cargo;
+
+    const payload = {
+      anioLectivoId: 'a1a1a1a1-1111-4111-8111-000000002026',
       nombre: this.nuevaJornada.nombre,
-      cargo: this.nuevaJornada.cargo,
+      cargoEleccion: cargoFinal,
       fechaApertura: this.nuevaJornada.fechaApertura,
       fechaCierre: this.nuevaJornada.fechaCierre,
-      estado: 'ABIERTA',
     };
 
-    // Inicializar candidatos para la nueva elección
-    const listaInicial: CandidatoTarjeton[] = [];
-    if (this.nuevaJornada.incluirVotoBlanco) {
-      listaInicial.push({
-        id: `cand-blanco-${Date.now()}`,
-        numeroTarjeton: 1,
-        nombre: 'Voto en Blanco',
-        lema: 'Ninguna de las opciones anteriores',
-        fotoUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=120&auto=format&fit=crop&q=80',
-        esBlanco: true,
-        votos: 0,
-        porcentaje: 0.0,
-      });
-    }
+    this.api.post<any>('gobierno-escolar/jornadas', payload).subscribe({
+      next: (jornadaCreada) => {
+        const nuevaJornadaObj: JornadaInfo = {
+          id: jornadaCreada.id || `jornada-${Date.now()}`,
+          nombre: payload.nombre,
+          cargo: payload.cargoEleccion,
+          fechaApertura: payload.fechaApertura,
+          fechaCierre: payload.fechaCierre,
+          estado: 'ABIERTA',
+        };
 
-    this.jornadaActual.set(nuevaJornadaObj);
-    this.candidatos.set(listaInicial);
-    this.totalVotos.set(0);
-    this.selectedCandidatoId.set(listaInicial.length > 0 ? listaInicial[0].id : null);
-    this.votoComprobante.set(null);
-    this.modalNuevaJornada.set(false);
+        const listaInicial: CandidatoTarjeton[] = [];
+        if (this.nuevaJornada.incluirVotoBlanco) {
+          listaInicial.push({
+            id: `cand-blanco-${Date.now()}`,
+            numeroTarjeton: 1,
+            nombre: 'Voto en Blanco',
+            lema: 'Ninguna de las opciones anteriores',
+            fotoUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=120&auto=format&fit=crop&q=80',
+            esBlanco: true,
+            votos: 0,
+            porcentaje: 0.0,
+          });
+        }
 
-    this.toast.success(
-      '¡Nueva Elección Aperturada!',
-      `Se ha creado el proceso para ${this.getCargoLabel(nuevaJornadaObj.cargo)}. Puedes comenzar a inscribir candidatos.`
-    );
+        this.jornadaActual.set(nuevaJornadaObj);
+        this.candidatos.set(listaInicial);
+        this.totalVotos.set(0);
+        this.selectedCandidatoId.set(listaInicial.length > 0 ? listaInicial[0].id : null);
+        this.votoComprobante.set(null);
+        this.modalNuevaJornada.set(false);
+
+        this.toast.success(
+          '¡Nueva Elección Aperturada!',
+          `Se ha creado el proceso para ${this.getCargoLabel(cargoFinal)}. Puedes comenzar a inscribir candidatos.`
+        );
+      },
+      error: (err) => {
+        this.toast.error('Error al aperturar elección', err?.error?.message || 'No fue posible registrar la jornada.');
+      },
+    });
   }
 
   // --- BOTÓN 2: FINALIZAR VOTACIONES / CERRAR URNAS ---

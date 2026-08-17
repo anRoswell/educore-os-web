@@ -74,6 +74,9 @@ export interface EstudianteFinanciero {
           <p>Facturación masiva de pensiones, estado de cuenta por alumno, recaudos en ventanilla, pasarela Wompi / PSE y acuerdos de pago</p>
         </div>
         <div class="header-actions">
+          <button (click)="abrirModalNuevoConcepto()" class="btn btn-secondary" title="Crear nuevo concepto de cobro o tarifa">
+            <span>🏷️ Crear Concepto</span>
+          </button>
           <button (click)="abrirModalNuevoCobro()" class="btn btn-secondary" title="Emitir cobro individual o extraordinario">
             <span>➕ Nuevo Cobro</span>
           </button>
@@ -931,6 +934,68 @@ export interface EstudianteFinanciero {
         </div>
       }
 
+      <!-- MODAL 3.5: CREAR CONCEPTO DE COBRO -->
+      @if (modalNuevoConcepto()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <div>
+                <h3>🏷️ Crear Concepto de Cobro / Tarifa</h3>
+                <span class="modal-subtitle">Parametrización financiera de pensiones, matrículas y derechos</span>
+              </div>
+              <button (click)="modalNuevoConcepto.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Nombre del Concepto *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoConceptoForm.nombre"
+                  placeholder="Ej: Pensión Mensual, Seguro Escolar, Salida Pedagógica"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código Único *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoConceptoForm.codigo"
+                    placeholder="Ej: PENS-01, MAT-2026, SEG-EST"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Valor Sugerido ($ COP)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoConceptoForm.valorSugerido"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" [(ngModel)]="nuevoConceptoForm.esRecurrenteMensual" style="width: 18px; height: 18px;" />
+                  <span>¿Es cobro recurrente mensual? (ej: Pensión mensual)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoConcepto()" class="btn btn-primary">
+                💾 Guardar Concepto
+              </button>
+              <button (click)="modalNuevoConcepto.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- MODAL 4: EMITIR COBRO INDIVIDUAL -->
       @if (modalNuevoCobro()) {
         <div class="modal-backdrop animate-fade-in">
@@ -946,12 +1011,16 @@ export interface EstudianteFinanciero {
                 <input type="text" class="form-control" [(ngModel)]="nuevoCobro.estudianteNombre" placeholder="Nombre completo del estudiante" />
               </div>
               <div class="form-group mt-3">
-                <label class="form-label">Concepto de Cobro *</label>
-                <select class="form-select" [(ngModel)]="nuevoCobro.concepto">
-                  <option value="Derechos de Grado">Derechos de Grado</option>
-                  <option value="Salida Pedagógica">Salida Pedagógica Cultural</option>
-                  <option value="Duplicado Carnet Digital">Duplicado Carnet Digital</option>
-                  <option value="Seguro Estudiantil">Seguro de Accidentes Escolares</option>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                  <label class="form-label" style="margin: 0;">Concepto de Cobro *</label>
+                  <button (click)="abrirModalNuevoConcepto()" style="background: none; border: none; color: #4f46e5; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: underline;">+ Nuevo Concepto</button>
+                </div>
+                <select class="form-select" [(ngModel)]="nuevoCobro.concepto" (ngModelChange)="onConceptoSelect($event)">
+                  @for (con of conceptosList(); track con.id) {
+                    <option [value]="con.nombre">{{ con.nombre }} (\${{ con.valorSugerido | number }} COP)</option>
+                  } @empty {
+                    <option value="Pensión Mensual Escolar">Pensión Mensual Escolar</option>
+                  }
                 </select>
               </div>
               <div class="form-group mt-3">
@@ -1801,6 +1870,7 @@ export class TesoreriaComponent implements OnInit {
 
   // Modales
   readonly checkoutModal = signal<CuentaCobroItem | null>(null);
+  readonly modalNuevoConcepto = signal(false);
   readonly modalNuevoCobro = signal(false);
   readonly modalPagoManual = signal(false);
   readonly modalNuevoAcuerdo = signal(false);
@@ -1811,6 +1881,8 @@ export class TesoreriaComponent implements OnInit {
   readonly pazSalvoModal = signal(false);
   readonly modalBeca = signal(false);
   readonly desbloqueoExcepcional = signal(false);
+
+  readonly conceptosList = signal<any[]>([]);
 
   readonly becaActual = signal<{ tipo: string; porcentaje: number; nombre: string }>({
     tipo: 'NINGUNA',
@@ -1829,10 +1901,17 @@ export class TesoreriaComponent implements OnInit {
   readonly hashPazYSalvo = 'PYS-2026-B9F2A108C7E4';
 
   // Formularios
+  nuevoConceptoForm = {
+    nombre: '',
+    codigo: '',
+    valorSugerido: 450000,
+    esRecurrenteMensual: true,
+  };
+
   nuevoCobro = {
     estudianteNombre: '',
-    concepto: 'Salida Pedagógica',
-    valorTotal: 120000,
+    concepto: 'Pensión Mensual Escolar',
+    valorTotal: 450000,
     fechaVencimiento: '2026-08-25',
   };
 
@@ -2202,6 +2281,56 @@ export class TesoreriaComponent implements OnInit {
 
   ngOnInit() {
     this.cargarDatosBackend();
+    this.cargarConceptos();
+  }
+
+  cargarConceptos() {
+    this.api.get<any[]>('tesoreria/conceptos').subscribe({
+      next: (data) => {
+        if (data && data.length > 0) {
+          this.conceptosList.set(data);
+          this.nuevoCobro.concepto = data[0].nombre;
+          this.nuevoCobro.valorTotal = Number(data[0].valorSugerido) || 450000;
+        }
+      },
+    });
+  }
+
+  onConceptoSelect(nombre: string) {
+    const found = this.conceptosList().find((c) => c.nombre === nombre);
+    if (found && found.valorSugerido) {
+      this.nuevoCobro.valorTotal = Number(found.valorSugerido);
+    }
+  }
+
+  abrirModalNuevoConcepto() {
+    this.nuevoConceptoForm = {
+      nombre: '',
+      codigo: `CON-${Date.now().toString().slice(-4)}`,
+      valorSugerido: 150000,
+      esRecurrenteMensual: false,
+    };
+    this.modalNuevoConcepto.set(true);
+  }
+
+  guardarNuevoConcepto() {
+    if (!this.nuevoConceptoForm.nombre || !this.nuevoConceptoForm.codigo) {
+      this.toast.error('Campos Requeridos', 'Por favor complete el nombre y código del concepto de cobro.');
+      return;
+    }
+
+    this.api.post<any>('tesoreria/conceptos', this.nuevoConceptoForm).subscribe({
+      next: (conceptoCreado) => {
+        this.modalNuevoConcepto.set(false);
+        this.toast.success('¡Concepto Creado!', `El concepto '${conceptoCreado.nombre}' ha sido registrado en PostgreSQL.`);
+        this.cargarConceptos();
+        this.nuevoCobro.concepto = conceptoCreado.nombre;
+        this.nuevoCobro.valorTotal = Number(conceptoCreado.valorSugerido) || 0;
+      },
+      error: (err) => {
+        this.toast.error('Error al crear concepto', err?.error?.message || 'No fue posible registrar el concepto.');
+      },
+    });
   }
 
   cargarDatosBackend() {

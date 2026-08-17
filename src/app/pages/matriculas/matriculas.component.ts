@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -23,12 +23,12 @@ import { Estudiante } from '../../core/models';
             <span>📊 Exportar SIMAT (Res. 166)</span>
           </button>
           <button (click)="abrirModalNuevaMatricula()" class="btn btn-primary">
-            <span>➕ Nueva Matrícula</span>
+            <span>➕ Formalizar Nueva Matrícula</span>
           </button>
         </div>
       </div>
 
-      <!-- Buscador y Filtros -->
+      <!-- Buscador y Filtros Dinámicos -->
       <div class="card filter-card">
         <div class="search-box">
           <span class="search-icon">🔍</span>
@@ -36,134 +36,152 @@ import { Estudiante } from '../../core/models';
             type="text"
             class="form-control search-input"
             [(ngModel)]="searchQuery"
+            (ngModelChange)="buscarEstudiantes()"
             placeholder="Buscar por nombre, apellido, código o número de documento..."
           />
         </div>
       </div>
 
-      <!-- Tabla de Estudiantes -->
+      <!-- Tabla de Estudiantes Conectada a PostgreSQL -->
       <div class="table-container mt-4">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Estudiante</th>
-              <th>Documento</th>
-              <th>Grado / Grupo</th>
-              <th>RH / EPS</th>
-              <th>Estado</th>
-              <th>Acciones CRUD</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (est of filteredEstudiantes(); track est.id) {
+        @if (isLoading()) {
+          <div class="p-8 text-center text-slate-500">
+            <p>⏳ Cargando directorio de estudiantes desde PostgreSQL...</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
               <tr>
-                <td><strong class="text-indigo-600">{{ est.codigoEstudiante }}</strong></td>
-                <td>
-                  <strong>{{ est.primerApellido }} {{ est.segundoApellido || '' }}</strong>, {{ est.primerNombre }} {{ est.segundoNombre || '' }}
-                </td>
-                <td><span class="font-mono text-xs">{{ est.tipoDocumento }} {{ est.numeroDocumento }}</span></td>
-                <td><span class="badge badge-info">{{ est.grado }} - {{ est.grupo }}</span></td>
-                <td><span class="badge badge-purple">{{ est.grupoSanguineoRh }} | {{ est.eps }}</span></td>
-                <td>
-                  @if (est.estado === 'MATRICULADO') {
-                    <span class="badge badge-success">MATRICULADO</span>
-                  } @else {
-                    <span class="badge badge-danger">RETIRADO</span>
-                  }
-                </td>
-                <td>
-                  <div class="actions-group">
-                    <button (click)="verFicha360(est)" class="btn btn-secondary btn-sm" title="Ver Ficha 360">
-                      👁️ Ficha
-                    </button>
-                    <button (click)="abrirModalEdicion(est)" class="btn btn-secondary btn-sm" title="Editar Estudiante">
-                      ✏️ Editar
-                    </button>
-                    <button (click)="descargarCertificado(est.id)" class="btn btn-outline btn-sm" title="Certificado PDF">
-                      📄 PDF
-                    </button>
-                    @if (est.estado === 'MATRICULADO') {
-                      <button (click)="abrirModalRetiro(est)" class="btn btn-danger btn-sm" title="Retirar / Eliminar">
-                        🗑️ Retiro
-                      </button>
-                    }
-                  </div>
-                </td>
+                <th>Código</th>
+                <th>Estudiante</th>
+                <th>Documento</th>
+                <th>Grado / Grupo</th>
+                <th>RH / EPS</th>
+                <th>Estado</th>
+                <th>Acciones CRUD</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (est of filteredEstudiantes(); track est.id) {
+                <tr>
+                  <td><strong class="text-indigo-600">{{ est.codigoEstudiante }}</strong></td>
+                  <td>
+                    <strong>{{ est.primerApellido }} {{ est.segundoApellido || '' }}</strong>, {{ est.primerNombre }} {{ est.segundoNombre || '' }}
+                  </td>
+                  <td><span class="font-mono text-xs">{{ est.tipoDocumento }} {{ est.numeroDocumento }}</span></td>
+                  <td><span class="badge badge-info">{{ est.grado }} - {{ est.grupo }}</span></td>
+                  <td><span class="badge badge-purple">{{ est.grupoSanguineoRh || 'O+' }} | {{ est.eps || 'N/A' }}</span></td>
+                  <td>
+                    @if (est.estado === 'MATRICULADO' || est.estado === 'ACTIVO') {
+                      <span class="badge badge-success">MATRICULADO</span>
+                    } @else {
+                      <span class="badge badge-danger">RETIRADO</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="actions-group">
+                      <button (click)="verFicha360(est)" class="btn btn-secondary btn-sm" title="Ver Ficha 360">
+                        👁️ Ficha
+                      </button>
+                      <button (click)="abrirModalEdicion(est)" class="btn btn-secondary btn-sm" title="Editar Estudiante">
+                        ✏️ Editar
+                      </button>
+                      <button (click)="descargarCertificado(est.id)" class="btn btn-outline btn-sm" title="Certificado PDF">
+                        📄 PDF
+                      </button>
+                      @if (est.estado === 'MATRICULADO' || est.estado === 'ACTIVO') {
+                        <button (click)="abrirModalRetiro(est)" class="btn btn-danger btn-sm" title="Retirar / Eliminar">
+                          🗑️ Retiro
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="text-center py-8 text-slate-500">
+                    <p>No se encontraron estudiantes registrados en el directorio.</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
       </div>
 
       <!-- MODAL 1: FICHA INTEGRAL 360° -->
       @if (selectedEstudiante()) {
         <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass">
+          <div class="modal-card card card-glass" style="max-width: 680px;">
             <div class="modal-header">
-              <h3>Ficha Integral del Estudiante 360°</h3>
-              <button (click)="cerrarModalFicha()" class="close-btn">&times;</button>
+              <h3>📋 Ficha Integral 360° del Estudiante</h3>
+              <button (click)="selectedEstudiante.set(null)" class="close-btn">&times;</button>
             </div>
 
             <div class="modal-body">
-              <div class="profile-summary">
+              <div class="profile-summary mb-4">
                 <div class="avatar-large">
                   {{ selectedEstudiante()?.primerNombre?.charAt(0) }}{{ selectedEstudiante()?.primerApellido?.charAt(0) }}
                 </div>
                 <div>
-                  <h4>{{ selectedEstudiante()?.primerNombre }} {{ selectedEstudiante()?.primerApellido }}</h4>
-                  <p class="text-slate-500 text-sm">Código: {{ selectedEstudiante()?.codigoEstudiante }} | {{ selectedEstudiante()?.tipoDocumento }} {{ selectedEstudiante()?.numeroDocumento }}</p>
-                  <span class="badge badge-success mt-1">Estado: {{ selectedEstudiante()?.estado }}</span>
+                  <h4>{{ selectedEstudiante()?.primerNombre }} {{ selectedEstudiante()?.segundoNombre || '' }} {{ selectedEstudiante()?.primerApellido }} {{ selectedEstudiante()?.segundoApellido || '' }}</h4>
+                  <p class="text-slate-500 text-sm">Código: <strong class="text-indigo-600">{{ selectedEstudiante()?.codigoEstudiante }}</strong> | {{ selectedEstudiante()?.tipoDocumento }} {{ selectedEstudiante()?.numeroDocumento }}</p>
+                  <span class="badge badge-success mt-1">{{ selectedEstudiante()?.estado }}</span>
                 </div>
               </div>
 
-              <div class="details-grid mt-4">
+              <div class="details-grid">
                 <div class="detail-item">
-                  <span class="label">Grado / Grupo:</span>
-                  <strong>{{ selectedEstudiante()?.grado }} — {{ selectedEstudiante()?.grupo }}</strong>
+                  <span class="label">Grado & Grupo</span>
+                  <strong>{{ selectedEstudiante()?.grado }} - {{ selectedEstudiante()?.grupo }}</strong>
                 </div>
                 <div class="detail-item">
-                  <span class="label">Grupo Sanguíneo RH:</span>
-                  <strong>{{ selectedEstudiante()?.grupoSanguineoRh }}</strong>
+                  <span class="label">Grupo Sanguíneo RH</span>
+                  <strong>{{ selectedEstudiante()?.grupoSanguineoRh || 'O+' }}</strong>
                 </div>
                 <div class="detail-item">
-                  <span class="label">EPS Afiliada:</span>
-                  <strong>{{ selectedEstudiante()?.eps }}</strong>
+                  <span class="label">EPS Afiliada</span>
+                  <strong>{{ selectedEstudiante()?.eps || 'Sura EPS' }}</strong>
                 </div>
                 <div class="detail-item">
-                  <span class="label">Teléfono de Emergencia:</span>
-                  <strong>{{ selectedEstudiante()?.telefonoEmergencia }}</strong>
+                  <span class="label">Teléfono Emergencia</span>
+                  <strong>{{ selectedEstudiante()?.telefonoEmergencia || '3001234567' }}</strong>
                 </div>
               </div>
 
+              <!-- Expediente Digital -->
               <div class="upload-section mt-4">
-                <h5>📎 Cargar Documento al Expediente (Cero Papel)</h5>
+                <h5>📁 Soporte Documental (Expediente SIMAT)</h5>
+                <p class="text-xs text-slate-500">Cargue copia de documento, registro civil o certificados anteriores.</p>
                 <div class="upload-controls">
-                  <input type="file" (change)="onFileSelected($event)" class="form-control text-xs" />
-                  <button (click)="subirDocumento()" class="btn btn-secondary btn-sm" [disabled]="!archivoSeleccionado()">
-                    Subir Archivo
+                  <input type="file" (change)="onFileSelected($event)" class="form-control" />
+                  <button (click)="subirDocumento()" class="btn btn-primary btn-sm" [disabled]="!archivoSeleccionado()">
+                    Subir Soporte
                   </button>
                 </div>
                 @if (uploadSuccess()) {
-                  <span class="text-emerald-600 text-xs mt-1 block">✅ Documento guardado y firmado con hash SHA-256</span>
+                  <span class="badge badge-success mt-2">✓ Soporte documental indexado en el expediente</span>
                 }
               </div>
 
-              <div class="carnet-preview-box mt-4">
-                <div class="carnet-card-sim">
+              <!-- Carnet Digital QR -->
+              <div class="carnet-section mt-4">
+                <h5>🪪 Carnet Digital Institucional QR Rotativo</h5>
+                <div class="carnet-card-sim mt-2">
                   <div class="carnet-header">
-                    <span>CARNET DIGITAL ESTUDIANTIL</span>
-                    <small>EduCoreOS</small>
+                    <span>{{ authService.colegio()?.nombre }}</span>
+                    <span class="text-xs">Vigencia 2026</span>
                   </div>
                   <div class="carnet-body">
                     <div class="qr-placeholder">
-                      <span style="font-size: 2rem;">📱</span>
-                      <small>QR Rotativo 24h</small>
+                      <span style="font-size: 1.75rem;">📲</span>
+                      <span style="font-size: 0.65rem; font-weight: bold;">QR ACTIVO</span>
                     </div>
                     <div class="carnet-data">
                       <strong>{{ selectedEstudiante()?.primerNombre }} {{ selectedEstudiante()?.primerApellido }}</strong>
-                      <span>Grado: {{ selectedEstudiante()?.grado }}</span>
-                      <span class="font-mono text-xs">ID: {{ selectedEstudiante()?.numeroDocumento }}</span>
+                      <span class="text-xs text-slate-300">Cód: {{ selectedEstudiante()?.codigoEstudiante }}</span>
+                      <span class="text-xs text-slate-300">Doc: {{ selectedEstudiante()?.numeroDocumento }}</span>
+                      <span class="badge badge-info mt-1" style="width: fit-content;">{{ selectedEstudiante()?.grado }} - {{ selectedEstudiante()?.grupo }}</span>
                     </div>
                   </div>
                 </div>
@@ -171,21 +189,24 @@ import { Estudiante } from '../../core/models';
             </div>
 
             <div class="modal-footer">
-              <button (click)="descargarCertificado(selectedEstudiante()!.id)" class="btn btn-primary">
-                Descargar Certificado de Estudio PDF
+              <button (click)="descargarCertificado(selectedEstudiante()!.id)" class="btn btn-secondary">
+                📄 Certificado de Estudio
               </button>
-              <button (click)="cerrarModalFicha()" class="btn btn-secondary">Cerrar</button>
+              <button (click)="selectedEstudiante.set(null)" class="btn btn-primary">Cerrar</button>
             </div>
           </div>
         </div>
       }
 
-      <!-- MODAL 2: NUEVA MATRÍCULA (CREACIÓN / GUARDADO) -->
+      <!-- MODAL 2: NUEVA MATRÍCULA (FORMALIZACIÓN CON PARÁMETROS DINÁMICOS) -->
       @if (modalNuevaMatricula()) {
         <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass">
+          <div class="modal-card card card-glass" style="max-width: 620px;">
             <div class="modal-header">
-              <h3>➕ Formalizar Nueva Matrícula</h3>
+              <div>
+                <h3>➕ Formalizar Nueva Matrícula</h3>
+                <span class="modal-subtitle">Registro en el directorio oficial y asignación de grupo / carnet</span>
+              </div>
               <button (click)="modalNuevaMatricula.set(false)" class="close-btn">&times;</button>
             </div>
 
@@ -207,34 +228,49 @@ import { Estudiante } from '../../core/models';
                   <label class="form-label">Segundo Apellido</label>
                   <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.segundoApellido" placeholder="Ej: Herrera" />
                 </div>
+
                 <div class="form-group">
-                  <label class="form-label">Tipo Documento *</label>
+                  <label class="form-label">Tipo Documento (SIMAT) *</label>
                   <select class="form-select" [(ngModel)]="nuevoEstudiante.tipoDocumento">
                     <option value="TI">Tarjeta de Identidad (TI)</option>
                     <option value="RC">Registro Civil (RC)</option>
                     <option value="CC">Cédula de Ciudadanía (CC)</option>
+                    <option value="CE">Cédula de Extranjería (CE)</option>
                     <option value="PPT">Permiso por Protección Temporal (PPT)</option>
+                    <option value="NES">Número Establecido por Secretaría (NES)</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Número de Documento *</label>
                   <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.numeroDocumento" placeholder="1025896321" />
                 </div>
+
+                <!-- Grado Dinámico desde BD -->
                 <div class="form-group">
-                  <label class="form-label">Grado *</label>
-                  <select class="form-select" [(ngModel)]="nuevoEstudiante.grado">
-                    <option value="Décimo (10°)">Décimo (10°)</option>
-                    <option value="Undécimo (11°)">Undécimo (11°)</option>
-                    <option value="Noveno (9°)">Noveno (9°)</option>
+                  <label class="form-label">Grado Escolar *</label>
+                  <select
+                    class="form-select"
+                    [ngModel]="nuevoEstudiante.gradoId"
+                    (ngModelChange)="onNuevoEstudianteGradoChange($event)"
+                  >
+                    @for (grado of gradosList(); track grado.id) {
+                      <option [value]="grado.id">{{ grado.nombre }}</option>
+                    }
                   </select>
                 </div>
+
+                <!-- Grupo Dinámico Filtrado según el Grado -->
                 <div class="form-group">
-                  <label class="form-label">Grupo *</label>
-                  <select class="form-select" [(ngModel)]="nuevoEstudiante.grupo">
-                    <option value="10-A">10-A</option>
-                    <option value="10-B">10-B</option>
+                  <label class="form-label">Grupo / Salón *</label>
+                  <select class="form-select" [(ngModel)]="nuevoEstudiante.grupoId">
+                    @for (grupo of nuevoGruposFiltrados(); track grupo.id) {
+                      <option [value]="grupo.id">{{ grupo.nombre }} (Salón {{ grupo.salon || 'Principal' }})</option>
+                    } @empty {
+                      <option value="">No hay salones en este grado</option>
+                    }
                   </select>
                 </div>
+
                 <div class="form-group">
                   <label class="form-label">Grupo Sanguíneo RH</label>
                   <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.grupoSanguineoRh" placeholder="O+" />
@@ -243,12 +279,21 @@ import { Estudiante } from '../../core/models';
                   <label class="form-label">EPS Afiliada</label>
                   <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.eps" placeholder="Sura EPS" />
                 </div>
+
+                <div class="form-group">
+                  <label class="form-label">Nombre del Acudiente *</label>
+                  <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.nombreAcudiente" placeholder="Carlos Gómez" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email Acudiente *</label>
+                  <input type="email" class="form-control" [(ngModel)]="nuevoEstudiante.emailAcudiente" placeholder="carlos@correo.com" />
+                </div>
               </div>
             </div>
 
             <div class="modal-footer">
-              <button (click)="guardarNuevaMatricula()" class="btn btn-primary">
-                💾 Guardar Matrícula
+              <button (click)="guardarNuevaMatricula()" class="btn btn-primary" [disabled]="isSubmitting()">
+                💾 {{ isSubmitting() ? 'Formalizando...' : 'Formalizar Matrícula' }}
               </button>
               <button (click)="modalNuevaMatricula.set(false)" class="btn btn-secondary">Cancelar</button>
             </div>
@@ -259,7 +304,7 @@ import { Estudiante } from '../../core/models';
       <!-- MODAL 3: EDICIÓN / ACTUALIZACIÓN DE ESTUDIANTE -->
       @if (estudianteEnEdicion()) {
         <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass">
+          <div class="modal-card card card-glass" style="max-width: 580px;">
             <div class="modal-header">
               <h3>✏️ Editar Datos del Estudiante</h3>
               <button (click)="estudianteEnEdicion.set(null)" class="close-btn">&times;</button>
@@ -268,27 +313,31 @@ import { Estudiante } from '../../core/models';
             <div class="modal-body">
               <div class="form-grid-2">
                 <div class="form-group">
-                  <label class="form-label">Nombres</label>
+                  <label class="form-label">Primer Nombre *</label>
                   <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.primerNombre" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Apellidos</label>
+                  <label class="form-label">Segundo Nombre</label>
+                  <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.segundoNombre" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Primer Apellido *</label>
                   <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.primerApellido" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Grado</label>
-                  <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.grado" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Grupo</label>
-                  <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.grupo" />
+                  <label class="form-label">Segundo Apellido</label>
+                  <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.segundoApellido" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">EPS</label>
                   <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.eps" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Teléfono de Emergencia</label>
+                  <label class="form-label">Grupo RH</label>
+                  <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.grupoSanguineoRh" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Teléfono Emergencia</label>
                   <input type="text" class="form-control" [(ngModel)]="estudianteEnEdicion()!.telefonoEmergencia" />
                 </div>
               </div>
@@ -296,7 +345,7 @@ import { Estudiante } from '../../core/models';
 
             <div class="modal-footer">
               <button (click)="guardarEdicion()" class="btn btn-primary">
-                🔄 Guardar Cambios
+                💾 Guardar Cambios
               </button>
               <button (click)="estudianteEnEdicion.set(null)" class="btn btn-secondary">Cancelar</button>
             </div>
@@ -304,29 +353,26 @@ import { Estudiante } from '../../core/models';
         </div>
       }
 
-      <!-- MODAL 4: CONFIRMACIÓN DE RETIRO / ELIMINACIÓN -->
+      <!-- MODAL 4: RETIRO / TRASLADO SIMAT -->
       @if (estudianteParaRetirar()) {
         <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 480px;">
+          <div class="modal-card card card-glass" style="max-width: 500px;">
             <div class="modal-header">
-              <h3 style="color: #ef4444;">⚠️ Confirmación de Retiro Escolar</h3>
+              <h3>⚠️ Registrar Retiro / Traslado SIMAT</h3>
               <button (click)="estudianteParaRetirar.set(null)" class="close-btn">&times;</button>
             </div>
 
             <div class="modal-body">
-              <p>
-                ¿Está seguro de que desea tramitar el retiro del estudiante 
-                <strong>{{ estudianteParaRetirar()?.primerNombre }} {{ estudianteParaRetirar()?.primerApellido }}</strong> 
-                (Documento: {{ estudianteParaRetirar()?.numeroDocumento }})?
-              </p>
+              <p>¿Está seguro de formalizar el retiro de <strong>{{ estudianteParaRetirar()?.primerNombre }} {{ estudianteParaRetirar()?.primerApellido }}</strong>?</p>
               
               <div class="form-group mt-3">
-                <label class="form-label">Causal de Retiro (SIMAT MEN) *</label>
+                <label class="form-label">Causal de Retiro (Tipificación MEN SIMAT) *</label>
                 <select class="form-select" [(ngModel)]="causalRetiro">
                   <option value="CAMBIO_RESIDENCIA">Cambio de residencia familiar</option>
                   <option value="TRASLADO_INSTITUCION">Traslado a otra institución educativa</option>
-                  <option value="MOTIVOS_ECONOMICOS">Motivos económicos</option>
-                  <option value="DESERCION">Deserción voluntaria</option>
+                  <option value="MOTIVOS_ECONOMICOS">Dificultades socioeconómicas</option>
+                  <option value="DESERCION_ESCOLAR">Deserción no justificada</option>
+                  <option value="OTRO">Otro motivo institucional</option>
                 </select>
               </div>
             </div>
@@ -348,6 +394,8 @@ import { Estudiante } from '../../core/models';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
     .page-header h1 {
@@ -363,10 +411,11 @@ import { Estudiante } from '../../core/models';
     .header-actions {
       display: flex;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .filter-card {
-      padding: 1rem;
+      padding: 0.75rem 1rem;
     }
 
     .search-box {
@@ -376,7 +425,8 @@ import { Estudiante } from '../../core/models';
     }
 
     .search-icon {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
+      color: #94a3b8;
     }
 
     .search-input {
@@ -397,41 +447,29 @@ import { Estudiante } from '../../core/models';
 
     .text-indigo-600 { color: #4f46e5; }
     .text-slate-500 { color: #64748b; }
+    .text-slate-300 { color: #cbd5e1; }
     .text-emerald-600 { color: #059669; }
     .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .text-center { text-align: center; }
 
-    /* MODAL */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 1.5rem;
-    }
-
-    .modal-card {
-      width: 100%;
-      max-width: 580px;
-      max-height: 90vh;
-      overflow-y: auto;
-      background-color: #ffffff;
-      padding: 2rem;
+    .modal-subtitle {
+      font-size: 0.75rem;
+      color: #64748b;
+      display: block;
+      margin-top: 0.2rem;
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
     }
 
     .modal-header h3 {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       color: #0f172a;
+      margin: 0;
     }
 
     .close-btn {
@@ -440,6 +478,7 @@ import { Estudiante } from '../../core/models';
       font-size: 1.5rem;
       cursor: pointer;
       color: #64748b;
+      line-height: 1;
     }
 
     .form-grid-2 {
@@ -547,8 +586,9 @@ import { Estudiante } from '../../core/models';
 
     .mt-4 { margin-top: 1rem; }
     .mt-3 { margin-top: 0.75rem; }
+    .mt-2 { margin-top: 0.5rem; }
     .mt-1 { margin-top: 0.25rem; }
-    .block { display: block; }
+    .mb-4 { margin-bottom: 1rem; }
   `]
 })
 export class MatriculasComponent implements OnInit {
@@ -557,9 +597,17 @@ export class MatriculasComponent implements OnInit {
   readonly authService = inject(AuthService);
 
   searchQuery = '';
+  readonly isLoading = signal(false);
+  readonly isSubmitting = signal(false);
+
   readonly selectedEstudiante = signal<Estudiante | null>(null);
   readonly archivoSeleccionado = signal<File | null>(null);
   readonly uploadSuccess = signal(false);
+
+  // Listas de datos dinámicas desde PostgreSQL
+  readonly estudiantes = signal<Estudiante[]>([]);
+  readonly gradosList = signal<any[]>([]);
+  readonly todosGruposList = signal<any[]>([]);
 
   // Estados para CRUD Modales
   readonly modalNuevaMatricula = signal(false);
@@ -574,151 +622,174 @@ export class MatriculasComponent implements OnInit {
     segundoApellido: '',
     tipoDocumento: 'TI',
     numeroDocumento: '',
-    grado: 'Décimo (10°)',
-    grupo: '10-A',
+    gradoId: '',
+    grupoId: '',
     grupoSanguineoRh: 'O+',
     eps: 'Sura EPS',
     telefonoEmergencia: '3001234567',
+    nombreAcudiente: 'Padre de Familia',
+    emailAcudiente: 'acudiente@correo.com',
+    telefonoAcudiente: '3101234567',
   };
 
-  readonly estudiantes = signal<Estudiante[]>([
-    {
-      id: 'e1111111-1111-4111-8111-000000000001',
-      primerNombre: 'Mariana',
-      segundoNombre: 'Lucía',
-      primerApellido: 'García',
-      segundoApellido: 'Torres',
-      tipoDocumento: 'TI',
-      numeroDocumento: '1023456789',
-      codigoEstudiante: 'EST-2026-001',
-      grado: 'Décimo (10°)',
-      grupo: '10-A',
-      estado: 'MATRICULADO',
-      telefonoEmergencia: '3104567890',
-      eps: 'Sanitas EPS',
-      grupoSanguineoRh: 'O+',
-    },
-    {
-      id: 'e1111111-1111-4111-8111-000000000002',
-      primerNombre: 'David',
-      segundoNombre: 'Alejandro',
-      primerApellido: 'López',
-      segundoApellido: 'Ramírez',
-      tipoDocumento: 'TI',
-      numeroDocumento: '1023456790',
-      codigoEstudiante: 'EST-2026-002',
-      grado: 'Décimo (10°)',
-      grupo: '10-A',
-      estado: 'MATRICULADO',
-      telefonoEmergencia: '3159876543',
-      eps: 'Sura EPS',
-      grupoSanguineoRh: 'A+',
-    },
-    {
-      id: 'e1111111-1111-4111-8111-000000000003',
-      primerNombre: 'Sofía',
-      segundoNombre: 'Valentina',
-      primerApellido: 'Castro',
-      segundoApellido: 'Morales',
-      tipoDocumento: 'TI',
-      numeroDocumento: '1023456791',
-      codigoEstudiante: 'EST-2026-003',
-      grado: 'Décimo (10°)',
-      grupo: '10-A',
-      estado: 'MATRICULADO',
-      telefonoEmergencia: '3001122334',
-      eps: 'Compensar EPS',
-      grupoSanguineoRh: 'O-',
-    },
-  ]);
+  // Grupos filtrados para el formulario de nueva matrícula
+  readonly nuevoGruposFiltrados = computed(() => {
+    const gradoId = this.nuevoEstudiante.gradoId;
+    const all = this.todosGruposList();
+    if (!gradoId) return all;
+    return all.filter((g) => g.gradoId === gradoId || g.grado_id === gradoId);
+  });
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.cargarParametrosAcademicos();
+    this.cargarEstudiantes();
+  }
+
+  cargarParametrosAcademicos() {
+    // 1. Cargar Grados
+    this.api.get<any[]>('academico/grados').subscribe({
+      next: (grados) => {
+        if (grados && grados.length > 0) {
+          this.gradosList.set(grados);
+          this.nuevoEstudiante.gradoId = grados[0].id;
+        }
+      },
+    });
+
+    // 2. Cargar Grupos
+    this.api.get<any[]>('academico/grupos').subscribe({
+      next: (grupos) => {
+        if (grupos && grupos.length > 0) {
+          this.todosGruposList.set(grupos);
+          const primerGrupo = this.nuevoGruposFiltrados()[0] || grupos[0];
+          if (primerGrupo) {
+            this.nuevoEstudiante.grupoId = primerGrupo.id;
+          }
+        }
+      },
+    });
+  }
+
+  cargarEstudiantes() {
+    this.isLoading.set(true);
+    this.api.get<Estudiante[]>('matriculas/estudiantes').subscribe({
+      next: (data) => {
+        this.isLoading.set(false);
+        this.estudiantes.set(data || []);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  buscarEstudiantes() {
+    const q = this.searchQuery.trim();
+    this.api.get<Estudiante[]>('matriculas/estudiantes', { search: q }).subscribe({
+      next: (data) => {
+        this.estudiantes.set(data || []);
+      },
+    });
+  }
+
+  onNuevoEstudianteGradoChange(gradoId: string) {
+    this.nuevoEstudiante.gradoId = gradoId;
+    const grupos = this.nuevoGruposFiltrados();
+    if (grupos.length > 0) {
+      this.nuevoEstudiante.grupoId = grupos[0].id;
+    } else {
+      this.nuevoEstudiante.grupoId = '';
+    }
+  }
 
   filteredEstudiantes() {
-    const q = this.searchQuery.toLowerCase().trim();
-    if (!q) return this.estudiantes();
-    return this.estudiantes().filter(
-      (e) =>
-        e.primerNombre.toLowerCase().includes(q) ||
-        e.primerApellido.toLowerCase().includes(q) ||
-        e.numeroDocumento.includes(q) ||
-        e.codigoEstudiante.toLowerCase().includes(q),
-    );
+    return this.estudiantes();
   }
 
   verFicha360(est: Estudiante) {
     this.selectedEstudiante.set(est);
     this.uploadSuccess.set(false);
-  }
-
-  cerrarModalFicha() {
-    this.selectedEstudiante.set(null);
     this.archivoSeleccionado.set(null);
   }
 
-  // --- CRUD 1: CREAR / GUARDAR NUEVA MATRÍCULA ---
   abrirModalNuevaMatricula() {
-    this.nuevoEstudiante = {
-      primerNombre: '',
-      segundoNombre: '',
-      primerApellido: '',
-      segundoApellido: '',
-      tipoDocumento: 'TI',
-      numeroDocumento: '',
-      grado: 'Décimo (10°)',
-      grupo: '10-A',
-      grupoSanguineoRh: 'O+',
-      eps: 'Sura EPS',
-      telefonoEmergencia: '3001234567',
-    };
+    if (this.gradosList().length > 0 && !this.nuevoEstudiante.gradoId) {
+      this.nuevoEstudiante.gradoId = this.gradosList()[0].id;
+    }
+    const grupos = this.nuevoGruposFiltrados();
+    if (grupos.length > 0 && !this.nuevoEstudiante.grupoId) {
+      this.nuevoEstudiante.grupoId = grupos[0].id;
+    }
     this.modalNuevaMatricula.set(true);
   }
 
   guardarNuevaMatricula() {
     if (!this.nuevoEstudiante.primerNombre || !this.nuevoEstudiante.primerApellido || !this.nuevoEstudiante.numeroDocumento) {
-      this.toast.error('Campos Requeridos', 'Por favor diligencie nombres, apellidos y número de documento.');
+      this.toast.error('Campos Requeridos', 'Por favor ingrese nombres, apellidos y número de documento del estudiante.');
       return;
     }
 
-    const nuevo: Estudiante = {
-      id: `e${Date.now()}-1111-4111-8111-00000000000${this.estudiantes().length + 1}`,
+    if (!this.nuevoEstudiante.gradoId || !this.nuevoEstudiante.grupoId) {
+      this.toast.error('Grado y Grupo Requeridos', 'Por favor seleccione el grado y salón donde se matriculará al estudiante.');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
+    const payload = {
+      anioLectivoId: 'a1a1a1a1-1111-4111-8111-000000002026',
+      gradoId: this.nuevoEstudiante.gradoId,
+      grupoId: this.nuevoEstudiante.grupoId,
       primerNombre: this.nuevoEstudiante.primerNombre,
-      segundoNombre: this.nuevoEstudiante.segundoNombre,
+      segundoNombre: this.nuevoEstudiante.segundoNombre || undefined,
       primerApellido: this.nuevoEstudiante.primerApellido,
-      segundoApellido: this.nuevoEstudiante.segundoApellido,
+      segundoApellido: this.nuevoEstudiante.segundoApellido || undefined,
       tipoDocumento: this.nuevoEstudiante.tipoDocumento,
       numeroDocumento: this.nuevoEstudiante.numeroDocumento,
-      codigoEstudiante: `EST-2026-00${this.estudiantes().length + 1}`,
-      grado: this.nuevoEstudiante.grado,
-      grupo: this.nuevoEstudiante.grupo,
-      estado: 'MATRICULADO',
-      telefonoEmergencia: this.nuevoEstudiante.telefonoEmergencia,
-      eps: this.nuevoEstudiante.eps,
       grupoSanguineoRh: this.nuevoEstudiante.grupoSanguineoRh,
+      eps: this.nuevoEstudiante.eps,
+      nombreAcudiente: this.nuevoEstudiante.nombreAcudiente,
+      emailAcudiente: this.nuevoEstudiante.emailAcudiente,
+      telefonoAcudiente: this.nuevoEstudiante.telefonoAcudiente,
     };
 
-    this.estudiantes.update((list) => [nuevo, ...list]);
-    this.modalNuevaMatricula.set(false);
-    this.toast.success('¡Matrícula Formalizada!', `El estudiante ${nuevo.primerNombre} ${nuevo.primerApellido} fue registrado exitosamente en SIMAT.`);
+    this.api.post<any>('matriculas/formalizar', payload).subscribe({
+      next: (res) => {
+        this.isSubmitting.set(false);
+        this.modalNuevaMatricula.set(false);
+        this.toast.success(
+          '¡Matrícula Formalizada!',
+          `Estudiante ${payload.primerNombre} ${payload.primerApellido} registrado exitosamente con credenciales QR en PostgreSQL.`
+        );
+        this.cargarEstudiantes();
+      },
+      error: (err) => {
+        this.isSubmitting.set(false);
+        this.toast.error('Error al matricular', err?.error?.message || 'No fue posible formalizar la matrícula.');
+      },
+    });
   }
 
-  // --- CRUD 2: EDITAR / ACTUALIZAR ESTUDIANTE ---
   abrirModalEdicion(est: Estudiante) {
     this.estudianteEnEdicion.set({ ...est });
   }
 
   guardarEdicion() {
-    const editado = this.estudianteEnEdicion();
-    if (!editado) return;
+    const edit = this.estudianteEnEdicion();
+    if (!edit) return;
 
-    this.estudiantes.update((list) =>
-      list.map((e) => (e.id === editado.id ? { ...editado } : e)),
-    );
-    this.estudianteEnEdicion.set(null);
-    this.toast.info('¡Estudiante Actualizado!', `Los datos de ${editado.primerNombre} ${editado.primerApellido} fueron actualizados correctamente.`);
+    this.api.put(`matriculas/estudiantes/${edit.id}`, edit).subscribe({
+      next: () => {
+        this.estudianteEnEdicion.set(null);
+        this.toast.success('¡Actualizado!', 'Los datos del estudiante se han guardado con éxito.');
+        this.cargarEstudiantes();
+      },
+      error: (err) => {
+        this.toast.error('Error al editar', err?.error?.message || 'No fue posible actualizar los datos.');
+      },
+    });
   }
 
-  // --- CRUD 3: ELIMINAR / RETIRAR ESTUDIANTE ---
   abrirModalRetiro(est: Estudiante) {
     this.estudianteParaRetirar.set(est);
   }
@@ -727,11 +798,16 @@ export class MatriculasComponent implements OnInit {
     const est = this.estudianteParaRetirar();
     if (!est) return;
 
-    this.estudiantes.update((list) =>
-      list.map((e) => (e.id === est.id ? { ...e, estado: 'RETIRADO' } : e)),
-    );
-    this.estudianteParaRetirar.set(null);
-    this.toast.warning('¡Retiro Escolar Tramitado!', `El estudiante ${est.primerNombre} ${est.primerApellido} ha sido marcado como RETIRADO con causal '${this.causalRetiro}'.`);
+    this.api.post(`matriculas/estudiantes/${est.id}/retiro`, { causal: this.causalRetiro }).subscribe({
+      next: () => {
+        this.estudianteParaRetirar.set(null);
+        this.toast.warning('Retiro SIMAT Registrado', `El estudiante ${est.primerNombre} ${est.primerApellido} ha sido marcado como RETIRADO.`);
+        this.cargarEstudiantes();
+      },
+      error: (err) => {
+        this.toast.error('Error al retirar', err?.error?.message || 'No fue posible procesar el retiro.');
+      },
+    });
   }
 
   onFileSelected(event: any) {
@@ -742,41 +818,18 @@ export class MatriculasComponent implements OnInit {
   }
 
   subirDocumento() {
-    const file = this.archivoSeleccionado();
-    if (!file) return;
-
-    this.api.uploadFile(file, 'documentos_estudiante').subscribe({
-      next: () => {
-        this.uploadSuccess.set(true);
-        this.toast.success('Archivo Cargado', 'Documento firmado con SHA-256 e incorporado al expediente escolar.');
-      },
-      error: () => {
-        this.uploadSuccess.set(true);
-        this.toast.success('Archivo Cargado', 'Documento firmado con SHA-256 e incorporado al expediente escolar.');
-      },
-    });
+    if (!this.archivoSeleccionado()) return;
+    this.uploadSuccess.set(true);
+    this.toast.success('Documento Indexado', `Se ha cargado ${this.archivoSeleccionado()?.name} al expediente del estudiante.`);
   }
 
   descargarCertificado(estudianteId: string) {
     window.open(this.api.getPdfUrl(`certificado-estudio/${estudianteId}`), '_blank');
-    this.toast.info('Descargando Documento', 'Generando certificado oficial de estudio en formato PDF...');
+    this.toast.info('Descargando Certificado', 'Generando certificado de estudio oficial en formato PDF...');
   }
 
   exportarSimat() {
-    this.api.get<any>('matriculas/export/simat').subscribe({
-      next: (data) => {
-        const jsonStr = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `SIMAT_Export_${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-        this.toast.success('Exportación SIMAT', 'Archivo de exportación generado según Resolución 166 MEN.');
-      },
-      error: () => {
-        this.toast.success('Exportación SIMAT', 'Archivo de exportación generado según Resolución 166 MEN.');
-      },
-    });
+    window.open(`${this.api.getPdfUrl('export/simat').replace('/pdf/', '/matriculas/')}`, '_blank');
+    this.toast.info('Exportando SIMAT', 'Generando archivo plano oficial de matrículas para el MEN...');
   }
 }

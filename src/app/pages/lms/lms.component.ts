@@ -119,10 +119,9 @@ export interface EntregaLmsItem {
             <label class="form-label">Grupo Escolar</label>
             <select class="form-select" [(ngModel)]="filtroGrupo" (change)="aplicarFiltros()">
               <option value="TODOS">Todos los grupos</option>
-              <option value="10-A">10°A (Décimo A)</option>
-              <option value="10-B">10°B (Décimo B)</option>
-              <option value="9-A">9°A (Noveno A)</option>
-              <option value="11-A">11°A (Once A)</option>
+              @for (g of gruposList(); track g.id) {
+                <option [value]="g.nombre">{{ g.nombre }}</option>
+              }
             </select>
           </div>
 
@@ -130,11 +129,9 @@ export interface EntregaLmsItem {
             <label class="form-label">Asignatura</label>
             <select class="form-select" [(ngModel)]="filtroAsignatura" (change)="aplicarFiltros()">
               <option value="TODAS">Todas las asignaturas</option>
-              <option value="Matemáticas">Matemáticas & Cálculo</option>
-              <option value="Física">Física Clásica</option>
-              <option value="Biología">Biología & Genética</option>
-              <option value="Lengua Castellana">Lengua Castellana</option>
-              <option value="Inglés">Inglés B2</option>
+              @for (a of asignaturasList(); track a.id) {
+                <option [value]="a.nombre">{{ a.nombre }}</option>
+              }
             </select>
           </div>
 
@@ -142,10 +139,9 @@ export interface EntregaLmsItem {
             <label class="form-label">Periodo Académico</label>
             <select class="form-select" [(ngModel)]="filtroPeriodo" (change)="aplicarFiltros()">
               <option value="TODOS">Todos los periodos</option>
-              <option value="Periodo 1">Primer Periodo (25%)</option>
-              <option value="Periodo 2">Segundo Periodo (25%)</option>
-              <option value="Periodo 3">Tercer Periodo (25%)</option>
-              <option value="Periodo 4">Cuarto Periodo (25%)</option>
+              @for (p of periodosList(); track p.id) {
+                <option [value]="p.nombre">{{ p.nombre }}</option>
+              }
             </select>
           </div>
 
@@ -498,17 +494,22 @@ export interface EntregaLmsItem {
                 <div class="form-group">
                   <label class="form-label">Asignatura & Grupo <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="nuevaTareaForm.cargaDocenteId">
-                    <option value="a1b2c3d4-1111-4111-8111-000000000001">Matemáticas & Cálculo (10°A)</option>
+                    @for (c of cargasDocentesList(); track c.id) {
+                      <option [value]="c.id">{{ c.asignatura?.nombre || c.asignaturaNombre || 'Materia' }} ({{ c.grupo?.nombre || c.grupoNombre || 'Grupo' }})</option>
+                    } @empty {
+                      <option value="a1b2c3d4-1111-4111-8111-000000000001">Matemáticas & Cálculo (10°A)</option>
+                    }
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Periodo Académico <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="nuevaTareaForm.periodoId">
-                    <option value="b1b2c3d4-1111-4111-8111-000000000001">Primer Periodo (25%)</option>
-                    <option value="b1b2c3d4-1111-4111-8111-000000000002">Segundo Periodo (25%)</option>
-                    <option value="b1b2c3d4-1111-4111-8111-000000000003">Tercer Periodo (25%)</option>
-                    <option value="b1b2c3d4-1111-4111-8111-000000000004">Cuarto Periodo (25%)</option>
+                    @for (p of periodosList(); track p.id) {
+                      <option [value]="p.id">{{ p.nombre }}</option>
+                    } @empty {
+                      <option value="b1b2c3d4-1111-4111-8111-000000000001">Primer Periodo (25%)</option>
+                    }
                   </select>
                 </div>
               </div>
@@ -1202,6 +1203,12 @@ export class LmsComponent implements OnInit {
   filtroPeriodo = 'TODOS';
   filtroTexto = '';
 
+  // Listas Dinámicas desde Backend
+  readonly gruposList = signal<any[]>([]);
+  readonly asignaturasList = signal<any[]>([]);
+  readonly periodosList = signal<any[]>([]);
+  readonly cargasDocentesList = signal<any[]>([]);
+
   // Modales
   readonly modalCrearTarea = signal(false);
   readonly modoEdicionTarea = signal(false);
@@ -1212,8 +1219,8 @@ export class LmsComponent implements OnInit {
 
   // Formulario Nueva Tarea
   nuevaTareaForm = {
-    cargaDocenteId: 'a1b2c3d4-1111-4111-8111-000000000001',
-    periodoId: 'b1b2c3d4-1111-4111-8111-000000000001',
+    cargaDocenteId: '',
+    periodoId: '',
     titulo: '',
     instrucciones: '',
     urlGuiaAdjunta: '',
@@ -1400,6 +1407,39 @@ export class LmsComponent implements OnInit {
 
   ngOnInit() {
     this.cargarTareasBackend();
+    this.cargarParametrosLMS();
+  }
+
+  cargarParametrosLMS() {
+    this.api.get<any[]>('academico/grupos').subscribe({
+      next: (data) => {
+        if (data) this.gruposList.set(data);
+      },
+    });
+
+    this.api.get<any[]>('academico/asignaturas').subscribe({
+      next: (data) => {
+        if (data) this.asignaturasList.set(data);
+      },
+    });
+
+    this.api.get<any[]>('academico/periodos').subscribe({
+      next: (data) => {
+        if (data && data.length > 0) {
+          this.periodosList.set(data);
+          this.nuevaTareaForm.periodoId = data[0].id;
+        }
+      },
+    });
+
+    this.api.get<any[]>('academico/cargas-docentes').subscribe({
+      next: (data) => {
+        if (data && data.length > 0) {
+          this.cargasDocentesList.set(data);
+          this.nuevaTareaForm.cargaDocenteId = data[0].id;
+        }
+      },
+    });
   }
 
   cargarTareasBackend() {

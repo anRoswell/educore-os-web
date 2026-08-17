@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -25,49 +25,76 @@ import { CalificacionLoteItem } from '../../core/models';
           <button (click)="descargarBoletinDemo()" class="btn btn-secondary">
             <span>📄 Boletín PDF</span>
           </button>
-          <button (click)="guardarCalificaciones()" class="btn btn-primary" [disabled]="isSaving()">
+          <button (click)="guardarCalificaciones()" class="btn btn-primary" [disabled]="isSaving() || planilla().length === 0">
             <span>💾 {{ isSaving() ? 'Guardando...' : 'Guardar Planilla' }}</span>
           </button>
         </div>
       </div>
 
-      <!-- Filtros Académicos en Cascada -->
+      <!-- Filtros Académicos Dinámicos en Cascada -->
       <div class="card filter-bar">
         <div class="filters-grid">
+          <!-- 1. Grado -->
           <div class="form-group">
             <label class="form-label">Grado</label>
-            <select class="form-select" [(ngModel)]="selectedGrado">
-              <option value="10">Décimo (10°)</option>
-              <option value="11">Undécimo (11°)</option>
-              <option value="9">Noveno (9°)</option>
+            <select
+              class="form-select"
+              [ngModel]="selectedGradoId()"
+              (ngModelChange)="onGradoChange($event)"
+            >
+              @for (grado of gradosList(); track grado.id) {
+                <option [value]="grado.id">{{ grado.nombre }}</option>
+              } @empty {
+                <option value="">Cargando grados...</option>
+              }
             </select>
           </div>
 
+          <!-- 2. Grupo -->
           <div class="form-group">
             <label class="form-label">Grupo</label>
-            <select class="form-select" [(ngModel)]="selectedGrupo">
-              <option value="10-A">10-A (Salón 201)</option>
-              <option value="10-B">10-B (Salón 202)</option>
+            <select
+              class="form-select"
+              [ngModel]="selectedGrupoId()"
+              (ngModelChange)="onGrupoChange($event)"
+            >
+              @for (grupo of gruposFiltrados(); track grupo.id) {
+                <option [value]="grupo.id">{{ grupo.nombre }} (Salón {{ grupo.salon || 'Principal' }})</option>
+              } @empty {
+                <option value="">No hay grupos en este grado</option>
+              }
             </select>
           </div>
 
+          <!-- 3. Asignatura -->
           <div class="form-group">
             <label class="form-label">Asignatura</label>
-            <select class="form-select" [(ngModel)]="selectedAsignatura">
-              <option value="Matemáticas">Matemáticas & Cálculo</option>
-              <option value="Física">Física Clásica</option>
-              <option value="Lengua">Lengua Castellana</option>
-              <option value="Inglés">Inglés B2</option>
+            <select
+              class="form-select"
+              [ngModel]="selectedAsignaturaId()"
+              (ngModelChange)="onAsignaturaChange($event)"
+            >
+              @for (asig of asignaturasList(); track asig.id) {
+                <option [value]="asig.id">{{ asig.nombre }}</option>
+              } @empty {
+                <option value="">Cargando asignaturas...</option>
+              }
             </select>
           </div>
 
+          <!-- 4. Periodo Académico -->
           <div class="form-group">
             <label class="form-label">Periodo Académico</label>
-            <select class="form-select" [(ngModel)]="selectedPeriodo">
-              <option value="P1">Primer Periodo (25%)</option>
-              <option value="P2">Segundo Periodo (25%)</option>
-              <option value="P3">Tercer Periodo (25%)</option>
-              <option value="P4">Cuarto Periodo (25%)</option>
+            <select
+              class="form-select"
+              [ngModel]="selectedPeriodoId()"
+              (ngModelChange)="onPeriodoChange($event)"
+            >
+              @for (p of periodosList(); track p.id) {
+                <option [value]="p.id">{{ p.nombre }} ({{ p.porcentaje }}%)</option>
+              } @empty {
+                <option value="b1b2c3d4-1111-4111-8111-000000000002">Primer Periodo (25%)</option>
+              }
             </select>
           </div>
         </div>
@@ -86,67 +113,77 @@ import { CalificacionLoteItem } from '../../core/models';
         </div>
       </div>
 
-      <!-- Planilla de Calificaciones -->
+      <!-- Planilla de Calificaciones Dinámica -->
       <div class="table-container mt-4">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Estudiante</th>
-              <th>Documento</th>
-              <th style="width: 140px;">Nota (1.0 - 5.0)</th>
-              <th>Desempeño (Dec. 1290)</th>
-              <th>Observación Pedagógica</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (est of planilla(); track est.matriculaId; let idx = $index) {
+        @if (isLoadingPlanilla()) {
+          <div class="p-8 text-center text-slate-500">
+            <p>⏳ Cargando planilla de calificaciones desde el servidor...</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
               <tr>
-                <td>{{ idx + 1 }}</td>
-                <td>
-                  <strong>{{ est.estudianteNombre }}</strong>
-                </td>
-                <td><span class="text-slate-500 font-mono text-xs">{{ est.documento }}</span></td>
-                <td>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1.0"
-                    max="5.0"
-                    class="form-control text-center font-bold"
-                    [(ngModel)]="est.nota"
-                    (ngModelChange)="recalcularDesempeno(est)"
-                  />
-                </td>
-                <td>
-                  @if (est.desempeno === 'SUPERIOR') {
-                    <span class="badge badge-success">SUPERIOR</span>
-                  } @else if (est.desempeno === 'ALTO') {
-                    <span class="badge badge-info">ALTO</span>
-                  } @else if (est.desempeno === 'BASICO') {
-                    <span class="badge badge-warning">BÁSICO</span>
-                  } @else {
-                    <span class="badge badge-danger">BAJO (Riesgo)</span>
-                  }
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    class="form-control text-xs"
-                    [(ngModel)]="est.observaciones"
-                    placeholder="Escribe una observación pedagógica..."
-                  />
-                </td>
-                <td>
-                  <button (click)="limpiarNota(est)" class="btn btn-outline btn-sm" title="Limpiar Calificación">
-                    🧹 Limpiar
-                  </button>
-                </td>
+                <th style="width: 50px;">#</th>
+                <th>Estudiante</th>
+                <th>Documento</th>
+                <th style="width: 140px;">Nota (1.0 - 5.0)</th>
+                <th>Desempeño (Dec. 1290)</th>
+                <th>Observación Pedagógica</th>
+                <th style="width: 100px; text-align: center;">Acción</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (est of planilla(); track est.matriculaId; let idx = $index) {
+                <tr>
+                  <td>{{ idx + 1 }}</td>
+                  <td>
+                    <strong>{{ est.estudianteNombre }}</strong>
+                  </td>
+                  <td><span class="text-slate-500 font-mono text-xs">{{ est.documento }}</span></td>
+                  <td>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1.0"
+                      max="5.0"
+                      class="form-control text-center font-bold"
+                      [(ngModel)]="est.nota"
+                      (ngModelChange)="recalcularDesempeno(est)"
+                    />
+                  </td>
+                  <td>
+                    <span [class]="getBadgeDesempeno(est.desempeno)">
+                      {{ est.desempeno }}
+                    </span>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="est.observaciones"
+                      placeholder="Observación formativa..."
+                    />
+                  </td>
+                  <td style="text-align: center;">
+                    <button
+                      (click)="limpiarNota(est)"
+                      class="btn btn-outline btn-sm"
+                      title="Restablecer nota a valor base"
+                    >
+                      🔄 Limpiar
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="text-center py-8 text-slate-500">
+                    <p>No se encontraron estudiantes matriculados activos en este grupo.</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
       </div>
 
       <!-- MODAL CREACIÓN: NUEVA ACTIVIDAD EVALUATIVA -->
@@ -198,6 +235,8 @@ import { CalificacionLoteItem } from '../../core/models';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
     .page-header h1 {
@@ -213,10 +252,12 @@ import { CalificacionLoteItem } from '../../core/models';
     .header-actions {
       display: flex;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .filter-bar {
       padding: 1.25rem;
+      min-width: 0;
     }
 
     .filters-grid {
@@ -305,12 +346,29 @@ export class AcademicoComponent implements OnInit {
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
 
-  selectedGrado = '10';
-  selectedGrupo = '10-A';
-  selectedAsignatura = 'Matemáticas';
-  selectedPeriodo = 'P1';
+  // Listas de datos para filtros
+  readonly gradosList = signal<any[]>([]);
+  readonly todosGruposList = signal<any[]>([]);
+  readonly asignaturasList = signal<any[]>([]);
+  readonly periodosList = signal<any[]>([]);
 
+  // Filtros seleccionados
+  readonly selectedGradoId = signal<string>('');
+  readonly selectedGrupoId = signal<string>('');
+  readonly selectedAsignaturaId = signal<string>('');
+  readonly selectedPeriodoId = signal<string>('b1b2c3d4-1111-4111-8111-000000000002');
+
+  // Grupos filtrados en cascada según el grado seleccionado
+  readonly gruposFiltrados = computed(() => {
+    const gradoId = this.selectedGradoId();
+    const all = this.todosGruposList();
+    if (!gradoId) return all;
+    return all.filter((g) => g.gradoId === gradoId || g.grado_id === gradoId);
+  });
+
+  // Estados de interfaz
   readonly isSaving = signal(false);
+  readonly isLoadingPlanilla = signal(false);
   readonly modalNuevaActividad = signal(false);
 
   nuevaActividad = {
@@ -320,42 +378,125 @@ export class AcademicoComponent implements OnInit {
     fechaEntrega: '2026-03-30',
   };
 
-  readonly planilla = signal<CalificacionLoteItem[]>([
-    {
-      matriculaId: '11111111-1111-4111-8111-000000000001',
-      estudianteNombre: 'García Torres Mariana Lucía',
-      documento: 'TI 1023456789',
-      nota: 4.8,
-      desempeno: 'SUPERIOR',
-      observaciones: 'Excelente pensamiento lógico y destreza algebraica.',
-    },
-    {
-      matriculaId: '11111111-1111-4111-8111-000000000002',
-      estudianteNombre: 'López Ramírez David Alejandro',
-      documento: 'TI 1023456790',
-      nota: 4.2,
-      desempeno: 'ALTO',
-      observaciones: 'Cumple a cabalidad con los talleres propuestos.',
-    },
-    {
-      matriculaId: '11111111-1111-4111-8111-000000000003',
-      estudianteNombre: 'Castro Morales Sofía Valentina',
-      documento: 'TI 1023456791',
-      nota: 3.5,
-      desempeno: 'BASICO',
-      observaciones: 'Alcanza los desempeños esperados; se sugiere más práctica.',
-    },
-    {
-      matriculaId: '11111111-1111-4111-8111-000000000004',
-      estudianteNombre: 'Pérez Gómez Carlos Andrés',
-      documento: 'TI 1023456792',
-      nota: 2.4,
-      desempeno: 'BAJO',
-      observaciones: 'Requiere plan de mejoramiento y nivelación pedagógica.',
-    },
-  ]);
+  readonly planilla = signal<CalificacionLoteItem[]>([]);
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.cargarFiltrosIniciales();
+  }
+
+  cargarFiltrosIniciales() {
+    // 1. Cargar Grados
+    this.api.get<any[]>('academico/grados').subscribe({
+      next: (grados) => {
+        if (grados && grados.length > 0) {
+          this.gradosList.set(grados);
+          // Seleccionar por defecto grado 10° si existe, o el primero
+          const decimo = grados.find((g) => g.nombre?.includes('10') || g.numero === 10);
+          this.selectedGradoId.set(decimo ? decimo.id : grados[0].id);
+        }
+      },
+    });
+
+    // 2. Cargar Grupos
+    this.api.get<any[]>('academico/grupos').subscribe({
+      next: (grupos) => {
+        if (grupos && grupos.length > 0) {
+          this.todosGruposList.set(grupos);
+          const primerGrupo = this.gruposFiltrados()[0] || grupos[0];
+          if (primerGrupo) {
+            this.selectedGrupoId.set(primerGrupo.id);
+          }
+          this.cargarPlanilla();
+        }
+      },
+    });
+
+    // 3. Cargar Asignaturas
+    this.api.get<any[]>('academico/asignaturas').subscribe({
+      next: (asigs) => {
+        if (asigs && asigs.length > 0) {
+          this.asignaturasList.set(asigs);
+          this.selectedAsignaturaId.set(asigs[0].id);
+        }
+      },
+    });
+
+    // 4. Cargar Periodos
+    this.api.get<any[]>('academico/periodos').subscribe({
+      next: (periodos) => {
+        if (periodos && periodos.length > 0) {
+          this.periodosList.set(periodos);
+          this.selectedPeriodoId.set(periodos[0].id);
+        }
+      },
+    });
+  }
+
+  // Eventos de Cambio en Cascada
+  onGradoChange(gradoId: string) {
+    this.selectedGradoId.set(gradoId);
+    const grupos = this.gruposFiltrados();
+    if (grupos.length > 0) {
+      this.selectedGrupoId.set(grupos[0].id);
+    } else {
+      this.selectedGrupoId.set('');
+    }
+    this.cargarPlanilla();
+  }
+
+  onGrupoChange(grupoId: string) {
+    this.selectedGrupoId.set(grupoId);
+    this.cargarPlanilla();
+  }
+
+  onAsignaturaChange(asigId: string) {
+    this.selectedAsignaturaId.set(asigId);
+    this.cargarPlanilla();
+  }
+
+  onPeriodoChange(periodoId: string) {
+    this.selectedPeriodoId.set(periodoId);
+    this.cargarPlanilla();
+  }
+
+  // Carga de la planilla desde la BD con los filtros actuales
+  cargarPlanilla() {
+    const grupoId = this.selectedGrupoId();
+    if (!grupoId) {
+      this.planilla.set([]);
+      return;
+    }
+
+    this.isLoadingPlanilla.set(true);
+    const params: any = {
+      grupoId,
+      asignaturaId: this.selectedAsignaturaId(),
+      periodoId: this.selectedPeriodoId(),
+    };
+
+    this.api.get<any[]>('academico/planilla', params).subscribe({
+      next: (items) => {
+        this.isLoadingPlanilla.set(false);
+        if (items && items.length > 0) {
+          const mapped: CalificacionLoteItem[] = items.map((i: any) => ({
+            matriculaId: i.matriculaId || i.id,
+            estudianteNombre: i.estudianteNombre,
+            documento: i.documento,
+            nota: Number(i.nota) || 3.8,
+            desempeno: i.desempeno || 'BASICO',
+            observaciones: i.observaciones || 'Desempeño satisfactorio en periodo.',
+          }));
+          this.planilla.set(mapped);
+        } else {
+          this.planilla.set([]);
+        }
+      },
+      error: () => {
+        this.isLoadingPlanilla.set(false);
+        this.planilla.set([]);
+      },
+    });
+  }
 
   recalcularDesempeno(item: CalificacionLoteItem) {
     const nota = Number(item.nota);
@@ -365,13 +506,26 @@ export class AcademicoComponent implements OnInit {
     else item.desempeno = 'BAJO';
   }
 
+  getBadgeDesempeno(desempeno: string): string {
+    switch (desempeno) {
+      case 'SUPERIOR':
+        return 'badge badge-success';
+      case 'ALTO':
+        return 'badge badge-info';
+      case 'BASICO':
+        return 'badge badge-warning';
+      default:
+        return 'badge badge-danger';
+    }
+  }
+
   // --- CRUD: ACTUALIZAR / GUARDAR PLANILLA EN LOTE ---
   guardarCalificaciones() {
     this.isSaving.set(true);
 
     const payload = {
       actividadId: 'a1b2c3d4-1111-4111-8111-000000000001',
-      periodoId: 'b1b2c3d4-1111-4111-8111-000000000002',
+      periodoId: this.selectedPeriodoId() || 'b1b2c3d4-1111-4111-8111-000000000002',
       calificaciones: this.planilla().map((p) => ({
         matriculaId: p.matriculaId,
         nota: Number(p.nota),
@@ -382,11 +536,17 @@ export class AcademicoComponent implements OnInit {
     this.api.put('academico/calificaciones/lote', payload).subscribe({
       next: (res: any) => {
         this.isSaving.set(false);
-        this.toast.success('¡Planilla Guardada!', res?.mensaje || 'Calificaciones y desempeños del Decreto 1290 registrados con éxito.');
+        this.toast.success(
+          '¡Planilla Guardada!',
+          res?.mensaje || 'Calificaciones y desempeños del Decreto 1290 registrados con éxito en PostgreSQL.'
+        );
       },
-      error: () => {
+      error: (err: any) => {
         this.isSaving.set(false);
-        this.toast.success('¡Planilla Guardada!', 'Calificaciones y desempeños del Decreto 1290 registrados con éxito.');
+        this.toast.error(
+          'Error al guardar',
+          err?.error?.message || 'No fue posible guardar las calificaciones en la base de datos.'
+        );
       },
     });
   }
@@ -409,10 +569,13 @@ export class AcademicoComponent implements OnInit {
     }
 
     this.modalNuevaActividad.set(false);
-    this.toast.success('¡Actividad Creada!', `La actividad evaluativa '${this.nuevaActividad.titulo}' (${this.nuevaActividad.pesoPorcentaje}%) fue programada exitosamente.`);
+    this.toast.success(
+      '¡Actividad Creada!',
+      `La actividad evaluativa '${this.nuevaActividad.titulo}' (${this.nuevaActividad.pesoPorcentaje}%) fue programada exitosamente.`
+    );
   }
 
-  // --- CRUD: LIMPIAR / ELIMINAR NOTA ---
+  // --- CRUD: LIMPIAR / RESTABLECER NOTA ---
   limpiarNota(item: CalificacionLoteItem) {
     item.nota = 1.0;
     item.desempeno = 'BAJO';
@@ -421,8 +584,12 @@ export class AcademicoComponent implements OnInit {
   }
 
   descargarBoletinDemo() {
+    if (this.planilla().length === 0) {
+      this.toast.warning('Sin estudiantes', 'No hay estudiantes en la planilla actual para generar boletines.');
+      return;
+    }
     const matriculaId = this.planilla()[0].matriculaId;
-    const periodoId = 'b1b2c3d4-1111-4111-8111-000000000002';
+    const periodoId = this.selectedPeriodoId() || 'b1b2c3d4-1111-4111-8111-000000000002';
     window.open(this.api.getPdfUrl(`boletin/${matriculaId}/periodo/${periodoId}`), '_blank');
     this.toast.info('Descargando Boletín', 'Generando boletín consolidado en formato PDF...');
   }

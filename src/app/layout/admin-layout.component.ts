@@ -3,14 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { ToastContainerComponent } from '../shared/components/toast-container.component';
+import { GlossaryModalComponent } from '../shared/components/glossary-modal.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, GlossaryModalComponent],
   template: `
     <div class="admin-shell">
       <app-toast-container></app-toast-container>
+      <app-glossary-modal></app-glossary-modal>
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <!-- Logo y Marca -->

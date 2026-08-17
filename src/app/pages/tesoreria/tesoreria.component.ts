@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 
 export interface CuentaCobroItem {
   id: string;
@@ -64,14 +65,17 @@ export interface EstudianteFinanciero {
 @Component({
   selector: 'app-tesoreria',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent],
   template: `
     <div class="tesoreria-container">
       <!-- Header Principal -->
       <div class="page-header">
         <div>
           <h1>Tesorería & Cartera Educativa Pro</h1>
-          <p>Facturación masiva de pensiones, estado de cuenta por alumno, recaudos en ventanilla, pasarela Wompi / PSE y acuerdos de pago</p>
+          <p>
+            Facturación masiva de pensiones, recaudos en ventanilla y pasarela Wompi / PSE
+            <app-help-badge term="WOMPI_PSE"></app-help-badge>
+          </p>
         </div>
         <div class="header-actions">
           <button (click)="abrirModalNuevoConcepto()" class="btn btn-secondary" title="Crear nuevo concepto de cobro o tarifa">

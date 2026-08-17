@@ -5,11 +5,12 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CalificacionLoteItem } from '../../core/models';
+import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 
 @Component({
   selector: 'app-academico',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent],
   template: `
     <div class="academico-container">
       <!-- Header -->
@@ -41,7 +42,9 @@ import { CalificacionLoteItem } from '../../core/models';
           <div class="setup-guide-header">
             <div class="flex items-center gap-2">
               <span class="guide-badge">Ruta Pedagógica</span>
-              <h3>Flujo Oficial de Configuración Académica (Ley 115 & Decreto 1290)</h3>
+              <h3>Flujo Oficial de Configuración Académica</h3>
+              <app-help-badge term="LEY_115" label="Ley 115"></app-help-badge>
+              <app-help-badge term="SIEE" label="SIEE D.1290"></app-help-badge>
             </div>
             <div class="flex items-center gap-3">
               <span class="text-xs text-slate-500">Haz clic en cualquier paso para crearlo directamente</span>
@@ -467,7 +470,10 @@ import { CalificacionLoteItem } from '../../core/models';
 
               <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
-                  <label class="form-label">Código SIMAT (MEN)</label>
+                  <label class="form-label">
+                    Código SIMAT (MEN)
+                    <app-help-badge term="CODIGO_SIMAT"></app-help-badge>
+                  </label>
                   <input
                     type="text"
                     class="form-control"
@@ -579,7 +585,10 @@ import { CalificacionLoteItem } from '../../core/models';
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
-                <h3>📐 Paso 4: Crear Área Fundamental (Ley 115)</h3>
+                <h3>
+                  📐 Paso 4: Crear Área Fundamental (Ley 115)
+                  <app-help-badge term="LEY_115"></app-help-badge>
+                </h3>
                 <span class="modal-subtitle">Áreas obligatorias del Art. 23 o áreas optativas del PEI</span>
               </div>
               <button (click)="modalNuevaArea.set(false)" class="close-btn">&times;</button>
@@ -658,7 +667,10 @@ import { CalificacionLoteItem } from '../../core/models';
             <div class="modal-body">
               <div class="form-group">
                 <div class="filter-label-row">
-                  <label class="form-label">Área del Conocimiento (Ley 115) *</label>
+                  <label class="form-label">
+                    Área del Conocimiento (Ley 115) *
+                    <app-help-badge term="LEY_115"></app-help-badge>
+                  </label>
                   <button (click)="abrirModalNuevaArea()" class="btn-link-action" title="Crear Área">+ Nueva Área</button>
                 </div>
                 <select class="form-select" [(ngModel)]="nuevaAsignatura.areaId">
@@ -721,7 +733,10 @@ import { CalificacionLoteItem } from '../../core/models';
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
-                <h3>📅 Paso 6: Crear Periodo Académico</h3>
+                <h3>
+                  📅 Paso 6: Crear Periodo Académico (SIEE)
+                  <app-help-badge term="SIEE"></app-help-badge>
+                </h3>
                 <span class="modal-subtitle">Configuración de calendario escolar, ponderación y fechas límite</span>
               </div>
               <button (click)="modalNuevoPeriodo.set(false)" class="close-btn">&times;</button>

@@ -5,11 +5,12 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Estudiante } from '../../core/models';
+import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 
 @Component({
   selector: 'app-matriculas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent],
   template: `
     <div class="matriculas-container">
       <!-- Header -->
@@ -21,6 +22,7 @@ import { Estudiante } from '../../core/models';
         <div class="header-actions">
           <button (click)="exportarSimat()" class="btn btn-secondary">
             <span>📊 Exportar SIMAT (Res. 166)</span>
+            <app-help-badge term="SIMAT"></app-help-badge>
           </button>
           <button (click)="abrirModalNuevaMatricula()" class="btn btn-primary">
             <span>➕ Formalizar Nueva Matrícula</span>
@@ -166,7 +168,10 @@ import { Estudiante } from '../../core/models';
 
               <!-- Carnet Digital QR -->
               <div class="carnet-section mt-4">
-                <h5>🪪 Carnet Digital Institucional QR Rotativo</h5>
+                <h5>
+                  🪪 Carnet Digital Institucional QR Rotativo
+                  <app-help-badge term="CARNET_QR"></app-help-badge>
+                </h5>
                 <div class="carnet-card-sim mt-2">
                   <div class="carnet-header">
                     <span>{{ authService.colegio()?.nombre }}</span>
@@ -230,7 +235,10 @@ import { Estudiante } from '../../core/models';
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Tipo Documento (SIMAT) *</label>
+                  <label class="form-label">
+                    Tipo Documento (SIMAT) *
+                    <app-help-badge term="SIMAT"></app-help-badge>
+                  </label>
                   <select class="form-select" [(ngModel)]="nuevoEstudiante.tipoDocumento">
                     <option value="TI">Tarjeta de Identidad (TI)</option>
                     <option value="RC">Registro Civil (RC)</option>
@@ -366,7 +374,10 @@ import { Estudiante } from '../../core/models';
               <p>¿Está seguro de formalizar el retiro de <strong>{{ estudianteParaRetirar()?.primerNombre }} {{ estudianteParaRetirar()?.primerApellido }}</strong>?</p>
               
               <div class="form-group mt-3">
-                <label class="form-label">Causal de Retiro (Tipificación MEN SIMAT) *</label>
+                <label class="form-label">
+                  Causal de Retiro (Tipificación MEN SIMAT) *
+                  <app-help-badge term="CAUSAL_SIMAT"></app-help-badge>
+                </label>
                 <select class="form-select" [(ngModel)]="causalRetiro">
                   <option value="CAMBIO_RESIDENCIA">Cambio de residencia familiar</option>
                   <option value="TRASLADO_INSTITUCION">Traslado a otra institución educativa</option>

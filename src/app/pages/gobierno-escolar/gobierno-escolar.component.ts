@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 
 interface CandidatoTarjeton {
   id: string;
@@ -28,13 +29,16 @@ interface JornadaInfo {
 @Component({
   selector: 'app-gobierno-escolar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent],
   template: `
     <div class="gobierno-page-container">
       <!-- Header -->
       <div class="page-header">
         <div>
-          <h1>Gobierno Escolar & Elecciones Democráticas</h1>
+          <h1>
+            Gobierno Escolar & Elecciones
+            <app-help-badge term="GOBIERNO_ESCOLAR"></app-help-badge>
+          </h1>
           <p>Urna electrónica secreta criptográfica (SHA-256) y escrutinio automático en tiempo real</p>
         </div>
         <div class="header-actions">
@@ -221,7 +225,10 @@ interface JornadaInfo {
               </div>
 
               <div class="form-group mt-3">
-                <label class="form-label">Cargo a Elegir (Ley 115) *</label>
+                <label class="form-label">
+                  Cargo a Elegir (Ley 115) *
+                  <app-help-badge term="LEY_115"></app-help-badge>
+                </label>
                 <select class="form-select" [(ngModel)]="nuevaJornada.cargo">
                   <option value="PERSONERO">Personero Estudiantil (Grado 11°)</option>
                   <option value="CONTRALOR">Contralor Escolar</option>

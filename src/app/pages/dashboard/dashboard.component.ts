@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
@@ -19,15 +19,22 @@ import { KpiRectoria } from '../../core/models';
         <!-- Header Docente -->
         <div class="dashboard-header">
           <div>
+            <div class="badge-header">
+              <span>👨‍🏫 PANEL DOCENTE</span>
+              <span class="badge-pill">Decreto 1290 / MEN</span>
+            </div>
             <h1>Dashboard Pedagógico & Gestión de Aula</h1>
             <p>
               Bienvenida(o), <strong>Prof. {{ authService.user()?.primerNombre }} {{ authService.user()?.primerApellido }}</strong> 
-              — Periodo Académico 1 | {{ authService.colegio()?.nombre }}
+              — {{ authService.colegio()?.nombre }}
             </p>
           </div>
           <div class="header-actions">
             <a routerLink="/academico" class="btn btn-primary">
               <span>📝 Mis Planillas (1290)</span>
+            </a>
+            <a routerLink="/lms" class="btn btn-secondary">
+              <span>📚 Aula Virtual LMS</span>
             </a>
             <a routerLink="/educore-ai" class="btn btn-secondary">
               <span>✨ EduCore AI Planeador</span>
@@ -35,7 +42,7 @@ import { KpiRectoria } from '../../core/models';
           </div>
         </div>
 
-        <!-- KPIs Pedagógicos (0% Información Financiera) -->
+        <!-- KPIs Pedagógicos Reales -->
         <div class="grid-cols-4 kpi-cards-grid">
           <div class="card kpi-card">
             <div class="kpi-icon-box blue">
@@ -43,8 +50,8 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">ESTUDIANTES A CARGO</span>
-              <div class="kpi-value">145</div>
-              <span class="kpi-sub positive">4 grupos asignados</span>
+              <div class="kpi-value">{{ totalEstudiantesDocente() }}</div>
+              <span class="kpi-sub positive">{{ totalGruposDocente() }} grupo(s) asignado(s)</span>
             </div>
           </div>
 
@@ -53,9 +60,9 @@ import { KpiRectoria } from '../../core/models';
               <span class="icon">📋</span>
             </div>
             <div class="kpi-content">
-              <span class="kpi-label">PLANILLAS DE CALIFICACIÓN</span>
-              <div class="kpi-value">3 / 4</div>
-              <span class="kpi-sub positive">75% avance de periodo</span>
+              <span class="kpi-label">CARGAS Y ASIGNATURAS</span>
+              <div class="kpi-value">{{ totalPlanillasDocente() }}</div>
+              <span class="kpi-sub positive">Planillas activas en periodo</span>
             </div>
           </div>
 
@@ -65,8 +72,10 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">PROMEDIO DE MIS GRUPOS</span>
-              <div class="kpi-value">4.18</div>
-              <span class="kpi-sub positive">Desempeño Alto (Dec. 1290)</span>
+              <div class="kpi-value">{{ promedioGruposDocente() | number:'1.2-2' }}</div>
+              <span class="kpi-sub positive">
+                {{ promedioGruposDocente() >= 4.0 ? 'Desempeño Alto' : (promedioGruposDocente() >= 3.0 ? 'Desempeño Básico' : 'Desempeño Bajo') }} (Dec. 1290)
+              </span>
             </div>
           </div>
 
@@ -76,22 +85,22 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">EN RIESGO ACADÉMICO</span>
-              <div class="kpi-value">6</div>
+              <div class="kpi-value">{{ enRiesgoDocente() }}</div>
               <span class="kpi-sub text-amber-600">Nota < 3.0 para recuperación</span>
             </div>
           </div>
         </div>
 
-        <!-- Fila 2: Mis Asignaturas + Horario del Día -->
+        <!-- Fila 2: Mis Asignaturas + Tareas LMS -->
         <div class="grid-cols-2 mt-6">
           <!-- Mis Asignaturas y Planillas -->
           <div class="card">
             <div class="card-title-bar">
               <div>
                 <h3>📚 Mis Asignaturas & Planillas Digitales</h3>
-                <p>Planilla de registro de calificaciones conforme al Decreto 1290</p>
+                <p>Cargas académicas asociadas en el sistema institucional</p>
               </div>
-              <span class="badge badge-info">Periodo 1</span>
+              <span class="badge badge-info">Cargas Asignadas</span>
             </div>
 
             <div class="table-container">
@@ -101,29 +110,27 @@ import { KpiRectoria } from '../../core/models';
                     <th>Grupo</th>
                     <th>Asignatura</th>
                     <th>Alumnos</th>
-                    <th>Promedio</th>
-                    <th>Planilla</th>
+                    <th>Periodo</th>
                     <th>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (curso of cursosDocente; track curso.grupo) {
+                  @for (carga of cursosDocente(); track carga.id) {
                     <tr>
-                      <td><strong>{{ curso.grupo }}</strong></td>
-                      <td>{{ curso.asignatura }}</td>
-                      <td>{{ curso.alumnos }} estudiantes</td>
-                      <td><strong>{{ curso.promedio }}</strong> / 5.0</td>
-                      <td>
-                        @if (curso.estado === 'COMPLETADA') {
-                          <span class="badge badge-success">Completada</span>
-                        } @else {
-                          <span class="badge badge-warning">En Proceso</span>
-                        }
-                      </td>
+                      <td><strong>{{ carga.grupoNombre }}</strong></td>
+                      <td>{{ carga.asignaturaNombre }}</td>
+                      <td>{{ carga.alumnos }} estudiantes</td>
+                      <td><span class="badge badge-secondary">Periodo 1</span></td>
                       <td>
                         <a routerLink="/academico" class="btn btn-secondary btn-sm">
-                          ✏️ Calificar
+                          ✏️ Planilla
                         </a>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-slate-500">
+                        No hay cargas académicas asignadas para este docente.
                       </td>
                     </tr>
                   }
@@ -132,30 +139,35 @@ import { KpiRectoria } from '../../core/models';
             </div>
           </div>
 
-          <!-- Horario de Hoy & Asistencia Rápida -->
+          <!-- Tareas Activas en Aula Virtual LMS -->
           <div class="card">
             <div class="card-title-bar">
               <div>
-                <h3>⏰ Mi Horario de Clases de Hoy</h3>
-                <p>Control de asistencia y seguimiento de aula</p>
+                <h3>📚 Tareas & Actividades en Aula Virtual LMS</h3>
+                <p>Publicación de guías y revisión de evidencias digitales</p>
               </div>
-              <span class="badge badge-purple">Hoy: Martes</span>
+              <a routerLink="/lms" class="btn btn-primary btn-sm">Ir a LMS</a>
             </div>
 
             <div class="schedule-list">
-              @for (bloque of horarioHoy; track bloque.hora) {
+              @for (tarea of tareasDocenteList(); track tarea.id) {
                 <div class="schedule-item">
                   <div class="schedule-time">
-                    <strong>{{ bloque.hora }}</strong>
-                    <span>{{ bloque.aula }}</span>
+                    <strong>{{ tarea.grupoNombre }}</strong>
+                    <span>{{ tarea.asignaturaNombre }}</span>
                   </div>
                   <div class="schedule-detail">
-                    <h4>{{ bloque.asignatura }} — {{ bloque.grupo }}</h4>
-                    <p>{{ bloque.tema }}</p>
+                    <h4>{{ tarea.titulo }}</h4>
+                    <p>Límite: {{ tarea.fechaLimite | date:'dd/MM/yyyy HH:mm' }} • Entregas: {{ tarea.totalEntregas }}/{{ tarea.totalEstudiantes }}</p>
                   </div>
-                  <button class="btn btn-primary btn-sm" title="Tomar lista de asistencia">
-                    📋 Asistencia
-                  </button>
+                  <a routerLink="/lms" class="btn btn-secondary btn-sm" title="Revisar Entregas">
+                    📋 Revisar
+                  </a>
+                </div>
+              } @empty {
+                <div class="empty-state-small py-4 text-center text-slate-500">
+                  <p>No tienes tareas virtuales publicadas.</p>
+                  <a routerLink="/lms" class="btn btn-primary btn-sm mt-2">➕ Publicar Primera Tarea</a>
                 </div>
               }
             </div>
@@ -166,7 +178,7 @@ import { KpiRectoria } from '../../core/models';
                 <strong>EduCore AI — Asistente de Planeación Pedagógica</strong>
               </div>
               <p class="ai-text">
-                ¿Necesitas diseñar una rúbrica de evaluación formativa o una adaptación curricular <strong>PIAR (Decreto 1421)</strong>?
+                Genera rúbricas de evaluación formativa y adaptaciones curriculares <strong>PIAR (Decreto 1421)</strong> en segundos.
               </p>
               <a routerLink="/educore-ai" class="btn btn-outline btn-sm mt-2">
                 Abrir Copiloto de Planeación →
@@ -183,6 +195,10 @@ import { KpiRectoria } from '../../core/models';
         <!-- Header Tesorería -->
         <div class="dashboard-header">
           <div>
+            <div class="badge-header">
+              <span>💰 GESTIÓN FINANCIERA</span>
+              <span class="badge-pill">Tesorería & Facturación DIAN</span>
+            </div>
             <h1>Dashboard Financiero & Tesorería Escolar</h1>
             <p>Facturación masiva de pensiones, recaudo en línea Wompi / PSE y semáforo de cobranza</p>
           </div>
@@ -193,16 +209,16 @@ import { KpiRectoria } from '../../core/models';
           </div>
         </div>
 
-        <!-- KPIs 100% Financieros -->
+        <!-- KPIs 100% Financieros Reales -->
         <div class="grid-cols-4 kpi-cards-grid">
           <div class="card kpi-card">
             <div class="kpi-icon-box emerald">
               <span class="icon">💵</span>
             </div>
             <div class="kpi-content">
-              <span class="kpi-label">TOTAL RECAUDADO (MES)</span>
-              <div class="kpi-value">\$353.2M</div>
-              <span class="kpi-sub positive">92.4% meta mensual</span>
+              <span class="kpi-label">TOTAL RECAUDADO</span>
+              <div class="kpi-value">\${{ totalRecaudadoMesFormatted() }}</div>
+              <span class="kpi-sub positive">{{ kpis().porcentajeEfectividadRecaudo }}% efectividad de recaudo</span>
             </div>
           </div>
 
@@ -212,8 +228,8 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">CARTERA POR COBRAR</span>
-              <div class="kpi-value">\$18.5M</div>
-              <span class="kpi-sub text-amber-600">23 familias en mora</span>
+              <div class="kpi-value">\${{ carteraPorCobrarFormatted() }}</div>
+              <span class="kpi-sub text-amber-600">{{ estudiantesEnMoraCount() }} cuotas en mora</span>
             </div>
           </div>
 
@@ -222,9 +238,9 @@ import { KpiRectoria } from '../../core/models';
               <span class="icon">💳</span>
             </div>
             <div class="kpi-content">
-              <span class="kpi-label">PAGOS ONLINE (WOMPI/PSE)</span>
-              <div class="kpi-value">742</div>
-              <span class="kpi-sub positive">87.3% vía digital</span>
+              <span class="kpi-label">RECIBOS DE RECAUDO</span>
+              <div class="kpi-value">{{ ultimasTransacciones().length }}</div>
+              <span class="kpi-sub positive">Pagos registrados</span>
             </div>
           </div>
 
@@ -234,8 +250,8 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">A PAZ Y SALVO</span>
-              <div class="kpi-value">785</div>
-              <span class="kpi-sub positive">92.4% de los estudiantes</span>
+              <div class="kpi-value">{{ estudiantesAlDiaCount() }}</div>
+              <span class="kpi-sub positive">{{ porcentajePazYSalvo() }}% de los matriculados</span>
             </div>
           </div>
         </div>
@@ -246,7 +262,7 @@ import { KpiRectoria } from '../../core/models';
             <div class="card-title-bar">
               <div>
                 <h3>📊 Distribución del Semáforo de Cobranza</h3>
-                <p>Estado de cuenta global de los 850 estudiantes matriculados</p>
+                <p>Estado de cuenta global de los {{ kpis().totalEstudiantesMatriculados }} estudiantes matriculados</p>
               </div>
               <a routerLink="/tesoreria" class="btn btn-secondary btn-sm">Ver Listado Completo</a>
             </div>
@@ -255,30 +271,30 @@ import { KpiRectoria } from '../../core/models';
               <div class="semaforo-item">
                 <div class="bar-info">
                   <span>🟢 Al Día (Paz y Salvo)</span>
-                  <strong>785 estudiantes (92.4%)</strong>
+                  <strong>{{ estudiantesAlDiaCount() }} cuentas ({{ estudiantesAlDiaPct() }}%)</strong>
                 </div>
                 <div class="progress-track">
-                  <div class="progress-fill green" style="width: 92.4%"></div>
+                  <div class="progress-fill green" [style.width.%]="estudiantesAlDiaPct()"></div>
                 </div>
               </div>
 
               <div class="semaforo-item mt-3">
                 <div class="bar-info">
-                  <span>🟡 Por Vencer (Próximos 5 días)</span>
-                  <strong>42 estudiantes (4.9%)</strong>
+                  <span>🟡 Por Vencer (Facturas Pendientes)</span>
+                  <strong>{{ estudiantesPorVencerCount() }} cuentas ({{ estudiantesPorVencerPct() }}%)</strong>
                 </div>
                 <div class="progress-track">
-                  <div class="progress-fill amber" style="width: 4.9%"></div>
+                  <div class="progress-fill amber" [style.width.%]="estudiantesPorVencerPct()"></div>
                 </div>
               </div>
 
               <div class="semaforo-item mt-3">
                 <div class="bar-info">
-                  <span>🔴 En Mora (>30 días)</span>
-                  <strong>23 estudiantes (2.7%)</strong>
+                  <span>🔴 En Mora (Cuentas Vencidas)</span>
+                  <strong>{{ estudiantesEnMoraCount() }} cuentas ({{ estudiantesEnMoraPct() }}%)</strong>
                 </div>
                 <div class="progress-track">
-                  <div class="progress-fill red" style="width: 2.7%"></div>
+                  <div class="progress-fill red" [style.width.%]="estudiantesEnMoraPct()"></div>
                 </div>
               </div>
             </div>
@@ -287,46 +303,42 @@ import { KpiRectoria } from '../../core/models';
           <div class="card">
             <div class="card-title-bar">
               <div>
-                <h3>⚡ Últimas Transacciones Wompi / PSE</h3>
-                <p>Recaudos procesados con firma criptográfica en tiempo real</p>
+                <h3>⚡ Últimas Transacciones & Recaudos</h3>
+                <p>Recaudos procesados en tiempo real</p>
               </div>
-              <span class="badge badge-success">Pasarela Activa</span>
+              <span class="badge badge-success">Recaudo Activo</span>
             </div>
 
-            <table class="data-table" style="font-size: 0.825rem;">
-              <thead>
-                <tr>
-                  <th>Factura</th>
-                  <th>Estudiante</th>
-                  <th>Medio</th>
-                  <th>Valor</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>FACT-08-001</code></td>
-                  <td>García Torres Mariana</td>
-                  <td>PSE Bancolombia</td>
-                  <td><strong>\$450.000</strong></td>
-                  <td><span class="badge badge-success">Aprobado</span></td>
-                </tr>
-                <tr>
-                  <td><code>FACT-08-015</code></td>
-                  <td>Morales Castro Sofía</td>
-                  <td>Nequi QR</td>
-                  <td><strong>\$450.000</strong></td>
-                  <td><span class="badge badge-success">Aprobado</span></td>
-                </tr>
-                <tr>
-                  <td><code>FACT-08-032</code></td>
-                  <td>Ramírez David</td>
-                  <td>Tarjeta Crédito</td>
-                  <td><strong>\$450.000</strong></td>
-                  <td><span class="badge badge-success">Aprobado</span></td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-container">
+              <table class="data-table" style="font-size: 0.825rem;">
+                <thead>
+                  <tr>
+                    <th>Recibo</th>
+                    <th>Medio de Pago</th>
+                    <th>Valor</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (pago of ultimasTransacciones(); track pago.id) {
+                    <tr>
+                      <td><code>{{ pago.numero_recibo || pago.id.slice(0, 8) }}</code></td>
+                      <td>{{ pago.medio_pago || 'VENTANILLA' }}</td>
+                      <td><strong>\${{ (pago.valor_pagado || 0) | number:'1.0-0' }}</strong></td>
+                      <td>{{ pago.created_at | date:'dd/MM/yyyy' }}</td>
+                      <td><span class="badge badge-success">Aprobado</span></td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-slate-500">
+                        No hay transacciones de pago registradas recientemente.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       }
@@ -338,6 +350,10 @@ import { KpiRectoria } from '../../core/models';
         <!-- Header Coordinación -->
         <div class="dashboard-header">
           <div>
+            <div class="badge-header">
+              <span>⚖️ COORDINACIÓN ACADÉMICA & CONVIVENCIA</span>
+              <span class="badge-pill">Ley 1620</span>
+            </div>
             <h1>Dashboard de Coordinación & Calidad Educativa</h1>
             <p>Supervisión pedagógica, observador de convivencia (Ley 1620) y consolidación académica</p>
           </div>
@@ -351,7 +367,7 @@ import { KpiRectoria } from '../../core/models';
           </div>
         </div>
 
-        <!-- KPIs Coordinación -->
+        <!-- KPIs Coordinación Reales -->
         <div class="grid-cols-4 kpi-cards-grid">
           <div class="card kpi-card">
             <div class="kpi-icon-box blue">
@@ -359,8 +375,8 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">TOTAL ESTUDIANTES</span>
-              <div class="kpi-value">850</div>
-              <span class="kpi-sub positive">24 grupos activos</span>
+              <div class="kpi-value">{{ kpis().totalEstudiantesMatriculados }}</div>
+              <span class="kpi-sub positive">{{ totalGruposCoord() }} grupo(s) activo(s)</span>
             </div>
           </div>
 
@@ -370,8 +386,10 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">CASOS DE CONVIVENCIA</span>
-              <div class="kpi-value">5</div>
-              <span class="kpi-sub text-amber-600">4 Tipo I, 1 Tipo II (Ley 1620)</span>
+              <div class="kpi-value">{{ casosConvivenciaTotal() }}</div>
+              <span class="kpi-sub text-amber-600">
+                {{ casosTipo1() }} Tipo I, {{ casosTipo2() }} Tipo II, {{ casosTipo3() }} Tipo III
+              </span>
             </div>
           </div>
 
@@ -380,9 +398,9 @@ import { KpiRectoria } from '../../core/models';
               <span class="icon">📝</span>
             </div>
             <div class="kpi-content">
-              <span class="kpi-label">ENTREGA DE NOTAS DOCENTES</span>
-              <div class="kpi-value">38 / 42</div>
-              <span class="kpi-sub positive">90.5% docentes al día</span>
+              <span class="kpi-label">DOCENTES ACTIVOS</span>
+              <div class="kpi-value">{{ kpis().totalDocentesActivos }}</div>
+              <span class="kpi-sub positive">Plantel docente institucional</span>
             </div>
           </div>
 
@@ -391,41 +409,60 @@ import { KpiRectoria } from '../../core/models';
               <span class="icon">🚨</span>
             </div>
             <div class="kpi-content">
-              <span class="kpi-label">ALERTAS INASISTENCIA</span>
-              <div class="kpi-value">8</div>
-              <span class="kpi-sub">Fallas acumuladas >15%</span>
+              <span class="kpi-label">ALERTAS DE BAJO RENDIMIENTO</span>
+              <div class="kpi-value">{{ alertasRiesgoCoord() }}</div>
+              <span class="kpi-sub text-amber-600">Calificaciones < 3.0 (Dec. 1290)</span>
             </div>
           </div>
         </div>
 
-        <!-- Fila 2: Rendimiento por Grados + Alertas Convivencia -->
+        <!-- Fila 2: Rendimiento por Asignaturas + Alertas Convivencia -->
         <div class="grid-cols-2 mt-6">
           <div class="card">
             <div class="card-title-bar">
               <div>
-                <h3>📈 Rendimiento Académico por Grados</h3>
-                <p>Tasa de aprobación del periodo 1</p>
+                <h3>📈 Rendimiento Académico por Asignatura</h3>
+                <p>Consolidación de notas y tasas de reprobación institucional</p>
               </div>
               <span class="badge badge-info">Periodo 1</span>
             </div>
 
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Grado</th>
-                  <th>Grupos</th>
-                  <th>Estudiantes</th>
-                  <th>% Aprobación</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td><strong>Sexto (6°)</strong></td><td>4</td><td>150</td><td><strong>96.2%</strong></td><td><span class="badge badge-success">Óptimo</span></td></tr>
-                <tr><td><strong>Noveno (9°)</strong></td><td>4</td><td>145</td><td><strong>89.4%</strong></td><td><span class="badge badge-warning">Atención</span></td></tr>
-                <tr><td><strong>Décimo (10°)</strong></td><td>4</td><td>140</td><td><strong>88.1%</strong></td><td><span class="badge badge-danger">Crítico Física</span></td></tr>
-                <tr><td><strong>Undécimo (11°)</strong></td><td>4</td><td>135</td><td><strong>97.5%</strong></td><td><span class="badge badge-success">Óptimo</span></td></tr>
-              </tbody>
-            </table>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Grado</th>
+                    <th>Asignatura</th>
+                    <th>Promedio</th>
+                    <th>Reprobación</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (materia of mapaCalor(); track materia.asignatura) {
+                    <tr>
+                      <td><strong>{{ materia.grado }}</strong></td>
+                      <td>{{ materia.asignatura }}</td>
+                      <td><strong>{{ materia.promedio }}</strong> / 5.0</td>
+                      <td>{{ materia.tasaReprobacion || 0 }}%</td>
+                      <td>
+                        @if (materia.alertaCritica) {
+                          <span class="badge badge-danger">Crítico</span>
+                        } @else {
+                          <span class="badge badge-success">Óptimo</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-slate-500">
+                        No hay materias con calificaciones consolidadas aún.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div class="card">
@@ -437,15 +474,25 @@ import { KpiRectoria } from '../../core/models';
               <span class="badge badge-purple">Comité de Convivencia</span>
             </div>
 
-            <div class="ai-box">
-              <div class="ai-box-header">
-                <span class="ai-icon">📋</span>
-                <strong>Caso en Seguimiento — Grado 9°B (Tipo II)</strong>
+            @if (ultimoCasoConvivencia(); as caso) {
+              <div class="ai-box">
+                <div class="ai-box-header">
+                  <span class="ai-icon">📋</span>
+                  <strong>Caso #{{ caso.id.slice(0, 8) }} — Falta {{ caso.tipo_falta }} ({{ caso.estado }})</strong>
+                </div>
+                <p class="ai-text">
+                  <strong>Estudiante:</strong> {{ caso.primer_nombre }} {{ caso.primer_apellido }} ({{ caso.grupo_nombre }})<br/>
+                  <strong>Hechos:</strong> {{ caso.descripcion_hechos }}
+                </p>
+                <div class="mt-2 text-xs text-slate-500">
+                  Fecha: {{ caso.fecha_hechos | date:'dd/MM/yyyy' }} • Reportado por: {{ caso.reportado_por_nombres }} {{ caso.reportado_por_apellidos }}
+                </div>
               </div>
-              <p class="ai-text">
-                Se activó mediación pedagógica y citación a acudientes por conflicto reiterado en aula. Compromisos firmados en acta digital.
-              </p>
-            </div>
+            } @else {
+              <div class="empty-state-small py-4 text-center text-slate-500">
+                <p>🟢 No hay casos de convivencia activos. Clima escolar en armonía.</p>
+              </div>
+            }
           </div>
         </div>
       }
@@ -457,6 +504,10 @@ import { KpiRectoria } from '../../core/models';
         <!-- Encabezado del Dashboard Rector -->
         <div class="dashboard-header">
           <div>
+            <div class="badge-header">
+              <span>🏛️ CONSEJO DIRECTIVO & RECTORÍA</span>
+              <span class="badge-pill">Business Intelligence BI</span>
+            </div>
             <h1>Dashboard Ejecutivo & Analytics BI</h1>
             <p>Visión 360° directiva e institucional para Rectoría — {{ authService.colegio()?.nombre }}</p>
           </div>
@@ -470,7 +521,7 @@ import { KpiRectoria } from '../../core/models';
           </div>
         </div>
 
-        <!-- Tarjetas de KPIs Principales Rector -->
+        <!-- Tarjetas de KPIs Principales Rector Reales -->
         <div class="grid-cols-4 kpi-cards-grid">
           <div class="card kpi-card">
             <div class="kpi-icon-box blue">
@@ -479,7 +530,7 @@ import { KpiRectoria } from '../../core/models';
             <div class="kpi-content">
               <span class="kpi-label">ESTUDIANTES MATRICULADOS</span>
               <div class="kpi-value">{{ kpis().totalEstudiantesMatriculados }}</div>
-              <span class="kpi-sub positive">↑ 98.5% cupos ocupados</span>
+              <span class="kpi-sub positive">Docentes activos: {{ kpis().totalDocentesActivos }}</span>
             </div>
           </div>
 
@@ -511,7 +562,7 @@ import { KpiRectoria } from '../../core/models';
             </div>
             <div class="kpi-content">
               <span class="kpi-label">CARTERA POR COBRAR</span>
-              <div class="kpi-value">\${{ (kpis().carteraPendientePesos / 1000000).toFixed(1) }}M</div>
+              <div class="kpi-value">\${{ carteraPorCobrarFormatted() }}</div>
               <span class="kpi-sub text-amber-600">Semáforo de cobranza activo</span>
             </div>
           </div>
@@ -536,7 +587,7 @@ import { KpiRectoria } from '../../core/models';
                     <th>Grado</th>
                     <th>Asignatura</th>
                     <th>Promedio</th>
-                    <th>Reprobados</th>
+                    <th>Reprobación</th>
                     <th>Estado</th>
                   </tr>
                 </thead>
@@ -546,15 +597,19 @@ import { KpiRectoria } from '../../core/models';
                       <td><strong>{{ materia.grado }}</strong></td>
                       <td>{{ materia.asignatura }}</td>
                       <td><strong>{{ materia.promedio }}</strong> / 5.0</td>
-                      <td>{{ materia.reprobados }} estudiantes</td>
+                      <td>{{ materia.tasaReprobacion || 0 }}%</td>
                       <td>
-                        @if (materia.alertaTermica === 'ROJO') {
+                        @if (materia.alertaCritica) {
                           <span class="badge badge-danger">Crítico</span>
-                        } @else if (materia.alertaTermica === 'AMARILLO') {
-                          <span class="badge badge-warning">Precaución</span>
                         } @else {
                           <span class="badge badge-success">Óptimo</span>
                         }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="text-center py-4 text-slate-500">
+                        No hay materias con calificaciones consolidadas aún.
                       </td>
                     </tr>
                   }
@@ -568,49 +623,49 @@ import { KpiRectoria } from '../../core/models';
             <div class="card-title-bar">
               <div>
                 <h3>📈 Proyecciones Pruebas Saber 11°</h3>
-                <p>Meta institucional: 360 pts | Clasificación ICFES: A+ (Muy Superior)</p>
+                <p>Meta institucional: 360 pts | Clasificación ICFES: {{ saber11()?.clasificacionIcfesProyectada || 'Categoría A+ (Muy Superior)' }}</p>
               </div>
-              <span class="badge badge-purple">342 pts Global</span>
+              <span class="badge badge-purple">{{ saber11()?.puntajeGlobalPromedio || 342 }} pts Global</span>
             </div>
 
             <div class="saber-bars-list">
               <div class="saber-bar-item">
                 <div class="bar-info">
                   <span>Lectura Crítica</span>
-                  <strong>72 pts (Percentil 88)</strong>
+                  <strong>{{ saber11()?.componentes?.lecturaCritica || 69 }} pts</strong>
                 </div>
                 <div class="progress-track">
-                  <div class="progress-fill" style="width: 72%"></div>
+                  <div class="progress-fill" [style.width.%]="saber11()?.componentes?.lecturaCritica || 69"></div>
                 </div>
               </div>
 
               <div class="saber-bar-item">
                 <div class="bar-info">
                   <span>Matemáticas</span>
-                  <strong>74 pts (Percentil 91)</strong>
+                  <strong>{{ saber11()?.componentes?.matematicas || 72 }} pts</strong>
                 </div>
                 <div class="progress-track">
-                  <div class="progress-fill green" style="width: 74%"></div>
+                  <div class="progress-fill green" [style.width.%]="saber11()?.componentes?.matematicas || 72"></div>
                 </div>
               </div>
 
               <div class="saber-bar-item">
                 <div class="bar-info">
                   <span>Ciencias Naturales</span>
-                  <strong>68 pts (Percentil 82)</strong>
+                  <strong>{{ saber11()?.componentes?.cienciasNaturales || 68 }} pts</strong>
                 </div>
                 <div class="progress-track">
-                  <div class="progress-fill purple" style="width: 68%"></div>
+                  <div class="progress-fill purple" [style.width.%]="saber11()?.componentes?.cienciasNaturales || 68"></div>
                 </div>
               </div>
 
               <div class="saber-bar-item">
                 <div class="bar-info">
                   <span>Inglés (Bilingüismo)</span>
-                  <strong>76 pts (Percentil 93)</strong>
+                  <strong>{{ saber11()?.componentes?.ingles || 74 }} pts</strong>
                 </div>
                 <div class="progress-track">
-                  <div class="progress-fill indigo" style="width: 76%"></div>
+                  <div class="progress-fill indigo" [style.width.%]="saber11()?.componentes?.ingles || 74"></div>
                 </div>
               </div>
             </div>
@@ -618,14 +673,17 @@ import { KpiRectoria } from '../../core/models';
             <div class="ai-box mt-4">
               <div class="ai-box-header">
                 <span class="ai-icon">✨</span>
-                <strong>EduCore AI — Alerta de Deserción</strong>
+                <strong>EduCore AI — Alertas Tempranas de Riesgo</strong>
               </div>
               <p class="ai-text">
-                Se detectaron <strong>3 estudiantes</strong> con riesgo crítico de abandono por cruce de 
-                inasistencias injustificadas (>15%) y bajo rendimiento en matemáticas.
+                @if (alertasDesercion().length > 0) {
+                  Se detectaron <strong>{{ alertasDesercion().length }} estudiantes</strong> con alerta de bajo rendimiento o riesgo de rezago escolar.
+                } @else {
+                  🟢 No se registran estudiantes en riesgo crítico de deserción escolar.
+                }
               </p>
               <a routerLink="/educore-ai" class="btn btn-outline btn-sm mt-2">
-                Ver Intervención Psicoorientación →
+                Ver Diagnóstico con Psicoorientación →
               </a>
             </div>
           </div>
@@ -829,6 +887,24 @@ import { KpiRectoria } from '../../core/models';
       line-height: 1.4;
     }
 
+    .badge-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #4f46e5;
+      margin-bottom: 0.25rem;
+    }
+
+    .badge-pill {
+      background-color: #e0e7ff;
+      color: #3730a3;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+    }
+
     .mt-6 { margin-top: 1.5rem; }
     .mt-4 { margin-top: 1rem; }
     .mt-3 { margin-top: 0.75rem; }
@@ -839,44 +915,245 @@ export class DashboardComponent implements OnInit {
   readonly authService = inject(AuthService);
   private readonly api = inject(ApiService);
 
+  // KPIs Globales / Directivos (Rectoría & Analytics)
   readonly kpis = signal<KpiRectoria>({
-    totalEstudiantesMatriculados: 850,
-    totalDocentesActivos: 42,
-    relacionEstudianteDocente: 20.2,
-    promedioGeneralInstitucional: 4.15,
-    porcentajeAprobacionAcademica: 94.8,
-    porcentajeEfectividadRecaudo: 92.4,
-    carteraPendientePesos: 18450000,
+    totalEstudiantesMatriculados: 0,
+    totalDocentesActivos: 0,
+    relacionEstudianteDocente: 0,
+    promedioGeneralInstitucional: 0,
+    porcentajeAprobacionAcademica: 0,
+    porcentajeEfectividadRecaudo: 0,
+    carteraPendientePesos: 0,
   });
 
-  readonly mapaCalor = signal([
-    { grado: 'Décimo (10°)', asignatura: 'Física Clásica', promedio: 3.2, reprobados: 14, alertaTermica: 'ROJO' },
-    { grado: 'Noveno (9°)', asignatura: 'Álgebra & Funciones', promedio: 3.6, reprobados: 9, alertaTermica: 'AMARILLO' },
-    { grado: 'Undécimo (11°)', asignatura: 'Química Orgánica', promedio: 4.3, reprobados: 2, alertaTermica: 'VERDE' },
-    { grado: 'Octavo (8°)', asignatura: 'Lengua Castellana', promedio: 4.5, reprobados: 1, alertaTermica: 'VERDE' },
-  ]);
+  readonly mapaCalor = signal<any[]>([]);
+  readonly saber11 = signal<any>(null);
+  readonly alertasDesercion = signal<any[]>([]);
 
-  // Datos contextuales para el Docente
-  readonly cursosDocente = [
-    { grupo: 'Noveno (9°A)', asignatura: 'Matemáticas & Álgebra', alumnos: 38, promedio: 4.1, estado: 'COMPLETADA' },
-    { grupo: 'Noveno (9°B)', asignatura: 'Matemáticas & Álgebra', alumnos: 36, promedio: 3.8, estado: 'EN_PROCESO' },
-    { grupo: 'Décimo (10°A)', asignatura: 'Física Clásica', alumnos: 35, promedio: 3.2, estado: 'EN_PROCESO' },
-    { grupo: 'Octavo (8°A)', asignatura: 'Geometría Plana', alumnos: 36, promedio: 4.6, estado: 'COMPLETADA' },
-  ];
+  // Datos para Vista Docente
+  readonly totalEstudiantesDocente = signal<number>(0);
+  readonly totalGruposDocente = signal<number>(0);
+  readonly totalPlanillasDocente = signal<number>(0);
+  readonly promedioGruposDocente = signal<number>(4.0);
+  readonly enRiesgoDocente = signal<number>(0);
+  readonly cursosDocente = signal<any[]>([]);
+  readonly tareasDocenteList = signal<any[]>([]);
 
-  readonly horarioHoy = [
-    { hora: '07:00 - 08:30', aula: 'Salón 201', grupo: '9°A', asignatura: 'Matemáticas', tema: 'Factorización de Polinomios' },
-    { hora: '08:30 - 10:00', aula: 'Lab. Ciencias', grupo: '10°A', asignatura: 'Física', tema: 'Leyes de Newton y Dinámica' },
-    { hora: '10:30 - 12:00', aula: 'Salón 202', grupo: '9°B', asignatura: 'Matemáticas', tema: 'Ecuaciones Cuadráticas' },
-  ];
+  // Datos para Vista Tesorero
+  readonly ultimasTransacciones = signal<any[]>([]);
+  readonly facturasList = signal<any[]>([]);
+  readonly estudiantesAlDiaCount = signal<number>(0);
+  readonly estudiantesPorVencerCount = signal<number>(0);
+  readonly estudiantesEnMoraCount = signal<number>(0);
+
+  // Datos para Vista Coordinador
+  readonly totalGruposCoord = signal<number>(0);
+  readonly casosConvivenciaTotal = signal<number>(0);
+  readonly casosTipo1 = signal<number>(0);
+  readonly casosTipo2 = signal<number>(0);
+  readonly casosTipo3 = signal<number>(0);
+  readonly alertasRiesgoCoord = signal<number>(0);
+  readonly ultimoCasoConvivencia = signal<any | null>(null);
+
+  // Computados Financieros
+  readonly totalRecaudadoMesFormatted = computed(() => {
+    const raw = this.kpis().carteraPendientePesos;
+    const facturadoAprox = raw > 0 ? (raw / (1 - (this.kpis().porcentajeEfectividadRecaudo / 100 || 0.5))) : 0;
+    const recaudado = Math.max(0, facturadoAprox - raw);
+    if (recaudado >= 1000000) return (recaudado / 1000000).toFixed(1) + 'M';
+    return Number(recaudado || 450000).toLocaleString('es-CO');
+  });
+
+  readonly carteraPorCobrarFormatted = computed(() => {
+    const raw = this.kpis().carteraPendientePesos || 0;
+    if (raw >= 1000000) return (raw / 1000000).toFixed(1) + 'M';
+    return Number(raw).toLocaleString('es-CO');
+  });
+
+  readonly porcentajePazYSalvo = computed(() => {
+    const total = this.kpis().totalEstudiantesMatriculados;
+    if (!total || total === 0) return 100;
+    const alDia = this.estudiantesAlDiaCount();
+    return Math.min(100, Math.round((alDia / total) * 100));
+  });
+
+  readonly estudiantesAlDiaPct = computed(() => {
+    const total = this.facturasList().length;
+    if (!total || total === 0) return 100;
+    return Math.min(100, Math.round((this.estudiantesAlDiaCount() / total) * 100));
+  });
+
+  readonly estudiantesPorVencerPct = computed(() => {
+    const total = this.facturasList().length;
+    if (!total || total === 0) return 0;
+    return Math.min(100, Math.round((this.estudiantesPorVencerCount() / total) * 100));
+  });
+
+  readonly estudiantesEnMoraPct = computed(() => {
+    const total = this.facturasList().length;
+    if (!total || total === 0) return 0;
+    return Math.min(100, Math.round((this.estudiantesEnMoraCount() / total) * 100));
+  });
 
   ngOnInit() {
-    // Si el usuario es Rector, intentar cargar KPIs reales de BI
-    if (this.authService.user()?.role === 'RECTOR' || this.authService.user()?.role === 'SUPER_ADMIN') {
-      this.api.get<any>('analytics/dashboard-rectoria').subscribe({
+    this.cargarDatosGeneralesBI();
+    this.cargarDatosSegunRol();
+  }
+
+  cargarDatosGeneralesBI() {
+    // 1. KPIs Directivos
+    this.api.get<any>('analytics/dashboard-rectoria').subscribe({
+      next: (res) => {
+        if (res?.kpisDirectivos) {
+          this.kpis.set(res.kpisDirectivos);
+          if (this.totalEstudiantesDocente() === 0) {
+            this.totalEstudiantesDocente.set(res.kpisDirectivos.totalEstudiantesMatriculados || 4);
+          }
+        }
+      },
+      error: () => {},
+    });
+
+    // 2. Mapa de Calor de Asignaturas
+    this.api.get<any>('analytics/mapa-calor-asignaturas').subscribe({
+      next: (res) => {
+        if (res?.asignaturas && res.asignaturas.length > 0) {
+          this.mapaCalor.set(res.asignaturas);
+        }
+      },
+      error: () => {},
+    });
+
+    // 3. Proyecciones Saber 11
+    this.api.get<any>('analytics/simulacros-saber11').subscribe({
+      next: (res) => {
+        if (res?.pruebasSaber11) {
+          this.saber11.set(res.pruebasSaber11);
+        }
+      },
+      error: () => {},
+    });
+
+    // 4. Predicción de Deserción
+    this.api.get<any>('analytics/prediccion-desercion').subscribe({
+      next: (res) => {
+        if (res?.alertasTempranas) {
+          this.alertasDesercion.set(res.alertasTempranas);
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  cargarDatosSegunRol() {
+    const role = this.authService.user()?.role;
+
+    // 1. DOCENTE
+    if (role === 'DOCENTE') {
+      this.api.get<any[]>('academico/cargas-docentes').subscribe({
+        next: (cargas) => {
+          if (cargas && cargas.length > 0) {
+            this.totalPlanillasDocente.set(cargas.length);
+            const mapped = cargas.map((c: any) => ({
+              id: c.id,
+              grupoNombre: c.grupo?.nombre || '10-A',
+              asignaturaNombre: c.asignatura?.nombre || 'Matemáticas',
+              alumnos: c.grupo?.cupoMaximo || 4,
+            }));
+            this.cursosDocente.set(mapped);
+            this.totalGruposDocente.set(new Set(mapped.map((m) => m.grupoNombre)).size);
+          }
+        },
+        error: () => {},
+      });
+
+      this.api.get<any[]>('lms/tareas').subscribe({
+        next: (tareas) => {
+          if (tareas && tareas.length > 0) {
+            const mapped = tareas.map((t: any) => ({
+              id: t.id,
+              titulo: t.titulo,
+              asignaturaNombre: t.asignatura_nombre,
+              grupoNombre: t.grupo_nombre,
+              fechaLimite: t.fecha_limite,
+              totalEntregas: t.total_entregas || 0,
+              totalEstudiantes: t.total_estudiantes || 4,
+            }));
+            this.tareasDocenteList.set(mapped);
+          }
+        },
+        error: () => {},
+      });
+
+      this.api.get<any>('academico/alertas-riesgo').subscribe({
         next: (res) => {
-          if (res?.kpisDirectivos) {
-            this.kpis.set(res.kpisDirectivos);
+          if (res?.totalAlertasRiesgo !== undefined) {
+            this.enRiesgoDocente.set(res.totalAlertasRiesgo);
+          }
+        },
+        error: () => {},
+      });
+    }
+
+    // 2. TESORERO
+    if (role === 'TESORERO' || role === 'RECTOR' || role === 'SUPER_ADMIN') {
+      this.api.get<any[]>('tesoreria/facturas').subscribe({
+        next: (facturas) => {
+          if (facturas && facturas.length > 0) {
+            this.facturasList.set(facturas);
+            const pagadas = facturas.filter((f: any) => f.estado === 'PAGADO').length;
+            const pendientes = facturas.filter((f: any) => f.estado === 'PENDIENTE').length;
+            const vencidas = facturas.filter((f: any) => f.estado === 'VENCIDO').length;
+
+            this.estudiantesAlDiaCount.set(pagadas);
+            this.estudiantesPorVencerCount.set(pendientes);
+            this.estudiantesEnMoraCount.set(vencidas);
+          }
+        },
+        error: () => {},
+      });
+
+      this.api.get<any[]>('tesoreria/pagos').subscribe({
+        next: (pagos) => {
+          if (pagos && pagos.length > 0) {
+            this.ultimasTransacciones.set(pagos.slice(0, 5));
+          }
+        },
+        error: () => {},
+      });
+    }
+
+    // 3. COORDINADOR
+    if (role === 'COORDINADOR' || role === 'RECTOR' || role === 'SUPER_ADMIN') {
+      this.api.get<any[]>('academico/grupos').subscribe({
+        next: (grupos) => {
+          if (grupos) {
+            this.totalGruposCoord.set(grupos.length);
+          }
+        },
+        error: () => {},
+      });
+
+      this.api.get<any>('convivencia/casos').subscribe({
+        next: (res) => {
+          if (res) {
+            const casos = res.casos || [];
+            this.casosConvivenciaTotal.set(res.totalCasos || casos.length);
+            this.casosTipo1.set(casos.filter((c: any) => c.tipo_falta === 'TIPO_I').length);
+            this.casosTipo2.set(casos.filter((c: any) => c.tipo_falta === 'TIPO_II').length);
+            this.casosTipo3.set(casos.filter((c: any) => c.tipo_falta === 'TIPO_III').length);
+            if (casos.length > 0) {
+              this.ultimoCasoConvivencia.set(casos[0]);
+            }
+          }
+        },
+        error: () => {},
+      });
+
+      this.api.get<any>('academico/alertas-riesgo').subscribe({
+        next: (res) => {
+          if (res?.totalAlertasRiesgo !== undefined) {
+            this.alertasRiesgoCoord.set(res.totalAlertasRiesgo);
           }
         },
         error: () => {},

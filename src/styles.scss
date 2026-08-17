@@ -383,11 +383,23 @@ textarea.input-custom {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 999999 !important;
+  z-index: 999990 !important;
   padding: 1.5rem !important;
   box-sizing: border-box !important;
   margin: 0 !important;
   overflow-y: auto !important;
+
+  /* Modales Anidados de Segundo Nivel (ej: Crear Área desde Crear Asignatura, Crear Concepto desde Cobro) */
+  &.modal-nested,
+  &.nested-modal,
+  &.modal-level-2,
+  &.z-top {
+    z-index: 1000005 !important;
+  }
+
+  &.modal-level-3 {
+    z-index: 1000015 !important;
+  }
 }
 
 .modal-card {

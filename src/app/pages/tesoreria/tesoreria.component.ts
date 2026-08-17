@@ -940,7 +940,7 @@ export interface EstudianteFinanciero {
 
       <!-- MODAL 3.5: CREAR CONCEPTO DE COBRO -->
       @if (modalNuevoConcepto()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevoCobro()">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>

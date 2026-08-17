@@ -363,7 +363,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 1: CREAR NIVEL EDUCATIVO (MEN)       -->
       <!-- ========================================== -->
       @if (modalNuevoNivel()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevoGrado()">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
@@ -427,7 +427,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 2: CREAR GRADO ESCOLAR              -->
       <!-- ========================================== -->
       @if (modalNuevoGrado()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevoGrupo()">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
@@ -581,7 +581,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 4: CREAR ÁREA (LEY 115)             -->
       <!-- ========================================== -->
       @if (modalNuevaArea()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevaAsignatura()">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>

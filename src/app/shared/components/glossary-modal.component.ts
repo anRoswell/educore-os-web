@@ -86,7 +86,7 @@ import { GlossaryService } from '../../core/services/glossary.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 9999999;
+      z-index: 20000000 !important;
       padding: 1.5rem;
       margin: 0;
     }

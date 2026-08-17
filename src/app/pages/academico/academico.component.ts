@@ -19,8 +19,12 @@ import { CalificacionLoteItem } from '../../core/models';
           <p>Estructura curricular, registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
         <div class="header-actions-wrapper">
-          <button (click)="mostrarGuiaPasos.set(!mostrarGuiaPasos())" class="btn btn-outline" title="Ver guía de configuración paso a paso">
-            <span>💡 {{ mostrarGuiaPasos() ? 'Ocultar Guía de Pasos' : 'Ver Guía de Pasos' }}</span>
+          <button
+            (click)="mostrarGuiaPasos.set(!mostrarGuiaPasos())"
+            [class]="mostrarGuiaPasos() ? 'btn btn-secondary' : 'btn btn-outline'"
+            title="Ver guía de configuración paso a paso"
+          >
+            <span>{{ mostrarGuiaPasos() ? '🗺️ Ocultar Ruta Pedagógica' : '🗺️ Ver Ruta Pedagógica' }}</span>
           </button>
           <button (click)="guardarCalificaciones()" class="btn btn-primary" [disabled]="isSaving() || planilla().length === 0">
             <span>💾 {{ isSaving() ? 'Guardando...' : 'Guardar Planilla' }}</span>
@@ -39,7 +43,10 @@ import { CalificacionLoteItem } from '../../core/models';
               <span class="guide-badge">Ruta Pedagógica</span>
               <h3>Flujo Oficial de Configuración Académica (Ley 115 & Decreto 1290)</h3>
             </div>
-            <span class="text-xs text-slate-500">Haz clic en cualquier paso para crearlo directamente</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-slate-500">Haz clic en cualquier paso para crearlo directamente</span>
+              <button (click)="mostrarGuiaPasos.set(false)" class="close-guide-btn" title="Ocultar Guía">&times;</button>
+            </div>
           </div>
 
           <div class="steps-grid">
@@ -1172,25 +1179,52 @@ import { CalificacionLoteItem } from '../../core/models';
     .mt-3 { margin-top: 0.75rem; }
     .mb-4 { margin-bottom: 1rem; }
 
+    .close-guide-btn {
+      background: none;
+      border: none;
+      font-size: 1.35rem;
+      cursor: pointer;
+      color: #64748b;
+      padding: 0 0.35rem;
+      line-height: 1;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .close-guide-btn:hover {
+      color: #0f172a;
+      background: #e2e8f0;
+    }
+
+    /* Modal Backdrop & Centering */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 1.5rem;
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background-color: rgba(15, 23, 42, 0.65) !important;
+      backdrop-filter: blur(5px);
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 99999 !important;
+      padding: 1.5rem !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      overflow-y: auto;
     }
 
     .modal-card {
+      margin: auto !important;
       width: 100%;
+      max-width: 540px !important;
       background-color: #ffffff;
       padding: 1.75rem;
       border-radius: 16px;
       max-height: 90vh;
       overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      position: relative;
     }
 
     .modal-header {
@@ -1230,8 +1264,8 @@ export class AcademicoComponent implements OnInit {
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
 
-  // Control de interfaz y Guía de Pasos
-  readonly mostrarGuiaPasos = signal<boolean>(true);
+  // Control de interfaz y Guía de Pasos (dinámica, oculta por defecto para vista despejada)
+  readonly mostrarGuiaPasos = signal<boolean>(false);
 
   // Listas de datos para filtros
   readonly aniosLectivosList = signal<any[]>([]);

@@ -383,7 +383,7 @@ textarea.input-custom {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 999990 !important;
+  z-index: 999990;
   padding: 1.5rem !important;
   box-sizing: border-box !important;
   margin: 0 !important;
@@ -394,11 +394,11 @@ textarea.input-custom {
   &.nested-modal,
   &.modal-level-2,
   &.z-top {
-    z-index: 1000005 !important;
+    z-index: 1000005;
   }
 
   &.modal-level-3 {
-    z-index: 1000015 !important;
+    z-index: 1000015;
   }
 }
 

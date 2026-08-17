@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ModalManagerService } from '../../core/services/modal-manager.service';
 import { CalificacionLoteItem } from '../../core/models';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 
@@ -363,14 +364,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 1: CREAR NIVEL EDUCATIVO (MEN)       -->
       <!-- ========================================== -->
       @if (modalNuevoNivel()) {
-        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevoGrado()">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoNivel')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
                 <h3>🎓 Paso 1: Crear Nivel Educativo</h3>
                 <span class="modal-subtitle">Estructura macro según la Ley General de Educación (Ley 115 de 1994)</span>
               </div>
-              <button (click)="modalNuevoNivel.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevoNivel()" class="close-btn">&times;</button>
             </div>
 
             <!-- Banner de Ayuda Contextual -->
@@ -417,7 +418,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
               <button (click)="guardarNuevoNivel()" class="btn btn-primary">
                 💾 Guardar Nivel
               </button>
-              <button (click)="modalNuevoNivel.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevoNivel()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -427,14 +428,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 2: CREAR GRADO ESCOLAR              -->
       <!-- ========================================== -->
       @if (modalNuevoGrado()) {
-        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevoGrupo()">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoGrado')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
                 <h3>🏛️ Paso 2: Crear Grado Escolar</h3>
                 <span class="modal-subtitle">Grados organizados por nivel y código oficial SIMAT</span>
               </div>
-              <button (click)="modalNuevoGrado.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevoGrado()" class="close-btn">&times;</button>
             </div>
 
             <!-- Banner de Ayuda Contextual -->
@@ -498,7 +499,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
               <button (click)="guardarNuevoGrado()" class="btn btn-primary">
                 💾 Guardar Grado
               </button>
-              <button (click)="modalNuevoGrado.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevoGrado()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -508,14 +509,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 3: CREAR GRUPO / SALÓN              -->
       <!-- ========================================== -->
       @if (modalNuevoGrupo()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoGrupo')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
                 <h3>🚪 Paso 3: Crear Grupo / Salón</h3>
                 <span class="modal-subtitle">Apertura de cursos o secciones por grado académico</span>
               </div>
-              <button (click)="modalNuevoGrupo.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevoGrupo()" class="close-btn">&times;</button>
             </div>
 
             <!-- Banner de Ayuda Contextual -->
@@ -571,7 +572,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
               <button (click)="guardarNuevoGrupo()" class="btn btn-primary">
                 💾 Guardar Grupo
               </button>
-              <button (click)="modalNuevoGrupo.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevoGrupo()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -581,7 +582,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 4: CREAR ÁREA (LEY 115)             -->
       <!-- ========================================== -->
       @if (modalNuevaArea()) {
-        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevaAsignatura()">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevaArea')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
@@ -591,7 +592,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                 </h3>
                 <span class="modal-subtitle">Áreas obligatorias del Art. 23 o áreas optativas del PEI</span>
               </div>
-              <button (click)="modalNuevaArea.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevaArea()" class="close-btn">&times;</button>
             </div>
 
             <!-- Banner de Ayuda Contextual -->
@@ -638,7 +639,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
               <button (click)="guardarNuevaArea()" class="btn btn-primary">
                 💾 Guardar Área
               </button>
-              <button (click)="modalNuevaArea.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevaArea()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -648,14 +649,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 5: CREAR ASIGNATURA                 -->
       <!-- ========================================== -->
       @if (modalNuevaAsignatura()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevaAsignatura')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
                 <h3>📚 Paso 5: Crear Asignatura Curricular</h3>
                 <span class="modal-subtitle">Materias con peso porcentual dentro de su respectiva área</span>
               </div>
-              <button (click)="modalNuevaAsignatura.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevaAsignatura()" class="close-btn">&times;</button>
             </div>
 
             <!-- Banner de Ayuda Contextual -->
@@ -719,7 +720,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
               <button (click)="guardarNuevaAsignatura()" class="btn btn-primary">
                 💾 Guardar Asignatura
               </button>
-              <button (click)="modalNuevaAsignatura.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevaAsignatura()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -729,7 +730,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 6: CREAR PERIODO ACADÉMICO          -->
       <!-- ========================================== -->
       @if (modalNuevoPeriodo()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoPeriodo')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
@@ -739,7 +740,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                 </h3>
                 <span class="modal-subtitle">Configuración de calendario escolar, ponderación y fechas límite</span>
               </div>
-              <button (click)="modalNuevoPeriodo.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevoPeriodo()" class="close-btn">&times;</button>
             </div>
 
             <!-- Banner de Ayuda Contextual -->
@@ -836,7 +837,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
               <button (click)="guardarNuevoPeriodo()" class="btn btn-primary">
                 💾 Guardar Periodo
               </button>
-              <button (click)="modalNuevoPeriodo.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevoPeriodo()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -846,14 +847,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       <!-- MODAL 7: CREAR ACTIVIDAD EVALUATIVA       -->
       <!-- ========================================== -->
       @if (modalNuevaActividad()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevaActividad')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
                 <h3>➕ Paso 7: Crear Actividad Evaluativa</h3>
                 <span class="modal-subtitle">Evaluación formativa según las 3 dimensiones del SIEE</span>
               </div>
-              <button (click)="modalNuevaActividad.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevaActividad()" class="close-btn">&times;</button>
             </div>
 
             <!-- Banner de Ayuda Contextual -->
@@ -891,7 +892,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
               <button (click)="guardarNuevaActividad()" class="btn btn-primary">
                 💾 Guardar Actividad
               </button>
-              <button (click)="modalNuevaActividad.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevaActividad()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -1222,7 +1223,6 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      z-index: 99999 !important;
       padding: 1.5rem !important;
       box-sizing: border-box !important;
       margin: 0 !important;
@@ -1278,6 +1278,7 @@ export class AcademicoComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
+  readonly modalManager = inject(ModalManagerService);
 
   // Control de interfaz y Guía de Pasos (dinámica, oculta por defecto para vista despejada)
   readonly mostrarGuiaPasos = signal<boolean>(false);
@@ -1552,7 +1553,13 @@ export class AcademicoComponent implements OnInit {
       codigo: '',
       orden: (this.nivelesList().length || 0) + 1,
     };
+    this.modalManager.open('nuevoNivel');
     this.modalNuevoNivel.set(true);
+  }
+
+  cerrarModalNuevoNivel() {
+    this.modalManager.close('nuevoNivel');
+    this.modalNuevoNivel.set(false);
   }
 
   guardarNuevoNivel() {
@@ -1563,11 +1570,13 @@ export class AcademicoComponent implements OnInit {
 
     this.api.post<any>('academico/niveles', this.nuevoNivel).subscribe({
       next: (nivelCreado) => {
-        this.modalNuevoNivel.set(false);
+        this.cerrarModalNuevoNivel();
         this.toast.success('¡Nivel Creado!', `El nivel educativo '${nivelCreado.nombre}' ha sido registrado exitosamente.`);
         this.api.get<any[]>('academico/niveles').subscribe((niveles) => {
           this.nivelesList.set(niveles);
-          this.nuevoGrado.nivelId = nivelCreado.id;
+          if (this.modalNuevoGrado()) {
+            this.nuevoGrado.nivelId = nivelCreado.id;
+          }
         });
       },
       error: (err) => {
@@ -1584,7 +1593,13 @@ export class AcademicoComponent implements OnInit {
       codigoSimat: '',
       orden: (this.gradosList().length || 0) + 1,
     };
+    this.modalManager.open('nuevoGrado');
     this.modalNuevoGrado.set(true);
+  }
+
+  cerrarModalNuevoGrado() {
+    this.modalManager.close('nuevoGrado');
+    this.modalNuevoGrado.set(false);
   }
 
   guardarNuevoGrado() {
@@ -1595,12 +1610,16 @@ export class AcademicoComponent implements OnInit {
 
     this.api.post<any>('academico/grados', this.nuevoGrado).subscribe({
       next: (gradoCreado) => {
-        this.modalNuevoGrado.set(false);
+        this.cerrarModalNuevoGrado();
         this.toast.success('¡Grado Creado!', `El grado '${gradoCreado.nombre}' ha sido registrado exitosamente.`);
         this.api.get<any[]>('academico/grados').subscribe((grados) => {
           this.gradosList.set(grados);
-          this.selectedGradoId.set(gradoCreado.id);
-          this.onGradoChange(gradoCreado.id);
+          if (this.modalNuevoGrupo()) {
+            this.nuevoGrupo.gradoId = gradoCreado.id;
+          } else {
+            this.selectedGradoId.set(gradoCreado.id);
+            this.onGradoChange(gradoCreado.id);
+          }
         });
       },
       error: (err) => {
@@ -1617,7 +1636,13 @@ export class AcademicoComponent implements OnInit {
       cupoMaximo: 35,
       salon: '',
     };
+    this.modalManager.open('nuevoGrupo');
     this.modalNuevoGrupo.set(true);
+  }
+
+  cerrarModalNuevoGrupo() {
+    this.modalManager.close('nuevoGrupo');
+    this.modalNuevoGrupo.set(false);
   }
 
   guardarNuevoGrupo() {
@@ -1628,7 +1653,7 @@ export class AcademicoComponent implements OnInit {
 
     this.api.post<any>('academico/grupos', this.nuevoGrupo).subscribe({
       next: (grupoCreado) => {
-        this.modalNuevoGrupo.set(false);
+        this.cerrarModalNuevoGrupo();
         this.toast.success('¡Grupo Creado!', `El grupo / salón '${grupoCreado.nombre}' ha sido registrado.`);
         this.api.get<any[]>('academico/grupos').subscribe((grupos) => {
           this.todosGruposList.set(grupos);
@@ -1649,7 +1674,13 @@ export class AcademicoComponent implements OnInit {
       codigo: '',
       orden: (this.areasList().length || 0) + 1,
     };
+    this.modalManager.open('nuevaArea');
     this.modalNuevaArea.set(true);
+  }
+
+  cerrarModalNuevaArea() {
+    this.modalManager.close('nuevaArea');
+    this.modalNuevaArea.set(false);
   }
 
   guardarNuevaArea() {
@@ -1660,11 +1691,13 @@ export class AcademicoComponent implements OnInit {
 
     this.api.post<any>('academico/areas', this.nuevaArea).subscribe({
       next: (areaCreada) => {
-        this.modalNuevaArea.set(false);
+        this.cerrarModalNuevaArea();
         this.toast.success('¡Área Creada!', `El área '${areaCreada.nombre}' (Ley 115) ha sido registrada exitosamente.`);
         this.api.get<any[]>('academico/areas').subscribe((areas) => {
           this.areasList.set(areas);
-          this.nuevaAsignatura.areaId = areaCreada.id;
+          if (this.modalNuevaAsignatura()) {
+            this.nuevaAsignatura.areaId = areaCreada.id;
+          }
         });
       },
       error: (err) => {
@@ -1681,7 +1714,13 @@ export class AcademicoComponent implements OnInit {
       codigo: '',
       pesoAreaPorcentaje: 100,
     };
+    this.modalManager.open('nuevaAsignatura');
     this.modalNuevaAsignatura.set(true);
+  }
+
+  cerrarModalNuevaAsignatura() {
+    this.modalManager.close('nuevaAsignatura');
+    this.modalNuevaAsignatura.set(false);
   }
 
   guardarNuevaAsignatura() {
@@ -1692,7 +1731,7 @@ export class AcademicoComponent implements OnInit {
 
     this.api.post<any>('academico/asignaturas', this.nuevaAsignatura).subscribe({
       next: (asigCreada) => {
-        this.modalNuevaAsignatura.set(false);
+        this.cerrarModalNuevaAsignatura();
         this.toast.success('¡Asignatura Creada!', `La asignatura '${asigCreada.nombre}' fue agregada al plan de estudios.`);
         this.api.get<any[]>('academico/asignaturas').subscribe((asigs) => {
           this.asignaturasList.set(asigs);
@@ -1718,7 +1757,13 @@ export class AcademicoComponent implements OnInit {
       fechaLimiteDocentes: '2026-09-18',
       estado: 'ABIERTO',
     };
+    this.modalManager.open('nuevoPeriodo');
     this.modalNuevoPeriodo.set(true);
+  }
+
+  cerrarModalNuevoPeriodo() {
+    this.modalManager.close('nuevoPeriodo');
+    this.modalNuevoPeriodo.set(false);
   }
 
   guardarNuevoPeriodo() {
@@ -1729,7 +1774,7 @@ export class AcademicoComponent implements OnInit {
 
     this.api.post<any>('academico/periodos', this.nuevoPeriodo).subscribe({
       next: (periodoCreado) => {
-        this.modalNuevoPeriodo.set(false);
+        this.cerrarModalNuevoPeriodo();
         this.toast.success('¡Periodo Creado!', `El '${periodoCreado.nombre}' (${periodoCreado.pesoPorcentual}%) fue programado exitosamente.`);
         this.api.get<any[]>('academico/periodos').subscribe((periodos) => {
           this.periodosList.set(periodos);
@@ -1751,7 +1796,13 @@ export class AcademicoComponent implements OnInit {
       pesoPorcentaje: 20,
       fechaEntrega: '2026-03-30',
     };
+    this.modalManager.open('nuevaActividad');
     this.modalNuevaActividad.set(true);
+  }
+
+  cerrarModalNuevaActividad() {
+    this.modalManager.close('nuevaActividad');
+    this.modalNuevaActividad.set(false);
   }
 
   guardarNuevaActividad() {
@@ -1760,7 +1811,7 @@ export class AcademicoComponent implements OnInit {
       return;
     }
 
-    this.modalNuevaActividad.set(false);
+    this.cerrarModalNuevaActividad();
     this.toast.success(
       '¡Actividad Creada!',
       `La actividad evaluativa '${this.nuevaActividad.titulo}' (${this.nuevaActividad.pesoPorcentaje}%) fue programada exitosamente.`

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ModalManagerService } from '../../core/services/modal-manager.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 
 export interface CuentaCobroItem {
@@ -940,14 +941,14 @@ export interface EstudianteFinanciero {
 
       <!-- MODAL 3.5: CREAR CONCEPTO DE COBRO -->
       @if (modalNuevoConcepto()) {
-        <div class="modal-backdrop animate-fade-in" [class.modal-nested]="modalNuevoCobro()">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoConcepto')">
           <div class="modal-card card card-glass" style="max-width: 520px;">
             <div class="modal-header">
               <div>
                 <h3>🏷️ Crear Concepto de Cobro / Tarifa</h3>
                 <span class="modal-subtitle">Parametrización financiera de pensiones, matrículas y derechos</span>
               </div>
-              <button (click)="modalNuevoConcepto.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevoConcepto()" class="close-btn">&times;</button>
             </div>
 
             <div class="modal-body">
@@ -994,7 +995,7 @@ export interface EstudianteFinanciero {
               <button (click)="guardarNuevoConcepto()" class="btn btn-primary">
                 💾 Guardar Concepto
               </button>
-              <button (click)="modalNuevoConcepto.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevoConcepto()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -1002,11 +1003,11 @@ export interface EstudianteFinanciero {
 
       <!-- MODAL 4: EMITIR COBRO INDIVIDUAL -->
       @if (modalNuevoCobro()) {
-        <div class="modal-backdrop animate-fade-in">
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoCobro')">
           <div class="modal-card card card-glass" style="max-width: 500px;">
             <div class="modal-header">
               <h3>➕ Emitir Cobro Individual / Extraordinario</h3>
-              <button (click)="modalNuevoCobro.set(false)" class="close-btn">&times;</button>
+              <button (click)="cerrarModalNuevoCobro()" class="close-btn">&times;</button>
             </div>
 
             <div class="modal-body">
@@ -1041,7 +1042,7 @@ export interface EstudianteFinanciero {
               <button (click)="guardarNuevoCobro()" class="btn btn-primary">
                 💾 Emitir Cuenta de Cobro
               </button>
-              <button (click)="modalNuevoCobro.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="cerrarModalNuevoCobro()" class="btn btn-secondary">Cancelar</button>
             </div>
           </div>
         </div>
@@ -1770,7 +1771,6 @@ export interface EstudianteFinanciero {
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 50;
       padding: 1.5rem;
     }
 
@@ -1863,6 +1863,7 @@ export class TesoreriaComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
+  readonly modalManager = inject(ModalManagerService);
 
   readonly tabActiva = signal<'facturas' | 'estudiante' | 'recaudos' | 'acuerdos' | 'reportes'>('facturas');
   readonly isFacturando = signal(false);
@@ -2314,7 +2315,13 @@ export class TesoreriaComponent implements OnInit {
       valorSugerido: 150000,
       esRecurrenteMensual: false,
     };
+    this.modalManager.open('nuevoConcepto');
     this.modalNuevoConcepto.set(true);
+  }
+
+  cerrarModalNuevoConcepto() {
+    this.modalManager.close('nuevoConcepto');
+    this.modalNuevoConcepto.set(false);
   }
 
   guardarNuevoConcepto() {
@@ -2325,11 +2332,13 @@ export class TesoreriaComponent implements OnInit {
 
     this.api.post<any>('tesoreria/conceptos', this.nuevoConceptoForm).subscribe({
       next: (conceptoCreado) => {
-        this.modalNuevoConcepto.set(false);
+        this.cerrarModalNuevoConcepto();
         this.toast.success('¡Concepto Creado!', `El concepto '${conceptoCreado.nombre}' ha sido registrado en PostgreSQL.`);
         this.cargarConceptos();
-        this.nuevoCobro.concepto = conceptoCreado.nombre;
-        this.nuevoCobro.valorTotal = Number(conceptoCreado.valorSugerido) || 0;
+        if (this.modalNuevoCobro()) {
+          this.nuevoCobro.concepto = conceptoCreado.nombre;
+          this.nuevoCobro.valorTotal = Number(conceptoCreado.valorSugerido) || 0;
+        }
       },
       error: (err) => {
         this.toast.error('Error al crear concepto', err?.error?.message || 'No fue posible registrar el concepto.');
@@ -2680,7 +2689,13 @@ export class TesoreriaComponent implements OnInit {
       valorTotal: 120000,
       fechaVencimiento: '2026-08-25',
     };
+    this.modalManager.open('nuevoCobro');
     this.modalNuevoCobro.set(true);
+  }
+
+  cerrarModalNuevoCobro() {
+    this.modalManager.close('nuevoCobro');
+    this.modalNuevoCobro.set(false);
   }
 
   guardarNuevoCobro() {
@@ -2704,7 +2719,7 @@ export class TesoreriaComponent implements OnInit {
     };
 
     this.cuentas.update((list) => [item, ...list]);
-    this.modalNuevoCobro.set(false);
+    this.cerrarModalNuevoCobro();
     this.toast.success('¡Cobro Emitido!', `Cuenta de cobro por \$${item.valorTotal.toLocaleString()} COP generada para ${item.estudianteNombre}.`);
   }
 

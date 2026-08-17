@@ -19,6 +19,9 @@ import { CalificacionLoteItem } from '../../core/models';
           <p>Registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
         <div class="header-actions">
+          <button (click)="abrirModalNuevoPeriodo()" class="btn btn-secondary">
+            <span>📅 Crear Periodo</span>
+          </button>
           <button (click)="abrirModalNuevoNivel()" class="btn btn-secondary">
             <span>🎓 Crear Nivel</span>
           </button>
@@ -105,7 +108,10 @@ import { CalificacionLoteItem } from '../../core/models';
 
           <!-- 4. Periodo Académico -->
           <div class="form-group">
-            <label class="form-label">Periodo Académico</label>
+            <div class="filter-label-row">
+              <label class="form-label">Periodo Académico</label>
+              <button (click)="abrirModalNuevoPeriodo()" class="btn-link-action" title="Crear Periodo">+ Nuevo</button>
+            </div>
             <select
               class="form-select"
               [ngModel]="selectedPeriodoId()"
@@ -206,6 +212,111 @@ import { CalificacionLoteItem } from '../../core/models';
           </table>
         }
       </div>
+
+      <!-- ========================================== -->
+      <!-- MODAL -1: CREAR PERIODO ACADÉMICO          -->
+      <!-- ========================================== -->
+      @if (modalNuevoPeriodo()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <h3>📅 Crear Periodo Académico</h3>
+              <button (click)="modalNuevoPeriodo.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Año Lectivo *</label>
+                <select class="form-select" [(ngModel)]="nuevoPeriodo.anioLectivoId">
+                  @for (anio of aniosLectivosList(); track anio.id) {
+                    <option [value]="anio.id">{{ anio.nombre }} ({{ anio.anio }})</option>
+                  } @empty {
+                    <option value="a1a1a1a1-1111-4111-8111-000000002026">Año Académico 2026</option>
+                  }
+                </select>
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Número de Periodo (1 - 4) *</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoPeriodo.numero"
+                    min="1"
+                    max="6"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Peso Porcentual (%) *</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevoPeriodo.pesoPorcentual"
+                    min="1"
+                    max="100"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label">Nombre del Periodo *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoPeriodo.nombre"
+                  placeholder="Ej: Primer Periodo, Segundo Periodo"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Fecha de Inicio *</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    [(ngModel)]="nuevoPeriodo.fechaInicio"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fecha de Fin *</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    [(ngModel)]="nuevoPeriodo.fechaFin"
+                  />
+                </div>
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Límite para Docentes</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    [(ngModel)]="nuevoPeriodo.fechaLimiteDocentes"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Estado</label>
+                  <select class="form-select" [(ngModel)]="nuevoPeriodo.estado">
+                    <option value="ABIERTO">ABIERTO (Digitación activa)</option>
+                    <option value="PENDIENTE">PENDIENTE (Aún no iniciado)</option>
+                    <option value="CERRADO">CERRADO (Solo lectura)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevoPeriodo()" class="btn btn-primary">
+                💾 Guardar Periodo
+              </button>
+              <button (click)="modalNuevoPeriodo.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
 
       <!-- ========================================== -->
       <!-- MODAL 0: CREAR NIVEL EDUCATIVO (MEN)       -->
@@ -704,12 +815,13 @@ export class AcademicoComponent implements OnInit {
   readonly authService = inject(AuthService);
 
   // Listas de datos para filtros
-  readonly gradosList = signal<any[]>([]);
-  readonly todosGruposList = signal<any[]>([]);
-  readonly asignaturasList = signal<any[]>([]);
+  readonly aniosLectivosList = signal<any[]>([]);
   readonly periodosList = signal<any[]>([]);
   readonly nivelesList = signal<any[]>([]);
   readonly areasList = signal<any[]>([]);
+  readonly gradosList = signal<any[]>([]);
+  readonly todosGruposList = signal<any[]>([]);
+  readonly asignaturasList = signal<any[]>([]);
 
   // Filtros seleccionados
   readonly selectedGradoId = signal<string>('');
@@ -728,6 +840,7 @@ export class AcademicoComponent implements OnInit {
   // Estados de interfaz y Modales
   readonly isSaving = signal(false);
   readonly isLoadingPlanilla = signal(false);
+  readonly modalNuevoPeriodo = signal(false);
   readonly modalNuevoNivel = signal(false);
   readonly modalNuevaArea = signal(false);
   readonly modalNuevoGrado = signal(false);
@@ -736,6 +849,17 @@ export class AcademicoComponent implements OnInit {
   readonly modalNuevaActividad = signal(false);
 
   // Formularios de Creación
+  nuevoPeriodo = {
+    anioLectivoId: '',
+    numero: 1,
+    nombre: '',
+    pesoPorcentual: 25,
+    fechaInicio: '2026-01-15',
+    fechaFin: '2026-04-03',
+    fechaLimiteDocentes: '2026-04-10',
+    estado: 'ABIERTO',
+  };
+
   nuevoNivel = {
     nombre: '',
     codigo: '',
@@ -781,6 +905,18 @@ export class AcademicoComponent implements OnInit {
   ngOnInit() {
     this.cargarFiltrosIniciales();
     this.cargarNivelesYAreas();
+    this.cargarAniosLectivos();
+  }
+
+  cargarAniosLectivos() {
+    this.api.get<any[]>('academico/anios-lectivos').subscribe({
+      next: (anios) => {
+        if (anios && anios.length > 0) {
+          this.aniosLectivosList.set(anios);
+          this.nuevoPeriodo.anioLectivoId = anios[0].id;
+        }
+      },
+    });
   }
 
   cargarNivelesYAreas() {
@@ -848,6 +984,7 @@ export class AcademicoComponent implements OnInit {
         if (periodos && periodos.length > 0) {
           this.periodosList.set(periodos);
           this.selectedPeriodoId.set(periodos[0].id);
+          this.nuevoPeriodo.numero = periodos.length + 1;
         }
       },
     });
@@ -938,6 +1075,44 @@ export class AcademicoComponent implements OnInit {
       default:
         return 'badge badge-danger';
     }
+  }
+
+  // --- CRUD: CREAR PERIODO ---
+  abrirModalNuevoPeriodo() {
+    const totalActual = this.periodosList().length || 0;
+    this.nuevoPeriodo = {
+      anioLectivoId: this.aniosLectivosList()[0]?.id || 'a1a1a1a1-1111-4111-8111-000000002026',
+      numero: totalActual + 1,
+      nombre: `Periodo ${totalActual + 1}`,
+      pesoPorcentual: 25,
+      fechaInicio: '2026-07-06',
+      fechaFin: '2026-09-11',
+      fechaLimiteDocentes: '2026-09-18',
+      estado: 'ABIERTO',
+    };
+    this.modalNuevoPeriodo.set(true);
+  }
+
+  guardarNuevoPeriodo() {
+    if (!this.nuevoPeriodo.nombre || !this.nuevoPeriodo.fechaInicio || !this.nuevoPeriodo.fechaFin) {
+      this.toast.error('Campos Requeridos', 'Por favor complete el nombre, fechas de inicio y fin del periodo.');
+      return;
+    }
+
+    this.api.post<any>('academico/periodos', this.nuevoPeriodo).subscribe({
+      next: (periodoCreado) => {
+        this.modalNuevoPeriodo.set(false);
+        this.toast.success('¡Periodo Creado!', `El '${periodoCreado.nombre}' (${periodoCreado.pesoPorcentual}%) fue programado exitosamente.`);
+        this.api.get<any[]>('academico/periodos').subscribe((periodos) => {
+          this.periodosList.set(periodos);
+          this.selectedPeriodoId.set(periodoCreado.id);
+          this.cargarPlanilla();
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear periodo', err?.error?.message || 'No fue posible crear el periodo académico.');
+      },
+    });
   }
 
   // --- CRUD: CREAR NIVEL EDUCATIVO ---

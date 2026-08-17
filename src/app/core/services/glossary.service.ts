@@ -167,6 +167,94 @@ export class GlossaryService {
       utilidadEnSistema:
         'Evita sanciones por parte de la Secretaría de Educación al justificar adecuadamente las bajas de cupos en el reporte oficial.',
     },
+    LEY_1620: {
+      key: 'LEY_1620',
+      sigla: 'Ley 1620 de 2013',
+      nombreCompleto: 'Ley de Convivencia Escolar y Mitigación de la Violencia',
+      categoria: 'Normativa MEN',
+      icono: '🛡️',
+      explicacionSencilla:
+        'Crea el Sistema Nacional de Convivencia Escolar para la formación de derechos humanos, educación para la sexualidad y la prevención y mitigación de la violencia escolar y el bullying en todos los colegios de Colombia.',
+      marcoLegal: 'Ley 1620 de 2013 y Decreto Reglamentario 1965 de 2013.',
+      utilidadEnSistema:
+        'Fundamenta la tipificación obligatoria de faltas Tipo I, II y III, la Ruta de Atención Integral y los procesos de descargos y conciliación.',
+      ejemplo: 'Manejo de conflictos escolares, ciberacoso y medidas pedagógicas formativas.',
+    },
+    SIUCE: {
+      key: 'SIUCE',
+      sigla: 'SIUCE',
+      nombreCompleto: 'Sistema de Información Unificado de Convivencia Escolar',
+      categoria: 'Sistema Oficial',
+      icono: '📊',
+      explicacionSencilla:
+        'Es la plataforma del Ministerio de Educación donde los colegios deben reportar estadísticas y casos de acoso escolar, violencia y vulneración de derechos de los menores de edad.',
+      marcoLegal: 'Artículo 28 de la Ley 1620 de 2013.',
+      utilidadEnSistema:
+        'EduCoreOS genera automáticamente los indicadores semestrales y consolidados para cumplir oportunamente con el reporte de la Secretaría de Educación.',
+    },
+    TIPO_I: {
+      key: 'TIPO_I',
+      sigla: 'Falta Tipo I (Ley 1620)',
+      nombreCompleto: 'Conflictos Manejados Inadecuadamente y Situaciones Esporádicas',
+      categoria: 'Normativa MEN',
+      icono: '🟢',
+      explicacionSencilla:
+        'Son desacuerdos o discusiones comunes entre estudiantes que se presentan esporádicamente y no causan daño a la salud física o psicológica.',
+      marcoLegal: 'Decreto 1965 de 2013, Artículo 40.',
+      utilidadEnSistema:
+        'Permite a los docentes mediar y registrar compromisos pedagógicos inmediatos en el aula sin sanciones disciplinarias graves.',
+      ejemplo: 'Interrupciones reiteradas en clase, discusiones verbales de momento sin insultos discriminatorios.',
+    },
+    TIPO_II: {
+      key: 'TIPO_II',
+      sigla: 'Falta Tipo II (Ley 1620)',
+      nombreCompleto: 'Acoso Escolar (Bullying) y Ciberacoso Reiterado',
+      categoria: 'Normativa MEN',
+      icono: '🟠',
+      explicacionSencilla:
+        'Situaciones de agresión reiterada, bullying, ciberacoso o violencia que dañan la integridad psicológica o moral del estudiante sin constituir un delito formal con incapacidad médica.',
+      marcoLegal: 'Decreto 1965 de 2013, Artículo 40.',
+      utilidadEnSistema:
+        'Activa la Ruta de Atención Integral: notificación obligatoria a acudientes, descargos formales y remisión al Comité de Convivencia Escolar.',
+      ejemplo: 'Creación de grupos en redes para burlarse de un estudiante o exclusión social sistemática.',
+    },
+    TIPO_III: {
+      key: 'TIPO_III',
+      sigla: 'Falta Tipo III (Ley 1620)',
+      nombreCompleto: 'Presuntos Delitos y Violencia con Incapacidad',
+      categoria: 'Normativa MEN',
+      icono: '🔴',
+      explicacionSencilla:
+        'Situaciones de extrema gravedad que configuran presuntos delitos según la ley colombiana (porte de armas, venta o consumo de sustancias psicoactivas, agresiones físicas graves o abusos).',
+      marcoLegal: 'Decreto 1965 de 2013, Art. 40 y Código de la Infancia y la Adolescencia (Ley 1098 de 2006).',
+      utilidadEnSistema:
+        'Exige la activación inmediata de la Ruta Externa: denuncia y remisión prioritaria a Policía de Infancia y Adolescencia, ICBF, Fiscalía y atención médica de urgencias.',
+      ejemplo: 'Lesiones personales con incapacidad o amenazas graves contra la vida.',
+    },
+    DEBIDO_PROCESO: {
+      key: 'DEBIDO_PROCESO',
+      sigla: 'Debido Proceso Disciplinario',
+      nombreCompleto: 'Garantía Constitucional de Defensa y Descargos',
+      categoria: 'Normativa MEN',
+      icono: '⚖️',
+      explicacionSencilla:
+        'Es el principio fundamental que garantiza que todo estudiante tiene derecho a ser escuchado, a presentar sus descargos y pruebas, y a estar acompañado por su acudiente antes de recibir cualquier sanción formativa.',
+      marcoLegal: 'Constitución Política de Colombia (Art. 29) y Sentencias T-478/15 y T-240/18 de la Corte Constitucional.',
+      utilidadEnSistema:
+        'El módulo de Convivencia registra la fecha, versión de los hechos y firmas digitales inalterables para blindar legalmente al colegio ante tutelas.',
+    },
+    COMITE_CONVIVENCIA: {
+      key: 'COMITE_CONVIVENCIA',
+      sigla: 'Comité de Convivencia Escolar',
+      nombreCompleto: 'Instancia Institucional de Mediación y Clima Escolar',
+      categoria: 'Normativa MEN',
+      icono: '🤝',
+      explicacionSencilla:
+        'Órgano colegiado conformado por el Rector, el Personero Estudiantil, el Coordinador, un docente, un padre de familia y el orientador escolar para liderar acciones de convivencia y resolver casos Tipo II y III.',
+      marcoLegal: 'Artículo 12 de la Ley 1620 de 2013.',
+      utilidadEnSistema:
+        'Gestiona las convocatorias de reuniones, el orden del día, las deliberaciones y la generación automática de actas foliadas y firmadas.',
+    },
   };
 
   mostrar(key: string) {

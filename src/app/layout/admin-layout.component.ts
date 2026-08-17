@@ -112,6 +112,11 @@ import { GlossaryModalComponent } from '../shared/components/glossary-modal.comp
               </span>
               <span class="badge-mini">AI</span>
             </a>
+            <a routerLink="/convivencia" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">🛡️</span>
+              <span class="nav-text">Convivencia & Observador</span>
+              <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">1620</span>
+            </a>
             <a routerLink="/gobierno-escolar" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">🗳️</span>
               <span class="nav-text">Gobierno & Elecciones</span>

@@ -19,6 +19,9 @@ import { CalificacionLoteItem } from '../../core/models';
           <p>Registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
         <div class="header-actions">
+          <button (click)="abrirModalNuevaArea()" class="btn btn-secondary">
+            <span>📐 Crear Área (Ley 115)</span>
+          </button>
           <button (click)="abrirModalNuevoGrado()" class="btn btn-secondary">
             <span>🏛️ Crear Grado</span>
           </button>
@@ -202,7 +205,62 @@ import { CalificacionLoteItem } from '../../core/models';
       </div>
 
       <!-- ========================================== -->
-      <!-- MODAL 1: CREAR GRADO ESCOLAR              -->
+      <!-- MODAL 1: CREAR ÁREA (LEY 115)             -->
+      <!-- ========================================== -->
+      @if (modalNuevaArea()) {
+        <div class="modal-backdrop animate-fade-in">
+          <div class="modal-card card card-glass" style="max-width: 520px;">
+            <div class="modal-header">
+              <h3>📐 Crear Área Fundamental (Ley 115 de 1994)</h3>
+              <button (click)="modalNuevaArea.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Nombre del Área del Conocimiento *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevaArea.nombre"
+                  placeholder="Ej: Ciencias Naturales y Educación Ambiental"
+                />
+              </div>
+
+              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Código del Área *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaArea.codigo"
+                    placeholder="Ej: CN, HUM, SOC"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Orden en Boletín</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="nuevaArea.orden"
+                    min="1"
+                    max="20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarNuevaArea()" class="btn btn-primary">
+                💾 Guardar Área
+              </button>
+              <button (click)="modalNuevaArea.set(false)" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
+      <!-- MODAL 2: CREAR GRADO ESCOLAR              -->
       <!-- ========================================== -->
       @if (modalNuevoGrado()) {
         <div class="modal-backdrop animate-fade-in">
@@ -268,7 +326,7 @@ import { CalificacionLoteItem } from '../../core/models';
       }
 
       <!-- ========================================== -->
-      <!-- MODAL 2: CREAR GRUPO / SALÓN              -->
+      <!-- MODAL 3: CREAR GRUPO / SALÓN              -->
       <!-- ========================================== -->
       @if (modalNuevoGrupo()) {
         <div class="modal-backdrop animate-fade-in">
@@ -332,7 +390,7 @@ import { CalificacionLoteItem } from '../../core/models';
       }
 
       <!-- ========================================== -->
-      <!-- MODAL 3: CREAR ASIGNATURA                 -->
+      <!-- MODAL 4: CREAR ASIGNATURA                 -->
       <!-- ========================================== -->
       @if (modalNuevaAsignatura()) {
         <div class="modal-backdrop animate-fade-in">
@@ -344,7 +402,10 @@ import { CalificacionLoteItem } from '../../core/models';
 
             <div class="modal-body">
               <div class="form-group">
-                <label class="form-label">Área del Conocimiento (Ley 115) *</label>
+                <div class="filter-label-row">
+                  <label class="form-label">Área del Conocimiento (Ley 115) *</label>
+                  <button (click)="abrirModalNuevaArea()" class="btn-link-action" title="Crear Área">+ Nueva Área</button>
+                </div>
                 <select class="form-select" [(ngModel)]="nuevaAsignatura.areaId">
                   @for (area of areasList(); track area.id) {
                     <option [value]="area.id">{{ area.nombre }}</option>
@@ -398,7 +459,7 @@ import { CalificacionLoteItem } from '../../core/models';
       }
 
       <!-- ========================================== -->
-      <!-- MODAL 4: CREAR ACTIVIDAD EVALUATIVA       -->
+      <!-- MODAL 5: CREAR ACTIVIDAD EVALUATIVA       -->
       <!-- ========================================== -->
       @if (modalNuevaActividad()) {
         <div class="modal-backdrop animate-fade-in">
@@ -606,12 +667,19 @@ export class AcademicoComponent implements OnInit {
   // Estados de interfaz y Modales
   readonly isSaving = signal(false);
   readonly isLoadingPlanilla = signal(false);
+  readonly modalNuevaArea = signal(false);
   readonly modalNuevoGrado = signal(false);
   readonly modalNuevoGrupo = signal(false);
   readonly modalNuevaAsignatura = signal(false);
   readonly modalNuevaActividad = signal(false);
 
   // Formularios de Creación
+  nuevaArea = {
+    nombre: '',
+    codigo: '',
+    orden: 1,
+  };
+
   nuevoGrado = {
     nombre: '',
     nivelId: '',
@@ -662,6 +730,7 @@ export class AcademicoComponent implements OnInit {
         if (areas && areas.length > 0) {
           this.areasList.set(areas);
           this.nuevaAsignatura.areaId = areas[0].id;
+          this.nuevaArea.orden = areas.length + 1;
         }
       },
     });
@@ -800,6 +869,37 @@ export class AcademicoComponent implements OnInit {
       default:
         return 'badge badge-danger';
     }
+  }
+
+  // --- CRUD: CREAR ÁREA (LEY 115) ---
+  abrirModalNuevaArea() {
+    this.nuevaArea = {
+      nombre: '',
+      codigo: '',
+      orden: (this.areasList().length || 0) + 1,
+    };
+    this.modalNuevaArea.set(true);
+  }
+
+  guardarNuevaArea() {
+    if (!this.nuevaArea.nombre || !this.nuevaArea.codigo) {
+      this.toast.error('Campos Requeridos', 'Por favor ingrese el nombre y código del área fundamental.');
+      return;
+    }
+
+    this.api.post<any>('academico/areas', this.nuevaArea).subscribe({
+      next: (areaCreada) => {
+        this.modalNuevaArea.set(false);
+        this.toast.success('¡Área Creada!', `El área '${areaCreada.nombre}' (Ley 115) ha sido registrada exitosamente.`);
+        this.api.get<any[]>('academico/areas').subscribe((areas) => {
+          this.areasList.set(areas);
+          this.nuevaAsignatura.areaId = areaCreada.id;
+        });
+      },
+      error: (err) => {
+        this.toast.error('Error al crear área', err?.error?.message || 'No fue posible crear el área.');
+      },
+    });
   }
 
   // --- CRUD: CREAR GRADO ---

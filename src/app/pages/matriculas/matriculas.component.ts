@@ -20,6 +20,10 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           <p>Directorio escolar 360°, control de expediente documental, formalización y retiro SIMAT</p>
         </div>
         <div class="header-actions">
+          
+          <button (click)="abrirModalPlantillas()" class="btn btn-outline" style="margin-right: 10px;">
+            <span>⚙️ Plantillas Legales</span>
+          </button>
           <button (click)="exportarSimat()" class="btn btn-secondary">
             <span>📊 Exportar SIMAT (Res. 166)</span>
             <app-help-badge term="SIMAT"></app-help-badge>
@@ -409,6 +413,37 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           </div>
         </div>
       }
+
+      <!-- ========================================== -->
+      <!-- MODAL: PLANTILLAS LEGALES EJS              -->
+      <!-- ========================================== -->
+      @if (modalPlantillas()) {
+        <div class="modal-backdrop">
+          <div class="modal-content modal-lg animate-slide-up">
+            <div class="modal-header">
+              <h2>⚖️ Editor de Plantillas Legales</h2>
+              <button class="close-btn" (click)="cerrarModalPlantillas()">X</button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-info">
+                Use variables EJS como <code><%= estudianteNombre %></code>, <code><%= acudienteNombre %></code> o <code><%= valorMatricula %></code>.
+              </div>
+              <div class="form-group mb-3">
+                <label>Plantilla del Contrato de Prestación de Servicios</label>
+                <textarea class="form-control" rows="8" [(ngModel)]="plantillaContrato"></textarea>
+              </div>
+              <div class="form-group mb-3">
+                <label>Plantilla del Pagaré (Deuda Financiera)</label>
+                <textarea class="form-control" rows="6" [(ngModel)]="plantillaPagare"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" (click)="cerrarModalPlantillas()">Cancelar</button>
+              <button class="btn btn-primary" (click)="guardarPlantillas()">💾 Guardar Plantillas</button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -634,6 +669,10 @@ export class MatriculasComponent implements OnInit {
 
   // Estados para CRUD Modales
   readonly modalNuevaMatricula = signal(false);
+  readonly modalPlantillas = signal(false);
+  plantillaContrato = '';
+  plantillaPagare = '';
+
   readonly estudianteEnEdicion = signal<Estudiante | null>(null);
   readonly estudianteParaRetirar = signal<Estudiante | null>(null);
   causalRetiro = 'CAMBIO_RESIDENCIA';
@@ -854,5 +893,45 @@ export class MatriculasComponent implements OnInit {
   exportarSimat() {
     window.open(`${this.api.getPdfUrl('export/simat').replace('/pdf/', '/matriculas/')}`, '_blank');
     this.toast.info('Exportando SIMAT', 'Generando archivo plano oficial de matrículas para el MEN...');
+  }
+
+  // --- PLANTILLAS LEGALES (Phase 3) ---
+  abrirModalPlantillas() {
+    this.api.get<any[]>('matriculas/plantillas-legales').subscribe({
+      next: (plantillas) => {
+        const contrato = plantillas.find(p => p.tipo === 'CONTRATO_PRESTACION_SERVICIOS');
+        const pagare = plantillas.find(p => p.tipo === 'PAGARE');
+        this.plantillaContrato = contrato ? contrato.plantillaEjs : '<h1>Contrato de Prestación de Servicios</h1>\n<p>Acudiente: <%= acudienteNombre %></p>';
+        this.plantillaPagare = pagare ? pagare.plantillaEjs : '<h1>Pagaré</h1>';
+        this.modalPlantillas.set(true);
+      }
+    });
+  }
+
+  cerrarModalPlantillas() {
+    this.modalPlantillas.set(false);
+  }
+
+  guardarPlantillas() {
+    this.api.put('matriculas/plantillas-legales', { tipo: 'CONTRATO_PRESTACION_SERVICIOS', plantillaEjs: this.plantillaContrato }).subscribe();
+    this.api.put('matriculas/plantillas-legales', { tipo: 'PAGARE', plantillaEjs: this.plantillaPagare }).subscribe({
+      next: () => {
+        this.toast.success('Guardado', 'Las plantillas legales han sido actualizadas.');
+        this.cerrarModalPlantillas();
+      }
+    });
+  }
+
+  // --- ENVIAR A FIRMA ---
+  enviarAFirma(matriculaId: string) {
+    if(confirm('¿Desea despachar el código OTP al acudiente para firmar el contrato?')) {
+      this.toast.info('Procesando', 'Generando documentos y enviando email...');
+      this.api.post<any>(`matriculas/${matriculaId}/enviar-firma`, {}).subscribe({
+        next: (res) => {
+          this.toast.success('Enviado', res.mensaje);
+        },
+        error: () => this.toast.error('Error', 'Fallo al procesar el contrato.')
+      });
+    }
   }
 }

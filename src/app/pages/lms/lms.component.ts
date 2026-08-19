@@ -119,6 +119,10 @@ export interface EntregaLmsItem {
                       <div class="flex-between mb-2">
                         <strong>{{ post.titulo }}</strong>
                         <span class="badge" [ngClass]="post.tipo === 'MATERIAL' ? 'bg-indigo' : 'bg-success'">{{ post.tipo }}</span>
+                        <div style="display: inline-flex; gap: 0.5rem; margin-left: auto; padding-left: 1rem;">
+                          <button class="btn btn-sm text-primary" (click)="editarPublicacion(post)" title="Editar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">✏️</button>
+                          <button class="btn btn-sm text-danger" (click)="eliminarPublicacion(post)" title="Eliminar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🗑️</button>
+                        </div>
                       </div>
                       <p style="white-space: pre-wrap;">{{ post.contenido }}</p>
                       @if (post.videoEmbedUrl) {

@@ -66,7 +66,10 @@ export interface EntregaLmsItem {
           <h1>Gestión de Aulas & Tareas</h1>
           <p>Muros interactivos, recepción de evidencias y calificaciones formativas</p>
         </div>
-        <div class="header-actions" style="display:flex; gap: 10px;">
+        <div class="header-actions" style="display:flex; gap: 10px; align-items: center;">
+          <button class="btn btn-outline" (click)="isSidebarOpen.set(!isSidebarOpen())" title="Alternar panel lateral de aulas" style="padding: 0.5rem 0.75rem;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
           <button class="btn" [ngClass]="currentTab === 'AULAS' ? 'btn-primary' : 'btn-outline'" (click)="setTab('AULAS')">🏫 Aulas y Muro</button>
           <button class="btn" [ngClass]="currentTab === 'TAREAS' ? 'btn-primary' : 'btn-outline'" (click)="setTab('TAREAS')">📚 Tareas</button>
         </div>
@@ -80,9 +83,9 @@ export interface EntregaLmsItem {
               <button class="btn btn-primary mt-2" (click)="abrirModalCrearAula()">Crear Aula Virtual</button>
             </div>
           } @else {
-            <div class="grid-cols-1 md:grid-cols-3 gap-4" style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+            <div class="main-lms-layout" [style.gridTemplateColumns]="isSidebarOpen() ? '300px minmax(0, 1fr) 300px' : '0px minmax(0, 1fr) 300px'" style="display: grid; gap: 2rem; transition: grid-template-columns 0.3s ease;">
               <!-- Sidebar Aulas -->
-              <div class="aulas-sidebar shadow-sm">
+              <div class="aulas-sidebar shadow-sm" [style.opacity]="isSidebarOpen() ? 1 : 0" [style.pointerEvents]="isSidebarOpen() ? \'auto\' : \'none\'" style="overflow: hidden; transition: opacity 0.2s ease;">
                 <div class="sidebar-header">
                   <h3>Mis Aulas Virtuales</h3>
                   <button class="btn-icon-primary" (click)="abrirModalCrearAula()" title="Crear Aula">
@@ -171,6 +174,61 @@ export interface EntregaLmsItem {
                 } @else {
                   <div class="p-8 text-center text-slate-500">Selecciona un aula para ver su muro.</div>
                 }
+              </div>
+
+              <!-- Columna Derecha (Widgets) -->
+              <div class="right-widgets" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                @if (aulaSeleccionada()) {
+                  <div class="widget-card shadow-sm border" style="background: white; border-radius: 12px; padding: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">Próximas Tareas</h3>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                      <div class="task-mini-item" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="background: #fee2e2; color: #ef4444; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                          24
+                        </div>
+                        <div>
+                          <strong style="display: block; font-size: 0.9rem; color: #334155;">Taller de Funciones</strong>
+                          <span style="font-size: 0.75rem; color: #ef4444;">Vence hoy a las 23:59</span>
+                        </div>
+                      </div>
+                      
+                      <div class="task-mini-item" style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="background: #e0e7ff; color: #4f46e5; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                          28
+                        </div>
+                        <div>
+                          <strong style="display: block; font-size: 0.9rem; color: #334155;">Evaluación Unidad 2</strong>
+                          <span style="font-size: 0.75rem; color: #64748b;">Próximo viernes</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="widget-card shadow-sm border" style="background: white; border-radius: 12px; padding: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">Estadísticas del Aula</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Estudiantes Matriculados</span>
+                        <strong style="color: #334155;">35</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Total de Publicaciones</span>
+                        <strong style="color: #334155;">{{ publicaciones().length }}</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Tareas Pendientes</span>
+                        <strong style="color: #eab308;">2</strong>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="widget-card shadow-sm border" style="background: white; border-radius: 12px; padding: 1.5rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">👈</div>
+                    <p style="color: #64748b; margin: 0; font-size: 0.95rem;">Selecciona un aula en el panel izquierdo para ver sus estadísticas y tareas pendientes.</p>
+                  </div>
+                }
+
               </div>
             </div>
           }
@@ -1934,6 +1992,7 @@ export class LmsComponent implements OnInit {
 
   readonly tabActiva = signal<'tareas' | 'calificar' | 'estudiante_vista'>('tareas');
   readonly isSaving = signal(false);
+  isSidebarOpen = signal(true);
 
   // Edit Mode & Confirm Modals
   editandoAulaId = signal<string | null>(null);

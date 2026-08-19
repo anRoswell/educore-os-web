@@ -121,6 +121,14 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
                   <span>Convivencia & Horarios</span>
                 </div>
               </button>
+
+              <button (click)="login('ESTUDIANTE')" class="role-btn estudiante" style="grid-column: span 2; justify-content: center; background-color: #f8fafc; border-color: #94a3b8;">
+                <span class="role-icon">👨‍🎓</span>
+                <div class="role-text">
+                  <strong>Estudiante / Acudiente</strong>
+                  <span>Portal Académico & Muro</span>
+                </div>
+              </button>
             </div>
           </div>
 
@@ -406,7 +414,7 @@ export class LoginComponent {
   selectedColegioIndex = 0;
   readonly modalNuevoColegio = signal<boolean>(false);
 
-  login(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR') {
+  login(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTUDIANTE') {
     this.authService.loginDemo(role, Number(this.selectedColegioIndex));
   }
 

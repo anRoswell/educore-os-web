@@ -180,7 +180,7 @@ export class AuthService {
     return u.role === 'SUPER_ADMIN' || u.role === 'RECTOR';
   }
 
-  loginDemo(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR', colegioIndex: number = 0) {
+  loginDemo(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTUDIANTE', colegioIndex: number = 0) {
     const cols = this.colegiosDisponibles();
     const col = cols[colegioIndex] || cols[0] || COLEGIOS_DEMO[0];
     this.setColegio(col);
@@ -201,6 +201,10 @@ export class AuthService {
       nombre = 'Marta';
       apellido = 'Rojas';
       email = `coordinacion@${col.slug}.edu.co`;
+    } else if (role === 'ESTUDIANTE') {
+      nombre = 'Felipe';
+      apellido = 'García';
+      email = `felipe.garcia@estudiantes.${col.slug}.edu.co`;
     }
 
     this.user.set({

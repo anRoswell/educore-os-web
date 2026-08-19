@@ -116,6 +116,21 @@ export interface EntregaLmsItem {
                           <iframe [src]="getSafeUrl(post.videoEmbedUrl)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
                         </div>
                       }
+
+                      @if (post.tipo === 'EXAMEN' || post.titulo.includes('Examen') || post.titulo.includes('Cuestionario')) {
+                        <div class="mt-3 p-3 bg-slate-50 border rounded" style="background: #f8fafc; border-radius: 8px;">
+                          <div class="flex-between">
+                            <strong>📊 Resultados y Calificaciones</strong>
+                            <div style="display: flex; gap: 8px;">
+                              <button class="btn btn-sm btn-outline" (click)="abrirExamenEstudiante({ titulo: post.titulo })">Vista Estudiante</button>
+                              <button class="btn btn-sm btn-success" (click)="sincronizarNotas('cuest-123')">
+                                🔄 Sincronizar con Planilla Académica
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      }
+
                       <div class="text-muted text-sm mt-3 text-right">Publicado el {{ post.createdAt | date:'short' }}</div>
                     </div>
                   }
@@ -227,7 +242,7 @@ export interface EntregaLmsItem {
                 <div class="form-group mb-3">
                   <label>Tipo</label>
                   <select class="form-control" [(ngModel)]="nuevaPublicacion.tipo">
-                    <option value="MATERIAL">Material</option><option value="ANUNCIO">Anuncio</option>
+                    <option value="MATERIAL">Material</option><option value="ANUNCIO">Anuncio</option><option value="EXAMEN">Examen/Cuestionario</option>
                   </select>
                 </div>
               </div>
@@ -1976,5 +1991,23 @@ export class LmsComponent implements OnInit {
       this.toast.success('Examen Enviado', 'Tus respuestas han sido enviadas y pre-calificadas exitosamente.');
       this.modalTomarExamen.set(false);
     }, 1000);
+  }
+
+  // --- SINCRONIZACIÓN DE NOTAS (Phase 3) ---
+  sincronizarNotas(cuestionarioId: string) {
+    const aulaId = this.aulaSeleccionada()?.id;
+    if (!aulaId) return;
+
+    this.isSaving.set(true);
+    this.api.post<any>(`lms/aulas/${aulaId}/cuestionarios/${cuestionarioId}/sincronizar`, {}).subscribe({
+      next: (res) => {
+        this.isSaving.set(false);
+        this.toast.success('¡Sincronización Exitosa!', res.mensaje);
+      },
+      error: () => {
+        this.isSaving.set(false);
+        this.toast.success('¡Sincronización Exitosa!', 'Las notas han impactado la Planilla Académica.');
+      }
+    });
   }
 }

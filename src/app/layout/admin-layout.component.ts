@@ -107,7 +107,7 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
               </span>
               <span class="badge-mini" style="background: rgba(79, 70, 229, 0.2); color: #818cf8; border-color: rgba(79, 70, 229, 0.3);">LMS</span>
             </a>
-            @if (authService.user()?.role !== 'DOCENTE') {
+            @if (authService.user()?.role !== 'DOCENTE' && authService.user()?.role !== 'ESTUDIANTE') {
               <a routerLink="/matriculas" routerLinkActive="active" class="nav-link">
                 <span class="nav-icon">👥</span>
                 <span class="nav-text">Matrículas & Ficha 360°</span>
@@ -136,9 +136,10 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
             </a>
             <a routerLink="/convivencia" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">🛡️</span>
-              <span class="nav-text">Convivencia & Observador</span>
+              <span class="nav-text">{{ authService.user()?.role === 'ESTUDIANTE' ? 'Mi Observador' : 'Convivencia & Observador' }}</span>
               <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">1620</span>
             </a>
+          @if (authService.user()?.role !== 'ESTUDIANTE') {
             <a routerLink="/inclusion" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">🧩</span>
               <span class="nav-text">Inclusión & PIAR (DUA)</span>
@@ -149,6 +150,7 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
               <span class="nav-text">Protección de Datos & SIC</span>
               <span class="badge-mini" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; border-color: rgba(2, 132, 199, 0.3);">1581</span>
             </a>
+          }
             <a routerLink="/gobierno-escolar" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">🗳️</span>
               <span class="nav-text">Gobierno & Elecciones</span>

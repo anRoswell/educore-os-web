@@ -125,7 +125,7 @@ export interface EntregaLmsItem {
                           <button class="btn btn-sm text-danger" (click)="eliminarPublicacion(post)" title="Eliminar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🗑️</button>
                         </div>
                       </div>
-                      <div class="post-content mb-3" [innerHTML]="post.contenido" style="color: #334155;"></div>
+                      <quill-view [content]="post.contenido" format="html" theme="snow" class="custom-quill-view"></quill-view>
                       @if (post.videoEmbedUrl) {
                         <div class="mt-3 video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
                           <iframe [src]="getSafeUrl(post.videoEmbedUrl)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
@@ -925,6 +925,35 @@ export interface EntregaLmsItem {
       }
   `,
   styles: [`
+/* Quill Viewer Custom Fixes */
+.custom-quill-view .ql-editor {
+  padding: 0;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #334155;
+  white-space: pre-wrap;
+}
+.custom-quill-view .ql-editor p {
+  margin-bottom: 0.75rem;
+}
+.custom-quill-view .ql-editor ul, .custom-quill-view .ql-editor ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.custom-quill-view .ql-editor ul {
+  list-style-type: disc;
+}
+.custom-quill-view .ql-editor ol {
+  list-style-type: decimal;
+}
+.custom-quill-view .ql-editor h1, 
+.custom-quill-view .ql-editor h2, 
+.custom-quill-view .ql-editor h3 {
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
     .lms-container {
       padding: 1.5rem;
       max-width: 1400px;

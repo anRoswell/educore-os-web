@@ -498,7 +498,8 @@ export interface EntregaLmsItem {
       </div>
 
       <!-- TABS DE NAVEGACIÓN -->
-      <div class="tabs-nav mt-4">
+      <div class="tabs-nav-wrapper mt-4" style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #e2e8f0; margin-bottom: 1rem;">
+        <div class="tabs-nav" style="border-bottom: none; padding-bottom: 0;">
         <button 
           (click)="tabActiva.set('tareas')" 
           [class.active]="tabActiva() === 'tareas'" 
@@ -522,6 +523,10 @@ export interface EntregaLmsItem {
           [class.active]="tabActiva() === 'estudiante_vista'" 
           class="tab-btn">
           <span>👨‍🎓 Vista de Entrega (Portal Estudiante)</span>
+        </button>
+        </div>
+        <button class="btn btn-primary" (click)="abrirModalCrearTarea()" style="padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
+          ➕ Crear Nueva Tarea
         </button>
       </div>
 

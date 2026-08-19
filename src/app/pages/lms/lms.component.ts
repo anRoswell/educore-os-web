@@ -275,7 +275,14 @@ export interface EntregaLmsItem {
                 <div class="grid grid-cols-2 gap-3 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                   <div class="form-group">
                     <label class="form-label-modern">Adjuntar Video (YouTube/Vimeo)</label>
-                    <input type="text" class="form-control-modern" placeholder="https://youtube.com/watch?v=..." [(ngModel)]="nuevaPublicacion.url_adjunta">
+                    <input type="text" class="form-control-modern" placeholder="https://youtube.com/watch?v=..." 
+                           [(ngModel)]="nuevaPublicacion.url_adjunta" (ngModelChange)="onUrlChange($event)">
+                    
+                    @if (videoPreviewUrl()) {
+                      <div class="mt-2 video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
+                        <iframe [src]="videoPreviewUrl()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+                      </div>
+                    }
                   </div>
                   <div class="form-group">
                     <label class="form-label-modern">Tipo de Publicación</label>
@@ -1666,6 +1673,7 @@ export class LmsComponent implements OnInit {
   editarPublicacion(post: any) {
     this.editandoPublicacionId.set(post.id);
     this.nuevaPublicacion = { ...post };
+    this.onUrlChange(post.url_adjunta || '');
     this.modalPublicacion.set(true);
   }
 
@@ -1723,6 +1731,7 @@ export class LmsComponent implements OnInit {
 
   abrirModalPublicacion() {
     this.editandoPublicacionId.set(null);
+    this.videoPreviewUrl.set(null);
     this.nuevaPublicacion = { titulo: '', contenido: '', url_adjunta: '', tipo: 'MATERIAL', archivoAdjuntoUrl: '', archivoAdjuntoNombre: '' };
     this.modalPublicacion.set(true);
   }
@@ -1750,6 +1759,26 @@ export class LmsComponent implements OnInit {
     if (files && files.length > 0) {
       this.archivoSeleccionado.set(files[0]);
     }
+  }
+
+  videoPreviewUrl = signal<any>(null);
+
+  onUrlChange(url: string) {
+    if (!url) {
+      this.videoPreviewUrl.set(null);
+      return;
+    }
+    const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    if (ytMatch && ytMatch[1]) {
+      this.videoPreviewUrl.set(this.getSafeUrl(`https://www.youtube.com/embed/${ytMatch[1]}`));
+      return;
+    }
+    const vimeoMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+      this.videoPreviewUrl.set(this.getSafeUrl(`https://player.vimeo.com/video/${vimeoMatch[1]}`));
+      return;
+    }
+    this.videoPreviewUrl.set(null);
   }
 
   // Archivos Adjuntos

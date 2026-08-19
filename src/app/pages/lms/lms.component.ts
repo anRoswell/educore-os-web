@@ -253,7 +253,7 @@ export interface EntregaLmsItem {
         }
         @if(modalPublicacion()) {
           <div class="modal-backdrop">
-            <div class="modal-card form-modal animate-slide-up" style="max-width: 650px;">
+            <div class="modal-card form-modal animate-slide-up" style="max-width: 850px; overflow-y: auto; max-height: 95vh;">
               <div class="modal-header-modern bg-gradient-indigo">
                 <div class="header-icon">📝</div>
                 <div>

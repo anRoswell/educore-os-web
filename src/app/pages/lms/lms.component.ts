@@ -1705,6 +1705,7 @@ export class LmsComponent implements OnInit {
 
   ngOnInit() {
     this.cargarTareasBackend();
+    this.cargarAulas();
     this.cargarParametrosLMS();
   }
 
@@ -2019,6 +2020,7 @@ export class LmsComponent implements OnInit {
       next: () => {
         this.isSaving.set(false);
         this.cargarTareasBackend();
+    this.cargarAulas();
         this.modalCrearTarea.set(false);
         this.toast.success('¡Tarea Publicada!', `La tarea "${nuevaItem.titulo}" ya está disponible en el aula virtual de los estudiantes.`);
       },

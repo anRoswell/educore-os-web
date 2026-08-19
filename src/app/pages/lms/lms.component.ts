@@ -306,10 +306,10 @@ export interface EntregaLmsItem {
                      (drop)="onDrop($event)"
                      style="border: 2px dashed; transition: all 0.2s ease; cursor: pointer; border-radius: 8px;"
                      (click)="fileInput.click()">
-                  <label class="form-label-modern mb-0" style="cursor: pointer; display: block;">
-                    <div style="font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem;">📎</div>
-                    <strong style="color: #475569;">Arrastra y suelta un documento aquí</strong><br>
-                    <span style="color: #64748b; font-size: 0.85rem;">o haz clic para explorar (PDF, Word, Excel)</span>
+                  <label class="form-label-modern mb-0" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%;">
+                    <div style="font-size: 2.5rem; color: #94a3b8; margin-bottom: 0.5rem;">📎</div>
+                    <strong style="color: #475569; font-size: 1.1rem;">Arrastra y suelta un documento aquí</strong>
+                    <span style="color: #64748b; font-size: 0.9rem; margin-top: 0.25rem;">o haz clic para explorar (PDF, Word, Excel)</span>
                   </label>
                   <input #fileInput type="file" (change)="onFileSelected($event)" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
                   @if (archivoSeleccionado()) {

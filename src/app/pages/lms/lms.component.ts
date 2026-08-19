@@ -117,10 +117,12 @@ export interface EntregaLmsItem {
 
                   @for (post of publicaciones(); track post.id) {
                     <div class="card shadow-sm mb-4 p-4 border" style="border-radius: 12px; background: white;">
-                      <div class="flex-between mb-2">
-                        <strong>{{ post.titulo }}</strong>
-                        <span class="badge" [ngClass]="post.tipo === 'MATERIAL' ? 'bg-indigo' : 'bg-success'">{{ post.tipo }}</span>
-                        <div style="display: inline-flex; gap: 0.5rem; margin-left: auto; padding-left: 1rem;">
+                      <div class="mb-3" style="display: flex; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                          <strong style="font-size: 1.1rem; color: #1e293b;">{{ post.titulo }}</strong>
+                          <span class="badge" [ngClass]="post.tipo === 'MATERIAL' ? 'bg-indigo' : 'bg-success'" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; margin-top: 2px;">{{ post.tipo }}</span>
+                        </div>
+                        <div style="display: inline-flex; gap: 0.5rem; margin-left: auto;">
                           <button class="btn btn-sm text-primary" (click)="editarPublicacion(post)" title="Editar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">✏️</button>
                           <button class="btn btn-sm text-danger" (click)="eliminarPublicacion(post)" title="Eliminar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🗑️</button>
                         </div>

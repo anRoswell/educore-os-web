@@ -1,14 +1,18 @@
 import sys
+import re
 
-with open('src/app/pages/matriculas/matriculas.component.ts', 'r') as f:
+with open('src/app/pages/lms/lms.component.ts', 'r') as f:
     content = f.read()
 
-signals = """  readonly modalNuevaMatricula = signal(false);
-  readonly modalPlantillas = signal(false);
-  plantillaContrato = '';
-  plantillaPagare = '';
-"""
-content = content.replace("  readonly modalNuevaMatricula = signal(false);", signals)
+signals = """  readonly isSaving = signal(false);
 
-with open('src/app/pages/matriculas/matriculas.component.ts', 'w') as f:
+  // Edit Mode & Confirm Modals
+  editandoAulaId = signal<string | null>(null);
+  editandoPublicacionId = signal<string | null>(null);
+  showConfirmModal = signal(false);
+  confirmModalConfig = signal({ title: '', message: '', confirmText: 'Confirmar', onConfirm: () => {} });"""
+
+content = re.sub(r'  readonly isSaving = signal\(false\);', signals, content)
+
+with open('src/app/pages/lms/lms.component.ts', 'w') as f:
     f.write(content)

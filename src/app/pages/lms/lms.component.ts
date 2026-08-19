@@ -99,6 +99,8 @@ export interface EntregaLmsItem {
                       <div class="aula-arrow">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                       </div>
+                      <button class="btn btn-sm text-primary" (click)="editarAula(aula, $event)" title="Editar Aula" style="background: none; border: none; font-size: 1.2rem; padding: 0 5px;">✏️</button>
+                      <button class="btn btn-sm text-danger" (click)="eliminarAula(aula, $event)" title="Eliminar Aula" style="background: none; border: none; font-size: 1.2rem; padding: 0 5px;">🗑️</button>
                     </div>
                   }
                 </div>
@@ -227,7 +229,7 @@ export interface EntregaLmsItem {
               <div class="modal-header-modern bg-gradient-indigo">
                 <div class="header-icon">🏫</div>
                 <div>
-                  <h3>Crear Nueva Aula Virtual</h3>
+                  <h3>{{ editandoAulaId() ? 'Editar Aula Virtual' : 'Crear Nueva Aula Virtual' }}</h3>
                   <p>Configura un nuevo espacio de aprendizaje para tus estudiantes</p>
                 </div>
                 <button class="close-btn-modern" (click)="modalCrearAula.set(false)">X</button>
@@ -255,7 +257,7 @@ export interface EntregaLmsItem {
               <div class="modal-header-modern bg-gradient-indigo">
                 <div class="header-icon">📝</div>
                 <div>
-                  <h3>Publicar en el Muro</h3>
+                  <h3>{{ editandoPublicacionId() ? 'Editar Publicación' : 'Publicar en el Muro' }}</h3>
                   <p>Comparte contenido, videos o documentos con tus estudiantes.</p>
                 </div>
                 <button class="close-btn-modern" (click)="modalPublicacion.set(false)">X</button>
@@ -301,7 +303,7 @@ export interface EntregaLmsItem {
                   @if (isUploading()) {
                     <span>Subiendo Archivo... ⏳</span>
                   } @else {
-                    <span>Publicar en Muro</span>
+                    <span>{{ editandoPublicacionId() ? 'Guardar Cambios' : 'Publicar en Muro' }}</span>
                   }
                 </button>
               </div>
@@ -1606,42 +1608,95 @@ export class LmsComponent implements OnInit {
 
   eliminarAula(aula: any, event: Event) {
     event.stopPropagation();
-    if (confirm('¿Está seguro de eliminar esta aula? Se perderán todas sus publicaciones.')) {
-      this.api.delete(`lms/aulas/${aula.id}`).subscribe(() => {
-        this.aulas.update(list => list.filter((a: any) => a.id !== aula.id));
-        if (this.aulaSeleccionada()?.id === aula.id) {
-          this.aulaSeleccionada.set(null);
-          this.publicaciones.set([]);
-        }
-        this.toast.success('Eliminada', 'Aula eliminada correctamente.');
-      });
-    }
+    this.confirmModalConfig.set({
+      title: 'Eliminar Aula',
+      message: '¿Está seguro de eliminar esta aula? Se perderán todas sus publicaciones y tareas de forma permanente.',
+      confirmText: 'Sí, eliminar',
+      onConfirm: () => {
+        this.showConfirmModal.set(false);
+        this.api.delete(`lms/aulas/${aula.id}`).subscribe(() => {
+          this.aulas.update(list => list.filter((a: any) => a.id !== aula.id));
+          if (this.aulaSeleccionada()?.id === aula.id) {
+            this.aulaSeleccionada.set(null);
+            this.publicaciones.set([]);
+          }
+          this.toast.success('Eliminada', 'Aula eliminada correctamente.');
+        });
+      }
+    });
+    this.showConfirmModal.set(true);
   }
 
   eliminarPublicacion(post: any) {
     const aulaId = this.aulaSeleccionada()?.id;
     if (!aulaId) return;
-    if (confirm('¿Eliminar esta publicación del muro?')) {
-      this.api.delete(`lms/aulas/${aulaId}/publicaciones/${post.id}`).subscribe(() => {
-        this.publicaciones.update(list => list.filter((p: any) => p.id !== post.id));
-        this.toast.success('Eliminada', 'Publicación eliminada.');
-      });
-    }
+    this.confirmModalConfig.set({
+      title: 'Eliminar Publicación',
+      message: '¿Estás seguro de eliminar esta publicación del muro? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      onConfirm: () => {
+        this.showConfirmModal.set(false);
+        this.api.delete(`lms/aulas/${aulaId}/publicaciones/${post.id}`).subscribe(() => {
+          this.publicaciones.update(list => list.filter((p: any) => p.id !== post.id));
+          this.toast.success('Eliminada', 'Publicación eliminada.');
+        });
+      }
+    });
+    this.showConfirmModal.set(true);
+  }
+
+  editarAula(aula: any, event: Event) {
+    event.stopPropagation();
+    this.editandoAulaId.set(aula.id);
+    this.nuevaAula = { ...aula };
+    this.modalCrearAula.set(true);
+  }
+
+  editarPublicacion(post: any) {
+    this.editandoPublicacionId.set(post.id);
+    this.nuevaPublicacion = { ...post };
+    this.modalPublicacion.set(true);
   }
 
   abrirModalCrearAula() {
+    this.editandoAulaId.set(null);
     this.nuevaAula = { nombre: '', descripcion: '', cargaDocenteId: null };
     this.modalCrearAula.set(true);
   }
 
   guardarAula() {
-    this.api.post<any>('lms/aulas', this.nuevaAula).subscribe({
-      next: (res) => {
-        this.aulas.update(list => [...list, res]);
-        this.modalCrearAula.set(false);
-        this.toast.success('Aula Creada', 'El aula virtual ha sido creada exitosamente.');
-      }
-    });
+    if (!this.nuevaAula.nombre || !this.nuevaAula.descripcion) {
+      this.toast.warning('Campos incompletos', 'Llene nombre y descripción.');
+      return;
+    }
+    this.isSaving.set(true);
+    const dto = {
+      ...this.nuevaAula,
+      cargaDocenteId: '99999999-9999-9999-9999-999999999999' // mock
+    };
+
+    const idToEdit = this.editandoAulaId();
+    if (idToEdit) {
+      this.api.put<any>(`lms/aulas/${idToEdit}`, dto).subscribe({
+        next: (res) => {
+          this.aulas.update(list => list.map(a => a.id === idToEdit ? { ...a, ...res } : a));
+          this.modalCrearAula.set(false);
+          this.isSaving.set(false);
+          this.toast.success('Aula actualizada', 'El aula se actualizó correctamente.');
+        },
+        error: () => this.isSaving.set(false)
+      });
+    } else {
+      this.api.post<any>('lms/aulas', dto).subscribe({
+        next: (res) => {
+          this.aulas.update(list => [res, ...list]);
+          this.modalCrearAula.set(false);
+          this.isSaving.set(false);
+          this.toast.success('Aula creada', 'El aula se ha creado correctamente.');
+        },
+        error: () => this.isSaving.set(false)
+      });
+    }
   }
 
   seleccionarAula(aula: any) {
@@ -1656,6 +1711,7 @@ export class LmsComponent implements OnInit {
   }
 
   abrirModalPublicacion() {
+    this.editandoPublicacionId.set(null);
     this.nuevaPublicacion = { titulo: '', contenido: '', url_adjunta: '', tipo: 'MATERIAL', archivoAdjuntoUrl: '', archivoAdjuntoNombre: '' };
     this.modalPublicacion.set(true);
   }
@@ -1699,15 +1755,28 @@ export class LmsComponent implements OnInit {
   }
 
   private crearPostBackend(aulaId: string) {
-    this.api.post<any>(`lms/aulas/${aulaId}/publicaciones`, this.nuevaPublicacion).subscribe({
-      next: (res) => {
-        this.publicaciones.update(list => [res, ...list]);
-        this.modalPublicacion.set(false);
-        this.isSaving.set(false);
-        this.toast.success('Publicado', 'Tu post se ha creado en el muro.');
-      },
-      error: () => this.isSaving.set(false)
-    });
+    const idToEdit = this.editandoPublicacionId();
+    if (idToEdit) {
+      this.api.put<any>(`lms/aulas/${aulaId}/publicaciones/${idToEdit}`, this.nuevaPublicacion).subscribe({
+        next: (res) => {
+          this.publicaciones.update(list => list.map(p => p.id === idToEdit ? { ...p, ...res } : p));
+          this.modalPublicacion.set(false);
+          this.isSaving.set(false);
+          this.toast.success('Post actualizado', 'Tu post se ha actualizado.');
+        },
+        error: () => this.isSaving.set(false)
+      });
+    } else {
+      this.api.post<any>(`lms/aulas/${aulaId}/publicaciones`, this.nuevaPublicacion).subscribe({
+        next: (res) => {
+          this.publicaciones.update(list => [res, ...list]);
+          this.modalPublicacion.set(false);
+          this.isSaving.set(false);
+          this.toast.success('Publicado', 'Tu post se ha creado en el muro.');
+        },
+        error: () => this.isSaving.set(false)
+      });
+    }
   }
 
 
@@ -1720,6 +1789,12 @@ export class LmsComponent implements OnInit {
 
   readonly tabActiva = signal<'tareas' | 'calificar' | 'estudiante_vista'>('tareas');
   readonly isSaving = signal(false);
+
+  // Edit Mode & Confirm Modals
+  editandoAulaId = signal<string | null>(null);
+  editandoPublicacionId = signal<string | null>(null);
+  showConfirmModal = signal(false);
+  confirmModalConfig = signal({ title: '', message: '', confirmText: 'Confirmar', onConfirm: () => {} });
   readonly isUploading = signal(false);
 
   // Filtros

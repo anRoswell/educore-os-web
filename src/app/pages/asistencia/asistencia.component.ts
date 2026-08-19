@@ -127,25 +127,29 @@ interface AlumnoAsistencia {
                           <button 
                             (click)="a.estado = 'PRESENTE'" 
                             [class.active]="a.estado === 'PRESENTE'" 
-                            class="estado-btn btn-presente">
+                            class="estado-btn btn-presente"
+                            title="Presente (El estudiante asistió puntualmente)">
                             P
                           </button>
                           <button 
                             (click)="a.estado = 'RETARDO'; a.notificarAcudiente = true" 
                             [class.active]="a.estado === 'RETARDO'" 
-                            class="estado-btn btn-retardo">
+                            class="estado-btn btn-retardo"
+                            title="Retardo (El estudiante llegó tarde)">
                             R
                           </button>
                           <button 
                             (click)="a.estado = 'FALTA_INJUSTIFICADA'; a.notificarAcudiente = true" 
                             [class.active]="a.estado === 'FALTA_INJUSTIFICADA'" 
-                            class="estado-btn btn-falta">
+                            class="estado-btn btn-falta"
+                            title="Falta Injustificada (No asistió y no tiene excusa)">
                             F
                           </button>
                           <button 
                             (click)="a.estado = 'FALTA_JUSTIFICADA'" 
                             [class.active]="a.estado === 'FALTA_JUSTIFICADA'" 
-                            class="estado-btn btn-justificada">
+                            class="estado-btn btn-justificada"
+                            title="Falta Justificada (Ausencia con excusa médica o calamidad)">
                             FJ
                           </button>
                         </div>

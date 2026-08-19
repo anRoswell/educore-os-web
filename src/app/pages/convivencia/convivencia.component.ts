@@ -70,6 +70,11 @@ export interface ActaComiteItem {
           <button (click)="abrirModalNuevaActa()" class="btn btn-secondary" title="Crear acta de sesión del Comité de Convivencia">
             📝 Nueva Sesión Comité
           </button>
+
+          <button (click)="abrirModalConfiguracion()" class="btn btn-outline" title="Ajustes de Notificaciones Disciplinarias">
+            ⚙️ Ajustes
+          </button>
+
           <button (click)="exportarReporteSiuce()" class="btn btn-secondary" title="Generar consolidado oficial SIUCE">
             📊 Exportar SIUCE (MEN)
           </button>
@@ -255,6 +260,11 @@ export interface ActaComiteItem {
                         <button (click)="abrirModalDescargos(caso)" class="btn-action btn-edit" title="Radicar descargos y evidencias">
                           ✍️ Descargos
                         </button>
+                        @if (caso.tipo_falta === 'TIPO_II' || caso.tipo_falta === 'TIPO_III') {
+                          <button (click)="reenviarNotificacion(caso.id)" class="btn-action" title="Reenviar Notificación a Acudiente" style="color: #6366f1;">
+                            ✉️ Reenviar Notificación
+                          </button>
+                        }
                       </div>
                     </td>
                   </tr>
@@ -759,6 +769,43 @@ export interface ActaComiteItem {
 
       <!-- ================================================= -->
       <!-- MODAL 5: INFORME MATRIZ OFICIAL SIUCE (MEN)        -->
+
+      <!-- ========================================== -->
+      <!-- MODAL 6: CONFIGURACIÓN CONVIVENCIA         -->
+      <!-- ========================================== -->
+      @if (modalConfiguracion()) {
+        <div class="modal-backdrop">
+          <div class="modal-content animate-slide-up">
+            <div class="modal-header">
+              <h2>⚙️ Configuración de Convivencia</h2>
+              <button class="close-btn" (click)="cerrarModalConfiguracion()">X</button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-info">
+                Parametrice el comportamiento del módulo disciplinario para toda la institución.
+              </div>
+
+              <div class="form-group mb-4">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                  <input type="checkbox" [(ngModel)]="colegioSettings.notificacionesDisciplinariasAuto" style="width: 20px; height: 20px;">
+                  <strong>Activar Notificaciones Automáticas</strong>
+                </label>
+                <small class="hint" style="display: block; margin-top: 5px; margin-left: 30px;">
+                  Si está activo, el sistema enviará un email al acudiente automáticamente cada vez que un docente registre una falta TIPO II (Grave) o TIPO III (Gravísima).
+                </small>
+              </div>
+
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" (click)="cerrarModalConfiguracion()">Cancelar</button>
+              <button class="btn btn-primary" (click)="guardarConfiguracion()">
+                💾 Guardar Ajustes
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- ================================================= -->
       @if (modalSiuceReporte()) {
         <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('siuceReporte')">
@@ -1449,6 +1496,14 @@ export class ConvivenciaComponent implements OnInit {
   // Modales
   readonly modalNuevoCaso = signal(false);
   readonly modalNuevaActa = signal(false);
+  readonly modalConfiguracion = signal(false);
+
+  // Settings state
+  colegioSettings = {
+    id: '',
+    notificacionesDisciplinariasAuto: false
+  };
+
   readonly casoSeleccionado = signal<CasoConvivenciaItem | null>(null);
   readonly actaParaVer = signal<ActaComiteItem | null>(null);
   readonly modalSiuceReporte = signal<boolean>(false);
@@ -1581,6 +1636,51 @@ export class ConvivenciaComponent implements OnInit {
   }
 
   // --- CRUD: NUEVO CASO ---
+
+  // --- CONFIGURACIÓN ---
+  abrirModalConfiguracion() {
+    this.api.get<any>('tenants/current').subscribe({
+      next: (col) => {
+        this.colegioSettings.id = col.id;
+        this.colegioSettings.notificacionesDisciplinariasAuto = col.notificacionesDisciplinariasAuto || false;
+        this.modalManager.open('configuracionConvivencia');
+        this.modalConfiguracion.set(true);
+      }
+    });
+  }
+
+  cerrarModalConfiguracion() {
+    this.modalManager.close('configuracionConvivencia');
+    this.modalConfiguracion.set(false);
+  }
+
+  guardarConfiguracion() {
+    this.api.patch<any>(`tenants/${this.colegioSettings.id}`, { notificacionesDisciplinariasAuto: this.colegioSettings.notificacionesDisciplinariasAuto }).subscribe({
+      next: () => {
+        this.toast.success('Ajustes guardados', 'La configuración de notificaciones automáticas ha sido actualizada.');
+        this.cerrarModalConfiguracion();
+      },
+      error: () => {
+        this.toast.error('Error', 'No fue posible guardar la configuración.');
+      }
+    });
+  }
+
+  // --- ENVIO A DEMANDA ---
+  reenviarNotificacion(casoId: string) {
+    if (confirm('¿Deseas reenviar la notificación al acudiente? Se dejará registro de auditoría.')) {
+      this.toast.info('Enviando...', 'Despachando correo al acudiente.');
+      this.api.post<any>(`convivencia/faltas/${casoId}/notificar-acudiente`, { ejecutadoPor: this.authService.currentUser()?.id }).subscribe({
+        next: (res) => {
+          this.toast.success('Enviado', 'La notificación fue enviada exitosamente.');
+        },
+        error: () => {
+          this.toast.error('Error', 'Fallo al enviar la notificación.');
+        }
+      });
+    }
+  }
+
   abrirModalNuevoCaso() {
     if (this.estudiantesList().length === 0) {
       this.cargarEstudiantes();

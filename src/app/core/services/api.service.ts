@@ -40,6 +40,11 @@ export class ApiService {
     return this.http.post<T>(this.buildUrl(endpoint), body);
   }
 
+
+  patch<T>(endpoint: string, body: any): Observable<T> {
+    return this.http.patch<T>(this.buildUrl(endpoint), body);
+  }
+
   put<T>(endpoint: string, body: any): Observable<T> {
     return this.http.put<T>(this.buildUrl(endpoint), body);
   }

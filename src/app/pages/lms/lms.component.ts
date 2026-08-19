@@ -130,7 +130,7 @@ export interface EntregaLmsItem {
         <!-- Modales Aulas -->
         @if(modalCrearAula()) {
           <div class="modal-backdrop">
-            <div class="modal-content animate-slide-up">
+            <div class="modal-card">
               <div class="modal-header">
                 <h2>Crear Nueva Aula Virtual</h2>
                 <button class="close-btn" (click)="modalCrearAula.set(false)">X</button>
@@ -145,7 +145,7 @@ export interface EntregaLmsItem {
         }
         @if(modalPublicacion()) {
           <div class="modal-backdrop">
-            <div class="modal-content animate-slide-up">
+            <div class="modal-card">
               <div class="modal-header">
                 <h2>Publicar en Muro</h2>
                 <button class="close-btn" (click)="modalPublicacion.set(false)">X</button>

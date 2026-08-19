@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { QuillModule } from 'ngx-quill';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -52,7 +53,7 @@ export interface EntregaLmsItem {
 @Component({
   selector: 'app-lms',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, QuillModule],
   template: `
     <div class="lms-container">
 
@@ -124,7 +125,7 @@ export interface EntregaLmsItem {
                           <button class="btn btn-sm text-danger" (click)="eliminarPublicacion(post)" title="Eliminar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🗑️</button>
                         </div>
                       </div>
-                      <p style="white-space: pre-wrap;">{{ post.contenido }}</p>
+                      <div class="post-content mb-3" [innerHTML]="post.contenido" style="color: #334155;"></div>
                       @if (post.videoEmbedUrl) {
                         <div class="mt-3 video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
                           <iframe [src]="getSafeUrl(post.videoEmbedUrl)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
@@ -134,7 +135,7 @@ export interface EntregaLmsItem {
                       @if (post.archivoAdjuntoUrl) {
                         <div class="mt-3 p-3 border rounded" style="background: #f8fafc; border-color: #e2e8f0; display: flex; align-items: center; justify-content: space-between; border-radius: 8px;">
                           <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-size: 1.5rem;">📄</span>
+                            <span style="font-size: 1.8rem;">{{ getFileIcon(post.archivoAdjuntoNombre) }}</span>
                             <div>
                               <strong style="color: #334155; display: block;">{{ post.archivoAdjuntoNombre || 'Documento Adjunto' }}</strong>
                               <span style="font-size: 0.8rem; color: #64748b;">Haga clic para descargar</span>
@@ -289,7 +290,10 @@ export interface EntregaLmsItem {
                 </div>
                 <div class="form-group mt-3">
                   <label class="form-label-modern">Cuerpo del Mensaje <span class="text-danger">*</span></label>
-                  <textarea class="form-control-modern" rows="4" [(ngModel)]="nuevaPublicacion.contenido" placeholder="Instrucciones, saludos o explicación del tema..."></textarea>
+                  <quill-editor [(ngModel)]="nuevaPublicacion.contenido" 
+                                  [styles]="{height: '200px'}" 
+                                  placeholder="Instrucciones, saludos o explicación del tema...">
+                    </quill-editor>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -1812,6 +1816,17 @@ export class LmsComponent implements OnInit {
       return;
     }
     this.videoPreviewUrl.set(null);
+  }
+
+
+  getFileIcon(filename: string | undefined): string {
+    if (!filename) return '📄';
+    const ext = filename.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return '📕';
+    if (['doc', 'docx'].includes(ext!)) return '📘';
+    if (['xls', 'xlsx'].includes(ext!)) return '📗';
+    if (['ppt', 'pptx'].includes(ext!)) return '📙';
+    return '📄';
   }
 
   // Archivos Adjuntos

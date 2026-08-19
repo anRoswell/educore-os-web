@@ -1,3 +1,4 @@
+import { AsistenciaComponent } from './pages/asistencia/asistencia.component';
 import { FirmaMatriculaComponent } from './pages/public/firma-matricula.component';
 import { FirmaDisciplinariaComponent } from './pages/public/firma-disciplinaria.component';
 import { Routes } from '@angular/router';
@@ -51,6 +52,10 @@ export const routes: Routes = [
       {
         path: 'lms',
         component: LmsComponent,
+      },
+      {
+        path: 'asistencia',
+        component: AsistenciaComponent,
       },
       {
         path: 'matriculas',

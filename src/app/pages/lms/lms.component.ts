@@ -83,7 +83,7 @@ export interface EntregaLmsItem {
               <button class="btn btn-primary mt-2" (click)="abrirModalCrearAula()">Crear Aula Virtual</button>
             </div>
           } @else {
-            <div class="main-lms-layout" [style.gridTemplateColumns]="isSidebarOpen() ? '300px minmax(0, 1fr) 300px' : '0px minmax(0, 1fr) 300px'" style="display: grid; gap: 2rem; transition: grid-template-columns 0.3s ease;">
+            <div class="main-lms-layout" [style.gridTemplateColumns]="isSidebarOpen() ? '320px minmax(0, 1fr) 300px' : '0px minmax(0, 1fr) 300px'" style="display: grid; gap: 2rem; transition: grid-template-columns 0.3s ease;">
               <!-- Sidebar Aulas -->
               <div class="aulas-sidebar shadow-sm" [style.opacity]="isSidebarOpen() ? 1 : 0" [style.pointerEvents]="isSidebarOpen() ? \'auto\' : \'none\'" style="overflow: hidden; transition: opacity 0.2s ease;">
                 <div class="sidebar-header">
@@ -140,14 +140,14 @@ export interface EntregaLmsItem {
 
                       @if (post.archivoAdjuntoUrl) {
                         <div class="mt-3 p-3 border rounded" style="background: #f8fafc; border-color: #e2e8f0; display: flex; align-items: center; justify-content: space-between; border-radius: 8px;">
-                          <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-size: 1.8rem;">{{ getFileIcon(post.archivoAdjuntoNombre) }}</span>
-                            <div>
-                              <strong style="color: #334155; display: block;">{{ post.archivoAdjuntoNombre || 'Documento Adjunto' }}</strong>
+                          <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1; padding-right: 1rem;">
+                            <span style="font-size: 1.8rem; flex-shrink: 0;">{{ getFileIcon(post.archivoAdjuntoNombre) }}</span>
+                            <div style="min-width: 0; overflow: hidden; width: 100%;">
+                              <strong style="color: #334155; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">{{ post.archivoAdjuntoNombre || 'Documento Adjunto' }}</strong>
                               <span style="font-size: 0.8rem; color: #64748b;">Haga clic para descargar</span>
                             </div>
                           </div>
-                          <a [href]="post.archivoAdjuntoUrl" target="_blank" class="btn btn-sm" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;">
+                          <a [href]="post.archivoAdjuntoUrl" target="_blank" class="btn btn-sm" style="flex-shrink: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;"  style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;">
                             ⬇️ Descargar
                           </a>
                         </div>
@@ -1070,7 +1070,7 @@ export interface EntregaLmsItem {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 1.25rem;
+      padding: 1rem; /* Modificado */
       display: flex;
       align-items: center;
       gap: 1rem;
@@ -1122,7 +1122,7 @@ export interface EntregaLmsItem {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 1.25rem;
+      padding: 1rem; /* Modificado */
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
@@ -1214,7 +1214,7 @@ export interface EntregaLmsItem {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 1.25rem;
+      padding: 1rem; /* Modificado */
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -1570,7 +1570,7 @@ export interface EntregaLmsItem {
     .aulas-sidebar {
       background: white;
       border-radius: 12px;
-      padding: 1.25rem;
+      padding: 1rem; /* Modificado */
       border: 1px solid #e2e8f0;
       height: fit-content;
     }
@@ -1600,7 +1600,7 @@ export interface EntregaLmsItem {
     .aula-item {
       display: flex;
       align-items: center;
-      padding: 0.85rem;
+      padding: 0.6rem 0.4rem; /* Modificado */
       border-radius: 10px;
       cursor: pointer;
       border: 1px solid transparent;
@@ -1610,9 +1610,9 @@ export interface EntregaLmsItem {
     .aula-item:hover { background: #f8fafc; border-color: #e2e8f0; }
     .aula-item.active { background: #eff6ff; border-color: #bfdbfe; box-shadow: 0 2px 4px rgba(59,130,246,0.05); }
     .aula-icon { font-size: 1.5rem; margin-right: 1rem; background: white; padding: 0.4rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .aula-info { flex: 1; display: flex; flex-direction: column; }
-    .aula-info strong { color: #1e293b; font-size: 0.95rem; }
-    .aula-info span { color: #64748b; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+    .aula-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .aula-info strong { color: #1e293b; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .aula-info span { color: #64748b; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     .aula-arrow { color: #cbd5e1; transition: transform 0.2s; }
     .aula-item.active .aula-arrow { color: #3b82f6; transform: translateX(3px); }
 
@@ -1672,7 +1672,7 @@ export interface EntregaLmsItem {
 
     .exam-integration-box {
       background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
-      padding: 1.25rem; display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem; /* Modificado */ display: flex; justify-content: space-between; align-items: center;
       flex-wrap: wrap; gap: 1rem;
     }
     .exam-info { display: flex; align-items: center; gap: 1rem; }

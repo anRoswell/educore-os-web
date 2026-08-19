@@ -27,27 +27,29 @@ import { GlossaryService } from '../../core/services/glossary.service';
 
           <!-- Body -->
           <div class="glossary-body">
-            <!-- 1. Explicación Sencilla -->
-            <div class="section-card main-explanation">
-              <div class="section-title">
-                <span>💡</span>
-                <h4>¿En qué consiste? (En palabras sencillas)</h4>
+            <div class="grid-cols-2" style="gap: 1rem;">
+              <!-- 1. Explicación Sencilla -->
+              <div class="section-card main-explanation">
+                <div class="section-title">
+                  <span>💡</span>
+                  <h4>¿En qué consiste?</h4>
+                </div>
+                <p>{{ glossary.activeTermino()?.explicacionSencilla }}</p>
               </div>
-              <p>{{ glossary.activeTermino()?.explicacionSencilla }}</p>
-            </div>
 
-            <!-- 2. ¿Para qué se usa en EduCoreOS? -->
-            <div class="section-card utility-box">
-              <div class="section-title">
-                <span>⚙️</span>
-                <h4>¿Por qué te lo pide el sistema?</h4>
+              <!-- 2. ¿Para qué se usa en EduCoreOS? -->
+              <div class="section-card utility-box">
+                <div class="section-title">
+                  <span>⚙️</span>
+                  <h4>¿Por qué te lo pide el sistema?</h4>
+                </div>
+                <p>{{ glossary.activeTermino()?.utilidadEnSistema }}</p>
               </div>
-              <p>{{ glossary.activeTermino()?.utilidadEnSistema }}</p>
             </div>
 
             <!-- 3. Ejemplo si aplica -->
             @if (glossary.activeTermino()?.ejemplo) {
-              <div class="section-card example-box">
+              <div class="section-card example-box mt-3">
                 <div class="section-title">
                   <span>📌</span>
                   <h4>Ejemplo práctico</h4>
@@ -58,7 +60,7 @@ import { GlossaryService } from '../../core/services/glossary.service';
 
             <!-- 4. Marco Legal -->
             @if (glossary.activeTermino()?.marcoLegal) {
-              <div class="legal-footnote">
+              <div class="legal-footnote mt-3">
                 <span>⚖️ <strong>Marco Legal / Normativa:</strong> {{ glossary.activeTermino()?.marcoLegal }}</span>
               </div>
             }
@@ -92,14 +94,14 @@ import { GlossaryService } from '../../core/services/glossary.service';
     }
 
     .glossary-card {
-      width: 100%;
-      max-width: 580px;
-      max-height: 90vh;
+      width: 95%;
+      max-width: 800px;
+      max-height: 92vh;
       overflow-y: auto;
       background: #ffffff;
       border: 1px solid rgba(226, 232, 240, 0.9);
       border-radius: 20px;
-      padding: 1.75rem;
+      padding: 1.75rem 2rem;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
 

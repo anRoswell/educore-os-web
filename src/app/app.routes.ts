@@ -11,6 +11,8 @@ import { ImportadorComponent } from './pages/importador/importador.component';
 import { DocumentalComponent } from './pages/documental/documental.component';
 import { LmsComponent } from './pages/lms/lms.component';
 import { ConvivenciaComponent } from './pages/convivencia/convivencia.component';
+import { InclusionComponent } from './pages/inclusion/inclusion.component';
+import { HabeasDataComponent } from './pages/habeas-data/habeas-data.component';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -59,6 +61,14 @@ export const routes: Routes = [
       {
         path: 'convivencia',
         component: ConvivenciaComponent,
+      },
+      {
+        path: 'inclusion',
+        component: InclusionComponent,
+      },
+      {
+        path: 'habeas-data',
+        component: HabeasDataComponent,
       },
       {
         path: 'documental',

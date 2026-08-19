@@ -356,15 +356,94 @@ textarea.input-custom {
   min-width: 0;
 }
 
-/* Micro-animaciones */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* ==========================================================================
+   SISTEMA GLOBAL DE PESTAÑAS (TABS) & CONTENIDO BODY
+   ========================================================================== */
+.tabs-container,
+.tabs-nav,
+.tabs-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--slate-200);
+  padding: 0 0.25rem 0.35rem 0.25rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
-.animate-fade-in {
-  animation: fadeIn 200ms ease-out forwards;
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    color: var(--primary-600);
+    background-color: var(--slate-100);
+  }
+
+  &.active {
+    color: var(--primary-600);
+    background-color: rgba(99, 102, 241, 0.08);
+    border-bottom-color: var(--primary-600);
+    font-weight: 700;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
+
+/* Contenedor del Cuerpo de la Pestaña (Tab Body) */
+.tab-body,
+.tab-content,
+.tab-pane {
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem 2rem;
+  margin-top: 0.75rem;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.tab-body-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--slate-100);
+  flex-wrap: wrap;
+}
+
+.tab-body-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--slate-800);
+}
+
+.tab-body-subtitle {
+  font-size: 0.8rem;
+  color: var(--slate-500);
+  margin-top: 0.25rem;
+}
+
 
 /* ==========================================================================
    SISTEMA GLOBAL DE MODALES & DIÁLOGOS CENTRADOS
@@ -405,13 +484,62 @@ textarea.input-custom {
 .modal-card {
   margin: auto !important;
   position: relative !important;
-  width: 100% !important;
-  max-width: 540px !important;
+  width: 95% !important;
+  max-width: 860px;
   background: #ffffff !important;
   border: 1px solid var(--slate-200) !important;
   border-radius: var(--radius-xl) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;
-  padding: 1.75rem !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
+  padding: 1.75rem 2rem !important;
+  max-height: 94vh !important;
+  overflow-y: auto;
+  box-sizing: border-box !important;
+
+  &.modal-sm { max-width: 580px !important; }
+  &.modal-md { max-width: 760px !important; }
+  &.modal-lg { max-width: 960px !important; }
+  &.modal-xl { max-width: 1140px !important; }
+  &.modal-2xl { max-width: 1320px !important; }
+}
+
+/* Modal Form Grid Helpers */
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.85rem 1.25rem;
+}
+
+.modal-form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem 1.25rem;
+}
+
+
+/* ==========================================================================
+   GLOBAL LOADING OVERLAY
+   ========================================================================== */
+.global-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  pointer-events: all;
+}
+
+.global-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-bottom-color: #4f46e5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }

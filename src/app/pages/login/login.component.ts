@@ -1,13 +1,20 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService, COLEGIOS_DEMO } from '../../core/services/auth.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-colegio.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalNuevoColegioComponent],
   template: `
+    <app-modal-nuevo-colegio
+      [visible]="modalNuevoColegio"
+      (visibleChange)="modalNuevoColegio.set($event)"
+      (colegioCreado)="onColegioCreado($event)"
+    ></app-modal-nuevo-colegio>
+
     <div class="login-page">
       <!-- Columna Izquierda: Showcase de la Plataforma -->
       <div class="showcase-side">
@@ -44,19 +51,39 @@ import { AuthService, COLEGIOS_DEMO } from '../../core/services/auth.service';
       <!-- Columna Derecha: Tarjeta de Acceso y Demo Picker -->
       <div class="form-side">
         <div class="login-card card card-glass">
-          <div class="card-header">
+          <div class="card-header" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <div style="background: linear-gradient(135deg, #6366f1, #4338ca); color: white; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); margin-bottom: 1rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 28px; height: 28px;">
+                <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+              </svg>
+            </div>
             <h3>Iniciar Sesión</h3>
             <p>Selecciona tu institución educativa y perfil para ingresar</p>
           </div>
 
-          <!-- Selector de Colegio Demo -->
+          <!-- Selector de Colegio con Escudo/Logo -->
           <div class="form-group">
-            <label class="form-label">Institución Educativa (Tenant)</label>
-            <select class="form-select" [(ngModel)]="selectedColegioIndex">
-              @for (col of colegios; track col.id; let i = $index) {
-                <option [value]="i">{{ col.nombre }} — {{ col.ciudad }} ({{ col.plan }})</option>
-              }
-            </select>
+            <div class="flex-between mb-1">
+              <label class="form-label" style="margin: 0;">Institución Educativa (Tenant)</label>
+              <button (click)="modalNuevoColegio.set(true)" class="btn-link-action" title="Crear nuevo colegio con logo">
+                + Registrar Colegio
+              </button>
+            </div>
+            
+            <div class="colegio-selector-card">
+              <div class="colegio-logo-badge" [style.background-color]="colegios()[selectedColegioIndex]?.colorPrimario || '#4f46e5'">
+                @if (colegios()[selectedColegioIndex]?.logoUrl) {
+                  <img [src]="colegios()[selectedColegioIndex]?.logoUrl" alt="Escudo" class="colegio-badge-img" />
+                } @else {
+                  {{ colegios()[selectedColegioIndex]?.nombre?.substring(0, 2)?.toUpperCase() }}
+                }
+              </div>
+              <select class="form-select" [(ngModel)]="selectedColegioIndex">
+                @for (col of colegios(); track col.id; let i = $index) {
+                  <option [value]="i">{{ col.nombre }} — {{ col.ciudad }} ({{ col.plan }})</option>
+                }
+              </select>
+            </div>
           </div>
 
           <!-- Acceso Rápido por Roles Demo -->
@@ -95,6 +122,13 @@ import { AuthService, COLEGIOS_DEMO } from '../../core/services/auth.service';
                 </div>
               </button>
             </div>
+          </div>
+
+          <!-- Botón Destacado para Registrar Nuevo Colegio -->
+          <div class="mt-3 text-center">
+            <button (click)="modalNuevoColegio.set(true)" class="btn btn-outline-primary w-full btn-sm">
+              🏫 ¿Tu colegio no está en la lista? Regístralo con su Escudo
+            </button>
           </div>
 
           <div class="divider">
@@ -325,6 +359,38 @@ import { AuthService, COLEGIOS_DEMO } from '../../core/services/auth.service';
       padding: 0 0.75rem;
     }
 
+    .colegio-selector-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.5rem;
+    }
+
+    .colegio-logo-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #4f46e5;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .colegio-badge-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .w-full {
       width: 100%;
     }
@@ -335,11 +401,18 @@ import { AuthService, COLEGIOS_DEMO } from '../../core/services/auth.service';
   `]
 })
 export class LoginComponent {
-  private readonly authService = inject(AuthService);
-  readonly colegios = COLEGIOS_DEMO;
+  readonly authService = inject(AuthService);
+  readonly colegios = this.authService.colegiosDisponibles;
   selectedColegioIndex = 0;
+  readonly modalNuevoColegio = signal<boolean>(false);
 
   login(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR') {
     this.authService.loginDemo(role, Number(this.selectedColegioIndex));
+  }
+
+  onColegioCreado(nuevoColegio: any) {
+    this.selectedColegioIndex = 0;
+    // Iniciar sesión inmediatamente como rector del nuevo colegio
+    this.authService.loginDemo('RECTOR', 0);
   }
 }

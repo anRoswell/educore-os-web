@@ -31,6 +31,9 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           <button (click)="guardarCalificaciones()" class="btn btn-primary" [disabled]="isSaving() || planilla().length === 0">
             <span>💾 {{ isSaving() ? 'Guardando...' : 'Guardar Planilla' }}</span>
           </button>
+                    <button (click)="descargarBoletinesMasivos()" class="btn btn-primary" title="Genera y descarga los boletines de todos los estudiantes de este grupo">
+            <span>📦 Descargar Boletines del Grupo (ZIP)</span>
+          </button>
           <button (click)="descargarBoletinDemo()" class="btn btn-secondary" title="Descargar Boletín Consolidado">
             <span>📄 Boletín PDF</span>
           </button>
@@ -1856,6 +1859,22 @@ export class AcademicoComponent implements OnInit {
     item.desempeno = 'BAJO';
     item.observaciones = 'Pendiente por registrar';
     this.toast.warning('Calificación Restablecida', `Se ha limpiado la calificación de ${item.estudianteNombre}.`);
+  }
+
+    descargarBoletinesMasivos() {
+    const grupoId = this.selectedGrupoId();
+    const periodoId = this.selectedPeriodoId();
+
+    if (!grupoId || !periodoId) {
+      this.toast.warning('Selección requerida', 'Seleccione un grupo y un periodo para generar los boletines masivos.');
+      return;
+    }
+
+    this.toast.info('Generando Boletines', 'Iniciando generación y compresión. Esto puede tardar unos segundos...');
+    
+    // Descargar el archivo desde el endpoint directamente
+    const url = this.api.getBaseUrl() + `/academico/boletines/descargar-masivo/${grupoId}/periodo/${periodoId}`;
+    window.open(url, '_blank');
   }
 
   descargarBoletinDemo() {

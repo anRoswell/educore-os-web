@@ -1,18 +1,29 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { ToastContainerComponent } from '../shared/components/toast-container.component';
 import { GlossaryModalComponent } from '../shared/components/glossary-modal.component';
+import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-colegio.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, GlossaryModalComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    ToastContainerComponent,
+    GlossaryModalComponent,
+    ModalNuevoColegioComponent,
+  ],
   template: `
     <div class="admin-shell">
       <app-toast-container></app-toast-container>
       <app-glossary-modal></app-glossary-modal>
+      <app-modal-nuevo-colegio [visible]="modalNuevoColegio" (visibleChange)="modalNuevoColegio.set($event)"></app-modal-nuevo-colegio>
+
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <!-- Logo y Marca -->
@@ -30,24 +41,35 @@ import { GlossaryModalComponent } from '../shared/components/glossary-modal.comp
 
         <!-- Selector de Institución (Tenant Switcher) -->
         <div class="tenant-selector-box">
-          <label class="tenant-label">INSTITUCIÓN EDUCATIVA (TENANT)</label>
+          <div class="flex-between mb-1">
+            <label class="tenant-label" style="margin: 0;">INSTITUCIÓN EDUCATIVA (TENANT)</label>
+            <button (click)="modalNuevoColegio.set(true)" class="btn-link-crear-colegio" title="Registrar Nueva Institución Educativa">
+              + Nuevo
+            </button>
+          </div>
           <div class="tenant-card">
-            <div class="tenant-avatar">
-              {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+            <div class="tenant-avatar" [style.background-color]="authService.colegio()?.colorPrimario || '#6366f1'">
+              @if (authService.colegio()?.logoUrl) {
+                <img [src]="authService.colegio()?.logoUrl" alt="Escudo" class="tenant-logo-img" />
+              } @else {
+                {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+              }
             </div>
             <div class="tenant-info">
               <span class="tenant-name" [title]="authService.colegio()?.nombre">{{ authService.colegio()?.nombre }}</span>
               <span class="tenant-sub">DANE: {{ authService.colegio()?.codigoDane }}</span>
             </div>
           </div>
-          <select 
-            class="tenant-select-dropdown" 
-            [value]="authService.colegio()?.id" 
-            (change)="onColegioChange($event)">
-            @for (col of authService.colegiosDisponibles(); track col.id) {
-              <option [value]="col.id">{{ col.nombre }} ({{ col.ciudad }})</option>
-            }
-          </select>
+          <div class="tenant-select-row">
+            <select 
+              class="tenant-select-dropdown" 
+              [value]="authService.colegio()?.id" 
+              (change)="onColegioChange($event)">
+              @for (col of authService.colegiosDisponibles(); track col.id) {
+                <option [value]="col.id">{{ col.nombre }} ({{ col.ciudad }})</option>
+              }
+            </select>
+          </div>
         </div>
 
         <!-- Menú de Navegación por Categorías -->
@@ -116,6 +138,16 @@ import { GlossaryModalComponent } from '../shared/components/glossary-modal.comp
               <span class="nav-icon">🛡️</span>
               <span class="nav-text">Convivencia & Observador</span>
               <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">1620</span>
+            </a>
+            <a routerLink="/inclusion" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">🧩</span>
+              <span class="nav-text">Inclusión & PIAR (DUA)</span>
+              <span class="badge-mini" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">1421</span>
+            </a>
+            <a routerLink="/habeas-data" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">⚖️</span>
+              <span class="nav-text">Protección de Datos & SIC</span>
+              <span class="badge-mini" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; border-color: rgba(2, 132, 199, 0.3);">1581</span>
             </a>
             <a routerLink="/gobierno-escolar" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">🗳️</span>
@@ -274,6 +306,17 @@ import { GlossaryModalComponent } from '../shared/components/glossary-modal.comp
       display: block;
     }
 
+    .btn-link-crear-colegio {
+      background: none;
+      border: none;
+      color: #818cf8;
+      font-size: 0.68rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      &:hover { color: #a5b4fc; text-decoration: underline; }
+    }
+
     .tenant-card {
       display: flex;
       align-items: center;
@@ -282,8 +325,8 @@ import { GlossaryModalComponent } from '../shared/components/glossary-modal.comp
     }
 
     .tenant-avatar {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
       background: linear-gradient(135deg, #10b981, #059669);
       color: white;
@@ -292,6 +335,14 @@ import { GlossaryModalComponent } from '../shared/components/glossary-modal.comp
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .tenant-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .tenant-info {
@@ -555,6 +606,7 @@ import { GlossaryModalComponent } from '../shared/components/glossary-modal.comp
 })
 export class AdminLayoutComponent {
   readonly authService = inject(AuthService);
+  readonly modalNuevoColegio = signal<boolean>(false);
 
   onColegioChange(event: Event) {
     const select = event.target as HTMLSelectElement;

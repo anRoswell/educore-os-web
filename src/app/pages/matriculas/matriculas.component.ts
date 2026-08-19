@@ -173,9 +173,18 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                   <app-help-badge term="CARNET_QR"></app-help-badge>
                 </h5>
                 <div class="carnet-card-sim mt-2">
-                  <div class="carnet-header">
-                    <span>{{ authService.colegio()?.nombre }}</span>
-                    <span class="text-xs">Vigencia 2026</span>
+                  <div class="carnet-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <div class="carnet-logo-mini" style="width: 24px; height: 24px; border-radius: 4px; overflow: hidden; background: #ffffff; display: flex; align-items: center; justify-content: center;">
+                        @if (authService.colegio()?.logoUrl) {
+                          <img [src]="authService.colegio()?.logoUrl" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" />
+                        } @else {
+                          <span style="color: #4f46e5; font-size: 0.6rem; font-weight: bold;">IE</span>
+                        }
+                      </div>
+                      <span style="font-weight: 700; font-size: 0.85rem;">{{ authService.colegio()?.nombre }}</span>
+                    </div>
+                    <span class="text-xs" style="opacity: 0.9;">Vigencia 2026</span>
                   </div>
                   <div class="carnet-body">
                     <div class="qr-placeholder">
@@ -188,6 +197,9 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                       <span class="text-xs text-slate-300">Doc: {{ selectedEstudiante()?.numeroDocumento }}</span>
                       <span class="badge badge-info mt-1" style="width: fit-content;">{{ selectedEstudiante()?.grado }} - {{ selectedEstudiante()?.grupo }}</span>
                     </div>
+                  </div>
+                  <div class="carnet-footer-contacts" style="background: rgba(0, 0, 0, 0.2); padding: 0.35rem 0.6rem; font-size: 0.65rem; color: #cbd5e1; text-align: center; border-radius: 0 0 8px 8px;">
+                    📍 {{ authService.colegio()?.direccion || 'Sede Principal' }} • 📞 {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }} • ✉️ {{ authService.colegio()?.emailContacto || 'info@colegio.edu.co' }}
                   </div>
                 </div>
               </div>

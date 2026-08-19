@@ -182,94 +182,96 @@ export interface EntregaLmsItem {
 
       <!-- TAB 1: BANDEJA DE TAREAS PUBLICADAS -->
       @if (tabActiva() === 'tareas') {
-        <div class="tareas-grid mt-4">
-          @for (tarea of tareasFiltradas(); track tarea.id) {
-            <div class="tarea-card" [class.tarea-activa]="tarea.id === tareaSeleccionada()?.id">
-              <div class="tarea-header">
-                <div class="tarea-tags">
-                  <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
-                  <span class="badge badge-secondary">{{ tarea.grupoNombre }}</span>
-                  <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}% Periodo</span>
-                </div>
-                <div class="tarea-menu">
-                  <button (click)="abrirModalEditarTarea(tarea)" class="btn-icon text-primary" title="Editar Parámetros de la Tarea">
-                    ✏️
-                  </button>
-                  <button (click)="eliminarTareaConfirm(tarea)" class="btn-icon text-danger" title="Eliminar Tarea">
-                    🗑️
-                  </button>
-                </div>
-              </div>
-
-              <h3 class="tarea-titulo">{{ tarea.titulo }}</h3>
-              <p class="tarea-instrucciones">{{ tarea.instrucciones }}</p>
-
-              <!-- Guía adjunta -->
-              @if (tarea.urlGuiaAdjunta) {
-                <div class="guia-attachment">
-                  <span class="guia-icon">📎</span>
-                  <div class="guia-info">
-                    <span class="guia-label">Guía / Material de Trabajo</span>
-                    <a [href]="tarea.urlGuiaAdjunta" target="_blank" class="guia-link">Descargar / Ver Documento ↗</a>
+        <div class="tab-body animate-fade-in">
+          <div class="tareas-grid">
+            @for (tarea of tareasFiltradas(); track tarea.id) {
+              <div class="tarea-card" [class.tarea-activa]="tarea.id === tareaSeleccionada()?.id">
+                <div class="tarea-header">
+                  <div class="tarea-tags">
+                    <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
+                    <span class="badge badge-secondary">{{ tarea.grupoNombre }}</span>
+                    <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}% Periodo</span>
+                  </div>
+                  <div class="tarea-menu">
+                    <button (click)="abrirModalEditarTarea(tarea)" class="btn-icon text-primary" title="Editar Parámetros de la Tarea">
+                      ✏️
+                    </button>
+                    <button (click)="eliminarTareaConfirm(tarea)" class="btn-icon text-danger" title="Eliminar Tarea">
+                      🗑️
+                    </button>
                   </div>
                 </div>
-              }
 
-              <!-- Fechas y Plazos -->
-              <div class="tarea-meta">
-                <div class="meta-item">
-                  <span class="meta-icon">📅</span>
-                  <span><strong>Publicado:</strong> {{ tarea.fechaPublicacion | date:'dd/MM/yyyy' }}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-icon">⏰</span>
-                  <span><strong>Límite:</strong> {{ tarea.fechaLimite | date:'dd/MM/yyyy HH:mm' }}</span>
-                </div>
-              </div>
+                <h3 class="tarea-titulo">{{ tarea.titulo }}</h3>
+                <p class="tarea-instrucciones">{{ tarea.instrucciones }}</p>
 
-              <!-- Barra de Progreso de Entregas -->
-              <div class="progreso-container">
-                <div class="progreso-header">
-                  <span>Avance de Entregas</span>
-                  <span class="progreso-numbers"><strong>{{ tarea.totalEntregas }}</strong> / {{ tarea.totalEstudiantes }}</span>
-                </div>
-                <div class="progress-bar-bg">
-                  <div 
-                    class="progress-bar-fill" 
-                    [style.width.%]="calcularPorcentaje(tarea.totalEntregas, tarea.totalEstudiantes)">
+                <!-- Guía adjunta -->
+                @if (tarea.urlGuiaAdjunta) {
+                  <div class="guia-attachment">
+                    <span class="guia-icon">📎</span>
+                    <div class="guia-info">
+                      <span class="guia-label">Guía / Material de Trabajo</span>
+                      <a [href]="tarea.urlGuiaAdjunta" target="_blank" class="guia-link">Descargar / Ver Documento ↗</a>
+                    </div>
+                  </div>
+                }
+
+                <!-- Fechas y Plazos -->
+                <div class="tarea-meta">
+                  <div class="meta-item">
+                    <span class="meta-icon">📅</span>
+                    <span><strong>Publicado:</strong> {{ tarea.fechaPublicacion | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-icon">⏰</span>
+                    <span><strong>Límite:</strong> {{ tarea.fechaLimite | date:'dd/MM/yyyy HH:mm' }}</span>
                   </div>
                 </div>
-                <div class="progreso-footer">
-                  <span class="text-xs text-slate-500">Calificadas: {{ tarea.totalCalificadas }}</span>
-                  @if (tarea.totalTardias > 0) {
-                    <span class="text-xs text-warning">⚠️ {{ tarea.totalTardias }} tardías</span>
-                  }
+
+                <!-- Barra de Progreso de Entregas -->
+                <div class="progreso-container">
+                  <div class="progreso-header">
+                    <span>Avance de Entregas</span>
+                    <span class="progreso-numbers"><strong>{{ tarea.totalEntregas }}</strong> / {{ tarea.totalEstudiantes }}</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div 
+                      class="progress-bar-fill" 
+                      [style.width.%]="calcularPorcentaje(tarea.totalEntregas, tarea.totalEstudiantes)">
+                    </div>
+                  </div>
+                  <div class="progreso-footer">
+                    <span class="text-xs text-slate-500">Calificadas: {{ tarea.totalCalificadas }}</span>
+                    @if (tarea.totalTardias > 0) {
+                      <span class="text-xs text-warning">⚠️ {{ tarea.totalTardias }} tardías</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Footer Botones -->
+                <div class="tarea-footer">
+                  <button (click)="seleccionarTareaParaCalificar(tarea)" class="btn btn-primary w-full">
+                    <span>📋 Revisar Entregas & Calificar (1290)</span>
+                  </button>
                 </div>
               </div>
-
-              <!-- Footer Botones -->
-              <div class="tarea-footer">
-                <button (click)="seleccionarTareaParaCalificar(tarea)" class="btn btn-primary w-full">
-                  <span>📋 Revisar Entregas & Calificar (1290)</span>
+            } @empty {
+              <div class="empty-state card">
+                <div class="empty-icon">📭</div>
+                <h3>No hay tareas publicadas con los filtros seleccionados</h3>
+                <p>Haz clic en "Crear Nueva Tarea" para publicar una actividad con su guía de trabajo.</p>
+                <button (click)="abrirModalCrearTarea()" class="btn btn-primary mt-3">
+                  <span>➕ Publicar Primera Tarea</span>
                 </button>
               </div>
-            </div>
-          } @empty {
-            <div class="empty-state card">
-              <div class="empty-icon">📭</div>
-              <h3>No hay tareas publicadas con los filtros seleccionados</h3>
-              <p>Haz clic en "Crear Nueva Tarea" para publicar una actividad con su guía de trabajo.</p>
-              <button (click)="abrirModalCrearTarea()" class="btn btn-primary mt-3">
-                <span>➕ Publicar Primera Tarea</span>
-              </button>
-            </div>
-          }
+            }
+          </div>
         </div>
       }
 
       <!-- TAB 2: PLANILLA DE REVISIÓN Y CALIFICACIÓN 1290 -->
       @if (tabActiva() === 'calificar' && tareaSeleccionada(); as tarea) {
-        <div class="card mt-4">
+        <div class="tab-body animate-fade-in">
           <div class="flex-between calificar-banner">
             <div>
               <div class="badge-header">
@@ -432,14 +434,14 @@ export interface EntregaLmsItem {
 
       <!-- TAB 3: VISTA SIMULADOR DEL ESTUDIANTE -->
       @if (tabActiva() === 'estudiante_vista') {
-        <div class="card mt-4">
-          <div class="flex-between">
+        <div class="tab-body animate-fade-in">
+          <div class="tab-body-header">
             <div>
-              <h3>👨‍🎓 Simulador de Bandeja de Tareas del Estudiante</h3>
-              <p class="text-slate-500">Visualiza cómo ve el alumno sus tareas y sube evidencias digitales</p>
+              <h3 class="tab-body-title">👨‍🎓 Simulador de Bandeja de Tareas del Estudiante</h3>
+              <p class="tab-body-subtitle">Visualiza cómo ve el alumno sus tareas y sube evidencias digitales</p>
             </div>
-            <div class="form-group" style="min-width: 280px;">
-              <label class="form-label">Estudiante Activo</label>
+            <div class="form-group" style="min-width: 280px; margin: 0;">
+              <label class="form-label" style="font-size: 0.75rem;">Estudiante Activo:</label>
               <select class="form-select" [(ngModel)]="estudianteSimuladoId">
                 <option value="11111111-1111-4111-8111-000000000001">Mariana García Torres (10°A)</option>
                 <option value="11111111-1111-4111-8111-000000000002">David López Ramírez (10°A)</option>
@@ -448,7 +450,7 @@ export interface EntregaLmsItem {
             </div>
           </div>
 
-          <div class="tareas-grid mt-4">
+          <div class="tareas-grid">
             @for (tarea of tareas(); track tarea.id) {
               <div class="tarea-card student-view-card">
                 <div class="tarea-header">
@@ -1240,136 +1242,10 @@ export class LmsComponent implements OnInit {
   };
 
   // Base de Datos de Tareas (Sincronizada con Backend)
-  readonly tareas = signal<TareaLmsItem[]>([
-    {
-      id: 't-001',
-      titulo: 'Taller de Derivadas y Regla de la Cadena',
-      instrucciones: 'Resolver los 15 ejercicios propuestos en la guía adjunta. Justificar paso a paso cada derivada y adjuntar fotos claras del procedimiento en el cuaderno.',
-      urlGuiaAdjunta: 'https://storage.educoreos.com/guias/matematicas-10a-derivadas.pdf',
-      fechaPublicacion: '2026-08-10',
-      fechaLimite: '2026-08-25T23:59:00',
-      permiteEntregaTardia: true,
-      pesoPorcentaje: 20.0,
-      cargaDocenteId: 'carga-10a-mat',
-      asignaturaNombre: 'Matemáticas & Cálculo',
-      grupoNombre: '10-A',
-      gradoNombre: 'Décimo',
-      periodoNombre: 'Periodo 1',
-      docenteNombres: 'Carlos',
-      docenteApellidos: 'Gómez',
-      totalEstudiantes: 32,
-      totalEntregas: 28,
-      totalCalificadas: 24,
-      totalTardias: 2,
-    },
-    {
-      id: 't-002',
-      titulo: 'Informe de Laboratorio: Movimiento Parabólico',
-      instrucciones: 'Elaborar informe formal en formato IEEE con base en las mediciones tomadas en el simulador PhET. Incluir tabla de datos, gráficas de dispersión y análisis de error porcentual.',
-      urlGuiaAdjunta: 'https://storage.educoreos.com/guias/fisica-laboratorio-parabolico.pdf',
-      fechaPublicacion: '2026-08-12',
-      fechaLimite: '2026-08-28T23:59:00',
-      permiteEntregaTardia: false,
-      pesoPorcentaje: 15.0,
-      cargaDocenteId: 'carga-10a-fis',
-      asignaturaNombre: 'Física Clásica',
-      grupoNombre: '10-A',
-      gradoNombre: 'Décimo',
-      periodoNombre: 'Periodo 1',
-      docenteNombres: 'Carlos',
-      docenteApellidos: 'Gómez',
-      totalEstudiantes: 32,
-      totalEntregas: 18,
-      totalCalificadas: 10,
-      totalTardias: 0,
-    },
-    {
-      id: 't-003',
-      titulo: 'Ensayo Argumentativo: Realismo Mágico en Cien Años de Soledad',
-      instrucciones: 'Redactar un ensayo de mínimo 1000 palabras analizando el concepto de soledad y la crítica política en la obra de Gabriel García Márquez.',
-      urlGuiaAdjunta: 'https://storage.educoreos.com/guias/lenguaje-ensayo-soledad.pdf',
-      fechaPublicacion: '2026-08-14',
-      fechaLimite: '2026-09-02T23:59:00',
-      permiteEntregaTardia: true,
-      pesoPorcentaje: 25.0,
-      cargaDocenteId: 'carga-10a-bio',
-      asignaturaNombre: 'Lengua Castellana',
-      grupoNombre: '10-A',
-      gradoNombre: 'Décimo',
-      periodoNombre: 'Periodo 1',
-      docenteNombres: 'Patricia',
-      docenteApellidos: 'Torres',
-      totalEstudiantes: 32,
-      totalEntregas: 5,
-      totalCalificadas: 0,
-      totalTardias: 0,
-    },
-  ]);
+  readonly tareas = signal<TareaLmsItem[]>([]);
 
   // Planilla de Entregas del Grupo Actual
-  readonly entregasActuales = signal<EntregaLmsItem[]>([
-    {
-      matriculaId: 'mat-001',
-      codigoEstudiante: 'EST-2026-001',
-      estudianteId: '11111111-1111-4111-8111-000000000001',
-      estudianteNombres: 'Mariana Lucía',
-      estudianteApellidos: 'García Torres',
-      estudianteDocumento: 'TI-1029384756',
-      entregaId: 'e-001',
-      fechaEntrega: '2026-08-18 16:45',
-      esTardia: false,
-      urlArchivoEntrega: 'https://storage.educoreos.com/entregas/garcia_mariana_taller1.pdf',
-      contenidoTexto: 'Profesor, adjunto los 15 ejercicios resueltos con comprobación de límites.',
-      calificacion: 4.8,
-      desempeno: 'SUPERIOR',
-      retroalimentacionDocente: 'Excelente trabajo. Procedimientos claros y muy buen orden en el desarrollo.',
-      estadoEntrega: 'CALIFICADO',
-    },
-    {
-      matriculaId: 'mat-002',
-      codigoEstudiante: 'EST-2026-002',
-      estudianteId: '11111111-1111-4111-8111-000000000002',
-      estudianteNombres: 'David Alejandro',
-      estudianteApellidos: 'López Ramírez',
-      estudianteDocumento: 'TI-1098765432',
-      entregaId: 'e-002',
-      fechaEntrega: '2026-08-19 10:20',
-      esTardia: false,
-      urlArchivoEntrega: 'https://storage.educoreos.com/entregas/lopez_david_taller1.pdf',
-      contenidoTexto: 'Envío el taller de cálculo.',
-      calificacion: 4.2,
-      desempeno: 'ALTO',
-      retroalimentacionDocente: 'Buen trabajo. Revisar la simplificación algebraica del ejercicio 12.',
-      estadoEntrega: 'CALIFICADO',
-    },
-    {
-      matriculaId: 'mat-003',
-      codigoEstudiante: 'EST-2026-003',
-      estudianteId: '11111111-1111-4111-8111-000000000003',
-      estudianteNombres: 'Sofía Valentina',
-      estudianteApellidos: 'Castro Morales',
-      estudianteDocumento: 'TI-1034567890',
-      entregaId: 'e-003',
-      fechaEntrega: '2026-08-20 08:15',
-      esTardia: false,
-      urlArchivoEntrega: 'https://storage.educoreos.com/entregas/castro_sofia_taller1.pdf',
-      contenidoTexto: 'Taller completo con gráficas anexas.',
-      calificacion: undefined,
-      desempeno: undefined,
-      retroalimentacionDocente: '',
-      estadoEntrega: 'ENTREGADO',
-    },
-    {
-      matriculaId: 'mat-004',
-      codigoEstudiante: 'EST-2026-004',
-      estudianteId: '11111111-1111-4111-8111-000000000004',
-      estudianteNombres: 'Carlos Andrés',
-      estudianteApellidos: 'Pérez Gómez',
-      estudianteDocumento: 'TI-1023456792',
-      esTardia: false,
-      estadoEntrega: 'PENDIENTE',
-    },
-  ]);
+  readonly entregasActuales = signal<EntregaLmsItem[]>([]);
 
   // Computed KPIs
   readonly totalEntregasRecibidas = computed(() =>

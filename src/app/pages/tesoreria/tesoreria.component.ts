@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalManagerService } from '../../core/services/modal-manager.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
+import { SearchableSelectComponent, SearchableOption } from '../../shared/components/searchable-select.component';
 
 export interface CuentaCobroItem {
   id: string;
@@ -66,7 +67,7 @@ export interface EstudianteFinanciero {
 @Component({
   selector: 'app-tesoreria',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, SearchableSelectComponent],
   template: `
     <div class="tesoreria-container">
       <!-- Header Principal -->
@@ -168,9 +169,9 @@ export interface EstudianteFinanciero {
       <!-- PESTAÑA 1: FACTURACIÓN & CUENTAS DE COBRO GENERALES      -->
       <!-- ======================================================== -->
       @if (tabActiva() === 'facturas') {
-        <div class="card mt-4 animate-fade-in">
+        <div class="tab-body animate-fade-in">
           <!-- Filtros de Búsqueda -->
-          <div class="filters-bar">
+          <div class="filters-bar mb-4">
             <div class="search-input-group">
               <span class="search-icon">🔍</span>
               <input 
@@ -279,7 +280,7 @@ export interface EstudianteFinanciero {
       <!-- PESTAÑA 2: FICHA FINANCIERA & ESTADO DE CUENTA POR ALUMNO-->
       <!-- ======================================================== -->
       @if (tabActiva() === 'estudiante') {
-        <div class="card mt-4 animate-fade-in">
+        <div class="tab-body animate-fade-in">
           <!-- Selector / Buscador de Alumno -->
           <div class="student-search-header">
             <div>
@@ -609,8 +610,8 @@ export interface EstudianteFinanciero {
       <!-- PESTAÑA 3: HISTORIAL GENERAL DE RECIBOS DE CAJA          -->
       <!-- ======================================================== -->
       @if (tabActiva() === 'recaudos') {
-        <div class="card mt-4 animate-fade-in">
-          <div class="card-title-bar">
+        <div class="tab-body animate-fade-in">
+          <div class="card-title-bar mb-4">
             <div>
               <h3>🧾 Historial General de Recibos de Caja & Ventanilla</h3>
               <p>Registro cronológico de todos los dineros ingresados a la institución por cualquier medio</p>
@@ -620,7 +621,7 @@ export interface EstudianteFinanciero {
             </button>
           </div>
 
-          <div class="table-container mt-3">
+          <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
@@ -665,8 +666,8 @@ export interface EstudianteFinanciero {
       <!-- PESTAÑA 4: ACUERDOS DE PAGO & REFINANCIACIÓN            -->
       <!-- ======================================================== -->
       @if (tabActiva() === 'acuerdos') {
-        <div class="card mt-4 animate-fade-in">
-          <div class="card-title-bar">
+        <div class="tab-body animate-fade-in">
+          <div class="card-title-bar mb-4">
             <div>
               <h3>🤝 Acuerdos de Pago & Financiación de Cartera</h3>
               <p>Refinanciación en cuotas para familias en mora con suspensión temporal de bloqueo de boletines</p>
@@ -676,7 +677,7 @@ export interface EstudianteFinanciero {
             </button>
           </div>
 
-          <div class="table-container mt-3">
+          <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
@@ -723,8 +724,8 @@ export interface EstudianteFinanciero {
       <!-- PESTAÑA 5: REPORTES & EXPORTACIÓN CONTABLE               -->
       <!-- ======================================================== -->
       @if (tabActiva() === 'reportes') {
-        <div class="card mt-4 animate-fade-in">
-          <div class="card-title-bar">
+        <div class="tab-body animate-fade-in">
+          <div class="card-title-bar mb-4">
             <div>
               <h3>📊 Reportes Financieros & Exportación a Software Contable</h3>
               <p>Exportación para Siigo, World Office, Helisa y cumplimiento de Documento Equivalente DIAN</p>
@@ -777,42 +778,44 @@ export interface EstudianteFinanciero {
       <!-- MODAL 1: REGISTRAR PAGO MANUAL / CAJA EN VENTANILLA -->
       @if (modalPagoManual()) {
         <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 520px;">
+          <div class="modal-card card card-glass" style="max-width: 820px;">
             <div class="modal-header">
               <h3>💵 Registrar Recaudo en Ventanilla (Caja)</h3>
               <button (click)="modalPagoManual.set(false)" class="close-btn">&times;</button>
             </div>
 
             <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Estudiante / Factura a Cruzar *</label>
-                <select class="form-select" [(ngModel)]="nuevoPagoManual.cuentaCobroId">
-                  @for (c of cuentasPendientes(); track c.id) {
-                    <option [value]="c.id">
-                      {{ c.estudianteNombre }} — {{ c.numeroFactura }} (\${{ c.valorTotal | number }} COP)
-                    </option>
-                  }
-                </select>
-              </div>
+              <div class="modal-form-grid">
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Estudiante / Factura a Cruzar *</label>
+                  <select class="form-select" [(ngModel)]="nuevoPagoManual.cuentaCobroId">
+                    @for (c of cuentasPendientes(); track c.id) {
+                      <option [value]="c.id">
+                        {{ c.estudianteNombre }} — {{ c.numeroFactura }} (\${{ c.valorTotal | number }} COP)
+                      </option>
+                    }
+                  </select>
+                </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label">Medio de Pago *</label>
-                <select class="form-select" [(ngModel)]="nuevoPagoManual.medioPago">
-                  <option value="EFECTIVO">💵 Efectivo en Ventanilla</option>
-                  <option value="TRANSFERENCIA_BANCOLOMBIA">🏦 Transferencia Bancolombia / Davivienda</option>
-                  <option value="NEQUI_QR">📱 Nequi / Daviplata QR</option>
-                  <option value="TARJETA_CREDITO">💳 Datáfono / Tarjeta</option>
-                </select>
-              </div>
+                <div class="form-group">
+                  <label class="form-label">Medio de Pago *</label>
+                  <select class="form-select" [(ngModel)]="nuevoPagoManual.medioPago">
+                    <option value="EFECTIVO">💵 Efectivo en Ventanilla</option>
+                    <option value="TRANSFERENCIA_BANCOLOMBIA">🏦 Transferencia Bancolombia / Davivienda</option>
+                    <option value="NEQUI_QR">📱 Nequi / Daviplata QR</option>
+                    <option value="TARJETA_CREDITO">💳 Datáfono / Tarjeta</option>
+                  </select>
+                </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label">Valor Recibido ($ COP) *</label>
-                <input type="number" class="form-control" [(ngModel)]="nuevoPagoManual.valorPagado" />
-              </div>
+                <div class="form-group">
+                  <label class="form-label">Valor Recibido ($ COP) *</label>
+                  <input type="number" class="form-control" [(ngModel)]="nuevoPagoManual.valorPagado" />
+                </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label">Número de Comprobante / Voucher Banco</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoPagoManual.referenciaTransaccion" placeholder="Ej: VOUCHER-9847291" />
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Número de Comprobante / Voucher Banco</label>
+                  <input type="text" class="form-control" [(ngModel)]="nuevoPagoManual.referenciaTransaccion" placeholder="Ej: VOUCHER-9847291" />
+                </div>
               </div>
             </div>
 
@@ -829,28 +832,29 @@ export interface EstudianteFinanciero {
       <!-- MODAL 2: CREAR ACUERDO DE PAGO EN CUOTAS -->
       @if (modalNuevoAcuerdo()) {
         <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 520px;">
+          <div class="modal-card card card-glass" style="max-width: 820px;">
             <div class="modal-header">
               <h3>🤝 Nuevo Acuerdo de Pago & Refinanciación</h3>
               <button (click)="modalNuevoAcuerdo.set(false)" class="close-btn">&times;</button>
             </div>
 
             <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Estudiante en Mora *</label>
-                <select class="form-select" [(ngModel)]="nuevoAcuerdo.estudianteId">
-                  @for (est of listaEstudiantes(); track est.id) {
-                    <option [value]="est.id">{{ est.nombre }} ({{ est.grado }})</option>
-                  }
-                </select>
-              </div>
+              <div class="modal-form-grid">
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Estudiante en Mora *</label>
+                  <app-searchable-select
+                    [options]="estudiantesMoraSelectOptions()"
+                    [(ngModel)]="nuevoAcuerdo.estudianteId"
+                    placeholder="🔍 Buscar estudiante por nombre, grado o documento..."
+                    searchPlaceholder="Escriba para filtrar en tiempo real..."
+                  ></app-searchable-select>
+                </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label">Monto Total de Deuda a Refinanciar ($ COP) *</label>
-                <input type="number" class="form-control" [(ngModel)]="nuevoAcuerdo.montoTotalAcordado" />
-              </div>
+                <div class="form-group">
+                  <label class="form-label">Monto Total de Deuda a Refinanciar ($ COP) *</label>
+                  <input type="number" class="form-control" [(ngModel)]="nuevoAcuerdo.montoTotalAcordado" />
+                </div>
 
-              <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
                   <label class="form-label">Número de Cuotas *</label>
                   <select class="form-select" [(ngModel)]="nuevoAcuerdo.numeroCuotas">
@@ -860,25 +864,22 @@ export interface EstudianteFinanciero {
                     <option [value]="6">6 cuotas mensuales</option>
                   </select>
                 </div>
+
                 <div class="form-group">
-                  <label class="form-label">Día Límite de Pago Mensual</label>
+                  <label class="form-label">Día de Pago Mensual (1-30) *</label>
                   <input type="number" class="form-control" [(ngModel)]="nuevoAcuerdo.diaPagoMensual" min="1" max="30" />
                 </div>
-              </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label">Observaciones y Compromisos del Acudiente</label>
-                <textarea class="form-control" rows="2" [(ngModel)]="nuevoAcuerdo.observaciones" placeholder="Ej: El acudiente se compromete a cancelar cuota mensual con la prima de servicios."></textarea>
-              </div>
-
-              <div class="mt-3 p-3" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem;">
-                <span>Valor estimado por cuota: <strong>\${{ (nuevoAcuerdo.montoTotalAcordado / nuevoAcuerdo.numeroCuotas) | number }} COP / mes</strong></span>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Compromiso / Observaciones</label>
+                  <input type="text" class="form-control" [(ngModel)]="nuevoAcuerdo.observaciones" placeholder="Ej: Acudiente abonará en quincenas" />
+                </div>
               </div>
             </div>
 
             <div class="modal-footer">
               <button (click)="guardarNuevoAcuerdo()" class="btn btn-primary">
-                ✍️ Firmar y Activar Acuerdo
+                💾 Firmar Acuerdo & Reestructurar Cartera
               </button>
               <button (click)="modalNuevoAcuerdo.set(false)" class="btn btn-secondary">Cancelar</button>
             </div>
@@ -896,10 +897,19 @@ export interface EstudianteFinanciero {
             </div>
 
             <div class="modal-body print-area">
-              <div class="text-center" style="border-bottom: 2px solid #cbd5e1; padding-bottom: 0.75rem;">
-                <h4>{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h4>
-                <p class="text-xs text-slate-500">NIT: {{ authService.colegio()?.nit }} | DANE: {{ authService.colegio()?.codigoDane }}</p>
-                <h3 style="color: #1e1b4b; margin-top: 0.5rem;">RECIBO DE CAJA Y COMPROBANTE DE RECAUDO</h3>
+              <div class="report-header-card" style="display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #cbd5e1; padding-bottom: 0.75rem;">
+                <div class="report-logo-box" style="width: 52px; height: 52px; border-radius: 10px; overflow: hidden; background: #4f46e5; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+                  @if (authService.colegio()?.logoUrl) {
+                    <img [src]="authService.colegio()?.logoUrl" alt="Escudo" style="width: 100%; height: 100%; object-fit: cover;" />
+                  } @else {
+                    {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+                  }
+                </div>
+                <div style="flex: 1;">
+                  <h4 style="margin: 0; color: #0f172a; font-weight: 800; font-size: 1.05rem;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h4>
+                  <p class="text-xs text-slate-500" style="margin: 0.15rem 0;">NIT: {{ authService.colegio()?.nit }} | DANE: {{ authService.colegio()?.codigoDane }}</p>
+                  <strong style="color: #1e1b4b; font-size: 0.85rem;">RECIBO DE CAJA Y COMPROBANTE DE RECAUDO</strong>
+                </div>
               </div>
 
               <div class="mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px;">
@@ -917,7 +927,7 @@ export interface EstudianteFinanciero {
                 <span class="text-xs text-slate-500 font-italic">Estado: APROBADO Y CONCILIADO EN LIBROS</span>
               </div>
 
-              <div class="firmas-grid mt-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; text-align: center; font-size: 0.75rem; margin-top: 2rem;">
+              <div class="firmas-grid mt-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; text-align: center; font-size: 0.75rem; margin-top: 1.5rem;">
                 <div>
                   <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
                   <span>PAGADURÍA / TESORERÍA</span>
@@ -926,6 +936,15 @@ export interface EstudianteFinanciero {
                   <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
                   <span>FIRMA Y SELLO DE CAJA</span>
                 </div>
+              </div>
+
+              <!-- Pie de página institucional con Dirección, Teléfono y Correo -->
+              <div class="report-footer-contacts mt-4" style="border-top: 1px solid #e2e8f0; padding-top: 0.6rem; text-align: center; font-size: 0.75rem; color: #64748b;">
+                <span>📍 Dirección: {{ authService.colegio()?.direccion || 'Campus Central' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>📞 Tel: {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>✉️ Correo: {{ authService.colegio()?.emailContacto || 'rectoria@sanbartolome.edu.co' }}</span>
               </div>
             </div>
 
@@ -942,7 +961,7 @@ export interface EstudianteFinanciero {
       <!-- MODAL 3.5: CREAR CONCEPTO DE COBRO -->
       @if (modalNuevoConcepto()) {
         <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoConcepto')">
-          <div class="modal-card card card-glass" style="max-width: 520px;">
+          <div class="modal-card card card-glass" style="max-width: 780px;">
             <div class="modal-header">
               <div>
                 <h3>🏷️ Crear Concepto de Cobro / Tarifa</h3>
@@ -952,17 +971,17 @@ export interface EstudianteFinanciero {
             </div>
 
             <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Nombre del Concepto *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="nuevoConceptoForm.nombre"
-                  placeholder="Ej: Pensión Mensual, Seguro Escolar, Salida Pedagógica"
-                />
-              </div>
+              <div class="modal-form-grid">
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Nombre del Concepto *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoConceptoForm.nombre"
+                    placeholder="Ej: Pensión Mensual, Seguro Escolar, Salida Pedagógica"
+                  />
+                </div>
 
-              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
                   <label class="form-label">Código Único *</label>
                   <input
@@ -972,6 +991,7 @@ export interface EstudianteFinanciero {
                     placeholder="Ej: PENS-01, MAT-2026, SEG-EST"
                   />
                 </div>
+
                 <div class="form-group">
                   <label class="form-label">Valor Sugerido ($ COP)</label>
                   <input
@@ -981,13 +1001,13 @@ export interface EstudianteFinanciero {
                     min="0"
                   />
                 </div>
-              </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                  <input type="checkbox" [(ngModel)]="nuevoConceptoForm.esRecurrenteMensual" style="width: 18px; height: 18px;" />
-                  <span>¿Es cobro recurrente mensual? (ej: Pensión mensual)</span>
-                </label>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" [(ngModel)]="nuevoConceptoForm.esRecurrenteMensual" style="width: 18px; height: 18px;" />
+                    <span>¿Es cobro recurrente mensual? (ej: Pensión mensual)</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -1004,37 +1024,42 @@ export interface EstudianteFinanciero {
       <!-- MODAL 4: EMITIR COBRO INDIVIDUAL -->
       @if (modalNuevoCobro()) {
         <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoCobro')">
-          <div class="modal-card card card-glass" style="max-width: 500px;">
+          <div class="modal-card card card-glass" style="max-width: 820px;">
             <div class="modal-header">
               <h3>➕ Emitir Cobro Individual / Extraordinario</h3>
               <button (click)="cerrarModalNuevoCobro()" class="close-btn">&times;</button>
             </div>
 
             <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Estudiante *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoCobro.estudianteNombre" placeholder="Nombre completo del estudiante" />
-              </div>
-              <div class="form-group mt-3">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                  <label class="form-label" style="margin: 0;">Concepto de Cobro *</label>
-                  <button (click)="abrirModalNuevoConcepto()" style="background: none; border: none; color: #4f46e5; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: underline;">+ Nuevo Concepto</button>
+              <div class="modal-form-grid">
+                <div class="form-group">
+                  <label class="form-label">Estudiante *</label>
+                  <input type="text" class="form-control" [(ngModel)]="nuevoCobro.estudianteNombre" placeholder="Nombre completo del estudiante" />
                 </div>
-                <select class="form-select" [(ngModel)]="nuevoCobro.concepto" (ngModelChange)="onConceptoSelect($event)">
-                  @for (con of conceptosList(); track con.id) {
-                    <option [value]="con.nombre">{{ con.nombre }} (\${{ con.valorSugerido | number }} COP)</option>
-                  } @empty {
-                    <option value="Pensión Mensual Escolar">Pensión Mensual Escolar</option>
-                  }
-                </select>
-              </div>
-              <div class="form-group mt-3">
-                <label class="form-label">Valor en Pesos ($ COP) *</label>
-                <input type="number" class="form-control" [(ngModel)]="nuevoCobro.valorTotal" />
-              </div>
-              <div class="form-group mt-3">
-                <label class="form-label">Fecha Límite de Pago *</label>
-                <input type="date" class="form-control" [(ngModel)]="nuevoCobro.fechaVencimiento" />
+
+                <div class="form-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label class="form-label" style="margin: 0;">Concepto de Cobro *</label>
+                    <button (click)="abrirModalNuevoConcepto()" style="background: none; border: none; color: #4f46e5; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: underline;">+ Nuevo Concepto</button>
+                  </div>
+                  <select class="form-select" [(ngModel)]="nuevoCobro.concepto" (ngModelChange)="onConceptoSelect($event)">
+                    @for (con of conceptosList(); track con.id) {
+                      <option [value]="con.nombre">{{ con.nombre }} (\${{ con.valorSugerido | number }} COP)</option>
+                    } @empty {
+                      <option value="Pensión Mensual Escolar">Pensión Mensual Escolar</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Valor en Pesos ($ COP) *</label>
+                  <input type="number" class="form-control" [(ngModel)]="nuevoCobro.valorTotal" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Fecha Límite de Pago *</label>
+                  <input type="date" class="form-control" [(ngModel)]="nuevoCobro.fechaVencimiento" />
+                </div>
               </div>
             </div>
 
@@ -1145,8 +1170,8 @@ export interface EstudianteFinanciero {
             </div>
 
             <div class="modal-footer">
-              <button (click)="confirmarPagoDemo()" class="btn btn-success">
-                Simular Pago Aprobado (PSE)
+              <button (click)="confirmarPagoWompi()" class="btn btn-success">
+                💳 Procesar Pago PSE Wompi
               </button>
               <button (click)="cerrarModalCheckout()" class="btn btn-secondary">Cancelar</button>
             </div>
@@ -1164,10 +1189,19 @@ export interface EstudianteFinanciero {
             </div>
 
             <div class="modal-body print-area">
-              <div class="text-center pb-3" style="border-bottom: 2px solid #0f172a;">
-                <h3 style="margin: 0; color: #1e1b4b;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h3>
-                <p class="text-xs text-slate-500" style="margin: 0.2rem 0;">NIT: {{ authService.colegio()?.nit }} | Código DANE: {{ authService.colegio()?.codigoDane }}</p>
-                <h4 style="margin-top: 0.5rem; color: #4338ca; text-transform: uppercase; letter-spacing: 0.05em;">ESTADO DE CUENTA Y EXTRACTO DE CARTERA 2026</h4>
+              <div class="report-header-card" style="display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #0f172a; padding-bottom: 0.75rem;">
+                <div class="report-logo-box" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: #4f46e5; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+                  @if (authService.colegio()?.logoUrl) {
+                    <img [src]="authService.colegio()?.logoUrl" alt="Escudo" style="width: 100%; height: 100%; object-fit: cover;" />
+                  } @else {
+                    {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+                  }
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="margin: 0; color: #1e1b4b; font-size: 1.15rem; font-weight: 800;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h3>
+                  <p class="text-xs text-slate-500" style="margin: 0.15rem 0;">NIT: {{ authService.colegio()?.nit }} | Código DANE: {{ authService.colegio()?.codigoDane }} | Res. MEN {{ authService.colegio()?.resolucionAprobacion || '4512 de 2018' }}</p>
+                  <h4 style="margin: 0.25rem 0 0 0; color: #4338ca; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">ESTADO DE CUENTA Y EXTRACTO DE CARTERA 2026</h4>
+                </div>
               </div>
 
               <div class="mt-3 p-3" style="background: #f8fafc; border-radius: 8px; font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
@@ -1221,7 +1255,7 @@ export interface EstudianteFinanciero {
                 </div>
               </div>
 
-              <div class="firmas-grid mt-5" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; text-align: center; font-size: 0.75rem; margin-top: 2.5rem;">
+              <div class="firmas-grid mt-5" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; text-align: center; font-size: 0.75rem; margin-top: 2rem;">
                 <div>
                   <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
                   <strong>PAGADURÍA & TESORERÍA</strong><br>
@@ -1232,6 +1266,15 @@ export interface EstudianteFinanciero {
                   <strong>RECTORÍA GENERAL</strong><br>
                   <span>EduCoreOS Auditoría Contable</span>
                 </div>
+              </div>
+
+              <!-- Pie de página institucional con Dirección, Teléfono y Correo -->
+              <div class="report-footer-contacts mt-4" style="border-top: 1px solid #e2e8f0; padding-top: 0.6rem; text-align: center; font-size: 0.75rem; color: #64748b;">
+                <span>📍 Dirección: {{ authService.colegio()?.direccion || 'Campus Central' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>📞 Tel: {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>✉️ Correo: {{ authService.colegio()?.emailContacto || 'rectoria@sanbartolome.edu.co' }}</span>
               </div>
             </div>
 
@@ -1307,10 +1350,18 @@ export interface EstudianteFinanciero {
             </div>
 
             <div class="modal-body print-area">
-              <div class="text-center pb-3" style="border-bottom: 2px solid #1e1b4b;">
-                <h2 style="color: #1e1b4b; margin: 0;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h2>
-                <p class="text-xs text-slate-500" style="margin: 0.25rem 0;">Resolución de Aprobación Oficial MEN N° 10245 | NIT: {{ authService.colegio()?.nit }} | DANE: {{ authService.colegio()?.codigoDane }}</p>
-                <p class="text-xs text-slate-500">Dirección: Carrera 7 # 9-96, Bogotá D.C. | PBX: (601) 3412000</p>
+              <div class="report-header-card" style="display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #1e1b4b; padding-bottom: 0.75rem;">
+                <div class="report-logo-box" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: #059669; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+                  @if (authService.colegio()?.logoUrl) {
+                    <img [src]="authService.colegio()?.logoUrl" alt="Escudo" style="width: 100%; height: 100%; object-fit: cover;" />
+                  } @else {
+                    {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+                  }
+                </div>
+                <div style="flex: 1;">
+                  <h2 style="color: #1e1b4b; margin: 0; font-size: 1.2rem; font-weight: 800;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h2>
+                  <p class="text-xs text-slate-500" style="margin: 0.2rem 0;">Resolución de Aprobación Oficial MEN N° {{ authService.colegio()?.resolucionAprobacion || '10245' }} | NIT: {{ authService.colegio()?.nit }} | DANE: {{ authService.colegio()?.codigoDane }}</p>
+                </div>
               </div>
 
               <div class="text-center my-4">
@@ -1333,11 +1384,11 @@ export interface EstudianteFinanciero {
                   Se encuentra a la fecha <strong>A PAZ Y SALVO POR TODO CONCEPTO DE DERECHOS ACADÉMICOS, MATRÍCULAS, PENSIONES MENSUALES Y SERVICIOS COMPLEMENTARIOS</strong> correspondientes al presente año lectivo 2026.
                 </p>
                 <p class="text-xs text-slate-500 mt-2">
-                  Se expide el presente documento a solicitud del interesado en Bogotá D.C., a los {{ fechaHoyTexto }}.
+                  Se expide el presente documento a solicitud del interesado en {{ authService.colegio()?.ciudad || 'Bogotá D.C.' }}, a los {{ fechaHoyTexto }}.
                 </p>
               </div>
 
-              <div class="firmas-grid mt-5" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; text-align: center; font-size: 0.8rem; margin-top: 3rem;">
+              <div class="firmas-grid mt-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; text-align: center; font-size: 0.8rem; margin-top: 2rem;">
                 <div>
                   <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
                   <strong>LIC. ANDRÉS SALAZAR C.</strong><br>
@@ -1348,6 +1399,15 @@ export interface EstudianteFinanciero {
                   <strong>DRA. MARÍA MERCEDES ROJAS</strong><br>
                   <span>Rectora Institucional</span>
                 </div>
+              </div>
+
+              <!-- Pie de página institucional con Dirección, Teléfono y Correo -->
+              <div class="report-footer-contacts mt-4" style="border-top: 1px solid #e2e8f0; padding-top: 0.6rem; text-align: center; font-size: 0.75rem; color: #64748b;">
+                <span>📍 Dirección: {{ authService.colegio()?.direccion || 'Campus Central' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>📞 Tel: {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>✉️ Correo: {{ authService.colegio()?.emailContacto || 'rectoria@sanbartolome.edu.co' }}</span>
               </div>
             </div>
 
@@ -1928,198 +1988,41 @@ export class TesoreriaComponent implements OnInit {
   };
 
   nuevoAcuerdo = {
-    estudianteId: '11111111-1111-4111-8111-000000000003',
-    montoTotalAcordado: 900000,
+    estudianteId: '',
+    montoTotalAcordado: 0,
     numeroCuotas: 3,
     diaPagoMensual: 15,
-    observaciones: 'Acuerdo de pago firmado por acudiente para saldar 2 meses de mora en 3 cuotas fijas.',
+    observaciones: '',
   };
 
   // Base de Datos en Memoria con sincronización Backend
-  readonly listaEstudiantes = signal<EstudianteFinanciero[]>([
-    {
-      id: '11111111-1111-4111-8111-000000000001',
-      nombre: 'García Torres Mariana Lucía',
-      documento: 'TI-1029384756',
-      grado: 'Noveno',
-      grupo: '9°A',
-      acudienteNombre: 'Patricia Torres',
-      acudienteTelefono: '310 987 6543',
-      acudienteEmail: 'patricia.torres@gmail.com',
-    },
-    {
-      id: '11111111-1111-4111-8111-000000000002',
-      nombre: 'López Ramírez David Alejandro',
-      documento: 'TI-1098765432',
-      grado: 'Noveno',
-      grupo: '9°B',
-      acudienteNombre: 'David López Sr.',
-      acudienteTelefono: '315 123 4567',
-      acudienteEmail: 'david.lopez@empresa.com',
-    },
-    {
-      id: '11111111-1111-4111-8111-000000000003',
-      nombre: 'Castro Morales Sofía Valentina',
-      documento: 'TI-1034567890',
-      grado: 'Décimo',
-      grupo: '10°A',
-      acudienteNombre: 'Valentina Morales',
-      acudienteTelefono: '320 555 7890',
-      acudienteEmail: 'v.morales@hotmail.com',
-    },
-    {
-      id: '11111111-1111-4111-8111-000000000004',
-      nombre: 'Pérez Gómez Carlos Andrés',
-      documento: 'TI-1023456792',
-      grado: 'Décimo',
-      grupo: '10°A',
-      acudienteNombre: 'Andrés Pérez',
-      acudienteTelefono: '318 776 6554',
-      acudienteEmail: 'andres.perez@gmail.com',
-    },
-  ]);
+  readonly listaEstudiantes = signal<EstudianteFinanciero[]>([]);
 
-  readonly estudianteSeleccionado = signal<EstudianteFinanciero>({
-    id: '11111111-1111-4111-8111-000000000001',
-    nombre: 'García Torres Mariana Lucía',
-    documento: 'TI-1029384756',
-    grado: 'Noveno',
-    grupo: '9°A',
-    acudienteNombre: 'Patricia Torres',
-    acudienteTelefono: '310 987 6543',
-    acudienteEmail: 'patricia.torres@gmail.com',
+  readonly estudiantesMoraSelectOptions = computed<SearchableOption[]>(() => {
+    return this.listaEstudiantes().map((est) => ({
+      value: est.id,
+      label: est.nombre,
+      sublabel: `Doc. ${est.documento} • Grado: ${est.grado} (${est.grupo})`,
+      badge: est.grado,
+      badgeClass: 'badge-secondary',
+      avatarText: est.nombre?.substring(0, 2)?.toUpperCase() || 'ES',
+    }));
   });
 
-  readonly cuentas = signal<CuentaCobroItem[]>([
-    {
-      id: 'c1111111-1111-4111-8111-000000000001',
-      estudianteId: '11111111-1111-4111-8111-000000000001',
-      estudianteNombre: 'García Torres Mariana Lucía',
-      estudianteDocumento: 'TI-1029384756',
-      gradoNombre: 'Noveno 9°A',
-      numeroFactura: 'FACT-2026-08-001',
-      concepto: 'Pensión Mensual Escolar',
-      mes: 'Agosto 2026',
-      mesCobro: 8,
-      valorTotal: 450000,
-      estado: 'AL_DIA',
-      fechaVencimiento: '2026-08-10',
-    },
-    {
-      id: 'c1111111-1111-4111-8111-000000000005',
-      estudianteId: '11111111-1111-4111-8111-000000000001',
-      estudianteNombre: 'García Torres Mariana Lucía',
-      estudianteDocumento: 'TI-1029384756',
-      gradoNombre: 'Noveno 9°A',
-      numeroFactura: 'FACT-2026-07-001',
-      concepto: 'Pensión Mensual Escolar',
-      mes: 'Julio 2026',
-      mesCobro: 7,
-      valorTotal: 450000,
-      estado: 'AL_DIA',
-      fechaVencimiento: '2026-07-10',
-    },
-    {
-      id: 'c1111111-1111-4111-8111-000000000002',
-      estudianteId: '11111111-1111-4111-8111-000000000002',
-      estudianteNombre: 'López Ramírez David Alejandro',
-      estudianteDocumento: 'TI-1098765432',
-      gradoNombre: 'Noveno 9°B',
-      numeroFactura: 'FACT-2026-08-002',
-      concepto: 'Pensión Mensual Escolar',
-      mes: 'Agosto 2026',
-      mesCobro: 8,
-      valorTotal: 450000,
-      estado: 'POR_VENCER',
-      fechaVencimiento: '2026-08-20',
-    },
-    {
-      id: 'c1111111-1111-4111-8111-000000000003',
-      estudianteId: '11111111-1111-4111-8111-000000000003',
-      estudianteNombre: 'Castro Morales Sofía Valentina',
-      estudianteDocumento: 'TI-1034567890',
-      gradoNombre: 'Décimo 10°A',
-      numeroFactura: 'FACT-2026-07-003',
-      concepto: 'Pensión Mensual Escolar',
-      mes: 'Julio 2026',
-      mesCobro: 7,
-      valorTotal: 450000,
-      estado: 'EN_MORA',
-      fechaVencimiento: '2026-07-10',
-    },
-    {
-      id: 'c1111111-1111-4111-8111-000000000004',
-      estudianteId: '11111111-1111-4111-8111-000000000003',
-      estudianteNombre: 'Castro Morales Sofía Valentina',
-      estudianteDocumento: 'TI-1034567890',
-      gradoNombre: 'Décimo 10°A',
-      numeroFactura: 'FACT-2026-08-003',
-      concepto: 'Pensión Mensual Escolar',
-      mes: 'Agosto 2026',
-      mesCobro: 8,
-      valorTotal: 450000,
-      estado: 'EN_MORA',
-      fechaVencimiento: '2026-08-10',
-    },
-  ]);
+  readonly estudianteSeleccionado = signal<EstudianteFinanciero>({
+    id: '',
+    nombre: 'Seleccione un estudiante',
+    documento: '',
+    grado: '',
+    grupo: '',
+    acudienteNombre: '',
+    acudienteTelefono: '',
+    acudienteEmail: '',
+  });
 
-  readonly pagos = signal<PagoRecaudoItem[]>([
-    {
-      id: 'p-001',
-      numeroRecibo: 'REC-2026-0842',
-      facturaReferencia: 'FACT-2026-08-001',
-      estudianteId: '11111111-1111-4111-8111-000000000001',
-      estudianteNombre: 'García Torres Mariana Lucía',
-      conceptoNombre: 'Pensión Agosto 2026',
-      medioPago: 'PSE',
-      valorPagado: 450000,
-      fechaPago: '2026-08-05 14:32',
-      referenciaTransaccion: 'WOMPI-PSE-9842104',
-      estado: 'APROBADO',
-    },
-    {
-      id: 'p-002',
-      numeroRecibo: 'REC-2026-0810',
-      facturaReferencia: 'FACT-2026-07-001',
-      estudianteId: '11111111-1111-4111-8111-000000000001',
-      estudianteNombre: 'García Torres Mariana Lucía',
-      conceptoNombre: 'Pensión Julio 2026',
-      medioPago: 'TRANSFERENCIA_BANCOLOMBIA',
-      valorPagado: 450000,
-      fechaPago: '2026-07-08 09:15',
-      referenciaTransaccion: 'BANCO-TR-458129',
-      estado: 'APROBADO',
-    },
-    {
-      id: 'p-003',
-      numeroRecibo: 'REC-2026-0799',
-      facturaReferencia: 'FACT-2026-07-002',
-      estudianteId: '11111111-1111-4111-8111-000000000002',
-      estudianteNombre: 'López Ramírez David Alejandro',
-      conceptoNombre: 'Pensión Julio 2026',
-      medioPago: 'NEQUI_QR',
-      valorPagado: 450000,
-      fechaPago: '2026-07-09 11:20',
-      referenciaTransaccion: 'NEQUI-M-1029384',
-      estado: 'APROBADO',
-    },
-  ]);
-
-  readonly acuerdos = signal<AcuerdoPagoItem[]>([
-    {
-      id: 'ac-001',
-      estudianteId: '11111111-1111-4111-8111-000000000003',
-      estudianteNombre: 'Castro Morales Sofía Valentina',
-      gradoNombre: 'Décimo (10°A)',
-      montoTotalAcordado: 900000,
-      numeroCuotas: 3,
-      montoPorCuota: 300000,
-      diaPagoMensual: 15,
-      fechaInicio: '2026-08-15',
-      estado: 'ACTIVO',
-      observaciones: 'Refinanciación de pensiones de Julio y Agosto. Primera cuota pactada para el 15 de Agosto.',
-    },
-  ]);
+  readonly cuentas = signal<CuentaCobroItem[]>([]);
+  readonly pagos = signal<PagoRecaudoItem[]>([]);
+  readonly acuerdos = signal<AcuerdoPagoItem[]>([]);
 
   // Cuentas filtradas computadas
   readonly cuentasFiltradas = computed(() => {
@@ -2389,6 +2292,29 @@ export class TesoreriaComponent implements OnInit {
             if (!arr.find((e) => e.id === this.estudianteSeleccionado().id)) {
               this.estudianteSeleccionado.set(arr[0]);
             }
+          }
+        }
+      },
+      error: () => {},
+    });
+
+    // Cargar estudiantes matriculados reales de BD
+    this.api.get<any[]>('convivencia/estudiantes-matriculados').subscribe({
+      next: (res) => {
+        if (res && res.length > 0) {
+          const mapped: EstudianteFinanciero[] = res.map((e: any) => ({
+            id: e.estudiante_id,
+            nombre: `${e.primer_apellido} ${e.segundo_apellido || ''} ${e.primer_nombre} ${e.segundo_nombre || ''}`.trim(),
+            documento: e.numero_documento,
+            grado: e.grado_nombre || '10°',
+            grupo: e.grupo_nombre || '10-A',
+            acudienteNombre: `Acudiente de ${e.primer_nombre} ${e.primer_apellido}`,
+            acudienteTelefono: '310 000 0000',
+            acudienteEmail: 'contacto@educore.edu.co',
+          }));
+          this.listaEstudiantes.set(mapped);
+          if (mapped.length > 0 && !this.estudianteSeleccionado().id) {
+            this.estudianteSeleccionado.set(mapped[0]);
           }
         }
       },
@@ -2955,31 +2881,26 @@ export class TesoreriaComponent implements OnInit {
     this.checkoutModal.set(null);
   }
 
-  confirmarPagoDemo() {
+  confirmarPagoWompi() {
     const item = this.checkoutModal();
     if (item) {
-      this.cuentas.update((list) =>
-        list.map((c) => (c.id === item.id ? { ...c, estado: 'AL_DIA' } : c)),
-      );
-
-      const nuevoPago: PagoRecaudoItem = {
-        id: `p-${Date.now()}`,
-        numeroRecibo: `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-        facturaReferencia: item.numeroFactura,
-        estudianteId: item.estudianteId,
-        estudianteNombre: item.estudianteNombre,
-        conceptoNombre: item.concepto,
-        medioPago: 'PSE',
+      this.api.post<any>('tesoreria/pagos', {
+        cuentaCobroId: item.id,
         valorPagado: item.valorTotal,
-        fechaPago: new Date().toLocaleString('es-CO'),
+        medioPago: 'PSE',
         referenciaTransaccion: `WOMPI-PSE-${Date.now().toString().slice(-6)}`,
-        estado: 'APROBADO',
-      };
-
-      this.pagos.update((list) => [nuevoPago, ...list]);
-      this.toast.success('¡Pago Aprobado por Wompi!', `Transacción por \$${item.valorTotal.toLocaleString()} COP confirmada exitosamente vía PSE Bancolombia.`);
+      }).subscribe({
+        next: () => {
+          this.toast.success('¡Pago Procesado!', `El recaudo por \$${item.valorTotal.toLocaleString()} COP ha sido registrado en la base de datos.`);
+          this.cargarDatosBackend();
+          this.cerrarModalCheckout();
+        },
+        error: (err) => {
+          this.toast.error('Error al registrar pago', err?.error?.message || 'No fue posible registrar el pago.');
+          this.cerrarModalCheckout();
+        }
+      });
     }
-    this.cerrarModalCheckout();
   }
 
   // --- PAZ Y SALVO ---

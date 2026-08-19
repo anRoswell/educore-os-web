@@ -326,12 +326,19 @@ interface JornadaInfo {
             </div>
 
             <div class="modal-body print-area">
-              <div class="acta-doc-header text-center">
-                <h4>REPÚBLICA DE COLOMBIA — MINISTERIO DE EDUCACIÓN NACIONAL</h4>
-                <h5>INSTITUCIÓN EDUCATIVA DEMO — GOBIERNO ESCOLAR 2026</h5>
-                <h3 class="mt-2" style="color: #1e1b4b; border-bottom: 2px solid #cbd5e1; padding-bottom: 0.5rem;">
-                  ACTA GENERAL DE ESCRUTINIO Y DECLARATORIA DE ELECCIÓN
-                </h3>
+              <div class="report-header-card" style="display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #cbd5e1; padding-bottom: 0.75rem;">
+                <div class="report-logo-box" style="width: 54px; height: 54px; border-radius: 10px; overflow: hidden; background: #6366f1; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+                  @if (authService.colegio()?.logoUrl) {
+                    <img [src]="authService.colegio()?.logoUrl" alt="Escudo" style="width: 100%; height: 100%; object-fit: cover;" />
+                  } @else {
+                    {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+                  }
+                </div>
+                <div style="flex: 1;">
+                  <h4 style="margin: 0; color: #0f172a; font-weight: 800; font-size: 1.1rem;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h4>
+                  <p class="text-xs text-slate-500" style="margin: 0.15rem 0;">NIT: {{ authService.colegio()?.nit }} | DANE: {{ authService.colegio()?.codigoDane }} | Res. {{ authService.colegio()?.resolucionAprobacion || 'MEN' }}</p>
+                  <strong style="color: #1e1b4b; font-size: 0.85rem;">GOBIERNO ESCOLAR — ACTA GENERAL DE ESCRUTINIO Y DECLARATORIA</strong>
+                </div>
               </div>
 
               <div class="acta-meta-grid mt-3">
@@ -393,6 +400,15 @@ interface JornadaInfo {
                   <div class="firma-line"></div>
                   <span>Veeduría / Personería Saliente</span>
                 </div>
+              </div>
+
+              <!-- Pie de página institucional con Dirección, Teléfono y Correo -->
+              <div class="report-footer-contacts mt-4" style="border-top: 1px solid #e2e8f0; padding-top: 0.6rem; text-align: center; font-size: 0.75rem; color: #64748b;">
+                <span>📍 Dirección: {{ authService.colegio()?.direccion || 'Campus Central' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>📞 Tel: {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>✉️ Correo: {{ authService.colegio()?.emailContacto || 'rectoria@sanbartolome.edu.co' }}</span>
               </div>
             </div>
 
@@ -934,36 +950,7 @@ export class GobiernoEscolarComponent {
     lema: '',
   };
 
-  readonly candidatos = signal<CandidatoTarjeton[]>([
-    {
-      id: 'c1111111-1111-4111-8111-000000000001',
-      numeroTarjeton: 1,
-      nombre: 'Valeria Sofía Morales',
-      lema: 'Unidos por un colegio más verde, incluyente y deportivo',
-      fotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-      votos: 260,
-      porcentaje: 61.9,
-    },
-    {
-      id: 'c1111111-1111-4111-8111-000000000002',
-      numeroTarjeton: 2,
-      nombre: 'Santiago Gómez Herrera',
-      lema: 'Tecnología, cultura y participación estudiantil activa',
-      fotoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
-      votos: 135,
-      porcentaje: 32.1,
-    },
-    {
-      id: 'c1111111-1111-4111-8111-000000000003',
-      numeroTarjeton: 3,
-      nombre: 'Voto en Blanco',
-      lema: 'Ninguna de las opciones anteriores',
-      fotoUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=120&auto=format&fit=crop&q=80',
-      esBlanco: true,
-      votos: 25,
-      porcentaje: 6.0,
-    },
-  ]);
+  readonly candidatos = signal<CandidatoTarjeton[]>([]);
 
   // Cómputos dinámicos del escrutinio en tiempo real
   readonly virtualGanador = computed(() => {
@@ -997,9 +984,48 @@ export class GobiernoEscolarComponent {
             fechaCierre: j.fechaCierre,
             estado: j.estado,
           });
+
+          if (j.candidatos && j.candidatos.length > 0) {
+            const mapped: CandidatoTarjeton[] = j.candidatos.map((c: any) => ({
+              id: c.id,
+              numeroTarjeton: c.numeroTarjeton,
+              nombre: c.nombreCompleto,
+              lema: c.lemaCampana || 'Propuesta de gobierno escolar',
+              fotoUrl: c.fotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+              votos: c.totalVotos || 0,
+              porcentaje: 0,
+              esBlanco: c.esVotoEnBlanco,
+            }));
+            this.candidatos.set(mapped);
+          }
+
+          // Consultar escrutinio en tiempo real
+          this.api.get<any>(`gobierno-escolar/escrutinio/${j.id}`).subscribe({
+            next: (escrutinio) => {
+              if (escrutinio && escrutinio.resultados && escrutinio.resultados.length > 0) {
+                const totalValidos = escrutinio.resumen?.votosValidos || escrutinio.resultados.reduce((acc: number, curr: any) => acc + (Number(curr.totalVotos) || 0), 0) || 1;
+                const mapped: CandidatoTarjeton[] = escrutinio.resultados.map((r: any) => ({
+                  id: r.candidatoId || r.id,
+                  numeroTarjeton: r.numeroTarjeton,
+                  nombre: r.nombreCompleto,
+                  lema: r.lemaCampana || 'Propuesta institucional',
+                  fotoUrl: r.fotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+                  votos: Number(r.totalVotos) || 0,
+                  porcentaje: Number(((Number(r.totalVotos || 0) / totalValidos) * 100).toFixed(1)),
+                  esBlanco: r.esVotoEnBlanco,
+                }));
+                this.candidatos.set(mapped);
+              }
+            },
+            error: () => {},
+          });
+        } else {
+          this.candidatos.set([]);
         }
       },
-      error: () => {},
+      error: () => {
+        this.candidatos.set([]);
+      },
     });
   }
 

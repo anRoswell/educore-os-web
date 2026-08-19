@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { SearchableSelectComponent, SearchableOption } from '../../shared/components/searchable-select.component';
 
 interface ChatMessage {
   sender: 'user' | 'ai';
@@ -14,7 +15,7 @@ interface ChatMessage {
 @Component({
   selector: 'app-educore-ai',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   template: `
     <div class="ai-page-container">
       <!-- Header -->
@@ -80,11 +81,13 @@ interface ChatMessage {
             
             <div class="tool-form mt-3">
               <div class="form-group">
-                <label class="form-label">Estudiante</label>
-                <select class="form-select" [(ngModel)]="selectedEstudianteId">
-                  <option value="11111111-1111-4111-8111-000000000001">García Torres Mariana Lucía (Promedio: 4.85)</option>
-                  <option value="11111111-1111-4111-8111-000000000004">Pérez Gómez Carlos Andrés (Promedio: 2.40)</option>
-                </select>
+                <label class="form-label">Estudiante para Redacción IA *</label>
+                <app-searchable-select
+                  [options]="estudiantesAiOptions()"
+                  [(ngModel)]="selectedEstudianteId"
+                  placeholder="🔍 Buscar estudiante por nombre o documento..."
+                  searchPlaceholder="Escriba nombre o apellido..."
+                ></app-searchable-select>
               </div>
 
               <button (click)="generarNarrativa()" class="btn btn-secondary w-full" [disabled]="isGeneratingNarrative()">
@@ -334,15 +337,47 @@ interface ChatMessage {
     .text-slate-500 { color: #64748b; }
   `]
 })
-export class EducoreAiComponent {
+export class EducoreAiComponent implements OnInit {
   private readonly api = inject(ApiService);
   readonly authService = inject(AuthService);
 
   userPrompt = '';
   isLoading = signal(false);
-  selectedEstudianteId = '11111111-1111-4111-8111-000000000001';
+  selectedEstudianteId = '';
   isGeneratingNarrative = signal(false);
   narrativaGenerada = signal<string | null>(null);
+
+  readonly estudiantesAiOptions = signal<SearchableOption[]>([]);
+
+  ngOnInit(): void {
+    this.cargarEstudiantes();
+  }
+
+  cargarEstudiantes(): void {
+    this.api.get<any[]>('convivencia/estudiantes-matriculados').subscribe({
+      next: (res) => {
+        if (res && Array.isArray(res) && res.length > 0) {
+          const mapped: SearchableOption[] = res.map((e) => ({
+            value: e.matricula_id || e.estudiante_id,
+            label: `${e.primer_apellido} ${e.segundo_apellido || ''} ${e.primer_nombre} ${e.segundo_nombre || ''}`.trim(),
+            sublabel: `Doc. ${e.numero_documento} • Grado: ${e.grado_nombre || '10°'} (${e.grupo_nombre || '10-A'})`,
+            badge: e.grupo_nombre || '10-A',
+            badgeClass: 'badge-primary',
+            avatarText: `${e.primer_nombre?.charAt(0) || 'E'}${e.primer_apellido?.charAt(0) || 'S'}`.toUpperCase(),
+          }));
+          this.estudiantesAiOptions.set(mapped);
+          if (mapped.length > 0 && !this.selectedEstudianteId) {
+            this.selectedEstudianteId = mapped[0].value;
+          }
+        } else {
+          this.estudiantesAiOptions.set([]);
+        }
+      },
+      error: () => {
+        this.estudiantesAiOptions.set([]);
+      }
+    });
+  }
 
   readonly messages = signal<ChatMessage[]>([
     {

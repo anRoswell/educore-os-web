@@ -5,8 +5,28 @@ import * as XLSX from 'xlsx';
 import { ApiService } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 
+export enum TipoEntidadImportacion {
+  ESTUDIANTES = 'ESTUDIANTES',
+  COLEGIOS = 'COLEGIOS',
+  DOCENTES = 'DOCENTES',
+  CALIFICACIONES = 'CALIFICACIONES',
+  TESORERIA = 'TESORERIA',
+}
+
+export enum EstadoFilaImportacion {
+  PENDIENTE = 'PENDIENTE',
+  VALIDO = 'VALIDO',
+  ERROR = 'ERROR',
+}
+
+export enum FiltroEstadoImportacion {
+  TODOS = 'TODOS',
+  VALIDOS = 'VALIDOS',
+  ERRORES = 'ERRORES',
+}
+
 export interface PlantillaEntity {
-  id: string;
+  id: TipoEntidadImportacion | string;
   nombre: string;
   icono: string;
   descripcion: string;
@@ -18,7 +38,7 @@ export interface PlantillaEntity {
 export interface FilaParsed {
   numeroFila: number;
   data: Record<string, any>;
-  estado: 'PENDIENTE' | 'VALIDO' | 'ERROR';
+  estado: EstadoFilaImportacion | string;
   errores: string[];
 }
 
@@ -55,18 +75,19 @@ export interface FilaParsed {
 
       <!-- ENTITY SELECTOR TABS -->
       <div class="entity-tabs">
-        <button
-          *ngFor="let ent of entidades"
-          class="tab-btn"
-          [class.active]="entidadSeleccionada() === ent.id"
-          (click)="seleccionarEntidad(ent.id)"
-        >
-          <span class="tab-icon">{{ ent.icono }}</span>
-          <div class="tab-text">
-            <span class="tab-title">{{ ent.nombre }}</span>
-            <span class="tab-sub">{{ ent.totalEstimado }}</span>
-          </div>
-        </button>
+        @for (ent of entidades; track ent.id) {
+          <button
+            class="tab-btn"
+            [class.active]="entidadSeleccionada() === ent.id"
+            (click)="seleccionarEntidad(ent.id)"
+          >
+            <span class="tab-icon">{{ ent.icono }}</span>
+            <div class="tab-text">
+              <span class="tab-title">{{ ent.nombre }}</span>
+              <span class="tab-sub">{{ ent.totalEstimado }}</span>
+            </div>
+          </button>
+        }
       </div>
 
       <!-- MAIN WORKFLOW GRID -->
@@ -112,32 +133,38 @@ export interface FilaParsed {
           </div>
 
           <!-- FILE LOADED CARD -->
-          <div *ngIf="archivoCargado()" class="file-card animate-slideDown">
-            <div class="file-icon">📊</div>
-            <div class="file-info">
-              <span class="file-name">{{ archivoCargado()?.name }}</span>
-              <span class="file-meta">
-                {{ formatBytes(archivoCargado()?.size || 0) }} • {{ filasParsed().length }} filas detectadas
-              </span>
+          @if (archivoCargado()) {
+            <div class="file-card animate-slideDown">
+              <div class="file-icon">📊</div>
+              <div class="file-info">
+                <span class="file-name">{{ archivoCargado()?.name }}</span>
+                <span class="file-meta">
+                  {{ formatBytes(archivoCargado()?.size || 0) }} • {{ filasParsed().length }} filas detectadas
+                </span>
+              </div>
+              <button class="btn-icon danger" title="Remover archivo" (click)="limpiarArchivo()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
             </div>
-            <button class="btn-icon danger" title="Remover archivo" (click)="limpiarArchivo()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-              </svg>
-            </button>
-          </div>
+          }
 
           <!-- COLUMNS CHECKS -->
           <div class="columns-guide">
             <h4>Estructura requerida para {{ getEntidadActual()?.nombre }}:</h4>
             <div class="tags-container">
-              <span *ngFor="let col of getEntidadActual()?.columnasRequeridas" class="tag-col required">
-                *{{ col }}
-              </span>
-              <span *ngFor="let col of getEntidadActual()?.columnasOpcionales" class="tag-col optional">
-                {{ col }}
-              </span>
+              @for (col of getEntidadActual()?.columnasRequeridas; track col) {
+                <span class="tag-col required">
+                  *{{ col }}
+                </span>
+              }
+              @for (col of getEntidadActual()?.columnasOpcionales; track col) {
+                <span class="tag-col optional">
+                  {{ col }}
+                </span>
+              }
             </div>
           </div>
         </div>
@@ -167,15 +194,17 @@ export interface FilaParsed {
           </div>
 
           <!-- PROGRESS BAR IF PROCESSING -->
-          <div *ngIf="isProcessing()" class="progress-box animate-fadeIn">
-            <div class="progress-info">
-              <span>Procesando registros en base de datos...</span>
-              <span>{{ progreso() }}%</span>
+          @if (isProcessing()) {
+            <div class="progress-box animate-fadeIn">
+              <div class="progress-info">
+                <span>Procesando registros en base de datos...</span>
+                <span>{{ progreso() }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="progreso()"></div>
+              </div>
             </div>
-            <div class="progress-bar">
-              <div class="progress-fill" [style.width.%]="progreso()"></div>
-            </div>
-          </div>
+          }
 
           <!-- ACTION BUTTONS -->
           <div class="panel-actions">
@@ -216,130 +245,148 @@ export interface FilaParsed {
       </div>
 
       <!-- STEP 3: DATA PREVIEW GRID -->
-      <div *ngIf="filasParsed().length > 0" class="glass-panel preview-panel animate-slideDown">
-        <div class="panel-header">
-          <div>
-            <h3>3. Vista Previa de Datos & Corrección</h3>
-            <p class="subtitle-small">Revisa y filtra las inconsistencias detectadas antes de la ingestión.</p>
+      @if (filasParsed().length > 0) {
+        <div class="glass-panel preview-panel animate-slideDown">
+          <div class="panel-header">
+            <div>
+              <h3>3. Vista Previa de Datos & Corrección</h3>
+              <p class="subtitle-small">Revisa y filtra las inconsistencias detectadas antes de la ingestión.</p>
+            </div>
+
+            <div class="filter-group">
+              <button
+                class="btn-filter"
+                [class.active]="filtroEstado() === FiltroEstadoImportacion.TODOS"
+                (click)="filtroEstado.set(FiltroEstadoImportacion.TODOS)"
+              >
+                Todos ({{ totalFilas() }})
+              </button>
+              <button
+                class="btn-filter success"
+                [class.active]="filtroEstado() === FiltroEstadoImportacion.VALIDOS"
+                (click)="filtroEstado.set(FiltroEstadoImportacion.VALIDOS)"
+              >
+                Válidos ({{ totalValidas() }})
+              </button>
+              <button
+                class="btn-filter danger"
+                [class.active]="filtroEstado() === FiltroEstadoImportacion.ERRORES"
+                (click)="filtroEstado.set(FiltroEstadoImportacion.ERRORES)"
+              >
+                Con Inconsistencias ({{ totalErrores() }})
+              </button>
+            </div>
           </div>
 
-          <div class="filter-group">
-            <button
-              class="btn-filter"
-              [class.active]="filtroEstado() === 'TODOS'"
-              (click)="filtroEstado.set('TODOS')"
-            >
-              Todos ({{ totalFilas() }})
-            </button>
-            <button
-              class="btn-filter success"
-              [class.active]="filtroEstado() === 'VALIDOS'"
-              (click)="filtroEstado.set('VALIDOS')"
-            >
-              Válidos ({{ totalValidas() }})
-            </button>
-            <button
-              class="btn-filter danger"
-              [class.active]="filtroEstado() === 'ERRORES'"
-              (click)="filtroEstado.set('ERRORES')"
-            >
-              Con Inconsistencias ({{ totalErrores() }})
-            </button>
+          <div class="table-responsive">
+            <table class="styled-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Fila</th>
+                  <th style="width: 130px;">Estado</th>
+                  @for (col of columnasVisibles(); track col) {
+                    <th>{{ col }}</th>
+                  }
+                  <th>Diagnóstico / Regla</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (f of filasFiltradas(); track f.numeroFila) {
+                  <tr [class.row-error]="f.estado === EstadoFilaImportacion.ERROR">
+                    <td class="cell-center font-mono font-bold">#{{ f.numeroFila }}</td>
+                    <td>
+                      <span
+                        class="status-pill"
+                        [class.success]="f.estado === EstadoFilaImportacion.VALIDO"
+                        [class.danger]="f.estado === EstadoFilaImportacion.ERROR"
+                        [class.pending]="f.estado === EstadoFilaImportacion.PENDIENTE"
+                      >
+                        {{ f.estado === EstadoFilaImportacion.VALIDO ? '✅ Apto' : f.estado === EstadoFilaImportacion.ERROR ? '❌ Inconsistente' : '⏳ Pendiente' }}
+                      </span>
+                    </td>
+                    @for (col of columnasVisibles(); track col) {
+                      <td class="cell-value">
+                        {{ f.data[col] || '-' }}
+                      </td>
+                    }
+                    <td>
+                      @if (f.errores.length > 0) {
+                        <div class="error-tags">
+                          @for (err of f.errores; track err) {
+                            <span class="error-msg">
+                              ⚠️ {{ err }}
+                            </span>
+                          }
+                        </div>
+                      }
+                      @if (f.errores.length === 0 && f.estado === EstadoFilaImportacion.VALIDO) {
+                        <span class="success-text">
+                          Cumple todas las validaciones de esquema y unicidad.
+                        </span>
+                      }
+                      @if (f.estado === EstadoFilaImportacion.PENDIENTE) {
+                        <span class="muted-text">
+                          Pendiente de validación.
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div class="table-responsive">
-          <table class="styled-table">
-            <thead>
-              <tr>
-                <th style="width: 70px;">Fila</th>
-                <th style="width: 130px;">Estado</th>
-                <th *ngFor="let col of columnasVisibles()">{{ col }}</th>
-                <th>Diagnóstico / Regla</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let f of filasFiltradas()" [class.row-error]="f.estado === 'ERROR'">
-                <td class="cell-center font-mono font-bold">#{{ f.numeroFila }}</td>
-                <td>
-                  <span
-                    class="status-pill"
-                    [class.success]="f.estado === 'VALIDO'"
-                    [class.danger]="f.estado === 'ERROR'"
-                    [class.pending]="f.estado === 'PENDIENTE'"
-                  >
-                    {{ f.estado === 'VALIDO' ? '✅ Apto' : f.estado === 'ERROR' ? '❌ Inconsistente' : '⏳ Pendiente' }}
-                  </span>
-                </td>
-                <td *ngFor="let col of columnasVisibles()" class="cell-value">
-                  {{ f.data[col] || '-' }}
-                </td>
-                <td>
-                  <div *ngIf="f.errores.length > 0" class="error-tags">
-                    <span *ngFor="let err of f.errores" class="error-msg">
-                      ⚠️ {{ err }}
-                    </span>
-                  </div>
-                  <span *ngIf="f.errores.length === 0 && f.estado === 'VALIDO'" class="success-text">
-                    Cumple todas las validaciones de esquema y unicidad.
-                  </span>
-                  <span *ngIf="f.estado === 'PENDIENTE'" class="muted-text">
-                    Pendiente de validación.
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      }
 
       <!-- MODAL CONFIRMACION DE PERSISTENCIA -->
-      <div *ngIf="showModalConfirm()" class="modal-backdrop animate-fadeIn">
-        <div class="glass-modal animate-scaleUp">
-          <div class="modal-header">
-            <div class="modal-icon-badge">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-              </svg>
-            </div>
-            <div>
-              <h3>Confirmar Ingestión Masiva</h3>
-              <p class="modal-subtitle">Se persistirán los registros en la base de datos institucional.</p>
-            </div>
-          </div>
-
-          <div class="modal-body">
-            <div class="summary-card">
-              <div class="summary-item">
-                <span>Entidad Destino:</span>
-                <strong>{{ getEntidadActual()?.nombre }}</strong>
+      @if (showModalConfirm()) {
+        <div class="modal-backdrop animate-fadeIn">
+          <div class="glass-modal animate-scaleUp">
+            <div class="modal-header">
+              <div class="modal-icon-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                </svg>
               </div>
-              <div class="summary-item">
-                <span>Registros a Insertar:</span>
-                <strong class="text-success">{{ totalValidas() }} registros aptos</strong>
-              </div>
-              <div class="summary-item">
-                <span>Registros a Omitir:</span>
-                <strong class="text-danger">{{ totalErrores() }} con inconsistencias</strong>
+              <div>
+                <h3>Confirmar Ingestión Masiva</h3>
+                <p class="modal-subtitle">Se persistirán los registros en la base de datos institucional.</p>
               </div>
             </div>
 
-            <div class="alert-info">
-              <p>
-                <strong>Nota de Auditoría:</strong> Cada inserción será vinculada al tenant actual y quedará registrada en los logs de auditoría del sistema con hash de integridad.
-              </p>
-            </div>
-          </div>
+            <div class="modal-body">
+              <div class="summary-card">
+                <div class="summary-item">
+                  <span>Entidad Destino:</span>
+                  <strong>{{ getEntidadActual()?.nombre }}</strong>
+                </div>
+                <div class="summary-item">
+                  <span>Registros a Insertar:</span>
+                  <strong class="text-success">{{ totalValidas() }} registros aptos</strong>
+                </div>
+                <div class="summary-item">
+                  <span>Registros a Omitir:</span>
+                  <strong class="text-danger">{{ totalErrores() }} con inconsistencias</strong>
+                </div>
+              </div>
 
-          <div class="modal-footer">
-            <button class="btn-secondary" (click)="showModalConfirm.set(false)">Cancelar</button>
-            <button class="btn-success" (click)="ejecutarPersistencia()">
-              Confirmar y Escribir en BD
-            </button>
+              <div class="alert-info">
+                <p>
+                  <strong>Nota de Auditoría:</strong> Cada inserción será vinculada al tenant actual y quedará registrada en los logs de auditoría del sistema con hash de integridad.
+                </p>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-secondary" (click)="showModalConfirm.set(false)">Cancelar</button>
+              <button class="btn-success" (click)="ejecutarPersistencia()">
+                Confirmar y Escribir en BD
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      }
     </div>
   `,
   styles: [`
@@ -997,9 +1044,14 @@ export class ImportadorComponent {
   private api = inject(ApiService);
   private toast = inject(ToastService);
 
+  // Enums expuestos para uso tipado en el template HTML
+  readonly TipoEntidadImportacion = TipoEntidadImportacion;
+  readonly EstadoFilaImportacion = EstadoFilaImportacion;
+  readonly FiltroEstadoImportacion = FiltroEstadoImportacion;
+
   entidades: PlantillaEntity[] = [
     {
-      id: 'ESTUDIANTES',
+      id: TipoEntidadImportacion.ESTUDIANTES,
       nombre: 'Estudiantes & Matrículas',
       icono: '👥',
       descripcion: 'Carga de alumnos, fichas médicas y código SIMAT del Ministerio de Educación Nacional.',
@@ -1008,7 +1060,7 @@ export class ImportadorComponent {
       totalEstimado: 'Plantilla Oficial SIMAT',
     },
     {
-      id: 'COLEGIOS',
+      id: TipoEntidadImportacion.COLEGIOS,
       nombre: 'Colegios & Sedes',
       icono: '🏫',
       descripcion: 'Instituciones educativas, subdominios (slugs), NIT, código DANE y plan contratado.',
@@ -1017,7 +1069,7 @@ export class ImportadorComponent {
       totalEstimado: 'Multi-Tenant Maestro',
     },
     {
-      id: 'DOCENTES',
+      id: TipoEntidadImportacion.DOCENTES,
       nombre: 'Docentes & Personal',
       icono: '👨‍🏫',
       descripcion: 'Planta de profesores, especialidades académicas, asignación y correos institucionales.',
@@ -1026,7 +1078,7 @@ export class ImportadorComponent {
       totalEstimado: 'Carga Académica',
     },
     {
-      id: 'CALIFICACIONES',
+      id: TipoEntidadImportacion.CALIFICACIONES,
       nombre: 'Notas Decreto 1290',
       icono: '📚',
       descripcion: 'Planilla de calificaciones históricas y parciales en escala 1.0 a 5.0.',
@@ -1035,7 +1087,7 @@ export class ImportadorComponent {
       totalEstimado: 'Decreto 1290 MEN',
     },
     {
-      id: 'TESORERIA',
+      id: TipoEntidadImportacion.TESORERIA,
       nombre: 'Cartera & Facturas',
       icono: '💰',
       descripcion: 'Saldos iniciales, pensiones escolares, fechas de vencimiento y cuentas de cobro.',
@@ -1045,19 +1097,19 @@ export class ImportadorComponent {
     },
   ];
 
-  entidadSeleccionada = signal<string>('ESTUDIANTES');
+  entidadSeleccionada = signal<TipoEntidadImportacion | string>(TipoEntidadImportacion.ESTUDIANTES);
   isDragging = signal<boolean>(false);
   archivoCargado = signal<File | null>(null);
   filasParsed = signal<FilaParsed[]>([]);
-  filtroEstado = signal<'TODOS' | 'VALIDOS' | 'ERRORES'>('TODOS');
+  filtroEstado = signal<FiltroEstadoImportacion>(FiltroEstadoImportacion.TODOS);
   isProcessing = signal<boolean>(false);
   progreso = signal<number>(0);
   showModalConfirm = signal<boolean>(false);
 
   // Computeds
   totalFilas = computed(() => this.filasParsed().length);
-  totalValidas = computed(() => this.filasParsed().filter(f => f.estado === 'VALIDO').length);
-  totalErrores = computed(() => this.filasParsed().filter(f => f.estado === 'ERROR').length);
+  totalValidas = computed(() => this.filasParsed().filter(f => f.estado === EstadoFilaImportacion.VALIDO).length);
+  totalErrores = computed(() => this.filasParsed().filter(f => f.estado === EstadoFilaImportacion.ERROR).length);
   porcentajeValido = computed(() => {
     const t = this.totalFilas();
     return t > 0 ? Math.round((this.totalValidas() / t) * 100) : 0;
@@ -1072,8 +1124,8 @@ export class ImportadorComponent {
   filasFiltradas = computed(() => {
     const filtro = this.filtroEstado();
     const list = this.filasParsed();
-    if (filtro === 'VALIDOS') return list.filter(f => f.estado === 'VALIDO');
-    if (filtro === 'ERRORES') return list.filter(f => f.estado === 'ERROR');
+    if (filtro === FiltroEstadoImportacion.VALIDOS) return list.filter(f => f.estado === EstadoFilaImportacion.VALIDO);
+    if (filtro === FiltroEstadoImportacion.ERRORES) return list.filter(f => f.estado === EstadoFilaImportacion.ERROR);
     return list;
   });
 
@@ -1081,7 +1133,7 @@ export class ImportadorComponent {
     return this.entidades.find(e => e.id === this.entidadSeleccionada());
   }
 
-  seleccionarEntidad(id: string) {
+  seleccionarEntidad(id: TipoEntidadImportacion | string) {
     this.entidadSeleccionada.set(id);
     this.limpiarArchivo();
   }
@@ -1133,7 +1185,7 @@ export class ImportadorComponent {
           return {
             numeroFila: index + 2, // Fila 1 es encabezado
             data: row,
-            estado: errores.length === 0 ? 'VALIDO' : 'ERROR',
+            estado: errores.length === 0 ? EstadoFilaImportacion.VALIDO : EstadoFilaImportacion.ERROR,
             errores,
           };
         });
@@ -1161,11 +1213,11 @@ export class ImportadorComponent {
     }
 
     // Validaciones específicas
-    if (this.entidadSeleccionada() === 'ESTUDIANTES') {
+    if (this.entidadSeleccionada() === TipoEntidadImportacion.ESTUDIANTES) {
       if (data['tipo_documento'] && !['RC', 'TI', 'CC', 'CE', 'PPT'].includes(String(data['tipo_documento']).toUpperCase())) {
         errores.push(`Tipo de documento "${data['tipo_documento']}" inválido.`);
       }
-    } else if (this.entidadSeleccionada() === 'CALIFICACIONES') {
+    } else if (this.entidadSeleccionada() === TipoEntidadImportacion.CALIFICACIONES) {
       const n = parseFloat(data['nota']);
       if (isNaN(n) || n < 1.0 || n > 5.0) {
         errores.push(`Nota fuera de escala Decreto 1290 (1.0 a 5.0).`);
@@ -1190,7 +1242,7 @@ export class ImportadorComponent {
     const headers = [...entidad.columnasRequeridas, ...entidad.columnasOpcionales];
     const sampleRow: Record<string, any> = {};
 
-    if (entidad.id === 'ESTUDIANTES') {
+    if (entidad.id === TipoEntidadImportacion.ESTUDIANTES) {
       sampleRow['tipo_documento'] = 'TI';
       sampleRow['numero_documento'] = '1023456799';
       sampleRow['primer_nombre'] = 'Alejandro';
@@ -1202,7 +1254,7 @@ export class ImportadorComponent {
       sampleRow['eps'] = 'Sanitas EPS';
       sampleRow['grado_codigo_simat'] = '10';
       sampleRow['telefono_emergencia'] = '3109876543';
-    } else if (entidad.id === 'COLEGIOS') {
+    } else if (entidad.id === TipoEntidadImportacion.COLEGIOS) {
       sampleRow['nombre'] = 'Colegio Campestre Los Álamos';
       sampleRow['slug'] = 'los-alamos';
       sampleRow['nit'] = '900.123.456-7';
@@ -1213,7 +1265,7 @@ export class ImportadorComponent {
       sampleRow['telefono'] = '6015551234';
       sampleRow['email'] = 'contacto@losalamos.edu.co';
       sampleRow['plan'] = 'ENTERPRISE';
-    } else if (entidad.id === 'DOCENTES') {
+    } else if (entidad.id === TipoEntidadImportacion.DOCENTES) {
       sampleRow['tipo_documento'] = 'CC';
       sampleRow['numero_documento'] = '79123456';
       sampleRow['nombres'] = 'Gabriel';
@@ -1222,13 +1274,13 @@ export class ImportadorComponent {
       sampleRow['telefono'] = '3151234567';
       sampleRow['especialidad'] = 'Física y Matemáticas';
       sampleRow['titulo_profesional'] = 'Licenciado en Matemáticas';
-    } else if (entidad.id === 'CALIFICACIONES') {
+    } else if (entidad.id === TipoEntidadImportacion.CALIFICACIONES) {
       sampleRow['estudiante_documento'] = '1023456789';
       sampleRow['asignatura_codigo'] = 'MAT-10';
       sampleRow['periodo_numero'] = 1;
       sampleRow['actividad_titulo'] = 'Taller Funciones';
       sampleRow['nota'] = 4.5;
-    } else if (entidad.id === 'TESORERIA') {
+    } else if (entidad.id === TipoEntidadImportacion.TESORERIA) {
       sampleRow['estudiante_documento'] = '1023456789';
       sampleRow['concepto_codigo'] = 'PENS-01';
       sampleRow['valor_bruto'] = 450000;
@@ -1283,7 +1335,7 @@ export class ImportadorComponent {
     this.progreso.set(20);
 
     const validRows = this.filasParsed()
-      .filter(f => f.estado === 'VALIDO')
+      .filter(f => f.estado === EstadoFilaImportacion.VALIDO)
       .map(f => f.data);
 
     const dto = {

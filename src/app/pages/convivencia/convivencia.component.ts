@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalManagerService } from '../../core/services/modal-manager.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
+import { SearchableSelectComponent, SearchableOption } from '../../shared/components/searchable-select.component';
 
 export interface CasoConvivenciaItem {
   id: string;
@@ -45,7 +46,7 @@ export interface ActaComiteItem {
 @Component({
   selector: 'app-convivencia',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, SearchableSelectComponent],
   template: `
     <div class="convivencia-page animate-fade-in">
       <!-- HEADER PRINCIPAL -->
@@ -160,9 +161,9 @@ export interface ActaComiteItem {
 
       <!-- TAB 1: OBSERVADOR DIGITAL & EXPEDIENTES -->
       @if (tabActiva() === 'observador') {
-        <div class="card card-glass p-4 mt-3">
+        <div class="tab-body animate-fade-in">
           <!-- BARRA DE FILTROS -->
-          <div class="filters-bar">
+          <div class="filters-bar mb-4">
             <div class="search-box">
               <span class="search-icon">🔍</span>
               <input
@@ -197,7 +198,7 @@ export interface ActaComiteItem {
           </div>
 
           <!-- TABLA DE EXPEDIENTES -->
-          <div class="table-container mt-4">
+          <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
@@ -274,18 +275,18 @@ export interface ActaComiteItem {
 
       <!-- TAB 2: COMITÉ DE CONVIVENCIA ESCOLAR -->
       @if (tabActiva() === 'comite') {
-        <div class="card card-glass p-4 mt-3">
-          <div class="flex-between mb-3">
+        <div class="tab-body animate-fade-in">
+          <div class="tab-body-header">
             <div>
-              <h3 class="text-lg font-bold text-slate-800">📋 Libro de Actas del Comité de Convivencia</h3>
-              <p class="text-xs text-slate-500">Sesiones ordinarias y extraordinarias del órgano colegiado de mediación escolar (Art. 12 Ley 1620)</p>
+              <h3 class="tab-body-title">📋 Libro de Actas del Comité de Convivencia</h3>
+              <p class="tab-body-subtitle">Sesiones ordinarias y extraordinarias del órgano colegiado de mediación escolar (Art. 12 Ley 1620)</p>
             </div>
             <button (click)="abrirModalNuevaActa()" class="btn btn-primary">
               ➕ Redactar Nueva Acta
             </button>
           </div>
 
-          <div class="grid-actas mt-4">
+          <div class="grid-actas">
             @for (acta of actasList(); track acta.id) {
               <div class="acta-card card">
                 <div class="acta-header">
@@ -319,11 +320,11 @@ export interface ActaComiteItem {
 
       <!-- TAB 3: MATRIZ OFICIAL SIUCE -->
       @if (tabActiva() === 'siuce') {
-        <div class="card card-glass p-4 mt-3">
-          <div class="flex-between mb-4">
+        <div class="tab-body animate-fade-in">
+          <div class="tab-body-header">
             <div>
-              <h3 class="text-lg font-bold text-slate-800">📊 Reporte Oficial SIUCE (Ministerio de Educación)</h3>
-              <p class="text-xs text-slate-500">Consolidado semestral de tipificación de faltas y garantías de no repetición</p>
+              <h3 class="tab-body-title">📊 Reporte Oficial SIUCE (Ministerio de Educación)</h3>
+              <p class="tab-body-subtitle">Consolidado semestral de tipificación de faltas y garantías de no repetición</p>
             </div>
             <button (click)="exportarReporteSiuce()" class="btn btn-primary">
               💾 Descargar Informe Oficial (CSV / PDF)
@@ -359,9 +360,13 @@ export interface ActaComiteItem {
 
       <!-- TAB 4: RUTA DE ATENCIÓN INTEGRAL -->
       @if (tabActiva() === 'ruta') {
-        <div class="card card-glass p-4 mt-3">
-          <h3 class="text-lg font-bold text-slate-800 mb-2">🧭 Componentes de la Ruta de Atención Integral (Ley 1620)</h3>
-          <p class="text-xs text-slate-500 mb-4">Los 4 pilares obligatorios para la convivencia pacífica y los derechos humanos escolares</p>
+        <div class="tab-body animate-fade-in">
+          <div class="tab-body-header">
+            <div>
+              <h3 class="tab-body-title">🧭 Componentes de la Ruta de Atención Integral (Ley 1620)</h3>
+              <p class="tab-body-subtitle">Los 4 pilares obligatorios para la convivencia pacífica y los derechos humanos escolares</p>
+            </div>
+          </div>
 
           <div class="ruta-grid">
             <div class="ruta-card border-blue">
@@ -393,7 +398,7 @@ export interface ActaComiteItem {
       <!-- ================================================= -->
       @if (modalNuevoCaso()) {
         <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoCaso')">
-          <div class="modal-card card card-glass" style="max-width: 600px;">
+          <div class="modal-card card card-glass" style="max-width: 900px;">
             <div class="modal-header">
               <div>
                 <h3>➕ Radicar Anotación en Observador Digital</h3>
@@ -409,56 +414,43 @@ export interface ActaComiteItem {
             </div>
 
             <div class="modal-body">
-              <!-- Selección de Estudiante -->
-              <div class="form-group">
-                <label class="form-label">Seleccionar Estudiante Matriculado *</label>
-                <select class="form-select" [(ngModel)]="nuevoCasoForm.matriculaId">
-                  @for (est of estudiantesList(); track est.matricula_id) {
-                    <option [value]="est.matricula_id">
-                      {{ est.primer_apellido }} {{ est.segundo_apellido || '' }} {{ est.primer_nombre }} ({{ est.grado_nombre || 'Grado' }} - {{ est.grupo_nombre || 'Grupo' }}) - {{ est.numero_documento }}
-                    </option>
-                  } @empty {
-                    <option value="">Cargando lista de estudiantes matriculados...</option>
-                  }
-                </select>
-              </div>
-
-              <!-- Tipificación de la Falta -->
-              <div class="form-group mt-3">
-                <div class="flex-between">
-                  <label class="form-label">Tipificación de la Falta (Ley 1620) *</label>
-                  <app-help-badge term="LEY_1620"></app-help-badge>
+              <div class="modal-form-grid">
+                <!-- Selección de Estudiante con Buscador en Tiempo Real -->
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Seleccionar Estudiante Matriculado *</label>
+                  <app-searchable-select
+                    [options]="estudiantesSelectOptions()"
+                    [(ngModel)]="nuevoCasoForm.matriculaId"
+                    placeholder="🔍 Buscar por apellido, nombre, grado o documento..."
+                    searchPlaceholder="Escriba para filtrar en tiempo real..."
+                  ></app-searchable-select>
                 </div>
-                <select class="form-select" [(ngModel)]="nuevoCasoForm.tipoFalta">
-                  <option value="TIPO_I">🟢 TIPO I: Falta Leve / Conflicto esporádico (Manejable en aula)</option>
-                  <option value="TIPO_II">🟠 TIPO II: Acoso Escolar (Bullying) / Ciberacoso reiterado</option>
-                  <option value="TIPO_III">🔴 TIPO III: Falta Gravísima / Presunto Delito (Remisión a ICBF/Fiscalía)</option>
-                </select>
-              </div>
 
-              <!-- Artículo del Manual de Convivencia -->
-              <div class="form-group mt-3">
-                <label class="form-label">Artículo del Manual de Convivencia</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="nuevoCasoForm.articuloManualConvivencia"
-                  placeholder="Ej: Capítulo 5, Art. 22 - Agresión verbal reiterada o uso indebido de celular"
-                />
-              </div>
+                <!-- Tipificación de la Falta -->
+                <div class="form-group">
+                  <div class="flex-between">
+                    <label class="form-label">Tipificación de la Falta (Ley 1620) *</label>
+                    <app-help-badge term="LEY_1620"></app-help-badge>
+                  </div>
+                  <select class="form-select" [(ngModel)]="nuevoCasoForm.tipoFalta">
+                    <option value="TIPO_I">🟢 TIPO I: Falta Leve / Conflicto en aula</option>
+                    <option value="TIPO_II">🟠 TIPO II: Acoso Escolar (Bullying) / Ciberacoso</option>
+                    <option value="TIPO_III">🔴 TIPO III: Falta Gravísima / Presunto Delito</option>
+                  </select>
+                </div>
 
-              <!-- Descripción de los Hechos -->
-              <div class="form-group mt-3">
-                <label class="form-label">Descripción Objetiva de los Hechos *</label>
-                <textarea
-                  class="form-control"
-                  rows="3"
-                  [(ngModel)]="nuevoCasoForm.descripcionHechos"
-                  placeholder="Relate de forma cronológica, clara y respetuosa lo acontecido..."
-                ></textarea>
-              </div>
+                <!-- Artículo del Manual de Convivencia -->
+                <div class="form-group">
+                  <label class="form-label">Artículo del Manual de Convivencia</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoCasoForm.articuloManualConvivencia"
+                    placeholder="Ej: Capítulo 5, Art. 22"
+                  />
+                </div>
 
-              <div class="grid-cols-2 mt-3" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <!-- Lugar y Fecha -->
                 <div class="form-group">
                   <label class="form-label">Lugar de los Hechos</label>
                   <input
@@ -475,6 +467,17 @@ export interface ActaComiteItem {
                     class="form-control"
                     [(ngModel)]="nuevoCasoForm.fechaHechos"
                   />
+                </div>
+
+                <!-- Descripción de los Hechos -->
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Descripción Objetiva de los Hechos *</label>
+                  <textarea
+                    class="form-control"
+                    rows="2"
+                    [(ngModel)]="nuevoCasoForm.descripcionHechos"
+                    placeholder="Relate de forma cronológica, clara y respetuosa lo acontecido..."
+                  ></textarea>
                 </div>
               </div>
             </div>
@@ -494,7 +497,7 @@ export interface ActaComiteItem {
       <!-- ================================================= -->
       @if (casoSeleccionado()) {
         <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('detalleCaso')">
-          <div class="modal-card card card-glass" style="max-width: 650px;">
+          <div class="modal-card card card-glass" style="max-width: 1000px;">
             <div class="modal-header">
               <div>
                 <h3>🔍 Expediente de Convivencia #{{ casoSeleccionado()?.id?.slice(0, 8) }}</h3>
@@ -505,7 +508,7 @@ export interface ActaComiteItem {
 
             <div class="modal-body">
               <!-- Información del Estudiante -->
-              <div class="estudiante-summary-box">
+              <div class="estudiante-summary-box mb-3">
                 <div class="estudiante-avatar">
                   {{ casoSeleccionado()?.primer_nombre?.charAt(0) }}{{ casoSeleccionado()?.primer_apellido?.charAt(0) }}
                 </div>
@@ -524,74 +527,80 @@ export interface ActaComiteItem {
                 </div>
               </div>
 
-              <!-- Hechos -->
-              <div class="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <div class="text-xs font-bold text-slate-500 uppercase">Hechos Registrados:</div>
-                <p class="text-sm text-slate-700 mt-1">{{ casoSeleccionado()?.descripcion_hechos }}</p>
-                <div class="text-2xs text-slate-400 mt-2">
-                  Fecha: {{ casoSeleccionado()?.fecha_hechos | date:'dd/MM/yyyy' }} · Lugar: {{ casoSeleccionado()?.lugar_hechos }}
-                </div>
-              </div>
-
-              <!-- Historial de Descargos -->
-              <div class="mt-4">
-                <h4 class="text-xs font-bold text-slate-700 uppercase mb-2 flex-between">
-                  <span>✍️ Descargos del Estudiante (Debido Proceso)</span>
-                  <app-help-badge term="DEBIDO_PROCESO"></app-help-badge>
-                </h4>
-
-                @for (d of casoSeleccionado()?.descargos; track d.id) {
-                  <div class="descargo-item">
-                    <div class="descargo-header">
-                      <span class="font-bold text-xs text-slate-800">Versión Presentada:</span>
-                      <span class="text-2xs text-slate-400">{{ d.fecha_descargos | date:'dd/MM/yyyy HH:mm' }}</span>
+              <!-- Distribución en 2 Columnas para aprovechar el ancho sin scroll -->
+              <div class="grid-cols-2" style="gap: 1.25rem;">
+                <!-- Columna Izquierda: Hechos y Medida Formativa -->
+                <div>
+                  <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div class="text-xs font-bold text-slate-500 uppercase">Hechos Registrados:</div>
+                    <p class="text-sm text-slate-700 mt-1">{{ casoSeleccionado()?.descripcion_hechos }}</p>
+                    <div class="text-2xs text-slate-400 mt-2">
+                      📅 {{ casoSeleccionado()?.fecha_hechos | date:'dd/MM/yyyy' }} · 📍 {{ casoSeleccionado()?.lugar_hechos }}
                     </div>
-                    <p class="text-xs text-slate-700 mt-1">{{ d.version_hechos }}</p>
                   </div>
-                } @empty {
-                  <p class="text-xs text-slate-400 italic">No se han registrado descargos formales para este caso.</p>
-                }
-              </div>
 
-              <!-- Formulario para agregar descargos -->
-              <div class="mt-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100">
-                <h5 class="text-xs font-bold text-indigo-900 mb-2">➕ Registrar Nueva Versión de Descargos:</h5>
-                <textarea
-                  class="form-control"
-                  rows="2"
-                  [(ngModel)]="nuevoDescargoForm.versionHechos"
-                  placeholder="Escriba la versión libre del estudiante y/o su acudiente..."
-                ></textarea>
-                <div class="flex justify-end mt-2">
-                  <button (click)="guardarDescargo()" class="btn btn-sm btn-primary">
-                    💾 Radicar Descargos
-                  </button>
+                  <div class="mt-3">
+                    <label class="form-label">Medida Pedagógica Formativa / Compromiso:</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="medidaFormativaInput"
+                      placeholder="Ej: Taller reflexivo sobre respeto, servicio social"
+                    />
+                  </div>
+
+                  <div class="flex-between mt-3">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-slate-600">Estado:</span>
+                      <select class="form-select form-select-sm" [(ngModel)]="estadoActualizarInput">
+                        <option value="ABIERTO">ABIERTO</option>
+                        <option value="EN_DESCARGOS">EN_DESCARGOS</option>
+                        <option value="CONCILIACION">CONCILIACION</option>
+                        <option value="SANCIONADO">SANCIONADO</option>
+                        <option value="CERRADO">CERRADO</option>
+                      </select>
+                    </div>
+                    <button (click)="actualizarEstadoCaso()" class="btn btn-primary">
+                      🔄 Actualizar Caso
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Medida Formativa y Cierre -->
-              <div class="mt-4 pt-3 border-t border-slate-200">
-                <label class="form-label">Medida Pedagógica Formativa / Compromiso de Convivencia:</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="medidaFormativaInput"
-                  placeholder="Ej: Taller reflexivo sobre respeto, servicio social pedagógico o acta de compromiso"
-                />
-                <div class="flex-between mt-3">
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-slate-600">Estado:</span>
-                    <select class="form-select form-select-sm" [(ngModel)]="estadoActualizarInput">
-                      <option value="ABIERTO">ABIERTO</option>
-                      <option value="EN_DESCARGOS">EN_DESCARGOS</option>
-                      <option value="CONCILIACION">CONCILIACION</option>
-                      <option value="SANCIONADO">SANCIONADO</option>
-                      <option value="CERRADO">CERRADO</option>
-                    </select>
+                <!-- Columna Derecha: Descargos y Derecho a la Defensa -->
+                <div>
+                  <h4 class="text-xs font-bold text-slate-700 uppercase mb-2 flex-between">
+                    <span>✍️ Descargos del Estudiante (Debido Proceso)</span>
+                    <app-help-badge term="DEBIDO_PROCESO"></app-help-badge>
+                  </h4>
+
+                  <div style="max-height: 180px; overflow-y: auto; margin-bottom: 0.75rem;">
+                    @for (d of casoSeleccionado()?.descargos; track d.id) {
+                      <div class="descargo-item">
+                        <div class="descargo-header">
+                          <span class="font-bold text-xs text-slate-800">Versión Presentada:</span>
+                          <span class="text-2xs text-slate-400">{{ d.fecha_descargos | date:'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                        <p class="text-xs text-slate-700 mt-1">{{ d.version_hechos }}</p>
+                      </div>
+                    } @empty {
+                      <p class="text-xs text-slate-400 italic">No se han registrado descargos formales para este caso.</p>
+                    }
                   </div>
-                  <button (click)="actualizarEstadoCaso()" class="btn btn-primary">
-                    🔄 Actualizar Caso
-                  </button>
+
+                  <div class="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                    <h5 class="text-xs font-bold text-indigo-900 mb-1">➕ Radicar Nueva Versión de Descargos:</h5>
+                    <textarea
+                      class="form-control"
+                      rows="2"
+                      [(ngModel)]="nuevoDescargoForm.versionHechos"
+                      placeholder="Escriba la versión libre del estudiante y/o acudiente..."
+                    ></textarea>
+                    <div class="flex justify-end mt-2">
+                      <button (click)="guardarDescargo()" class="btn btn-sm btn-primary">
+                        💾 Radicar Descargos
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -608,7 +617,7 @@ export interface ActaComiteItem {
       <!-- ================================================= -->
       @if (modalNuevaActa()) {
         <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevaActa')">
-          <div class="modal-card card card-glass" style="max-width: 600px;">
+          <div class="modal-card card card-glass" style="max-width: 900px;">
             <div class="modal-header">
               <div>
                 <h3>📝 Nueva Acta de Comité de Convivencia</h3>
@@ -618,7 +627,7 @@ export interface ActaComiteItem {
             </div>
 
             <div class="modal-body">
-              <div class="grid-cols-2" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <div class="modal-form-grid">
                 <div class="form-group">
                   <label class="form-label">Número de Acta *</label>
                   <input type="text" class="form-control" [(ngModel)]="nuevaActaForm.numeroActa" placeholder="Ej: ACTA-CCE-2026-03" />
@@ -627,26 +636,26 @@ export interface ActaComiteItem {
                   <label class="form-label">Fecha de Reunión *</label>
                   <input type="date" class="form-control" [(ngModel)]="nuevaActaForm.fechaReunion" />
                 </div>
-              </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label">Decisiones y Acuerdos Adoptados *</label>
-                <textarea
-                  class="form-control"
-                  rows="3"
-                  [(ngModel)]="nuevaActaForm.decisionesAdoptadas"
-                  placeholder="Detalle los casos analizados y las soluciones formativas acordadas por unanimidad..."
-                ></textarea>
-              </div>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Decisiones y Acuerdos Adoptados *</label>
+                  <textarea
+                    class="form-control"
+                    rows="2"
+                    [(ngModel)]="nuevaActaForm.decisionesAdoptadas"
+                    placeholder="Detalle los casos analizados y las soluciones formativas acordadas por unanimidad..."
+                  ></textarea>
+                </div>
 
-              <div class="form-group mt-3">
-                <label class="form-label">Compromisos de Seguimiento y Garantías de No Repetición</label>
-                <textarea
-                  class="form-control"
-                  rows="2"
-                  [(ngModel)]="nuevaActaForm.compromisosAdquiridos"
-                  placeholder="Acuerdos con estudiantes, docentes o acudientes para seguimiento con psicorientación..."
-                ></textarea>
+                <div class="form-group" style="grid-column: span 2;">
+                  <label class="form-label">Compromisos de Seguimiento y Garantías de No Repetición</label>
+                  <textarea
+                    class="form-control"
+                    rows="2"
+                    [(ngModel)]="nuevaActaForm.compromisosAdquiridos"
+                    placeholder="Acuerdos con estudiantes, docentes o acudientes para seguimiento con psicorientación..."
+                  ></textarea>
+                </div>
               </div>
             </div>
 
@@ -655,6 +664,179 @@ export interface ActaComiteItem {
                 💾 Guardar y Foliar Acta
               </button>
               <button (click)="cerrarModalNuevaActa()" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ================================================= -->
+      <!-- MODAL 4: VER E IMPRIMIR ACTA OFICIAL DE COMITÉ     -->
+      <!-- ================================================= -->
+      @if (actaParaVer()) {
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('verActa')">
+          <div class="modal-card card card-glass" style="max-width: 750px;">
+            <div class="modal-header">
+              <h3>📄 Acta de Comité de Convivencia N° {{ actaParaVer()?.numero_acta }}</h3>
+              <button (click)="actaParaVer.set(null)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body print-area">
+              <div class="report-header-card" style="display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #0f172a; padding-bottom: 0.75rem;">
+                <div class="report-logo-box" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: #4f46e5; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+                  @if (authService.colegio()?.logoUrl) {
+                    <img [src]="authService.colegio()?.logoUrl" alt="Escudo" style="width: 100%; height: 100%; object-fit: cover;" />
+                  } @else {
+                    {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+                  }
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="margin: 0; color: #1e1b4b; font-size: 1.15rem; font-weight: 800;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h3>
+                  <p class="text-xs text-slate-500" style="margin: 0.15rem 0;">NIT: {{ authService.colegio()?.nit }} | DANE: {{ authService.colegio()?.codigoDane }} | Res. {{ authService.colegio()?.resolucionAprobacion || 'MEN 4512' }}</p>
+                  <strong style="color: #4338ca; font-size: 0.85rem;">COMITÉ ESCOLAR DE CONVIVENCIA — LEY 1620 DE 2013</strong>
+                </div>
+              </div>
+
+              <div class="mt-3 p-3" style="background: #f8fafc; border-radius: 8px; font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <p><strong>N° Acta:</strong> {{ actaParaVer()?.numero_acta }}</p>
+                <p><strong>Fecha de Sesión:</strong> {{ actaParaVer()?.fecha_reunion | date:'dd/MM/yyyy' }}</p>
+                <p><strong>Tipo de Sesión:</strong> Ordinaria de Mediación</p>
+                <p><strong>Quórum:</strong> Rectoría, Orientación, Personero, Padres</p>
+              </div>
+
+              <div class="mt-4">
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #0f172a;">Decisiones y Acuerdos de Mediación Adoptados:</h4>
+                <div class="p-3" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; line-height: 1.6;">
+                  {{ actaParaVer()?.decisiones_adoptadas }}
+                </div>
+              </div>
+
+              @if (actaParaVer()?.compromisos_adquiridos) {
+                <div class="mt-3">
+                  <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #065f46;">Compromisos y Garantías de No Repetición:</h4>
+                  <div class="p-3" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 0.85rem; line-height: 1.6; color: #065f46;">
+                    {{ actaParaVer()?.compromisos_adquiridos }}
+                  </div>
+                </div>
+              }
+
+              <div class="firmas-grid mt-5" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; text-align: center; font-size: 0.75rem; margin-top: 2.5rem;">
+                <div>
+                  <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
+                  <strong>RECTORÍA</strong><br>
+                  <span>Presidente del Comité</span>
+                </div>
+                <div>
+                  <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
+                  <strong>ORIENTACIÓN ESCOLAR</strong><br>
+                  <span>Secretaría Técnica</span>
+                </div>
+                <div>
+                  <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
+                  <strong>PERSONERO ESTUDIANTIL</strong><br>
+                  <span>Garante de DDHH</span>
+                </div>
+              </div>
+
+              <!-- Pie de página institucional con Dirección, Teléfono y Correo -->
+              <div class="report-footer-contacts mt-4" style="border-top: 1px solid #e2e8f0; padding-top: 0.6rem; text-align: center; font-size: 0.75rem; color: #64748b;">
+                <span>📍 Dirección: {{ authService.colegio()?.direccion || 'Campus Central' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>📞 Tel: {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>✉️ Correo: {{ authService.colegio()?.emailContacto || 'rectoria@sanbartolome.edu.co' }}</span>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="imprimirActaDoc()" class="btn btn-primary">
+                🖨️ Imprimir Acta
+              </button>
+              <button (click)="actaParaVer.set(null)" class="btn btn-secondary">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ================================================= -->
+      <!-- MODAL 5: INFORME MATRIZ OFICIAL SIUCE (MEN)        -->
+      <!-- ================================================= -->
+      @if (modalSiuceReporte()) {
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('siuceReporte')">
+          <div class="modal-card card card-glass" style="max-width: 800px;">
+            <div class="modal-header">
+              <h3>📊 Informe Semestral de Convivencia SIUCE (MEN)</h3>
+              <button (click)="modalSiuceReporte.set(false)" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body print-area">
+              <div class="report-header-card" style="display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #0f172a; padding-bottom: 0.75rem;">
+                <div class="report-logo-box" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: #059669; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
+                  @if (authService.colegio()?.logoUrl) {
+                    <img [src]="authService.colegio()?.logoUrl" alt="Escudo" style="width: 100%; height: 100%; object-fit: cover;" />
+                  } @else {
+                    {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
+                  }
+                </div>
+                <div style="flex: 1;">
+                  <h3 style="margin: 0; color: #1e1b4b; font-size: 1.15rem; font-weight: 800;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h3>
+                  <p class="text-xs text-slate-500" style="margin: 0.15rem 0;">Código DANE: {{ authService.colegio()?.codigoDane }} | NIT: {{ authService.colegio()?.nit }}</p>
+                  <strong style="color: #059669; font-size: 0.85rem;">SISTEMA DE INFORMACIÓN UNIFICADO DE CONVIVENCIA ESCOLAR (SIUCE)</strong>
+                </div>
+              </div>
+
+              <div class="mt-3 p-3" style="background: #f8fafc; border-radius: 8px; font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <p><strong>Periodo Consolidado:</strong> Primer Semestre 2026</p>
+                <p><strong>Total de Casos:</strong> {{ casosList().length }} expedientes</p>
+                <p><strong>Tasa de Resolución:</strong> {{ calcularTasaResolucion() }}% conciliados</p>
+                <p><strong>Fecha de Corte:</strong> {{ newDate() | date:'dd/MM/yyyy' }}</p>
+              </div>
+
+              <table class="data-table mt-3" style="font-size: 0.85rem; width: 100%;">
+                <thead>
+                  <tr>
+                    <th>Tipificación (Ley 1620)</th>
+                    <th>Casos Registrados</th>
+                    <th>Protocolo Aplicado</th>
+                    <th>Remisión</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>🟢 <strong>Tipo I (Leves)</strong></td>
+                    <td><strong>{{ metricas().tipo_1_leves || totalTipo1() }}</strong></td>
+                    <td>Mediación pedagógica y compromisos</td>
+                    <td>Aula / Docente</td>
+                  </tr>
+                  <tr>
+                    <td>🟠 <strong>Tipo II (Acoso / Bullying)</strong></td>
+                    <td><strong>{{ metricas().tipo_2_acoso || totalTipo2() }}</strong></td>
+                    <td>Comité de Convivencia y Psicorientación</td>
+                    <td>Comité Escolar</td>
+                  </tr>
+                  <tr>
+                    <td>🔴 <strong>Tipo III (Delitos)</strong></td>
+                    <td><strong>{{ metricas().tipo_3_graves || totalTipo3() }}</strong></td>
+                    <td>Atención inmediata y debido proceso</td>
+                    <td>ICBF / Policía / Fiscalía</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Pie de página institucional con Dirección, Teléfono y Correo -->
+              <div class="report-footer-contacts mt-4" style="border-top: 1px solid #e2e8f0; padding-top: 0.6rem; text-align: center; font-size: 0.75rem; color: #64748b;">
+                <span>📍 Dirección: {{ authService.colegio()?.direccion || 'Campus Central' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>📞 Tel: {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }}</span>
+                <span style="margin: 0 0.5rem;">•</span>
+                <span>✉️ Correo: {{ authService.colegio()?.emailContacto || 'rectoria@sanbartolome.edu.co' }}</span>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="imprimirActaDoc()" class="btn btn-primary">
+                🖨️ Imprimir / Guardar PDF
+              </button>
+              <button (click)="modalSiuceReporte.set(false)" class="btn btn-secondary">Cerrar</button>
             </div>
           </div>
         </div>
@@ -1253,10 +1435,24 @@ export class ConvivenciaComponent implements OnInit {
   readonly estudiantesList = signal<any[]>([]);
   readonly metricas = signal<any>({});
 
+  readonly estudiantesSelectOptions = computed<SearchableOption[]>(() => {
+    return this.estudiantesList().map((e) => ({
+      value: e.matricula_id,
+      label: `${e.primer_apellido} ${e.segundo_apellido || ''} ${e.primer_nombre} ${e.segundo_nombre || ''}`.trim(),
+      sublabel: `Doc. ${e.numero_documento} • Grado: ${e.grado_nombre || '10°'}`,
+      badge: e.grupo_nombre || '10-A',
+      badgeClass: 'badge-primary',
+      avatarText: `${e.primer_nombre?.charAt(0) || 'E'}${e.primer_apellido?.charAt(0) || 'S'}`.toUpperCase(),
+    }));
+  });
+
   // Modales
   readonly modalNuevoCaso = signal(false);
   readonly modalNuevaActa = signal(false);
   readonly casoSeleccionado = signal<CasoConvivenciaItem | null>(null);
+  readonly actaParaVer = signal<ActaComiteItem | null>(null);
+  readonly modalSiuceReporte = signal<boolean>(false);
+  readonly newDate = signal<Date>(new Date());
 
   // Filtros
   filtroTexto = '';
@@ -1328,45 +1524,12 @@ export class ConvivenciaComponent implements OnInit {
           this.casosList.set(res.casos);
         } else if (Array.isArray(res)) {
           this.casosList.set(res);
+        } else {
+          this.casosList.set([]);
         }
       },
       error: () => {
-        // Mock inicial amigable si la BD aún no tiene casos registrados
-        this.casosList.set([
-          {
-            id: 'c1-mock',
-            primer_nombre: 'Valentina',
-            primer_apellido: 'Rodríguez',
-            numero_documento: '1023456789',
-            tipo_documento: 'TI',
-            grupo_nombre: '10°A',
-            tipo_falta: 'TIPO_I',
-            articulo_manual_convivencia: 'Capítulo 4, Art. 15 (Uso de celular en clase)',
-            descripcion_hechos: 'Uso reiterado del teléfono celular durante la explicación del docente sin autorización previa.',
-            lugar_hechos: 'Aula 10B',
-            fecha_hechos: '2026-08-14',
-            estado: 'CONCILIACION',
-            medida_formativa: 'Compromiso de entrega del dispositivo en portería y elaboración de resumen temático.',
-            reportado_por_nombres: 'Carlos',
-            reportado_por_apellidos: 'Gómez',
-          },
-          {
-            id: 'c2-mock',
-            primer_nombre: 'Mateo',
-            primer_apellido: 'Castro',
-            numero_documento: '1034567890',
-            tipo_documento: 'TI',
-            grupo_nombre: '9°B',
-            tipo_falta: 'TIPO_II',
-            articulo_manual_convivencia: 'Capítulo 6, Art. 28 (Ciberacoso y exclusión reiterada)',
-            descripcion_hechos: 'Publicación de comentarios despectivos y memes en grupo de mensajería afectando a un compañero de aula.',
-            lugar_hechos: 'Redes Sociales',
-            fecha_hechos: '2026-08-12',
-            estado: 'EN_DESCARGOS',
-            reportado_por_nombres: 'María',
-            reportado_por_apellidos: 'Fernández',
-          }
-        ]);
+        this.casosList.set([]);
       }
     });
   }
@@ -1378,18 +1541,12 @@ export class ConvivenciaComponent implements OnInit {
           this.actasList.set(res.actas);
         } else if (Array.isArray(res)) {
           this.actasList.set(res);
+        } else {
+          this.actasList.set([]);
         }
       },
       error: () => {
-        this.actasList.set([
-          {
-            id: 'acta-01',
-            numero_acta: 'ACTA-CCE-2026-01',
-            fecha_reunion: '2026-07-28',
-            decisiones_adoptadas: 'Se revisó caso de mediación escolar del grado 9°B. Se concertó acuerdo de no agresión y trabajo de sensibilización grupal.',
-            compromisos_adquiridos: 'Acompañamiento semanal por Psicorientación y seguimiento del Personero Estudiantil.',
-          }
-        ]);
+        this.actasList.set([]);
       }
     });
   }
@@ -1399,40 +1556,35 @@ export class ConvivenciaComponent implements OnInit {
       next: (res) => {
         if (res) this.metricas.set(res);
       },
+      error: () => {
+        this.metricas.set({});
+      }
     });
   }
 
   cargarEstudiantes() {
     this.api.get<any[]>('convivencia/estudiantes-matriculados').subscribe({
       next: (res) => {
-        if (res && res.length > 0) {
+        if (res && Array.isArray(res)) {
           this.estudiantesList.set(res);
-          this.nuevoCasoForm.matriculaId = res[0].matricula_id;
+          if (res.length > 0 && !this.nuevoCasoForm.matriculaId) {
+            this.nuevoCasoForm.matriculaId = res[0].matricula_id;
+          }
+        } else {
+          this.estudiantesList.set([]);
         }
       },
       error: () => {
-        // Fallback a matriculas estándar
-        this.api.get<any[]>('matriculas').subscribe((mats) => {
-          if (mats && mats.length > 0) {
-            const mapped = mats.map(m => ({
-              matricula_id: m.id,
-              estudiante_id: m.estudianteId,
-              primer_nombre: m.estudianteNombre?.split(' ')[0] || 'Estudiante',
-              primer_apellido: m.estudianteNombre?.split(' ')[1] || '',
-              numero_documento: m.estudianteDocumento || '10000000',
-              grado_nombre: m.gradoNombre || 'Grado',
-              grupo_nombre: m.grupoNombre || '10°A',
-            }));
-            this.estudiantesList.set(mapped);
-            this.nuevoCasoForm.matriculaId = mapped[0].matricula_id;
-          }
-        });
+        this.estudiantesList.set([]);
       }
     });
   }
 
   // --- CRUD: NUEVO CASO ---
   abrirModalNuevoCaso() {
+    if (this.estudiantesList().length === 0) {
+      this.cargarEstudiantes();
+    }
     this.nuevoCasoForm = {
       matriculaId: this.estudiantesList()[0]?.matricula_id || '',
       tipoFalta: 'TIPO_I',
@@ -1574,12 +1726,15 @@ export class ConvivenciaComponent implements OnInit {
   }
 
   imprimirActa(acta: ActaComiteItem) {
-    this.toast.info('Generando Vista de Impresión', `Preparando acta ${acta.numero_acta} con firmas institucionales.`);
+    this.actaParaVer.set(acta);
+  }
+
+  imprimirActaDoc() {
     window.print();
   }
 
   exportarReporteSiuce() {
-    this.toast.success('Reporte SIUCE Generado', 'Se ha consolidado la matriz semestral de convivencia para reporte a la Secretaría de Educación.');
+    this.modalSiuceReporte.set(true);
   }
 
   // Helpers de Formato

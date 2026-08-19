@@ -10,10 +10,18 @@ export interface User {
 export interface Colegio {
   id: string;
   nombre: string;
+  razonSocial?: string;
   slug: string;
   nit: string;
   codigoDane: string;
   ciudad: string;
+  direccion?: string;
+  telefonoContacto?: string;
+  emailContacto?: string;
+  resolucionAprobacion?: string;
+  logoUrl?: string;
+  colorPrimario?: string;
+  colorSecundario?: string;
   plan: 'BASIC' | 'STANDARD' | 'ENTERPRISE';
   modulosActivos: string[];
 }

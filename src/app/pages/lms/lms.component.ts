@@ -110,10 +110,11 @@ export interface EntregaLmsItem {
               <!-- Feed -->
               <div class="muro-feed">
                 @if (aulaSeleccionada()) {
-                  <div class="flex-between mb-3">
-                    <h2>Muro: {{ aulaSeleccionada()?.nombre }}</h2>
+                  <div class="flex-between mb-4">
+                    <h2 style="margin: 0; color: #1e293b;">Muro: {{ aulaSeleccionada()?.nombre }}</h2>
                     <button class="btn btn-primary" (click)="abrirModalPublicacion()">📝 Crear Post</button>
                   </div>
+                  <hr style="border: 0; height: 1px; background: #e2e8f0; margin-bottom: 2rem;">
 
                   @for (post of publicaciones(); track post.id) {
                     <div class="card shadow-sm mb-4 p-4 border" style="border-radius: 12px; background: white;">

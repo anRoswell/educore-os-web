@@ -2265,6 +2265,7 @@ export class LmsComponent implements OnInit {
       permiteEntregaTardia: true,
     };
     this.nombreArchivoGuia = '';
+    this.videoPreviewUrl.set(null);
     this.modalCrearTarea.set(true);
   }
 
@@ -2282,6 +2283,7 @@ export class LmsComponent implements OnInit {
       permiteEntregaTardia: tarea.permiteEntregaTardia ?? true,
     };
     this.nombreArchivoGuia = tarea.urlGuiaAdjunta ? 'Guía de trabajo adjunta' : '';
+    this.onUrlChange(tarea.urlGuiaAdjunta || '');
     this.modalCrearTarea.set(true);
   }
 

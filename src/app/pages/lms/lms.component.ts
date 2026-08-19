@@ -1536,6 +1536,7 @@ export class LmsComponent implements OnInit {
   readonly aulaSeleccionada = signal<any | null>(null);
   readonly modalCrearAula = signal(false);
   readonly modalPublicacion = signal(false);
+  archivoSeleccionado = signal<File | null>(null);
 
   // --- CUESTIONARIOS ---
   readonly modalCuestionario = signal(false);

@@ -107,6 +107,12 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
               </span>
               <span class="badge-mini" style="background: rgba(79, 70, 229, 0.2); color: #818cf8; border-color: rgba(79, 70, 229, 0.3);">LMS</span>
             </a>
+            <a routerLink="/asistencia" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">📅</span>
+              <span class="nav-text">
+                {{ authService.user()?.role === 'ESTUDIANTE' ? 'Mis Faltas & Excusas' : 'Asistencia & Excusas' }}
+              </span>
+            </a>
             @if (authService.user()?.role !== 'DOCENTE' && authService.user()?.role !== 'ESTUDIANTE') {
               <a routerLink="/matriculas" routerLinkActive="active" class="nav-link">
                 <span class="nav-icon">👥</span>

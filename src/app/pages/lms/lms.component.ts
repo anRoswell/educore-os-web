@@ -131,6 +131,22 @@ export interface EntregaLmsItem {
                         </div>
                       }
 
+                      @if (post.archivoAdjuntoUrl) {
+                        <div class="mt-3 p-3 border rounded" style="background: #f8fafc; border-color: #e2e8f0; display: flex; align-items: center; justify-content: space-between; border-radius: 8px;">
+                          <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">📄</span>
+                            <div>
+                              <strong style="color: #334155; display: block;">{{ post.archivoAdjuntoNombre || 'Documento Adjunto' }}</strong>
+                              <span style="font-size: 0.8rem; color: #64748b;">Haga clic para descargar</span>
+                            </div>
+                          </div>
+                          <a [href]="post.archivoAdjuntoUrl" target="_blank" class="btn btn-sm" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;">
+                            ⬇️ Descargar
+                          </a>
+                        </div>
+                      }
+
+
                       @if (post.tipo === 'EXAMEN' || post.titulo.includes('Examen') || post.titulo.includes('Cuestionario')) {
                         <div class="mt-3 p-3 bg-slate-50 border rounded" style="background: #f8fafc; border-radius: 8px;">
                           <div class="flex-between">

@@ -50,7 +50,7 @@ interface AlumnoAsistencia {
 
       <!-- TAB 1: TOMAR LISTA (DOCENTES) -->
       @if (tabActiva() === 'tomar_lista') {
-        <div class="tab-body animate-fade-in">
+        <div class="tab-body animate-fade-in mt-4">
           
           <!-- Filtros Carga Docente -->
           <div class="card filter-bar">
@@ -186,7 +186,7 @@ interface AlumnoAsistencia {
 
       <!-- TAB 2: EXCUSAS MÉDICAS -->
       @if (tabActiva() === 'excusas') {
-        <div class="tab-body animate-fade-in">
+        <div class="tab-body animate-fade-in mt-4">
           @if (role() === 'ESTUDIANTE') {
             <!-- Vista Estudiante: Radicar Excusa -->
             <div class="grid-cols-2">

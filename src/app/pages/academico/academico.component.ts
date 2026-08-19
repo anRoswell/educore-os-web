@@ -194,6 +194,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
             <span class="ac-hint">Tareas y Quizes SIEE</span>
           </div>
         </button>
+
+        <button (click)="abrirModalReglasSiee()" class="action-card-btn" title="Configurar las reglas de aprobación institucionales">
+          <span class="ac-icon">⚖️</span>
+          <div class="ac-text">
+            <span class="ac-title">Reglas SIEE</span>
+            <span class="ac-hint">Criterios de Promoción</span>
+          </div>
+        </button>
       </div>
 
       <!-- Filtros Académicos Dinámicos en Cascada -->
@@ -846,6 +854,46 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
         </div>
       }
 
+
+      <!-- ========================================== -->
+      <!-- MODAL 8: REGLAS SIEE                       -->
+      <!-- ========================================== -->
+      @if (modalReglasSiee()) {
+        <div class="modal-backdrop">
+          <div class="modal-content animate-slide-up">
+            <div class="modal-header">
+              <h2>⚖️ Configuración SIEE (Promoción)</h2>
+              <button class="close-btn" (click)="cerrarModalReglasSiee()">X</button>
+            </div>
+            
+            <div class="modal-body">
+              <div class="alert alert-info">
+                <strong>¿Cuándo reprueba un estudiante el año?</strong><br>
+                Defina los parámetros bajo los cuales el sistema determinará la reprobación automática al finalizar el año lectivo.
+              </div>
+
+              <div class="form-group mb-3">
+                <label>Límite de Materias Perdidas</label>
+                <input type="number" [(ngModel)]="reglaSiee.materiasReprobadasLimite" class="form-control" placeholder="Ej: 3">
+                <small class="hint">Si pierde esta cantidad o más, reprueba el año directamente.</small>
+              </div>
+
+              <div class="form-group mb-3">
+                <label>Nota Mínima de Aprobación</label>
+                <input type="number" step="0.1" [(ngModel)]="reglaSiee.notaMinimaAprobacion" class="form-control" placeholder="Ej: 3.0">
+                <small class="hint">La nota a partir de la cual el desempeño pasa de BAJO a BÁSICO.</small>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" (click)="cerrarModalReglasSiee()">Cancelar</button>
+              <button class="btn btn-primary" (click)="guardarReglasSiee()">
+                💾 Guardar Reglas
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- ========================================== -->
       <!-- MODAL 7: CREAR ACTIVIDAD EVALUATIVA       -->
       <!-- ========================================== -->
@@ -1319,6 +1367,14 @@ export class AcademicoComponent implements OnInit {
   readonly modalNuevoGrupo = signal(false);
   readonly modalNuevaAsignatura = signal(false);
   readonly modalNuevaActividad = signal(false);
+  readonly modalReglasSiee = signal(false);
+
+  // Formularios DTOs
+  reglaSiee = {
+    materiasReprobadasLimite: 3,
+    notaMinimaAprobacion: 3.0,
+  };
+
 
   // Formularios de Creación
   nuevoPeriodo = {
@@ -1787,6 +1843,36 @@ export class AcademicoComponent implements OnInit {
       },
       error: (err) => {
         this.toast.error('Error al crear periodo', err?.error?.message || 'No fue posible crear el periodo académico.');
+      },
+    });
+  }
+
+
+  // --- CRUD: REGLAS SIEE ---
+  abrirModalReglasSiee() {
+    this.api.get<any[]>('academico/siee/reglas').subscribe((reglas) => {
+      if (reglas && reglas.length > 0) {
+        this.reglaSiee.materiasReprobadasLimite = reglas[0].materiasReprobadasLimite || 3;
+        this.reglaSiee.notaMinimaAprobacion = reglas[0].notaMinimaAprobacion || 3.0;
+      }
+      this.modalManager.open('reglasSiee');
+      this.modalReglasSiee.set(true);
+    });
+  }
+
+  cerrarModalReglasSiee() {
+    this.modalManager.close('reglasSiee');
+    this.modalReglasSiee.set(false);
+  }
+
+  guardarReglasSiee() {
+    this.api.post<any>('academico/siee/reglas', this.reglaSiee).subscribe({
+      next: (res) => {
+        this.cerrarModalReglasSiee();
+        this.toast.success('Reglas Guardadas', 'Las reglas de promoción han sido actualizadas.');
+      },
+      error: (err) => {
+        this.toast.error('Error', err?.error?.message || 'No fue posible guardar las reglas SIEE.');
       },
     });
   }

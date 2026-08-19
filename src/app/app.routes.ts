@@ -1,3 +1,4 @@
+import { FirmaMatriculaComponent } from './pages/public/firma-matricula.component';
 import { FirmaDisciplinariaComponent } from './pages/public/firma-disciplinaria.component';
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
@@ -20,6 +21,10 @@ export const routes: Routes = [
   {
     path: 'public/firmar-acta',
     component: FirmaDisciplinariaComponent,
+  },
+  {
+    path: 'public/firmar-matricula',
+    component: FirmaMatriculaComponent,
   },
   {
     path: 'login',

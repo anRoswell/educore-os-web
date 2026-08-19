@@ -415,8 +415,6 @@ export interface EntregaLmsItem {
         }
 
       } @else {
-      <!-- Header Original Oculto -->
-      <div style="display:none;">
 
       <!-- TARJETAS KPI DE AULA VIRTUAL -->
       <div class="kpi-grid">
@@ -982,8 +980,8 @@ export interface EntregaLmsItem {
           </div>
         </div>
       }
-    </div>
       }
+    </div>
   `,
   styles: [`
 /* Quill Viewer Custom Fixes */

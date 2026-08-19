@@ -1,3 +1,4 @@
+import { FirmaDisciplinariaComponent } from './pages/public/firma-disciplinaria.component';
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
 import { AdminLayoutComponent } from './layout/admin-layout.component';
@@ -16,6 +17,10 @@ import { HabeasDataComponent } from './pages/habeas-data/habeas-data.component';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
+  {
+    path: 'public/firmar-acta',
+    component: FirmaDisciplinariaComponent,
+  },
   {
     path: 'login',
     component: LoginComponent,

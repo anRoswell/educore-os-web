@@ -5,8 +5,17 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalManagerService } from '../../core/services/modal-manager.service';
+import { SearchableOption } from '../../shared/components/searchable-select.component';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
-import { SearchableSelectComponent, SearchableOption } from '../../shared/components/searchable-select.component';
+import { ModalCheckoutWompiComponent } from './modales/modal-checkout-wompi.component';
+import { ModalNuevoConceptoComponent } from './modales/modal-nuevo-concepto.component';
+import { ModalNuevoAcuerdoComponent } from './modales/modal-nuevo-acuerdo.component';
+import { ModalNuevoCobroComponent } from './modales/modal-nuevo-cobro.component';
+import { ModalPagoManualComponent } from './modales/modal-pago-manual.component';
+import { ModalPazYSalvoComponent } from './modales/modal-paz-y-salvo.component';
+import { ModalEditarFacturaComponent } from './modales/modal-editar-factura.component';
+import { ModalAnularFacturaComponent } from './modales/modal-anular-factura.component';
+import { ModalBecaComponent } from './modales/modal-beca.component';
 
 export interface CuentaCobroItem {
   id: string;
@@ -67,7 +76,7 @@ export interface EstudianteFinanciero {
 @Component({
   selector: 'app-tesoreria',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalCheckoutWompiComponent, ModalNuevoConceptoComponent, ModalNuevoAcuerdoComponent, ModalNuevoCobroComponent, ModalPagoManualComponent, ModalPazYSalvoComponent, ModalEditarFacturaComponent, ModalAnularFacturaComponent, ModalBecaComponent],
   template: `
     <div class="tesoreria-container">
       <!-- Header Principal -->
@@ -777,114 +786,23 @@ export interface EstudianteFinanciero {
 
       <!-- MODAL 1: REGISTRAR PAGO MANUAL / CAJA EN VENTANILLA -->
       @if (modalPagoManual()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 820px;">
-            <div class="modal-header">
-              <h3>💵 Registrar Recaudo en Ventanilla (Caja)</h3>
-              <button (click)="modalPagoManual.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="modal-form-grid">
-                <div class="form-group" style="grid-column: span 2;">
-                  <label class="form-label">Estudiante / Factura a Cruzar *</label>
-                  <select class="form-select" [(ngModel)]="nuevoPagoManual.cuentaCobroId">
-                    @for (c of cuentasPendientes(); track c.id) {
-                      <option [value]="c.id">
-                        {{ c.estudianteNombre }} — {{ c.numeroFactura }} (\${{ c.valorTotal | number }} COP)
-                      </option>
-                    }
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Medio de Pago *</label>
-                  <select class="form-select" [(ngModel)]="nuevoPagoManual.medioPago">
-                    <option value="EFECTIVO">💵 Efectivo en Ventanilla</option>
-                    <option value="TRANSFERENCIA_BANCOLOMBIA">🏦 Transferencia Bancolombia / Davivienda</option>
-                    <option value="NEQUI_QR">📱 Nequi / Daviplata QR</option>
-                    <option value="TARJETA_CREDITO">💳 Datáfono / Tarjeta</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Valor Recibido ($ COP) *</label>
-                  <input type="number" class="form-control" [(ngModel)]="nuevoPagoManual.valorPagado" />
-                </div>
-
-                <div class="form-group" style="grid-column: span 2;">
-                  <label class="form-label">Número de Comprobante / Voucher Banco</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevoPagoManual.referenciaTransaccion" placeholder="Ej: VOUCHER-9847291" />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarPagoManual()" class="btn btn-success">
-                💾 Registrar Pago & Emitir Recibo de Caja
-              </button>
-              <button (click)="modalPagoManual.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-pago-manual
+          [cuentasPendientes]="cuentasPendientes()"
+          [form]="nuevoPagoManual"
+          (close)="modalPagoManual.set(false)"
+          (success)="onPagoManualGuardado($event)">
+        </app-modal-pago-manual>
       }
 
       <!-- MODAL 2: CREAR ACUERDO DE PAGO EN CUOTAS -->
       @if (modalNuevoAcuerdo()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 820px;">
-            <div class="modal-header">
-              <h3>🤝 Nuevo Acuerdo de Pago & Refinanciación</h3>
-              <button (click)="modalNuevoAcuerdo.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="modal-form-grid">
-                <div class="form-group" style="grid-column: span 2;">
-                  <label class="form-label">Estudiante en Mora *</label>
-                  <app-searchable-select
-                    [options]="estudiantesMoraSelectOptions()"
-                    [(ngModel)]="nuevoAcuerdo.estudianteId"
-                    placeholder="🔍 Buscar estudiante por nombre, grado o documento..."
-                    searchPlaceholder="Escriba para filtrar en tiempo real..."
-                  ></app-searchable-select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Monto Total de Deuda a Refinanciar ($ COP) *</label>
-                  <input type="number" class="form-control" [(ngModel)]="nuevoAcuerdo.montoTotalAcordado" />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Número de Cuotas *</label>
-                  <select class="form-select" [(ngModel)]="nuevoAcuerdo.numeroCuotas">
-                    <option [value]="2">2 cuotas mensuales</option>
-                    <option [value]="3">3 cuotas mensuales</option>
-                    <option [value]="4">4 cuotas mensuales</option>
-                    <option [value]="6">6 cuotas mensuales</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Día de Pago Mensual (1-30) *</label>
-                  <input type="number" class="form-control" [(ngModel)]="nuevoAcuerdo.diaPagoMensual" min="1" max="30" />
-                </div>
-
-                <div class="form-group" style="grid-column: span 2;">
-                  <label class="form-label">Compromiso / Observaciones</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevoAcuerdo.observaciones" placeholder="Ej: Acudiente abonará en quincenas" />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevoAcuerdo()" class="btn btn-primary">
-                💾 Firmar Acuerdo & Reestructurar Cartera
-              </button>
-              <button (click)="modalNuevoAcuerdo.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-nuevo-acuerdo
+          [listaEstudiantes]="listaEstudiantes()"
+          [estudiantesMoraSelectOptions]="estudiantesMoraSelectOptions()"
+          [form]="nuevoAcuerdo"
+          (close)="modalNuevoAcuerdo.set(false)"
+          (success)="onAcuerdoGuardado($event)">
+        </app-modal-nuevo-acuerdo>
       }
 
       <!-- MODAL 3: RECIBO OFICIAL DE CAJA (IMPRIMIBLE) -->
@@ -960,223 +878,48 @@ export interface EstudianteFinanciero {
 
       <!-- MODAL 3.5: CREAR CONCEPTO DE COBRO -->
       @if (modalNuevoConcepto()) {
-        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoConcepto')">
-          <div class="modal-card card card-glass" style="max-width: 780px;">
-            <div class="modal-header">
-              <div>
-                <h3>🏷️ Crear Concepto de Cobro / Tarifa</h3>
-                <span class="modal-subtitle">Parametrización financiera de pensiones, matrículas y derechos</span>
-              </div>
-              <button (click)="cerrarModalNuevoConcepto()" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="modal-form-grid">
-                <div class="form-group" style="grid-column: span 2;">
-                  <label class="form-label">Nombre del Concepto *</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevoConceptoForm.nombre"
-                    placeholder="Ej: Pensión Mensual, Seguro Escolar, Salida Pedagógica"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Código Único *</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevoConceptoForm.codigo"
-                    placeholder="Ej: PENS-01, MAT-2026, SEG-EST"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Valor Sugerido ($ COP)</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="nuevoConceptoForm.valorSugerido"
-                    min="0"
-                  />
-                </div>
-
-                <div class="form-group" style="grid-column: span 2;">
-                  <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                    <input type="checkbox" [(ngModel)]="nuevoConceptoForm.esRecurrenteMensual" style="width: 18px; height: 18px;" />
-                    <span>¿Es cobro recurrente mensual? (ej: Pensión mensual)</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevoConcepto()" class="btn btn-primary">
-                💾 Guardar Concepto
-              </button>
-              <button (click)="cerrarModalNuevoConcepto()" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-nuevo-concepto 
+          (close)="cerrarModalNuevoConcepto()"
+          (success)="onConceptoGuardado($event)">
+        </app-modal-nuevo-concepto>
       }
 
       <!-- MODAL 4: EMITIR COBRO INDIVIDUAL -->
       @if (modalNuevoCobro()) {
-        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoCobro')">
-          <div class="modal-card card card-glass" style="max-width: 820px;">
-            <div class="modal-header">
-              <h3>➕ Emitir Cobro Individual / Extraordinario</h3>
-              <button (click)="cerrarModalNuevoCobro()" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="modal-form-grid">
-                <div class="form-group">
-                  <label class="form-label">Estudiante *</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevoCobro.estudianteNombre" placeholder="Nombre completo del estudiante" />
-                </div>
-
-                <div class="form-group">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                    <label class="form-label" style="margin: 0;">Concepto de Cobro *</label>
-                    <button (click)="abrirModalNuevoConcepto()" style="background: none; border: none; color: #4f46e5; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-decoration: underline;">+ Nuevo Concepto</button>
-                  </div>
-                  <select class="form-select" [(ngModel)]="nuevoCobro.concepto" (ngModelChange)="onConceptoSelect($event)">
-                    @for (con of conceptosList(); track con.id) {
-                      <option [value]="con.nombre">{{ con.nombre }} (\${{ con.valorSugerido | number }} COP)</option>
-                    } @empty {
-                      <option value="Pensión Mensual Escolar">Pensión Mensual Escolar</option>
-                    }
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Valor en Pesos ($ COP) *</label>
-                  <input type="number" class="form-control" [(ngModel)]="nuevoCobro.valorTotal" />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Fecha Límite de Pago *</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevoCobro.fechaVencimiento" />
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarNuevoCobro()" class="btn btn-primary">
-                💾 Emitir Cuenta de Cobro
-              </button>
-              <button (click)="cerrarModalNuevoCobro()" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-nuevo-cobro
+          [conceptosList]="conceptosList()"
+          [form]="nuevoCobro"
+          (close)="cerrarModalNuevoCobro()"
+          (success)="onCobroEmitido($event)"
+          (nuevoConcepto)="abrirModalNuevoConcepto()">
+        </app-modal-nuevo-cobro>
       }
 
       <!-- MODAL 5: EDITAR / APLICAR DESCUENTO O BECA -->
       @if (facturaEnEdicion()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 480px;">
-            <div class="modal-header">
-              <h3>✏️ Aplicar Descuento / Beca</h3>
-              <button (click)="facturaEnEdicion.set(null)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <p>Estudiante: <strong>{{ facturaEnEdicion()?.estudianteNombre }}</strong></p>
-              <p>Factura: <span class="font-mono text-xs">{{ facturaEnEdicion()?.numeroFactura }}</span></p>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Nuevo Valor a Cobrar ($ COP) *</label>
-                <input type="number" class="form-control" [(ngModel)]="facturaEnEdicion()!.valorTotal" />
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarEdicionFactura()" class="btn btn-primary">
-                🔄 Actualizar Valor Factura
-              </button>
-              <button (click)="facturaEnEdicion.set(null)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-editar-factura
+          [factura]="facturaEnEdicion()"
+          (close)="facturaEnEdicion.set(null)"
+          (success)="guardarEdicionFactura($event)">
+        </app-modal-editar-factura>
       }
 
       <!-- MODAL 6: ANULAR FACTURA -->
       @if (facturaParaAnular()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 480px;">
-            <div class="modal-header">
-              <h3 style="color: #ef4444;">⚠️ Confirmación de Anulación</h3>
-              <button (click)="facturaParaAnular.set(null)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <p>
-                ¿Está seguro de anular la factura <strong>{{ facturaParaAnular()?.numeroFactura }}</strong> 
-                de <strong>{{ facturaParaAnular()?.estudianteNombre }}</strong> por valor de 
-                <strong>\${{ facturaParaAnular()?.valorTotal | number }} COP</strong>?
-              </p>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="confirmarAnulacion()" class="btn btn-danger">
-                🗑️ Confirmar Anulación
-              </button>
-              <button (click)="facturaParaAnular.set(null)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-anular-factura
+          [factura]="facturaParaAnular()"
+          (close)="facturaParaAnular.set(null)"
+          (confirm)="confirmarAnulacion($event)">
+        </app-modal-anular-factura>
       }
 
       <!-- MODAL 7: SIMULADOR WOMPI / PSE -->
       @if (checkoutModal()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass">
-            <div class="wompi-header">
-              <div class="wompi-brand">
-                <span style="font-size: 1.5rem;">💳</span>
-                <strong>Pasarela de Pagos Wompi Bancolombia</strong>
-              </div>
-              <button (click)="cerrarModalCheckout()" class="close-btn">&times;</button>
-            </div>
-
-            <div class="wompi-body mt-4">
-              <div class="checkout-summary">
-                <span class="text-slate-500 text-sm">Factura: {{ checkoutModal()?.numeroFactura }}</span>
-                <h3>\${{ checkoutModal()?.valorTotal | number }} COP</h3>
-                <p>Estudiante: <strong>{{ checkoutModal()?.estudianteNombre }}</strong></p>
-                <p>Concepto: {{ checkoutModal()?.concepto }}</p>
-              </div>
-
-              <div class="payment-methods-grid mt-4">
-                <div class="pm-option active">
-                  <span class="pm-icon">🏦</span>
-                  <strong>PSE (Débito a Cuentas de Ahorro)</strong>
-                </div>
-                <div class="pm-option">
-                  <span class="pm-icon">📱</span>
-                  <strong>Nequi / Daviplata QR</strong>
-                </div>
-                <div class="pm-option">
-                  <span class="pm-icon">💳</span>
-                  <strong>Tarjeta de Crédito Visa / Mastercard</strong>
-                </div>
-              </div>
-
-              <div class="security-badge mt-4">
-                <span>🔒 Transacción Segura con Firma Criptográfica SHA-256</span>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="confirmarPagoWompi()" class="btn btn-success">
-                💳 Procesar Pago PSE Wompi
-              </button>
-              <button (click)="cerrarModalCheckout()" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-checkout-wompi 
+          [cuenta]="checkoutModal()" 
+          (close)="cerrarModalCheckout()"
+          (success)="cargarDatosBackend(); cerrarModalCheckout()">
+        </app-modal-checkout-wompi>
       }
 
       <!-- MODAL 8: EXTRACTO FINANCIERO 360° COMPLETO (IMPRIMIBLE) -->
@@ -1290,135 +1033,22 @@ export interface EstudianteFinanciero {
 
       <!-- MODAL 9: ASIGNACIÓN DE BECA / DESCUENTO INSTITUCIONAL -->
       @if (modalBeca()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 500px;">
-            <div class="modal-header">
-              <h3>🎓 Asignación de Beca / Tarifa Especial</h3>
-              <button (click)="modalBeca.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <p>Estudiante: <strong>{{ estudianteSeleccionado().nombre }}</strong> (Grado {{ estudianteSeleccionado().grado }})</p>
-              
-              <div class="form-group mt-3">
-                <label class="form-label">Tipo de Beca / Beneficio *</label>
-                <select class="form-select" [(ngModel)]="becaForm.tipo" (ngModelChange)="actualizarPorcentajeBeca($event)">
-                  <option value="NINGUNA">Sin Beca (Tarifa Plena 100%)</option>
-                  <option value="EXCELENCIA">Beca por Excelencia Académica (50% desc.)</option>
-                  <option value="HERMANOS">Beca Familiar / Hermanos (20% desc.)</option>
-                  <option value="DOCENTE">Hijo de Docente / Colaborador (30% desc.)</option>
-                  <option value="SOLIDARIA">Beca Solidaria / Alcaldía (100% desc.)</option>
-                  <option value="PERSONALIZADA">Porcentaje Personalizado</option>
-                </select>
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Porcentaje de Descuento (%) *</label>
-                <input type="number" min="0" max="100" class="form-control" [(ngModel)]="becaForm.porcentaje" />
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Resolución / Justificación de la Beca *</label>
-                <textarea class="form-control" rows="2" [(ngModel)]="becaForm.observaciones" placeholder="Ej: Aprobado mediante Resolución Rectoral N° 045 de Consejo Directivo."></textarea>
-              </div>
-
-              <div class="mt-3 p-3" style="background: #eef2ff; border-radius: 8px; font-size: 0.85rem;">
-                <p style="margin: 0; color: #3730a3;">
-                  💡 Nueva pensión mensual resultante: 
-                  <strong>\${{ (450000 * (1 - (becaForm.porcentaje / 100))) | number }} COP</strong> (Ahorro de \${{ (450000 * (becaForm.porcentaje / 100)) | number }} COP/mes).
-                </p>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="guardarBecaEstudiante()" class="btn btn-primary">
-                💾 Guardar y Aplicar a Cuotas
-              </button>
-              <button (click)="modalBeca.set(false)" class="btn btn-secondary">Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-beca
+          [estudiante]="estudianteSeleccionado()"
+          [form]="becaForm"
+          (close)="modalBeca.set(false)"
+          (success)="guardarBecaEstudiante($event)">
+        </app-modal-beca>
       }
 
       <!-- MODAL 10: CERTIFICADO OFICIAL DE PAZ Y SALVO (IMPRIMIBLE) -->
       @if (pazSalvoModal()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card card card-glass" style="max-width: 750px;">
-            <div class="modal-header">
-              <h3>📄 Certificado de Paz y Salvo Financiero</h3>
-              <button (click)="pazSalvoModal.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body print-area">
-              <div class="report-header-card" style="display: flex; align-items: center; gap: 1rem; border-bottom: 2px solid #1e1b4b; padding-bottom: 0.75rem;">
-                <div class="report-logo-box" style="width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: #059669; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">
-                  @if (authService.colegio()?.logoUrl) {
-                    <img [src]="authService.colegio()?.logoUrl" alt="Escudo" style="width: 100%; height: 100%; object-fit: cover;" />
-                  } @else {
-                    {{ authService.colegio()?.nombre?.substring(0, 2)?.toUpperCase() }}
-                  }
-                </div>
-                <div style="flex: 1;">
-                  <h2 style="color: #1e1b4b; margin: 0; font-size: 1.2rem; font-weight: 800;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h2>
-                  <p class="text-xs text-slate-500" style="margin: 0.2rem 0;">Resolución de Aprobación Oficial MEN N° {{ authService.colegio()?.resolucionAprobacion || '10245' }} | NIT: {{ authService.colegio()?.nit }} | DANE: {{ authService.colegio()?.codigoDane }}</p>
-                </div>
-              </div>
-
-              <div class="text-center my-4">
-                <h3 style="color: #1e1b4b; letter-spacing: 0.1em; text-transform: uppercase;">CERTIFICADO DE PAZ Y SALVO FINANCIERO</h3>
-                <span class="text-xs font-mono" style="color: #059669; font-weight: bold;">CÓDIGO DE VERIFICACIÓN DIGITAL: {{ hashPazYSalvo }}</span>
-              </div>
-
-              <div class="p-3" style="font-size: 0.95rem; line-height: 1.8; text-align: justify; color: #1e293b;">
-                <p>
-                  La Oficina de Tesorería y Pagaduría del <strong>{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</strong>,
-                  hace constar que el(la) estudiante:
-                </p>
-                <div class="my-3 p-3 text-center" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;">
-                  <h3 style="margin: 0; color: #1e1b4b;">{{ estudianteSeleccionado().nombre }}</h3>
-                  <p style="margin: 0.25rem 0; font-size: 0.9rem;">
-                    Identificado(a) con <strong>{{ estudianteSeleccionado().documento }}</strong>, matriculado(a) en el grado <strong>{{ estudianteSeleccionado().grado }} ({{ estudianteSeleccionado().grupo }})</strong>
-                  </p>
-                </div>
-                <p>
-                  Se encuentra a la fecha <strong>A PAZ Y SALVO POR TODO CONCEPTO DE DERECHOS ACADÉMICOS, MATRÍCULAS, PENSIONES MENSUALES Y SERVICIOS COMPLEMENTARIOS</strong> correspondientes al presente año lectivo 2026.
-                </p>
-                <p class="text-xs text-slate-500 mt-2">
-                  Se expide el presente documento a solicitud del interesado en {{ authService.colegio()?.ciudad || 'Bogotá D.C.' }}, a los {{ fechaHoyTexto }}.
-                </p>
-              </div>
-
-              <div class="firmas-grid mt-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; text-align: center; font-size: 0.8rem; margin-top: 2rem;">
-                <div>
-                  <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
-                  <strong>LIC. ANDRÉS SALAZAR C.</strong><br>
-                  <span>Jefe de Tesorería & Cartera</span>
-                </div>
-                <div>
-                  <div style="border-top: 1px solid #0f172a; margin-bottom: 0.25rem;"></div>
-                  <strong>DRA. MARÍA MERCEDES ROJAS</strong><br>
-                  <span>Rectora Institucional</span>
-                </div>
-              </div>
-
-              <!-- Pie de página institucional con Dirección, Teléfono y Correo -->
-              <div class="report-footer-contacts mt-4" style="border-top: 1px solid #e2e8f0; padding-top: 0.6rem; text-align: center; font-size: 0.75rem; color: #64748b;">
-                <span>📍 Dirección: {{ authService.colegio()?.direccion || 'Campus Central' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}</span>
-                <span style="margin: 0 0.5rem;">•</span>
-                <span>📞 Tel: {{ authService.colegio()?.telefonoContacto || '(601) 341-2000' }}</span>
-                <span style="margin: 0 0.5rem;">•</span>
-                <span>✉️ Correo: {{ authService.colegio()?.emailContacto || 'rectoria@sanbartolome.edu.co' }}</span>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="imprimirRecibo()" class="btn btn-primary">
-                🖨️ Imprimir Paz y Salvo Oficial
-              </button>
-              <button (click)="pazSalvoModal.set(false)" class="btn btn-secondary">Cerrar</button>
-            </div>
-          </div>
-        </div>
+        <app-modal-paz-y-salvo
+          [estudiante]="estudianteSeleccionado()"
+          [hashPazYSalvo]="hashPazYSalvo"
+          [fechaHoyTexto]="fechaHoyTexto"
+          (close)="pazSalvoModal.set(false)">
+        </app-modal-paz-y-salvo>
       }
 
     </div>
@@ -1964,21 +1594,9 @@ export class TesoreriaComponent implements OnInit {
   readonly fechaHoy = new Date().toLocaleDateString('es-CO');
   readonly fechaHoyTexto = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
   readonly hashPazYSalvo = 'PYS-2026-B9F2A108C7E4';
+  nuevoCobro: any = {};
 
-  // Formularios
-  nuevoConceptoForm = {
-    nombre: '',
-    codigo: '',
-    valorSugerido: 450000,
-    esRecurrenteMensual: true,
-  };
 
-  nuevoCobro = {
-    estudianteNombre: '',
-    concepto: 'Pensión Mensual Escolar',
-    valorTotal: 450000,
-    fechaVencimiento: '2026-08-25',
-  };
 
   nuevoPagoManual = {
     cuentaCobroId: '',
@@ -2204,20 +1822,9 @@ export class TesoreriaComponent implements OnInit {
     });
   }
 
-  onConceptoSelect(nombre: string) {
-    const found = this.conceptosList().find((c) => c.nombre === nombre);
-    if (found && found.valorSugerido) {
-      this.nuevoCobro.valorTotal = Number(found.valorSugerido);
-    }
-  }
+
 
   abrirModalNuevoConcepto() {
-    this.nuevoConceptoForm = {
-      nombre: '',
-      codigo: `CON-${Date.now().toString().slice(-4)}`,
-      valorSugerido: 150000,
-      esRecurrenteMensual: false,
-    };
     this.modalManager.open('nuevoConcepto');
     this.modalNuevoConcepto.set(true);
   }
@@ -2227,27 +1834,15 @@ export class TesoreriaComponent implements OnInit {
     this.modalNuevoConcepto.set(false);
   }
 
-  guardarNuevoConcepto() {
-    if (!this.nuevoConceptoForm.nombre || !this.nuevoConceptoForm.codigo) {
-      this.toast.error('Campos Requeridos', 'Por favor complete el nombre y código del concepto de cobro.');
-      return;
+  onConceptoGuardado(conceptoCreado: any) {
+    this.cerrarModalNuevoConcepto();
+    this.cargarConceptos();
+    if (this.modalNuevoCobro()) {
+      this.nuevoCobro.concepto = conceptoCreado.nombre;
+      this.nuevoCobro.valorTotal = Number(conceptoCreado.valorSugerido) || 0;
     }
-
-    this.api.post<any>('tesoreria/conceptos', this.nuevoConceptoForm).subscribe({
-      next: (conceptoCreado) => {
-        this.cerrarModalNuevoConcepto();
-        this.toast.success('¡Concepto Creado!', `El concepto '${conceptoCreado.nombre}' ha sido registrado en PostgreSQL.`);
-        this.cargarConceptos();
-        if (this.modalNuevoCobro()) {
-          this.nuevoCobro.concepto = conceptoCreado.nombre;
-          this.nuevoCobro.valorTotal = Number(conceptoCreado.valorSugerido) || 0;
-        }
-      },
-      error: (err) => {
-        this.toast.error('Error al crear concepto', err?.error?.message || 'No fue posible registrar el concepto.');
-      },
-    });
   }
+
 
   cargarDatosBackend() {
     // 1. Cargar facturas reales de BD
@@ -2441,26 +2036,7 @@ export class TesoreriaComponent implements OnInit {
     this.modalPagoManual.set(true);
   }
 
-  guardarPagoManual() {
-    const cuenta = this.cuentas().find((c) => c.id === this.nuevoPagoManual.cuentaCobroId);
-    if (!cuenta) {
-      this.toast.error('Factura no encontrada', 'Seleccione una cuenta de cobro válida.');
-      return;
-    }
-
-    const dto = {
-      cuentaCobroId: cuenta.id,
-      medioPago: this.nuevoPagoManual.medioPago,
-      valorPagado: this.nuevoPagoManual.valorPagado,
-      referenciaTransaccion: this.nuevoPagoManual.referenciaTransaccion,
-    };
-
-    // Registrar en API
-    this.api.post('tesoreria/pagos/manual', dto).subscribe({
-      next: () => {},
-      error: () => {},
-    });
-
+  onPagoManualGuardado({ dto, cuenta }: { dto: any, cuenta: CuentaCobroItem }) {
     // Actualizar estado reactivo
     const nuevoRecibo: PagoRecaudoItem = {
       id: `p-${Date.now()}`,
@@ -2469,10 +2045,10 @@ export class TesoreriaComponent implements OnInit {
       estudianteId: cuenta.estudianteId,
       estudianteNombre: cuenta.estudianteNombre,
       conceptoNombre: `${cuenta.concepto} (${cuenta.mes})`,
-      medioPago: this.nuevoPagoManual.medioPago,
-      valorPagado: this.nuevoPagoManual.valorPagado,
+      medioPago: dto.medioPago,
+      valorPagado: dto.valorPagado,
       fechaPago: new Date().toLocaleString('es-CO'),
-      referenciaTransaccion: this.nuevoPagoManual.referenciaTransaccion,
+      referenciaTransaccion: dto.referenciaTransaccion,
       estado: 'APROBADO',
     };
 
@@ -2516,33 +2092,21 @@ export class TesoreriaComponent implements OnInit {
     this.modalNuevoAcuerdo.set(true);
   }
 
-  guardarNuevoAcuerdo() {
-    const est = this.listaEstudiantes().find((e) => e.id === this.nuevoAcuerdo.estudianteId);
-    if (!est) return;
-
-    const cuota = Math.round(this.nuevoAcuerdo.montoTotalAcordado / this.nuevoAcuerdo.numeroCuotas);
+  onAcuerdoGuardado({ dto, est }: { dto: any, est: any }) {
+    const cuota = Math.round(dto.montoTotalAcordado / dto.numeroCuotas);
     const nuevo: AcuerdoPagoItem = {
       id: `ac-${Date.now()}`,
       estudianteId: est.id,
       estudianteNombre: est.nombre,
       gradoNombre: `${est.grado} (${est.grupo})`,
-      montoTotalAcordado: this.nuevoAcuerdo.montoTotalAcordado,
-      numeroCuotas: this.nuevoAcuerdo.numeroCuotas,
+      montoTotalAcordado: dto.montoTotalAcordado,
+      numeroCuotas: dto.numeroCuotas,
       montoPorCuota: cuota,
-      diaPagoMensual: this.nuevoAcuerdo.diaPagoMensual,
+      diaPagoMensual: dto.diaPagoMensual,
       fechaInicio: new Date().toISOString().split('T')[0],
       estado: 'ACTIVO',
-      observaciones: this.nuevoAcuerdo.observaciones,
+      observaciones: dto.observaciones,
     };
-
-    // Llamada API
-    this.api.post('tesoreria/acuerdos-pago', {
-      matriculaId: 'm1111111-1111-4111-8111-000000000001',
-      montoTotalAcordado: nuevo.montoTotalAcordado,
-      numeroCuotas: nuevo.numeroCuotas,
-      diaPagoMensual: nuevo.diaPagoMensual,
-      observaciones: nuevo.observaciones,
-    }).subscribe({ next: () => {}, error: () => {} });
 
     this.acuerdos.update((list) => [nuevo, ...list]);
     this.modalNuevoAcuerdo.set(false);
@@ -2624,29 +2188,23 @@ export class TesoreriaComponent implements OnInit {
     this.modalNuevoCobro.set(false);
   }
 
-  guardarNuevoCobro() {
-    if (!this.nuevoCobro.estudianteNombre) {
-      this.toast.error('Campo Requerido', 'Por favor indique el nombre del estudiante.');
-      return;
-    }
-
+  onCobroEmitido(formData: any) {
     const item: CuentaCobroItem = {
       id: `c${Date.now()}-1111-4111-8111-00000000000${this.cuentas().length + 1}`,
       estudianteId: this.estudianteSeleccionado().id,
       numeroFactura: `FACT-2026-EXT-${Math.floor(100 + Math.random() * 900)}`,
-      estudianteNombre: this.nuevoCobro.estudianteNombre,
+      estudianteNombre: formData.estudianteNombre,
       estudianteDocumento: this.estudianteSeleccionado().documento,
       gradoNombre: this.estudianteSeleccionado().grado,
-      concepto: this.nuevoCobro.concepto,
+      concepto: formData.concepto,
       mes: 'Agosto 2026',
-      valorTotal: this.nuevoCobro.valorTotal,
+      valorTotal: formData.valorTotal,
       estado: 'POR_VENCER',
-      fechaVencimiento: this.nuevoCobro.fechaVencimiento,
+      fechaVencimiento: formData.fechaVencimiento,
     };
 
     this.cuentas.update((list) => [item, ...list]);
     this.cerrarModalNuevoCobro();
-    this.toast.success('¡Cobro Emitido!', `Cuenta de cobro por \$${item.valorTotal.toLocaleString()} COP generada para ${item.estudianteNombre}.`);
   }
 
   // --- MÉTODOS DE LA FICHA FINANCIERA 360° ---
@@ -2658,16 +2216,8 @@ export class TesoreriaComponent implements OnInit {
     this.modalBeca.set(true);
   }
 
-  actualizarPorcentajeBeca(tipo: string) {
-    if (tipo === 'NINGUNA') this.becaForm.porcentaje = 0;
-    else if (tipo === 'EXCELENCIA') this.becaForm.porcentaje = 50;
-    else if (tipo === 'HERMANOS') this.becaForm.porcentaje = 20;
-    else if (tipo === 'DOCENTE') this.becaForm.porcentaje = 30;
-    else if (tipo === 'SOLIDARIA') this.becaForm.porcentaje = 100;
-  }
-
-  guardarBecaEstudiante() {
-    const pct = Number(this.becaForm.porcentaje) || 0;
+  guardarBecaEstudiante(form: any) {
+    const pct = Number(form.porcentaje) || 0;
     const est = this.estudianteSeleccionado();
     
     let nombreBeca = 'Tarifa Plena';
@@ -2678,7 +2228,7 @@ export class TesoreriaComponent implements OnInit {
     else if (pct > 0) nombreBeca = `Especial ${pct}%`;
 
     this.becaActual.set({
-      tipo: this.becaForm.tipo,
+      tipo: form.tipo,
       porcentaje: pct,
       nombre: nombreBeca,
     });
@@ -2828,10 +2378,7 @@ export class TesoreriaComponent implements OnInit {
     this.facturaEnEdicion.set({ ...item });
   }
 
-  guardarEdicionFactura() {
-    const editada = this.facturaEnEdicion();
-    if (!editada) return;
-
+  guardarEdicionFactura(editada: any) {
     this.cuentas.update((list) =>
       list.map((c) => (c.id === editada.id ? { ...editada } : c)),
     );
@@ -2843,11 +2390,7 @@ export class TesoreriaComponent implements OnInit {
   abrirModalAnular(item: CuentaCobroItem) {
     this.facturaParaAnular.set(item);
   }
-
-  confirmarAnulacion() {
-    const item = this.facturaParaAnular();
-    if (!item) return;
-
+  confirmarAnulacion(item: any) {
     this.cuentas.update((list) =>
       list.map((c) => (c.id === item.id ? { ...c, estado: 'ANULADO' } : c)),
     );
@@ -2881,27 +2424,6 @@ export class TesoreriaComponent implements OnInit {
     this.checkoutModal.set(null);
   }
 
-  confirmarPagoWompi() {
-    const item = this.checkoutModal();
-    if (item) {
-      this.api.post<any>('tesoreria/pagos', {
-        cuentaCobroId: item.id,
-        valorPagado: item.valorTotal,
-        medioPago: 'PSE',
-        referenciaTransaccion: `WOMPI-PSE-${Date.now().toString().slice(-6)}`,
-      }).subscribe({
-        next: () => {
-          this.toast.success('¡Pago Procesado!', `El recaudo por \$${item.valorTotal.toLocaleString()} COP ha sido registrado en la base de datos.`);
-          this.cargarDatosBackend();
-          this.cerrarModalCheckout();
-        },
-        error: (err) => {
-          this.toast.error('Error al registrar pago', err?.error?.message || 'No fue posible registrar el pago.');
-          this.cerrarModalCheckout();
-        }
-      });
-    }
-  }
 
   // --- PAZ Y SALVO ---
   descargarPazYSalvoEstudiante(estudianteId: string) {

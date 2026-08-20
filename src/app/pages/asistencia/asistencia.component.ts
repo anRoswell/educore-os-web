@@ -78,28 +78,28 @@ interface AlumnoAsistencia {
               <span class="stat-icon">👥</span>
               <div class="stat-info">
                 <h3>Total</h3>
-                <p>{{ alumnosLista().length }} Alumnos</p>
+                @if (isLoadingPlanilla()) { <div class="skeleton-box" style="width: 80px; height: 32px;"></div> } @else { <p>{{ alumnosLista().length }} Alumnos</p> }
               </div>
             </div>
             <div class="stat-card success">
               <span class="stat-icon">✅</span>
               <div class="stat-info">
                 <h3>Presentes</h3>
-                <p>{{ totalesAsistencia().presentes }}</p>
+                @if (isLoadingPlanilla()) { <div class="skeleton-box" style="width: 40px; height: 32px;"></div> } @else { <p>{{ totalesAsistencia().presentes }}</p> }
               </div>
             </div>
             <div class="stat-card warning">
               <span class="stat-icon">⏱️</span>
               <div class="stat-info">
                 <h3>Retardos</h3>
-                <p>{{ totalesAsistencia().retardos }}</p>
+                @if (isLoadingPlanilla()) { <div class="skeleton-box" style="width: 40px; height: 32px;"></div> } @else { <p>{{ totalesAsistencia().retardos }}</p> }
               </div>
             </div>
             <div class="stat-card danger">
               <span class="stat-icon">❌</span>
               <div class="stat-info">
                 <h3>Faltas Totales</h3>
-                <p>{{ totalesAsistencia().faltas }}</p>
+                @if (isLoadingPlanilla()) { <div class="skeleton-box" style="width: 40px; height: 32px;"></div> } @else { <p>{{ totalesAsistencia().faltas }}</p> }
               </div>
             </div>
           </div>
@@ -118,6 +118,17 @@ interface AlumnoAsistencia {
                   </tr>
                 </thead>
                 <tbody>
+                  @if (isLoadingPlanilla()) {
+                    @for (item of [1,2,3,4,5]; track item) {
+                      <tr>
+                        <td><div class="skeleton-box" style="width: 20px; height: 20px;"></div></td>
+                        <td><div class="skeleton-box" style="width: 150px; height: 20px;"></div></td>
+                        <td><div class="skeleton-box" style="width: 180px; height: 36px; border-radius: 8px;"></div></td>
+                        <td><div class="skeleton-box" style="width: 46px; height: 24px; border-radius: 12px;"></div></td>
+                        <td><div class="skeleton-box" style="width: 100px; height: 30px;"></div></td>
+                      </tr>
+                    }
+                  } @else {
                   @for (a of alumnosLista(); track a.matriculaId; let i = $index) {
                     <tr>
                       <td class="text-slate-500">{{ i + 1 }}</td>
@@ -172,6 +183,7 @@ interface AlumnoAsistencia {
                     <tr>
                       <td colspan="5" class="text-center text-slate-500 py-4">Selecciona un grupo para cargar la planilla de estudiantes.</td>
                     </tr>
+                  }
                   }
                 </tbody>
               </table>
@@ -327,6 +339,17 @@ interface AlumnoAsistencia {
       transition: all 0.3s ease;
       cursor: default;
     }
+    .skeleton-box {
+      background: #e2e8f0;
+      background-image: linear-gradient(90deg, #e2e8f0 0px, #f1f5f9 40px, #e2e8f0 80px);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite linear;
+      border-radius: 6px;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
     .stat-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px -5px rgba(99,102,241,0.2);
@@ -423,6 +446,7 @@ export class AsistenciaComponent implements OnInit {
   
   alumnosLista = signal<AlumnoAsistencia[]>([]);
   isSaving = signal<boolean>(false);
+  isLoadingPlanilla = signal<boolean>(false);
 
   // EXCUSAS
   nuevaExcusa = { motivo: 'MEDICA', fechaInicio: this.getHoy(), fechaFin: this.getHoy(), descripcion: '' };
@@ -467,11 +491,14 @@ export class AsistenciaComponent implements OnInit {
     const id = this.cargaDocenteSeleccionada();
     if (!id) return;
     
+    this.isLoadingPlanilla.set(true);
     // Fake the student list since there is no get route specific to attendance students yet, 
     // we use the 'academico/planilla' trick or just mock.
     this.api.get<any[]>('academico/planilla', { grupoId: id }).subscribe({
       next: (items) => {
-        if (items && items.length > 0) {
+        setTimeout(() => {
+          this.isLoadingPlanilla.set(false);
+          if (items && items.length > 0) {
           const arr: AlumnoAsistencia[] = items.map((i: any) => ({
             matriculaId: i.matriculaId || i.id,
             estudianteNombre: i.estudianteNombre || 'Estudiante',
@@ -490,14 +517,18 @@ export class AsistenciaComponent implements OnInit {
             { matriculaId: '4', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
           ]);
         }
+        }, 600); // 600ms skeleton delay
       },
       error: () => {
-         this.alumnosLista.set([
+        setTimeout(() => {
+          this.isLoadingPlanilla.set(false);
+          this.alumnosLista.set([
             { matriculaId: '1', estudianteNombre: 'Felipe García', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
             { matriculaId: '2', estudianteNombre: 'Mariana López', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
             { matriculaId: '3', estudianteNombre: 'Kevin Santiago Perez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
             { matriculaId: '4', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
           ]);
+        }, 600);
       }
     });
   }

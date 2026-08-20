@@ -354,21 +354,33 @@ interface AlumnoAsistencia {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px -5px rgba(99,102,241,0.2);
     }
-    .stat-icon { font-size: 2rem; }
+    .stat-icon { 
+      font-size: 1.6rem; 
+      width: 52px; 
+      height: 52px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border-radius: 14px; 
+      background: rgba(99, 102, 241, 0.12); /* Default indigo wrapper */
+    }
     .stat-info h3 { font-size: 0.85rem; color: #64748b; margin: 0; }
     .stat-info p { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; }
     
     .stat-card.success { border-left-color: #10b981; background: linear-gradient(135deg, #ffffff 50%, rgba(16,185,129,0.08) 100%); }
     .stat-card.success:hover { box-shadow: 0 10px 25px -5px rgba(16,185,129,0.2); }
     .stat-card.success .stat-info p { color: #10b981; }
+    .stat-card.success .stat-icon { background: rgba(16, 185, 129, 0.12); }
     
     .stat-card.warning { border-left-color: #f59e0b; background: linear-gradient(135deg, #ffffff 50%, rgba(245,158,11,0.08) 100%); }
     .stat-card.warning:hover { box-shadow: 0 10px 25px -5px rgba(245,158,11,0.2); }
     .stat-card.warning .stat-info p { color: #f59e0b; }
+    .stat-card.warning .stat-icon { background: rgba(245, 158, 11, 0.12); }
     
     .stat-card.danger { border-left-color: #ef4444; background: linear-gradient(135deg, #ffffff 50%, rgba(239,68,68,0.08) 100%); }
     .stat-card.danger:hover { box-shadow: 0 10px 25px -5px rgba(239,68,68,0.2); }
     .stat-card.danger .stat-info p { color: #ef4444; }
+    .stat-card.danger .stat-icon { background: rgba(239, 68, 68, 0.12); }
 
     /* Estado Selector (Toggles P/R/F/FJ) */
     .estado-selector {

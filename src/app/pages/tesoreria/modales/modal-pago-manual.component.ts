@@ -1,4 +1,5 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Parametro } from '../../../core/services/parametros.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
@@ -6,7 +7,7 @@ import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-modal-pago-manual',
-  standalone: true,
+  standalone: true, changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   template: `
     <div class="modal-backdrop animate-fade-in">
@@ -32,10 +33,9 @@ import { ToastService } from '../../../core/services/toast.service';
             <div class="form-group">
               <label class="form-label">Medio de Pago *</label>
               <select class="form-select" [(ngModel)]="form.medioPago">
-                <option value="EFECTIVO">💵 Efectivo en Ventanilla</option>
-                <option value="TRANSFERENCIA_BANCOLOMBIA">🏦 Transferencia Bancolombia / Davivienda</option>
-                <option value="NEQUI_QR">📱 Nequi / Daviplata QR</option>
-                <option value="TARJETA_CREDITO">💳 Datáfono / Tarjeta</option>
+                @for (medio of mediosPagoList(); track medio.codigo) {
+                  <option [value]="medio.codigo">{{ medio.nombre }}</option>
+                }
               </select>
             </div>
 
@@ -62,6 +62,7 @@ import { ToastService } from '../../../core/services/toast.service';
   `
 })
 export class ModalPagoManualComponent {
+  mediosPagoList = input<Parametro[]>([]);
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
 

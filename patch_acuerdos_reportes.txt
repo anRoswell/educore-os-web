@@ -1,0 +1,18 @@
+      <!-- ======================================================== -->
+      <!-- PESTAÑA 4: ACUERDOS DE PAGO & REFINANCIACIÓN            -->
+      <!-- ======================================================== -->
+      @if (tabActiva() === 'acuerdos') {
+        <app-tesoreria-acuerdos
+          [acuerdos]="acuerdos()"
+          (abrirModalNuevoAcuerdo)="abrirModalNuevoAcuerdo()">
+        </app-tesoreria-acuerdos>
+      }
+
+      <!-- ======================================================== -->
+      <!-- PESTAÑA 5: REPORTES & EXPORTACIÓN CONTABLE               -->
+      <!-- ======================================================== -->
+      @if (tabActiva() === 'reportes') {
+        <app-tesoreria-reportes
+          (exportarExcelSiigo)="exportarExcelSiigo()">
+        </app-tesoreria-reportes>
+      }

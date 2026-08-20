@@ -1,323 +1,498 @@
-import { CuentaCobroItem, PagoRecaudoItem, AcuerdoPagoItem, EstudianteFinanciero, EstadoCuenta, MedioPago, EstadoPago, EstadoAcuerdo } from "./models/tesoreria.models";
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ApiService } from '../../core/services/api.service';
-import { AuthService } from '../../core/services/auth.service';
-import { ToastService } from '../../core/services/toast.service';
-import { ModalManagerService } from '../../core/services/modal-manager.service';
-import { SearchableOption } from '../../shared/components/searchable-select.component';
 
-import { TesoreriaFacturasComponent } from './tabs/tesoreria-facturas.component';
-import { TesoreriaEstadoCuentaComponent } from './tabs/tesoreria-estado-cuenta.component';
-import { TesoreriaRecaudosComponent } from './tabs/tesoreria-recaudos.component';
-import { TesoreriaAcuerdosComponent } from './tabs/tesoreria-acuerdos.component';
-import { TesoreriaReportesComponent } from './tabs/tesoreria-reportes.component';
-import { ParametrosService, Parametro } from '../../core/services/parametros.service';
-
-import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
-import { ModalCheckoutWompiComponent } from './modales/modal-checkout-wompi.component';
-import { ModalNuevoConceptoComponent } from './modales/modal-nuevo-concepto.component';
-import { ModalNuevoAcuerdoComponent } from './modales/modal-nuevo-acuerdo.component';
-import { ModalNuevoCobroComponent } from './modales/modal-nuevo-cobro.component';
-import { ModalPagoManualComponent } from './modales/modal-pago-manual.component';
-import { ModalPazYSalvoComponent } from './modales/modal-paz-y-salvo.component';
-import { ModalEditarFacturaComponent } from './modales/modal-editar-factura.component';
-import { ModalAnularFacturaComponent } from './modales/modal-anular-factura.component';
-import { ModalBecaComponent } from './modales/modal-beca.component';
-
-
-
-
-
-
-
-
-
-@Component({
-  selector: 'app-tesoreria',
-  standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalCheckoutWompiComponent, ModalNuevoConceptoComponent, ModalNuevoAcuerdoComponent, ModalNuevoCobroComponent, ModalPagoManualComponent, ModalPazYSalvoComponent, ModalEditarFacturaComponent, ModalAnularFacturaComponent,     ModalBecaComponent,
-    TesoreriaFacturasComponent,
-    TesoreriaEstadoCuentaComponent,
-    TesoreriaRecaudosComponent,
-    TesoreriaAcuerdosComponent,
-    TesoreriaReportesComponent],
-  template: `
-    <div class="page-header">
-      <div>
-        <div class="flex items-center gap-2 mb-1">
-          <h1>Tesorería & Cartera</h1>
-          <app-help-badge term="MODULO_TESORERIA"></app-help-badge>
-        </div>
-        <p>Gestión de recaudo, control de morosidad, facturación electrónica y acuerdos de pago.</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-outline" (click)="abrirConfiguracionTesoreria()">
-          <span>⚙️ Configuración</span>
-        </button>
-        <button class="btn btn-primary" (click)="generarCierreDiario()">
-          <span>🔒 Cierre de Caja Diario</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- KPIs Financieros -->
-    <div class="kpi-summary-grid grid-cols-5 animate-fade-in">
-      <div class="summary-card kpi-mini-card">
-        <div class="status-indicator-dot green"></div>
-        <div>
-          <span class="label">Recaudo del Mes</span>
-          <span class="value text-success">\$85.4M</span>
-        </div>
-      </div>
-      <div class="summary-card kpi-mini-card">
-        <div class="status-indicator-dot amber"></div>
-        <div>
-          <span class="label">Cartera Vencida</span>
-          <span class="value text-warning">\$12.3M</span>
-        </div>
-      </div>
-      <div class="summary-card kpi-mini-card">
-        <div class="status-indicator-dot blue"></div>
-        <div>
-          <span class="label">Proyección Mes</span>
-          <span class="value">\$115.0M</span>
-        </div>
-      </div>
-      <div class="summary-card kpi-mini-card">
-        <div class="status-indicator-dot red"></div>
-        <div>
-          <span class="label">Acuerdos Incumplidos</span>
-          <span class="value text-danger">4</span>
-        </div>
-      </div>
-      <div class="summary-card kpi-mini-card">
-        <div class="status-indicator-dot green"></div>
-        <div>
-          <span class="label">Caja Actual</span>
-          <span class="value">\$1.2M</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- TABS NAVEGACIÓN -->
-    <div class="tabs-container">
-      <div class="tabs-nav-bar mt-4">
-        <button 
-          class="tab-btn" 
-          [class.active]="tabActiva() === 'facturas'" 
-          (click)="tabActiva.set('facturas')">
-          🧾 Facturación y Cuentas de Cobro
-          <span class="tab-count">{{ cuentasFiltradas().length }}</span>
-        </button>
-        <button 
-          class="tab-btn" 
-          [class.active]="tabActiva() === 'estudiante'" 
-          (click)="tabActiva.set('estudiante')">
-          👤 Ficha Financiera Estudiante
-        </button>
-        <button 
-          class="tab-btn" 
-          [class.active]="tabActiva() === 'recaudos'" 
-          (click)="tabActiva.set('recaudos')">
-          💵 Recaudos y Pagos
-        </button>
-        <button 
-          class="tab-btn" 
-          [class.active]="tabActiva() === 'acuerdos'" 
-          (click)="tabActiva.set('acuerdos')">
-          🤝 Acuerdos de Pago
-        </button>
-        <button 
-          class="tab-btn" 
-          [class.active]="tabActiva() === 'reportes'" 
-          (click)="tabActiva.set('reportes')">
-          📊 Reportes Contables
-        </button>
-      </div>
-    </div>
-
-    <div class="tab-content">
-      @if (tabActiva() === 'facturas') {
-        <app-tesoreria-facturas
-          [cuentasFiltradas]="cuentasFiltradas()"
-          [estadosCuentaList]="estadosCuentaList()"
-          [mesesList]="mesesList()"
-          [filtroTexto]="filtroTexto()"
-          [filtroEstado]="filtroEstado()"
-          [filtroMes]="filtroMes()"
-          (filtrar)="onFiltrarFacturas($event)"
-          (verFicha360)="verFicha360($event)"
-          (pagarWompi)="pagarWompi($event)"
-          (pagarCaja)="abrirModalPagoDirecto($event)"
-          (editarValor)="abrirModalEditarValor($event)"
-          (anularFactura)="abrirModalAnular($event)"
-          (verRecibo)="verRecibo.set($event)"
-          (descargarPazYSalvo)="descargarPazYSalvoEstudiante($event)"
-        />
-      }
-      
-      @if (tabActiva() === 'estudiante') {
-        <app-tesoreria-estado-cuenta
-          [listaEstudiantes]="listaEstudiantes()"
-          [estadosCuentaList]="estadosCuentaList()"
-          [mesesList]="mesesList()"
-          [mediosPagoList]="mediosPagoList()"
-          [estudianteSeleccionado]="estudianteSeleccionado()"
-          
-          [estadoCuentaEstudiante]="estadoCuentaEstudiante()"
-          
-          
-          [desbloqueoExcepcional]="desbloqueoExcepcional()"
-          (seleccionarEstudiante)="seleccionarEstudiante($event)"
-          (abrirModalExtracto)="abrirModalExtracto()"
-          (abrirModalBeca)="abrirModalBeca()"
-          (toggleDesbloqueo)="toggleDesbloqueoExcepcional()"
-          (enviarWhatsApp)="enviarRecordatorioWhatsApp()"
-          (enviarEmail)="enviarEstadoCuentaEmail()"
-          (abrirPazSalvo)="abrirModalPazSalvoCompleto()"
-          (asignarCobro)="asignarCobroAEstudianteActual()"
-          (pagarMes)="abrirModalPagoDirectoMes($event)"
-          (editarMes)="abrirModalEditarMes($event)"
-          (pagarWompi)="pagarMesEstudiante($event)"
-          (verReciboMes)="verReciboMes($event)"
-          (pagarWompiCargo)="pagarWompi($any($event))"
-          (pagarCajaCargo)="abrirModalPagoDirecto($any($event))"
-        />
-      }
-
-      @if (tabActiva() === 'recaudos') {
-        <app-tesoreria-recaudos
-          
-          [mediosPagoList]="mediosPagoList()"
-          (abrirModalPagoManual)="abrirModalPagoManual()"
-          (imprimirReciboIndividual)="reciboParaVer.set($event)"
-        />
-      }
-
-      @if (tabActiva() === 'acuerdos') {
-        <app-tesoreria-acuerdos
-          [acuerdos]="acuerdos()"
-          (abrirModalNuevoAcuerdo)="abrirModalNuevoAcuerdo()"
-          (verFicha)="verFicha360($event)"
-        />
-      }
-
-      @if (tabActiva() === 'reportes') {
-        <app-tesoreria-reportes
-          (exportarExcel)="exportarExcelSiigo()"
-        />
-      }
-    </div>
-
-    <!-- MODALES -->
-    @if (checkoutModal()) {
-      <app-modal-checkout-wompi
-        [cuenta]="checkoutModal()"
-        (cerrar)="cerrarModalCheckout()"
-      />
+    .student-actions-bar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
     }
 
-    @if (modalNuevoConcepto()) {
-      <app-modal-nuevo-concepto (cerrar)="modalNuevoConcepto.set(false)" />
+    .grid-cols-5 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.75rem;
     }
 
-    @if (modalNuevoCobro()) {
-      <app-modal-nuevo-cobro
-        [form]="nuevoCobro"
-        [conceptosList]="conceptosList()"
-        (cerrar)="modalNuevoCobro.set(false)"
-      />
+    .btn-xs {
+      padding: 0.2rem 0.45rem;
+      font-size: 0.72rem;
+      border-radius: 4px;
     }
 
-    @if (modalPagoManual()) {
-      <app-modal-pago-manual
-        
-        [mediosPagoList]="mediosPagoList()"
-        (cerrar)="cerrarModalPagoManual()"
-        (pagoRegistrado)="confirmarPagoManual($event)"
-      />
+    .action-buttons-flex {
+      display: flex;
+      gap: 0.25rem;
+      width: 100%;
     }
 
-    @if (modalNuevoAcuerdo()) {
-      <app-modal-nuevo-acuerdo
-        (cerrar)="modalNuevoAcuerdo.set(false)"
-      />
+    .text-info {
+      color: #3b82f6;
     }
 
-    @if (extractoModal()) {
-      <div class="modal-backdrop z-top">
-        <div class="modal-card modal-sm animate-fade-in-up">
-          <div class="modal-header">
-            <h3>Generar Extracto Consolidado</h3>
-            <button class="close-btn" (click)="extractoModal.set(false)">&times;</button>
-          </div>
-          <p class="text-sm text-slate-600 mb-4">Se generará un documento PDF con los movimientos de cartera seleccionados.</p>
-          <div class="flex justify-end gap-2 mt-4">
-            <button class="btn btn-outline" (click)="extractoModal.set(false)">Cancelar</button>
-            <button class="btn btn-primary" (click)="extractoModal.set(false)">📄 Descargar PDF</button>
-          </div>
-        </div>
-      </div>
+    .text-center { text-align: center; }
+    .text-sm { font-size: 0.85rem; }
+    .text-xs { font-size: 0.75rem; }
+    .font-bold { font-weight: 700; }
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .my-3 { margin-top: 0.75rem; margin-bottom: 0.75rem; }
+    .my-4 { margin-top: 1rem; margin-bottom: 1rem; }
+    .pb-3 { padding-bottom: 0.75rem; }
+    .p-3 { padding: 0.75rem; }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
-    @if (pazSalvoModal()) {
-      <app-modal-paz-y-salvo
-        [estudiante]="estudianteSeleccionado()"
-        [hashPazYSalvo]="'PYZ-8923-26'"
-        [fechaHoyTexto]="'20 de Agosto de 2026'"
-        (cerrar)="pazSalvoModal.set(false)"
-        (descargar)="descargarPazYSalvoEstudiante($any($event))"
-      />
+    .page-header h1 {
+      font-size: 1.75rem;
+      color: #0f172a;
     }
 
-    @if (facturaEnEdicion()) {
-      <app-modal-editar-factura
-        [factura]="facturaEnEdicion()"
-        (cerrar)="facturaEnEdicion.set(null)"
-        (guardar)="guardarEdicionFactura($event)"
-      />
+    .page-header p {
+      font-size: 0.9rem;
+      color: #64748b;
     }
 
-    @if (facturaParaAnular()) {
-      <app-modal-anular-factura
-        [factura]="facturaParaAnular()"
-        (cerrar)="facturaParaAnular.set(null)"
-        (confirmar)="confirmarAnulacion($event)"
-      />
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
-    @if (modalBeca()) {
-      <app-modal-beca
-        [estudiante]="estudianteSeleccionado()"
-        
-        (cerrar)="modalBeca.set(false)"
-        (guardar)="guardarBecaEstudiante($event)"
-      />
+    .kpi-summary-grid {
+      margin-bottom: 1rem;
     }
 
-    @if (reciboParaVer()) {
-      <div class="modal-backdrop z-top">
-        <div class="modal-card modal-md animate-fade-in-up">
-          <div class="modal-header">
-            <h3>Recibo de Caja {{ reciboParaVer()?.numeroRecibo }}</h3>
-            <button class="close-btn" (click)="reciboParaVer.set(null)">&times;</button>
-          </div>
-          <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-center mb-4">
-            <p class="text-sm text-slate-500 mb-1">Valor Pagado</p>
-            <h2 class="text-2xl font-bold text-slate-800">\${{ reciboParaVer()?.valorPagado | number }} COP</h2>
-            <p class="text-xs text-success font-bold mt-2">Transacción Aprobada - {{ reciboParaVer()?.medioPago }}</p>
-          </div>
-          <div class="flex justify-end gap-2">
-            <button class="btn btn-outline" (click)="reciboParaVer.set(null)">Cerrar</button>
-            <button class="btn btn-primary">🖨️ Imprimir Copia</button>
-          </div>
-        </div>
-      </div>
+    .summary-card {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 1.15rem;
     }
-  `,
-  styles: []
+
+    .status-indicator-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .status-indicator-dot.green { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+    .status-indicator-dot.amber { background-color: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+    .status-indicator-dot.red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+    .status-indicator-dot.blue { background-color: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+
+    .summary-card .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #64748b;
+      display: block;
+    }
+
+    .summary-card .value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      font-family: var(--font-display);
+    }
+
+    /* TABS */
+    .tabs-nav-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.25rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.1rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 150ms ease;
+    }
+
+    .tab-btn:hover {
+      color: #4f46e5;
+    }
+
+    .tab-btn.active {
+      color: #4f46e5;
+      border-bottom-color: #4f46e5;
+    }
+
+    .tab-count {
+      background-color: #e0e7ff;
+      color: #4338ca;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 9999px;
+    }
+
+    /* FILTERS */
+    .filters-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-input-group {
+      display: flex;
+      align-items: center;
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0.35rem 0.75rem;
+      flex: 1;
+      max-width: 400px;
+    }
+
+    .search-input {
+      border: none;
+      background: transparent;
+      padding-left: 0.5rem;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .search-input:focus {
+      outline: none;
+    }
+
+    .filter-selects {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .select-sm {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    /* FICHA 360° */
+    .student-search-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .student-header-box {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: linear-gradient(135deg, #f8fafc, #eef2ff);
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .student-avatar-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #4f46e5, #3730a3);
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .student-details-main {
+      flex: 1;
+    }
+
+    .student-details-main h2 {
+      font-size: 1.35rem;
+      color: #0f172a;
+      margin-bottom: 0.35rem;
+    }
+
+    .student-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .student-tags .tag {
+      background-color: #ffffff;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .status-box-pazsalvo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+    }
+
+    .status-box-pazsalvo.al-dia {
+      background-color: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+
+    .status-box-pazsalvo.en-mora {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .student-kpis-mini {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .kpi-mini-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+    }
+
+    .kpi-mini-card .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #64748b;
+      display: block;
+    }
+
+    .kpi-mini-card .value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    /* TIMELINE */
+    .tuition-timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .month-tuition-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.85rem;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.65rem;
+      transition: all 150ms ease;
+      min-width: 0;
+    }
+
+    .month-footer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      width: 100%;
+    }
+
+    .secondary-actions-row {
+      display: flex;
+      gap: 0.35rem;
+      width: 100%;
+    }
+
+    .month-footer-paid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .month-tuition-card.paid {
+      border-color: #86efac;
+      background-color: #f0fdf4;
+    }
+
+    .month-tuition-card.late {
+      border-color: #fca5a5;
+      background-color: #fef2f2;
+    }
+
+    .month-tuition-card.due {
+      border-color: #fde68a;
+      background-color: #fefce8;
+    }
+
+    .month-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.35rem;
+    }
+
+    .month-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .badge-status {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .tuition-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: block;
+      margin: 0.25rem 0;
+    }
+
+    .tuition-recibo {
+      color: #059669;
+      display: block;
+    }
+
+    .actions-group {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .text-slate-500 { color: #64748b; }
+    .text-success { color: #059669; }
+    .text-danger { color: #dc2626; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-5 { margin-top: 1.5rem; }
+    .mt-3 { margin-top: 0.75rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .w-full { width: 100%; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-card {
+      width: 100%;
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 16px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .wompi-header, .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 1rem;
+    }
+
+    .wompi-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #1e1b4b;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #64748b;
+    }
+
+    .checkout-summary {
+      background-color: #f8fafc;
+      padding: 1.25rem;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .checkout-summary h3 {
+      font-size: 1.8rem;
+      color: #4f46e5;
+      margin: 0.25rem 0;
+    }
+
+    .payment-methods-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .pm-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .pm-option.active {
+      border-color: #4f46e5;
+      background-color: #eef2ff;
+      color: #3730a3;
+    }
+
+    .security-badge {
+      font-size: 0.75rem;
+      color: #059669;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+    }
+  `]
 })
 export class TesoreriaComponent implements OnInit {
 
@@ -327,27 +502,10 @@ export class TesoreriaComponent implements OnInit {
   mesesList = signal<Parametro[]>([]);
   mediosPagoList = signal<Parametro[]>([]);
 
-  // Filtros
-  filtroTexto = signal('');
-  filtroEstado = signal('TODOS');
-  filtroMes = signal('TODOS');
-
-
-  abrirConfiguracionTesoreria() {}
-  generarCierreDiario() {}
-  verFicha360(event: any) {}
-  verRecibo = signal<any>(null);
-  busquedaEstudiante = signal('');
-  seleccionarEstudiante(event: any) {}
-  pagarWompiCargo(event: any) { this.pagarWompi(event); }
-  pagarCajaCargo(event: any) { this.abrirModalPagoDirecto(event); }
-
-  onFiltrarFacturas(event: any) {
-    this.filtroTexto.set(event.texto);
-    this.filtroEstado.set(event.estado);
-    this.filtroMes.set(event.mes);
-  }
-
+  readonly EstadoCuenta = EstadoCuenta;
+  readonly MedioPago = MedioPago;
+  readonly EstadoAcuerdo = EstadoAcuerdo;
+  readonly EstadoPago = EstadoPago;
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
@@ -357,7 +515,10 @@ export class TesoreriaComponent implements OnInit {
   readonly isFacturando = signal(false);
 
   // Filtros
-      
+  filtroTexto = '';
+  filtroEstado = 'TODOS';
+  filtroMes = 'TODOS';
+
   // Modales
   readonly checkoutModal = signal<CuentaCobroItem | null>(null);
   readonly modalNuevoConcepto = signal(false);
@@ -366,7 +527,6 @@ export class TesoreriaComponent implements OnInit {
   readonly modalNuevoAcuerdo = signal(false);
   readonly facturaEnEdicion = signal<CuentaCobroItem | null>(null);
   readonly facturaParaAnular = signal<CuentaCobroItem | null>(null);
-  readonly facturaParaPagar = signal<CuentaCobroItem | null>(null);
   readonly reciboParaVer = signal<PagoRecaudoItem | null>(null);
   readonly extractoModal = signal(false);
   readonly pazSalvoModal = signal(false);
@@ -396,7 +556,7 @@ export class TesoreriaComponent implements OnInit {
 
   nuevoPagoManual = {
     cuentaCobroId: '',
-    medioPago: 'EFECTIVO' as MedioPago.PSE | 'EFECTIVO' | 'TRANSFERENCIA_BANCOLOMBIA' | 'NEQUI_QR' | 'TARJETA_CREDITO',
+    medioPago: MedioPago.EFECTIVO as MedioPago.PSE | MedioPago.EFECTIVO | MedioPago.TRANSFERENCIA_BANCOLOMBIA | MedioPago.NEQUI_QR | MedioPago.TARJETA_CREDITO,
     valorPagado: 450000,
     referenciaTransaccion: 'REC-VENTANILLA-001',
   };
@@ -442,12 +602,12 @@ export class TesoreriaComponent implements OnInit {
   readonly cuentasFiltradas = computed(() => {
     return this.cuentas().filter((c) => {
       const matchText = !this.filtroTexto || 
-        c.estudianteNombre.toLowerCase().includes(this.filtroTexto().toLowerCase()) ||
-        c.numeroFactura.toLowerCase().includes(this.filtroTexto().toLowerCase()) ||
-        (c.estudianteDocumento && c.estudianteDocumento.includes(this.filtroTexto()));
+        c.estudianteNombre.toLowerCase().includes(this.filtroTexto.toLowerCase()) ||
+        c.numeroFactura.toLowerCase().includes(this.filtroTexto.toLowerCase()) ||
+        (c.estudianteDocumento && c.estudianteDocumento.includes(this.filtroTexto));
       
-      const matchEstado = this.filtroEstado() === 'TODOS' || c.estado === this.filtroEstado();
-      const matchMes = this.filtroMes() === 'TODOS' || c.mes === this.filtroMes();
+      const matchEstado = this.filtroEstado === 'TODOS' || c.estado === this.filtroEstado;
+      const matchMes = this.filtroMes === 'TODOS' || c.mes === this.filtroMes;
 
       return matchText && matchEstado && matchMes;
     });
@@ -674,12 +834,12 @@ export class TesoreriaComponent implements OnInit {
               mapaEstudiantes.set(f.estudianteId, {
                 id: f.estudianteId,
                 nombre: f.estudianteNombre,
-                documento: f.estudianteDocumento || 'TI-1023456789',
-                grado: f.gradoNombre || 'Décimo',
-                grupo: '10°A',
-                acudienteNombre: `Acudiente de ${f.estudianteNombre}`,
-                acudienteTelefono: '310 555 1234',
-                acudienteEmail: 'acudiente@educore.edu.co',
+                documento: f.estudianteDocumento || '',
+                grado: f.gradoNombre || '',
+                grupo: f.grupoNombre || '',
+                acudienteNombre: f.acudienteNombre || '',
+                acudienteTelefono: f.acudienteTelefono || '',
+                acudienteEmail: f.acudienteEmail || '',
               });
             }
           });
@@ -702,12 +862,12 @@ export class TesoreriaComponent implements OnInit {
           const mapped: EstudianteFinanciero[] = res.map((e: any) => ({
             id: e.estudiante_id,
             nombre: `${e.primer_apellido} ${e.segundo_apellido || ''} ${e.primer_nombre} ${e.segundo_nombre || ''}`.trim(),
-            documento: e.numero_documento,
-            grado: e.grado_nombre || '10°',
-            grupo: e.grupo_nombre || '10-A',
-            acudienteNombre: `Acudiente de ${e.primer_nombre} ${e.primer_apellido}`,
-            acudienteTelefono: '310 000 0000',
-            acudienteEmail: 'contacto@educore.edu.co',
+            documento: e.numero_documento || '',
+            grado: e.grado_nombre || '',
+            grupo: e.grupo_nombre || '',
+            acudienteNombre: e.acudiente_nombre || '',
+            acudienteTelefono: e.acudiente_telefono || '',
+            acudienteEmail: e.acudiente_email || '',
           }));
           this.listaEstudiantes.set(mapped);
           if (mapped.length > 0 && !this.estudianteSeleccionado().id) {
@@ -822,26 +982,21 @@ export class TesoreriaComponent implements OnInit {
     const pendientes = this.cuentasPendientes();
     this.nuevoPagoManual = {
       cuentaCobroId: pendientes.length > 0 ? pendientes[0].id : '',
-      medioPago: 'EFECTIVO',
+      medioPago: MedioPago.EFECTIVO,
       valorPagado: pendientes.length > 0 ? pendientes[0].valorTotal : 450000,
       referenciaTransaccion: `REC-VENT-${Math.floor(1000 + Math.random() * 9000)}`,
     };
     this.modalPagoManual.set(true);
   }
 
-    abrirModalPagoDirecto(cuenta: CuentaCobroItem) {
-    this.facturaParaPagar.set(cuenta);
+  abrirModalPagoDirecto(cuenta: CuentaCobroItem) {
+    this.nuevoPagoManual = {
+      cuentaCobroId: cuenta.id,
+      medioPago: MedioPago.EFECTIVO,
+      valorPagado: cuenta.valorTotal,
+      referenciaTransaccion: `REC-VENT-${Math.floor(1000 + Math.random() * 9000)}`,
+    };
     this.modalPagoManual.set(true);
-  }
-
-  cerrarModalPagoManual() {
-    this.modalPagoManual.set(false);
-    this.facturaParaPagar.set(null);
-  }
-
-  confirmarPagoManual(pagoData: any) {
-    this.onPagoManualGuardado(pagoData);
-    this.cerrarModalPagoManual();
   }
 
   onPagoManualGuardado({ dto, cuenta }: { dto: any, cuenta: CuentaCobroItem }) {
@@ -1016,6 +1171,12 @@ export class TesoreriaComponent implements OnInit {
   }
 
   // --- MÉTODOS DE LA FICHA FINANCIERA 360° ---
+  onFiltrarFacturas(event: { texto: string, estado: string, mes: string }) {
+    this.filtroTexto = event.texto;
+    this.filtroEstado = event.estado;
+    this.filtroMes = event.mes;
+  }
+
   abrirModalExtracto() {
     this.extractoModal.set(true);
   }

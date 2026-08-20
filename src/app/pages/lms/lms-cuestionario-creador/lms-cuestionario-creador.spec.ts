@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { LmsCuestionarioCreadorComponent } from './lms-cuestionario-creador';
 
-import { LmsCuestionarioCreador } from './lms-cuestionario-creador';
-
-describe('LmsCuestionarioCreador', () => {
-  let component: LmsCuestionarioCreador;
-  let fixture: ComponentFixture<LmsCuestionarioCreador>;
+describe('LmsCuestionarioCreadorComponent', () => {
+  let component: LmsCuestionarioCreadorComponent;
+  let fixture: ComponentFixture<LmsCuestionarioCreadorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LmsCuestionarioCreador],
+      imports: [LmsCuestionarioCreadorComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(LmsCuestionarioCreador);
+    fixture = TestBed.createComponent(LmsCuestionarioCreadorComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

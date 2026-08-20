@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { of } from 'rxjs';
-import { DocumentalComponent } from './documental.component';
+import { DocumentalComponent, VistaDocumental, TipoFirmaTab } from './documental.component';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -84,7 +84,7 @@ describe('DocumentalComponent (Flujos BPM & Vault de Firmas Frontend)', () => {
 
   it('1. Debe inicializar el componente de gestión documental', () => {
     expect(component).toBeTruthy();
-    expect(component.vistaActiva()).toBe('KANBAN');
+    expect(component.vistaActiva()).toBe(VistaDocumental.KANBAN);
   });
 
   it('2. Debe cargar los flujos y trámites en curso desde el backend', () => {
@@ -108,11 +108,11 @@ describe('DocumentalComponent (Flujos BPM & Vault de Firmas Frontend)', () => {
   });
 
   it('5. Debe alternar entre dibujo en pantalla y carga de imagen en el Vault de Firmas', () => {
-    component.vistaActiva.set('FIRMAS_VAULT');
-    expect(component.tipoFirmaTab()).toBe('TRAZO');
+    component.vistaActiva.set(VistaDocumental.FIRMAS_VAULT);
+    expect(component.tipoFirmaTab()).toBe(TipoFirmaTab.TRAZO);
 
-    component.tipoFirmaTab.set('IMAGEN');
-    expect(component.tipoFirmaTab()).toBe('IMAGEN');
+    component.tipoFirmaTab.set(TipoFirmaTab.IMAGEN);
+    expect(component.tipoFirmaTab()).toBe(TipoFirmaTab.IMAGEN);
   });
 
   it('6. Debe calcular métricas de trámites activos, pendientes y completados', () => {
@@ -123,7 +123,7 @@ describe('DocumentalComponent (Flujos BPM & Vault de Firmas Frontend)', () => {
   });
 
   it('7. Debe cambiar a la pestaña TRD y formatear secciones y disposiciones', () => {
-    component.vistaActiva.set('TRD');
+    component.vistaActiva.set(VistaDocumental.TRD);
     expect(component.vistaActiva()).toBe('TRD');
     expect(component.formatSeccion('SECRETARIA_ACADEMICA')).toBe('Secretaría Académica');
     expect(component.formatDisposicion('CONSERVACION_TOTAL')).toBe('Conservación Total (CT)');

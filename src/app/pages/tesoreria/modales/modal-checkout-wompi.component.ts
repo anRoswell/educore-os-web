@@ -2,7 +2,7 @@ import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { CuentaCobroItem } from '../tesoreria.component';
+import { CuentaCobroItem } from '../models/tesoreria.models';
 
 @Component({
   selector: 'app-modal-checkout-wompi',

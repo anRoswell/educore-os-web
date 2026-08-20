@@ -1,0 +1,326 @@
+        <div class="tab-body animate-fade-in">
+          <!-- Selector / Buscador de Alumno -->
+          <div class="student-search-header">
+            <div>
+              <h3>🔍 Consulta de Estado de Cuenta & Historial por Alumno</h3>
+              <p>Auditoría financiera integral, cronograma de pensiones, otros cobros, acuerdos de pago y emisión de certificados</p>
+            </div>
+            <div class="student-picker-group">
+              <label class="form-label" style="margin: 0; font-size: 0.8rem;">Estudiante:</label>
+              <select class="form-select select-sm" [ngModel]="estudianteSeleccionado.id" (ngModelChange)="cambiarEstudiante.emit($event)">
+                @for (est of listaEstudiantes; track est.id) {
+                  <option [value]="est.id">{{ est.nombre }} — {{ est.grado }} (Doc: {{ est.documento }})</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Ficha 360° del Estudiante -->
+          <div class="student-360-card mt-4">
+            <!-- Header Alumno -->
+            <div class="student-header-box">
+              <div class="student-avatar-box">
+                {{ estudianteSeleccionado.nombre.substring(0, 2).toUpperCase() }}
+              </div>
+              <div class="student-details-main">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <h2>{{ estudianteSeleccionado.nombre }}</h2>
+                  @if (becaActual.porcentaje > 0) {
+                    <span class="badge badge-info" style="font-size: 0.75rem;">🎓 Beca {{ becaActual.porcentaje }}% ({{ becaActual.nombre }})</span>
+                  }
+                </div>
+                <div class="student-tags mt-1">
+                  <span class="tag">Doc: <strong>{{ estudianteSeleccionado.documento }}</strong></span>
+                  <span class="tag">Grado: <strong>{{ estudianteSeleccionado.grado }} ({{ estudianteSeleccionado.grupo }})</strong></span>
+                  <span class="tag">Acudiente: <strong>{{ estudianteSeleccionado.acudienteNombre }} ({{ estudianteSeleccionado.acudienteTelefono }})</strong></span>
+                  <span class="tag">Email: <strong>{{ estudianteSeleccionado.acudienteEmail }}</strong></span>
+                </div>
+              </div>
+              <div class="student-paz-salvo-action">
+                @if (estadoCuentaEstudiante.saldoPendienteTotal === 0) {
+                  <div class="status-box-pazsalvo al-dia">
+                    <span class="icon">🟢</span>
+                    <div>
+                      <strong>ESTADO: A PAZ Y SALVO</strong>
+                      <p>Cartera al día (\$0 COP pendientes)</p>
+                    </div>
+                  </div>
+                  <button (click)="abrirModalPazSalvoCompleto.emit()" class="btn btn-success mt-2 w-full">
+                    📄 Ver Paz y Salvo Oficial (PDF)
+                  </button>
+                } @else {
+                  <div class="status-box-pazsalvo en-mora">
+                    <span class="icon">🔴</span>
+                    <div>
+                      <strong>ESTADO: EN MORA</strong>
+                      <p>Saldo pendiente: \${{ estadoCuentaEstudiante.saldoPendienteTotal | number }} COP</p>
+                    </div>
+                  </div>
+                  <button (click)="abrirModalAcuerdoDesde360.emit()" class="btn btn-warning mt-2 w-full">
+                    🤝 Pactar Acuerdo de Pago
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Toolbar de Acciones Rápidas del Alumno -->
+            <div class="student-actions-bar mt-3">
+              <button (click)="abrirModalExtracto.emit()" class="btn btn-secondary btn-sm" title="Generar e imprimir extracto contable oficial con membrete">
+                📊 Extracto de Cuenta 360° (Imprimible)
+              </button>
+              <button (click)="abrirModalBeca.emit()" class="btn btn-secondary btn-sm" title="Asignar porcentaje de beca o tarifa especial">
+                🎓 Asignar / Modificar Beca
+              </button>
+              <button (click)="enviarRecordatorioWhatsApp.emit()" class="btn btn-outline btn-sm" style="color: #059669; border-color: #059669;" title="Enviar recordatorio formal por WhatsApp">
+                💬 Recordatorio WhatsApp
+              </button>
+              <button (click)="enviarEstadoCuentaEmail.emit()" class="btn btn-outline btn-sm" title="Enviar ficha de cartera al email del acudiente">
+                📧 Enviar por Correo
+              </button>
+              <button (click)="toggleDesbloqueoExcepcional.emit()" class="btn btn-outline btn-sm" [style.color]="desbloqueoExcepcional ? '#dc2626' : '#4f46e5'" title="Autorizar o suspender bloqueo administrativo de calificaciones">
+                {{ desbloqueoExcepcional ? '🔒 Suspender Excepción de Boletín' : '🔓 Desbloqueo Excepcional de Boletín' }}
+              </button>
+            </div>
+
+            <!-- Resumen de Métricas del Estudiante (5 KPIs) -->
+            <div class="grid-cols-5 mt-4 student-kpis-mini">
+              <div class="kpi-mini-card">
+                <span class="label">SALDO TOTAL PENDIENTE</span>
+                <span class="value" [class.text-danger]="estadoCuentaEstudiante.saldoPendienteTotal > 0">
+                  \${{ estadoCuentaEstudiante.saldoPendienteTotal | number }} COP
+                </span>
+              </div>
+              <div class="kpi-mini-card">
+                <span class="label">CUOTAS AL DÍA</span>
+                <span class="value text-success">{{ estadoCuentaEstudiante.cuotasAlDia }} de 10</span>
+              </div>
+              <div class="kpi-mini-card">
+                <span class="label">CUOTAS EN MORA</span>
+                <span class="value" [class.text-danger]="estadoCuentaEstudiante.cuotasEnMora > 0">
+                  {{ estadoCuentaEstudiante.cuotasEnMora }} meses
+                </span>
+              </div>
+              <div class="kpi-mini-card">
+                <span class="label">BOLETÍN DE NOTAS</span>
+                <span class="value" [class.text-success]="!estadoCuentaEstudiante.bloqueoBoletin || desbloqueoExcepcional" [class.text-danger]="estadoCuentaEstudiante.bloqueoBoletin && !desbloqueoExcepcional">
+                  {{ desbloqueoExcepcional ? '⚡ Excepción Autorizada' : (estadoCuentaEstudiante.bloqueoBoletin ? '🔒 Bloqueado' : '🔓 Habilitado') }}
+                </span>
+              </div>
+              <div class="kpi-mini-card">
+                <span class="label">BECA / TARIFA</span>
+                <span class="value" [class.text-info]="becaActual.porcentaje > 0">
+                  {{ becaActual.porcentaje > 0 ? (becaActual.porcentaje + '% Beca') : 'Tarifa Plena' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 1. Línea de Tiempo de Pensiones del Año (Febrero a Noviembre) -->
+            <div class="flex-between mt-5">
+              <h4 style="margin: 0;">📅 Cronograma de Pensiones Mensuales (Año Lectivo 2026):</h4>
+              <span class="text-xs text-slate-500">10 mensualidades fijas (Decreto 1075 / MEN)</span>
+            </div>
+            <div class="tuition-timeline-grid mt-2">
+              @for (mes of planMensualEstudiante; track mes.mes) {
+                <div class="month-tuition-card" [class.paid]="mes.estado === 'PAGADO'" [class.due]="mes.estado === EstadoCuenta.POR_VENCER" [class.late]="mes.estado === EstadoCuenta.EN_MORA">
+                  <div class="month-header">
+                    <span class="month-name">{{ mes.mes }}</span>
+                    <span class="badge badge-status" [class.badge-success]="mes.estado === 'PAGADO'" [class.badge-warning]="mes.estado === EstadoCuenta.POR_VENCER" [class.badge-danger]="mes.estado === EstadoCuenta.EN_MORA">
+                      {{ mes.estado === EstadoCuenta.POR_VENCER ? 'Por Vencer' : (mes.estado === EstadoCuenta.EN_MORA ? 'En Mora' : 'Pagado') }}
+                    </span>
+                  </div>
+                  <div class="month-body">
+                    <span class="tuition-value">\${{ mes.valor | number }} COP</span>
+                    <span class="tuition-date text-xs text-slate-500">Vence: {{ mes.vencimiento }}</span>
+                    @if (mes.recibo) {
+                      <span class="tuition-recibo font-mono text-xs">🧾 {{ mes.recibo }}</span>
+                    }
+                  </div>
+                  <div class="month-footer">
+                    @if (mes.estado !== 'PAGADO') {
+                      <div class="month-footer-actions">
+                        <button (click)="pagarMesEstudiante.emit(mes)" class="btn btn-primary btn-xs w-full" title="Pagar por PSE / Wompi">
+                          💳 Pagar PSE
+                        </button>
+                        <div class="secondary-actions-row">
+                          <button (click)="abrirModalPagoDirectoMes.emit(mes)" class="btn btn-success btn-xs" style="flex: 1;" title="Registrar Pago en Caja Ventanilla">
+                            💵 Caja
+                          </button>
+                          <button (click)="abrirModalEditarMes.emit(mes)" class="btn btn-secondary btn-xs" title="Editar Valor o Descuento">
+                            ✏️
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="month-footer-paid">
+                        <span class="text-success text-xs font-bold">✓ Al Día</span>
+                        <button (click)="verReciboMes.emit(mes)" class="btn btn-secondary btn-xs" title="Ver Recibo de Caja">
+                          🧾 Recibo
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- 2. Otros Conceptos, Derechos y Cargos del Alumno -->
+            <div class="flex-between mt-5 mb-2">
+              <div>
+                <h4 style="margin: 0;">🎒 Otros Conceptos, Derechos y Cargos Asignados:</h4>
+                <p class="text-xs text-slate-500" style="margin: 0;">Matrículas, derechos de grado, carnetización, seguros, certificados y salidas pedagógicas</p>
+              </div>
+              <button (click)="asignarCobroAEstudianteActual.emit()" class="btn btn-secondary btn-sm">
+                <span>➕ Asignar Cobro a este Estudiante</span>
+              </button>
+            </div>
+            <div class="table-container">
+              <table class="data-table" style="font-size: 0.85rem;">
+                <thead>
+                  <tr>
+                    <th># Factura</th>
+                    <th>Concepto de Cobro</th>
+                    <th>Mes / Periodo</th>
+                    <th>Fecha Límite</th>
+                    <th>Valor a Cobrar</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (cargo of otrosCobrosEstudiante; track cargo.id) {
+                    <tr>
+                      <td><strong class="font-mono text-xs">{{ cargo.numeroFactura }}</strong></td>
+                      <td><strong>{{ cargo.concepto }}</strong></td>
+                      <td>{{ cargo.mes }}</td>
+                      <td><span class="text-xs">{{ cargo.fechaVencimiento }}</span></td>
+                      <td><strong>\${{ cargo.valorTotal | number }} COP</strong></td>
+                      <td>
+                        @if (cargo.estado === EstadoCuenta.AL_DIA) {
+                          <span class="badge badge-success">PAGADO</span>
+                        } @else if (cargo.estado === EstadoCuenta.POR_VENCER) {
+                          <span class="badge badge-warning">POR VENCER</span>
+                        } @else {
+                          <span class="badge badge-danger">EN MORA</span>
+                        }
+                      </td>
+                      <td>
+                        <div class="actions-group">
+                          @if (cargo.estado !== EstadoCuenta.AL_DIA) {
+                            <button (click)="pagarWompi.emit(cargo)" class="btn btn-primary btn-xs" title="Pagar vía PSE">
+                              💳 PSE
+                            </button>
+                            <button (click)="abrirModalPagoDirecto.emit(cargo)" class="btn btn-success btn-xs" title="Pagar en Caja">
+                              💵 Caja
+                            </button>
+                            <button (click)="abrirModalAnular.emit(cargo)" class="btn btn-danger btn-xs" title="Exonerar o Anular">
+                              🗑️
+                            </button>
+                          } @else {
+                            <button (click)="verReciboCaja.emit(cargo)" class="btn btn-secondary btn-xs">
+                              🧾 Recibo
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  @if (otrosCobrosEstudiante.length === 0) {
+                    <tr>
+                      <td colspan="7" class="text-center text-slate-500 p-3">
+                        No hay cobros extraordinarios asignados a este estudiante. Utilice el botón "➕ Asignar Cobro" para emitir derechos de grado, carnet o seguros.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 3. Acuerdos de Pago & Financiación del Alumno -->
+            @if (acuerdosEstudiante.length > 0) {
+              <div class="mt-5 mb-2">
+                <h4 style="margin: 0;">🤝 Acuerdos de Pago & Financiación del Estudiante:</h4>
+                <p class="text-xs text-slate-500" style="margin: 0;">Compromisos y planes de cuotas pactados con el acudiente</p>
+              </div>
+              <div class="table-container">
+                <table class="data-table" style="font-size: 0.85rem;">
+                  <thead>
+                    <tr>
+                      <th>Deuda Refinanciada</th>
+                      <th>Plan Cuotas</th>
+                      <th>Cuota Mensual</th>
+                      <th>Día de Pago</th>
+                      <th>Fecha Inicio</th>
+                      <th>Estado</th>
+                      <th>Observaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (ac of acuerdosEstudiante; track ac.id) {
+                      <tr>
+                        <td><strong>\${{ ac.montoTotalAcordado | number }} COP</strong></td>
+                        <td>{{ ac.numeroCuotas }} cuotas</td>
+                        <td><strong>\${{ ac.montoPorCuota | number }} COP</strong></td>
+                        <td>Día {{ ac.diaPagoMensual }} de c/mes</td>
+                        <td>{{ ac.fechaInicio }}</td>
+                        <td>
+                          <span class="badge" [class.badge-success]="ac.estado === EstadoAcuerdo.CUMPLIDO" [class.badge-info]="ac.estado === EstadoAcuerdo.ACTIVO" [class.badge-danger]="ac.estado === EstadoAcuerdo.INCUMPLIDO">
+                            {{ ac.estado === EstadoAcuerdo.ACTIVO ? 'EN CURSO' : ac.estado }}
+                          </span>
+                        </td>
+                        <td><span class="text-xs">{{ ac.observaciones }}</span></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            <!-- 4. Historial de Recibos Realizados por el Estudiante -->
+            <div class="flex-between mt-5 mb-2">
+              <div>
+                <h4 style="margin: 0;">🧾 Historial de Recibos y Pagos Realizados:</h4>
+                <p class="text-xs text-slate-500" style="margin: 0;">Comprobantes oficiales de ingreso conciliados en contabilidad</p>
+              </div>
+              <span class="badge badge-success">{{ pagosEstudiante.length }} Pagos Registrados</span>
+            </div>
+            <table class="data-table" style="font-size: 0.85rem;">
+              <thead>
+                <tr>
+                  <th># Recibo</th>
+                  <th>Fecha de Pago</th>
+                  <th>Concepto / Mes</th>
+                  <th>Medio de Pago</th>
+                  <th>Referencia</th>
+                  <th>Valor Pagado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pago of pagosEstudiante; track pago.id) {
+                  <tr>
+                    <td><strong class="font-mono">{{ pago.numeroRecibo }}</strong></td>
+                    <td>{{ pago.fechaPago }}</td>
+                    <td>{{ pago.conceptoNombre }}</td>
+                    <td><span class="badge badge-info">{{ pago.medioPago }}</span></td>
+                    <td><code class="text-xs">{{ pago.referenciaTransaccion }}</code></td>
+                    <td><strong>\${{ pago.valorPagado | number }} COP</strong></td>
+                    <td>
+                      <button (click)="imprimirReciboIndividual.emit(pago)" class="btn btn-secondary btn-sm" title="Imprimir Recibo Oficial">
+                        🖨️ Imprimir
+                      </button>
+                    </td>
+                  </tr>
+                }
+                @if (pagosEstudiante.length === 0) {
+                  <tr>
+                    <td colspan="7" class="text-center text-slate-500 p-3">
+                      No se han registrado recaudos recientes para este alumno.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      <!-- ======================================================== -->

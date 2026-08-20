@@ -1,0 +1,114 @@
+<div class="modal-backdrop">
+  <div class="modal-content w-full max-w-4xl p-6 bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh]">
+    <div class="flex justify-between items-center mb-6 border-b pb-4">
+      <h2 class="text-2xl font-bold text-slate-800">📝 Crear Nuevo Cuestionario</h2>
+      <button (click)="cancel.emit()" class="text-slate-500 hover:text-slate-700 text-2xl font-bold">&times;</button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-6">
+      
+      <!-- Cuestionario Settings -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border">
+        <div class="col-span-2">
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Título del Cuestionario *</label>
+          <input type="text" formControlName="titulo" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej: Examen Final de Biología">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Descripción o Instrucciones</label>
+          <textarea formControlName="descripcion" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" rows="2" placeholder="Instrucciones para el estudiante..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Fecha Apertura *</label>
+          <input type="datetime-local" formControlName="fechaApertura" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Fecha Cierre *</label>
+          <input type="datetime-local" formControlName="fechaCierre" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Tiempo Límite (minutos)</label>
+          <input type="number" formControlName="limiteTiempoMinutos" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+      </div>
+
+      <!-- Preguntas -->
+      <div formArrayName="preguntas" class="space-y-6">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xl font-bold text-slate-700">Preguntas del Cuestionario</h3>
+          <button type="button" (click)="addPregunta()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+            + Añadir Pregunta
+          </button>
+        </div>
+
+        <div *ngFor="let p of preguntas.controls; let i=index" [formGroupName]="i" class="border p-4 rounded-lg bg-white shadow-sm relative">
+          <button type="button" (click)="removePregunta(i)" class="absolute top-2 right-2 text-red-500 hover:text-red-700" title="Eliminar pregunta">
+            🗑️ Eliminar
+          </button>
+          
+          <div class="flex items-center gap-2 mb-3">
+            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">Pregunta {{ i + 1 }}</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="col-span-3">
+              <label class="block text-sm font-semibold text-slate-700 mb-1">Enunciado *</label>
+              <textarea formControlName="enunciado" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" rows="2"></textarea>
+            </div>
+            <div class="col-span-1 space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Tipo *</label>
+                <select formControlName="tipo" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                  <option value="CERRADA_MULTIPLE">Opción Múltiple</option>
+                  <option value="ABIERTA_TEXTO">Abierta (Texto)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Puntos</label>
+                <input type="number" formControlName="valorPuntos" step="0.1" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Opciones para Cerrada -->
+          <div *ngIf="p.get('tipo')?.value === 'CERRADA_MULTIPLE'" class="bg-slate-50 p-4 rounded border mt-2">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-semibold text-sm text-slate-700">Opciones de Respuesta:</span>
+              <button type="button" (click)="addOpcion(i)" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                + Añadir Opción
+              </button>
+            </div>
+            <div formArrayName="opciones" class="space-y-2">
+              <div *ngFor="let opt of opciones(i).controls; let j=index" [formGroupName]="j" class="flex items-center gap-2">
+                <input type="radio" [name]="'correcta_' + i" [checked]="opt.get('esCorrecta')?.value" (change)="setOpcionCorrecta(i, j)" class="w-4 h-4 text-blue-600 cursor-pointer">
+                <input type="text" formControlName="texto" class="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Texto de la opción...">
+                <button type="button" (click)="removeOpcion(i, j)" class="text-red-500 hover:text-red-700 px-2" title="Quitar opción">×</button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 italic">Selecciona el botón circular para marcar la opción correcta.</p>
+          </div>
+
+          <!-- Mensaje para Abierta -->
+          <div *ngIf="p.get('tipo')?.value === 'ABIERTA_TEXTO'" class="bg-slate-50 p-4 rounded border mt-2 text-sm text-slate-600 italic">
+            El estudiante responderá con un texto libre. Esta pregunta requerirá calificación manual.
+          </div>
+
+        </div>
+
+        <div *ngIf="preguntas.length === 0" class="text-center py-8 text-slate-500 bg-slate-50 border rounded-lg border-dashed">
+          No has añadido ninguna pregunta aún.
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="flex justify-end gap-3 pt-6 border-t">
+        <button type="button" (click)="cancel.emit()" class="px-6 py-2 border rounded text-slate-700 hover:bg-slate-50 font-semibold transition">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="form.invalid" class="px-6 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          💾 Guardar Cuestionario
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -57,6 +57,10 @@ export class ApiService {
     return this.http.get(this.buildUrl(endpoint), { responseType: 'blob' });
   }
 
+  postBlob(endpoint: string, body: any): Observable<Blob> {
+    return this.http.post(this.buildUrl(endpoint), body, { responseType: 'blob' });
+  }
+
   uploadFile<T>(file: File, modulo: string = 'documental', origen: string = 'web'): Observable<T> {
     const formData = new FormData();
     formData.append('file', file);

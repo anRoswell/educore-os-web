@@ -6,6 +6,9 @@ import { QuillModule } from 'ngx-quill';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { LmsCuestionarioCreadorComponent } from './lms-cuestionario-creador/lms-cuestionario-creador';
+import { LmsCuestionarioTomaComponent } from './lms-cuestionario-toma/lms-cuestionario-toma';
+
 
 export interface TareaLmsItem {
   id: string;
@@ -53,7 +56,7 @@ export interface EntregaLmsItem {
 @Component({
   selector: 'app-lms',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule],
+  imports: [CommonModule, FormsModule, QuillModule, LmsCuestionarioCreadorComponent, LmsCuestionarioTomaComponent],
   template: `
     <div class="lms-container">
 
@@ -115,7 +118,10 @@ export interface EntregaLmsItem {
                 @if (aulaSeleccionada()) {
                   <div class="flex-between mb-4">
                     <h2 style="margin: 0; color: #1e293b;">Muro: {{ aulaSeleccionada()?.nombre }}</h2>
-                    <button class="btn btn-primary" (click)="abrirModalPublicacion()">📝 Crear Post</button>
+                    <div style="display:flex; gap: 10px;">
+                      <button class="btn btn-primary" (click)="abrirModalPublicacion()">📝 Crear Post / Tarea</button>
+                      <button class="btn btn-success" (click)="abrirCreadorCuestionario()">📝 Crear Cuestionario</button>
+                    </div>
                   </div>
                   <hr style="border: 0; height: 1px; background: #e2e8f0; margin-bottom: 2rem;">
 
@@ -775,9 +781,14 @@ export interface EntregaLmsItem {
             <button (click)="tabActiva.set('tareas')" class="btn btn-secondary">
               <span>← Volver a Tareas</span>
             </button>
-            <button (click)="guardarTodasLasCalificaciones()" class="btn btn-success">
-              <span>💾 Guardar Toda la Planilla</span>
-            </button>
+            <div style="display:flex; gap: 10px; align-items: center;">
+              <button (click)="guardarTodasLasCalificaciones()" class="btn btn-success">
+                <span>💾 Guardar Toda la Planilla</span>
+              </button>
+              <button (click)="sincronizarNotasTareaConAcademico()" class="btn btn-primary" title="Enviar calificaciones a la Planilla Oficial del Módulo Académico">
+                <span>🔄 Sincronizar con Planilla Académica</span>
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -993,7 +1004,25 @@ export interface EntregaLmsItem {
       }
       }
     </div>
-  `,
+  
+    <!-- Cuestionario Creador Modal -->
+    @if (mostrandoCreadorCuestionario) {
+      <app-lms-cuestionario-creador
+        (cancel)="cerrarCreadorCuestionario()"
+        (created)="guardarNuevoCuestionario($event)">
+      </app-lms-cuestionario-creador>
+    }
+
+    <!-- Cuestionario Toma Modal -->
+    @if (examenActivo) {
+      <app-lms-cuestionario-toma
+        [cuestionario]="examenActivo"
+        [matriculaId]="''"
+        (cancel)="examenActivo = null"
+        (submitted)="submitExamen($event)">
+      </app-lms-cuestionario-toma>
+    }
+`,
   styles: [`
 /* Quill Viewer Custom Fixes */
 .custom-quill-view .ql-editor {
@@ -1707,6 +1736,43 @@ export interface EntregaLmsItem {
   `]
 })
 export class LmsComponent implements OnInit {
+  mostrandoCreadorCuestionario = false;
+  
+  abrirCreadorCuestionario() {
+    this.mostrandoCreadorCuestionario = true;
+  }
+  
+  cerrarCreadorCuestionario() {
+    this.mostrandoCreadorCuestionario = false;
+  }
+  
+  guardarNuevoCuestionario(cuestionarioData: any) {
+    if (!this.aulaSeleccionada()) return;
+    
+    // Asignar cargaDocenteId basado en el aula actual
+    cuestionarioData.cargaDocenteId = this.aulaSeleccionada()?.cargaDocenteId;
+    
+    this.api.post('lms/cuestionarios', cuestionarioData).subscribe({
+      next: (res) => {
+        this.toast.success('Cuestionario Creado', 'El examen ha sido publicado con éxito.');
+        this.cerrarCreadorCuestionario();
+        // Recargar o asociar a publicacion
+      },
+      error: (err) => this.toast.error('Error', 'No se pudo crear el cuestionario.')
+    });
+  }
+  
+  submitExamen(respuestas: any) {
+    if (!this.examenActivo) return;
+    this.api.post(`lms/cuestionarios/${this.examenActivo.id}/enviar`, respuestas).subscribe({
+      next: (res: any) => {
+        this.toast.success('Examen Enviado', `Obtuviste ${res.puntajeObtenido} puntos.`);
+        this.examenActivo = null;
+      },
+      error: () => this.toast.error('Error', 'No se pudo enviar el examen.')
+    });
+  }
+
   // --- TABS ---
   currentTab: 'AULAS' | 'TAREAS' = 'AULAS';
 
@@ -2253,7 +2319,33 @@ export class LmsComponent implements OnInit {
   }
 
   guardarTodasLasCalificaciones() {
-    this.toast.success('¡Planilla Completa Guardada!', 'Todas las calificaciones del Decreto 1290 han sido sincronizadas en el libro de notas escolar.');
+    const tarea = this.tareaSeleccionada();
+    if (!tarea) return;
+    const pendientes = this.entregasActuales().filter(e => e.calificacion && e.estadoEntrega !== 'CALIFICADO');
+    if (pendientes.length === 0) {
+      this.toast.success('¡Planilla Lista!', 'Todas las calificaciones ya están guardadas.');
+      return;
+    }
+    // Guardar cada una pendiente
+    pendientes.forEach(est => this.guardarCalificacionEstudiante(est));
+  }
+
+  sincronizarNotasTareaConAcademico() {
+    const tarea = this.tareaSeleccionada();
+    if (!tarea) return;
+    this.api.post(`lms/tareas/${tarea.id}/sincronizar`, {}).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.toast.success('¡Sincronización Exitosa!', res.mensaje);
+        } else {
+          this.toast.error('Sin datos', res.mensaje || 'No hay calificaciones para sincronizar.');
+        }
+      },
+      error: (err) => {
+        const msg = err?.error?.message || 'Verifica que la tarea tenga una Actividad de la Planilla enlazada.';
+        this.toast.error('Error de Sincronización', msg);
+      }
+    });
   }
 
   // --- CREAR / EDITAR TAREA ---
@@ -2522,9 +2614,15 @@ export class LmsComponent implements OnInit {
   }
 
   abrirExamenEstudiante(cuestionario: any) {
+    if (!cuestionario.preguntas) {
+      cuestionario.preguntas = [
+        { id: '1', enunciado: '¿Cuál es la capital de Francia?', tipo: 'CERRADA_MULTIPLE', valorPuntos: 2.5, opciones: [ {id: 'o1', texto: 'París'}, {id: 'o2', texto: 'Madrid'} ] },
+        { id: '2', enunciado: 'Escribe un resumen sobre la fotosíntesis', tipo: 'ABIERTA_TEXTO', valorPuntos: 2.5 }
+      ];
+      cuestionario.limiteTiempoMinutos = 30;
+    }
     this.examenActivo = cuestionario;
     this.respuestasEstudiante = {};
-    this.modalTomarExamen.set(true);
   }
 
   enviarExamen() {

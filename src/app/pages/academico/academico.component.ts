@@ -1889,20 +1889,39 @@ export class AcademicoComponent implements OnInit {
   // --- CIERRE DE AÑO SIEE ---
   ejecutarCierreAno() {
     // Doble confirmación por seguridad
-    if (confirm('⚠️ ATENCIÓN: Va a ejecutar el algoritmo de Promoción SIEE. Esto evaluará a todos los estudiantes y determinará si Aprueban o Reprueban el año. ¿Está seguro de continuar?')) {
-      if (confirm('🔒 SEGURIDAD: ¿Confirma irrevocablemente que todas las notas del último periodo han sido subidas?')) {
-        this.toast.info('Calculando Promociones', 'El Motor SIEE está evaluando a los estudiantes. Esto puede tardar...');
-        this.api.post<any>('academico/cierre-ano', { colegioId: 'GLOBAL', anioLectivoId: '2026' }).subscribe({
-          next: (res) => {
-            this.toast.success('Cierre de Año Exitoso', 'Actas de promoción generadas exitosamente.');
-          },
-          error: (err) => {
-            this.toast.error('Error Crítico', 'No se pudo completar el cierre de año.');
-          }
-        });
-      }
+    if (!confirm('⚠️ ATENCIÓN: Va a ejecutar el algoritmo de Promoción SIEE.\n\nEsto evaluará a TODOS los estudiantes del año lectivo y determinará si Aprueban o Reprueban.\n\n¿Está seguro de continuar?')) {
+      return;
     }
+    if (!confirm('🔒 SEGURIDAD: ¿Confirma irrevocablemente que TODAS las notas de todos los periodos han sido cargadas correctamente en el sistema?')) {
+      return;
+    }
+
+    const anioLectivoId = this.aniosLectivosList()[0]?.id;
+    if (!anioLectivoId) {
+      this.toast.error('Sin Año Lectivo', 'No hay un año lectivo configurado. Cree uno primero.');
+      return;
+    }
+
+    this.toast.info('Calculando Promociones', 'El Motor SIEE está evaluando a los estudiantes. Esto puede tardar unos segundos...');
+
+    // Llamar al endpoint con responseType 'blob' para recibir el PDF del acta directamente
+    this.api.postBlob('academico/cierre-ano', { colegioId: 'auto', anioLectivoId }).subscribe({
+      next: (blob: Blob) => {
+        // Descargar el PDF del Acta de Promoción automáticamente
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Acta_Promocion_${new Date().getFullYear()}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+        this.toast.success('✅ Cierre de Año Exitoso', 'Acta de Promoción generada y descargada exitosamente. Los estados de matrícula han sido actualizados.');
+      },
+      error: (err) => {
+        this.toast.error('Error Crítico', err?.error?.message || 'No se pudo completar el cierre de año. Verifique los datos académicos.');
+      }
+    });
   }
+
 
   // --- CRUD: CREAR ACTIVIDAD EVALUATIVA ---
   abrirModalNuevaActividad() {

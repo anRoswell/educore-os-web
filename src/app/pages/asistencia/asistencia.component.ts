@@ -315,7 +315,7 @@ interface AlumnoAsistencia {
       gap: 1rem;
     }
     .stat-card {
-      background: white;
+      background: linear-gradient(135deg, #ffffff 50%, rgba(99,102,241,0.06) 100%);
       border: 1px solid #e2e8f0;
       border-left: 4px solid #6366f1; /* Indigo default */
       border-radius: 12px;
@@ -335,15 +335,15 @@ interface AlumnoAsistencia {
     .stat-info h3 { font-size: 0.85rem; color: #64748b; margin: 0; }
     .stat-info p { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; }
     
-    .stat-card.success { border-left-color: #10b981; }
+    .stat-card.success { border-left-color: #10b981; background: linear-gradient(135deg, #ffffff 50%, rgba(16,185,129,0.08) 100%); }
     .stat-card.success:hover { box-shadow: 0 10px 25px -5px rgba(16,185,129,0.2); }
     .stat-card.success .stat-info p { color: #10b981; }
     
-    .stat-card.warning { border-left-color: #f59e0b; }
+    .stat-card.warning { border-left-color: #f59e0b; background: linear-gradient(135deg, #ffffff 50%, rgba(245,158,11,0.08) 100%); }
     .stat-card.warning:hover { box-shadow: 0 10px 25px -5px rgba(245,158,11,0.2); }
     .stat-card.warning .stat-info p { color: #f59e0b; }
     
-    .stat-card.danger { border-left-color: #ef4444; }
+    .stat-card.danger { border-left-color: #ef4444; background: linear-gradient(135deg, #ffffff 50%, rgba(239,68,68,0.08) 100%); }
     .stat-card.danger:hover { box-shadow: 0 10px 25px -5px rgba(239,68,68,0.2); }
     .stat-card.danger .stat-info p { color: #ef4444; }
 

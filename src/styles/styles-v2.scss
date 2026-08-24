@@ -8,21 +8,21 @@
    ───────────────────────────────────────────────────────────────────── */
 
 /* 1. Tokens y Variables */
-@import 'styles/tokens';
+@import 'tokens';
 
 /* 2. Reset y Base */
-@import 'styles/base';
+@import 'base';
 
 /* 3. Componentes */
-@import 'styles/buttons';
-@import 'styles/forms';
-@import 'styles/cards';
-@import 'styles/modals';
-@import 'styles/tables';
-@import 'styles/components';
+@import 'buttons';
+@import 'forms';
+@import 'cards';
+@import 'modals';
+@import 'tables';
+@import 'components';
 
 /* 4. Utilidades */
-@import 'styles/utilities';
+@import 'utilities';
 
 /* 5. Editor de texto enriquecido (Quill) */
 @import 'quill/dist/quill.snow.css';

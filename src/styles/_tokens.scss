@@ -1,0 +1,246 @@
+/* ==========================================================================
+   EduCoreOS — Design Tokens & Variables
+   Sistema de tokens consolidado para colores, tipografía, espaciado y efectos
+   ========================================================================== */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────
+     PALETA DE COLORES
+     ───────────────────────────────────────────────────────────────────── */
+
+  /* Primario: Índigo / Violeta Institucional */
+  --primary-50: #eef2ff;
+  --primary-100: #e0e7ff;
+  --primary-200: #c7d2fe;
+  --primary-300: #a5b4fc;
+  --primary-400: #818cf8;
+  --primary-500: #6366f1;
+  --primary-600: #4f46e5;
+  --primary-700: #4338ca;
+  --primary-800: #3730a3;
+  --primary-900: #312e81;
+
+  /* Escala de Grises / Slate */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  /* Colores Semánticos */
+  --success: #10b981;
+  --success-light: #ecfdf5;
+  --success-dark: #065f46;
+
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --warning-dark: #92400e;
+
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --danger-dark: #991b1b;
+
+  --info: #0284c7;
+  --info-light: #f0f9ff;
+  --info-dark: #075985;
+
+  --purple: #8b5cf6;
+  --purple-light: #f5f3ff;
+  --purple-dark: #5b21b6;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     COLORES ADAPTATIVOS (Soportan Dark Mode)
+     ───────────────────────────────────────────────────────────────────── */
+
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-elevated: #ffffff;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
+
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --border-focus: #6366f1;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     TIPOGRAFÍA
+     ───────────────────────────────────────────────────────────────────── */
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Tamaños de Fuente (Escala tipográfica) */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+
+  /* Pesos de Fuente */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     ESPACIADO (Sistema de 4px/8px base)
+     ───────────────────────────────────────────────────────────────────── */
+
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;    /* 4px */
+  --spacing-2: 0.5rem;     /* 8px */
+  --spacing-3: 0.75rem;    /* 12px */
+  --spacing-4: 1rem;       /* 16px */
+  --spacing-5: 1.25rem;    /* 20px */
+  --spacing-6: 1.5rem;     /* 24px */
+  --spacing-7: 1.75rem;    /* 28px */
+  --spacing-8: 2rem;       /* 32px */
+  --spacing-10: 2.5rem;    /* 40px */
+  --spacing-12: 3rem;      /* 48px */
+  --spacing-16: 4rem;      /* 64px */
+  --spacing-20: 5rem;      /* 80px */
+
+  /* ─────────────────────────────────────────────────────────────────────
+     SOMBRAS Y ELEVACIONES
+     ───────────────────────────────────────────────────────────────────── */
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+  /* ─────────────────────────────────────────────────────────────────────
+     RADIOS (Border Radius)
+     ───────────────────────────────────────────────────────────────────── */
+
+  --radius-sm: 0.375rem;   /* 6px */
+  --radius-md: 0.5rem;     /* 8px */
+  --radius-lg: 0.75rem;    /* 12px */
+  --radius-xl: 1rem;       /* 16px */
+  --radius-2xl: 1.5rem;    /* 24px */
+  --radius-3xl: 2rem;      /* 32px */
+  --radius-full: 9999px;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     TRANSICIONES Y ANIMACIONES
+     ───────────────────────────────────────────────────────────────────── */
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Z-INDEX (Capas de apilamiento)
+     ───────────────────────────────────────────────────────────────────── */
+
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-notification: 1080;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     TAMAÑOS DE COMPONENTES
+     ───────────────────────────────────────────────────────────────────── */
+
+  /* Botones */
+  --btn-height-xs: 36px;
+  --btn-height-sm: 40px;
+  --btn-height-md: 44px;
+  --btn-height-lg: 48px;
+
+  /* Inputs */
+  --input-height: 44px;
+  --input-height-sm: 40px;
+  --input-height-lg: 48px;
+
+  /* Touch Targets (WCAG 2.1 AAA) */
+  --touch-target-min: 44px;
+}
+
+/* ==========================================================================
+   DARK MODE
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Backgrounds */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-elevated: #1e293b;
+
+    /* Texto */
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --text-muted: #64748b;
+    --text-inverse: #0f172a;
+
+    /* Bordes */
+    --border-primary: #334155;
+    --border-secondary: #475569;
+
+    /* Sombras ajustadas para dark mode */
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+  }
+}
+
+/* ==========================================================================
+   MODO DARK CON DATA ATTRIBUTE (Para toggle manual)
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-elevated: #1e293b;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #0f172a;
+
+  --border-primary: #334155;
+  --border-secondary: #475569;
+
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+}

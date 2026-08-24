@@ -211,6 +211,31 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
           </div>
 
           <div class="topbar-right">
+            <!-- Dark Mode Toggle -->
+            <button
+              (click)="toggleDarkMode()"
+              class="dark-mode-toggle"
+              [title]="isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+              @if (isDarkMode()) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggle-icon">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggle-icon">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              }
+              <span class="toggle-label">{{ isDarkMode() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+            </button>
+
             <!-- Perfil de Usuario Activo -->
             <div class="user-profile-widget">
               <div class="user-details">
@@ -552,6 +577,50 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
       gap: 0.75rem;
     }
 
+    /* Dark Mode Toggle */
+    .dark-mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      background-color: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 150ms ease;
+      margin-right: 1rem;
+    }
+
+    .dark-mode-toggle:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .toggle-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+    }
+
+    .toggle-label {
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .toggle-label {
+        display: none;
+      }
+
+      .dark-mode-toggle {
+        padding: 0.5rem;
+      }
+    }
+
     .btn-logout {
       display: inline-flex;
       align-items: center;
@@ -615,12 +684,42 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
 export class AdminLayoutComponent {
   readonly authService = inject(AuthService);
   readonly modalNuevoColegio = signal<boolean>(false);
+  readonly isDarkMode = signal<boolean>(false);
+
+  constructor() {
+    // Cargar preferencia de dark mode al iniciar
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      this.isDarkMode.set(true);
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else if (!savedTheme) {
+      // Si no hay preferencia guardada, detectar preferencia del sistema
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.isDarkMode.set(prefersDark);
+      if (prefersDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    }
+  }
 
   onColegioChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     const selected = this.authService.colegiosDisponibles().find((c) => c.id === select.value);
     if (selected) {
       this.authService.setColegio(selected);
+    }
+  }
+
+  toggleDarkMode() {
+    const newMode = !this.isDarkMode();
+    this.isDarkMode.set(newMode);
+
+    if (newMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'light');
     }
   }
 }

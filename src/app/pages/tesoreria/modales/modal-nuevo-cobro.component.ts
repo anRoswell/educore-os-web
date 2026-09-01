@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../core/services/toast.service';
 import { ModalManagerService } from '../../../core/services/modal-manager.service';
+import { SearchableSelectComponent, SearchableOption } from '../../../shared/components/searchable-select.component';
+import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.directive';
 
 @Component({
   selector: 'app-modal-nuevo-cobro',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent, CurrencyMaskDirective],
   template: `
     <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoCobro')">
       <div class="modal-card card card-glass" style="max-width: 820px;">
@@ -18,9 +20,19 @@ import { ModalManagerService } from '../../../core/services/modal-manager.servic
 
         <div class="modal-body">
           <div class="modal-form-grid">
-            <div class="form-group">
+            <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Estudiante *</label>
-              <input type="text" class="form-control" [(ngModel)]="form.estudianteNombre" placeholder="Nombre completo del estudiante" />
+              @if (opcionesEstudiantes.length > 0) {
+                <app-searchable-select
+                  [options]="opcionesEstudiantes"
+                  [ngModel]="selectedEstudianteId"
+                  (ngModelChange)="onEstudianteSelect($event)"
+                  placeholder="🔍 Buscar estudiante por nombre, grado o documento..."
+                  searchPlaceholder="Escriba para filtrar en tiempo real..."
+                ></app-searchable-select>
+              } @else {
+                <input type="text" class="form-control" [(ngModel)]="form.estudianteNombre" placeholder="Nombre completo del estudiante" />
+              }
             </div>
 
             <div class="form-group">
@@ -39,10 +51,16 @@ import { ModalManagerService } from '../../../core/services/modal-manager.servic
 
             <div class="form-group">
               <label class="form-label">Valor en Pesos ($ COP) *</label>
-              <input type="number" class="form-control" [(ngModel)]="form.valorTotal" />
+              <input
+                type="text"
+                appCurrencyMask
+                class="form-control"
+                [(ngModel)]="form.valorTotal"
+                placeholder="$ 450.000"
+              />
             </div>
 
-            <div class="form-group">
+            <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Fecha Límite de Pago *</label>
               <input type="date" class="form-control" [(ngModel)]="form.fechaVencimiento" />
             </div>
@@ -63,19 +81,48 @@ export class ModalNuevoCobroComponent {
   private readonly toast = inject(ToastService);
   readonly modalManager = inject(ModalManagerService);
 
+  @Input() listaEstudiantes: any[] = [];
+  @Input() estudiantesSelectOptions: SearchableOption[] = [];
   @Input() conceptosList: any[] = [];
-  @Input() form = {
+  @Input() form: any = {
     estudianteNombre: '',
+    estudianteId: '',
     concepto: 'Pensión Mensual Escolar',
     valorTotal: 450000,
     fechaVencimiento: '2026-08-25',
   };
 
+  selectedEstudianteId = '';
+
+  get opcionesEstudiantes(): SearchableOption[] {
+    if (this.estudiantesSelectOptions && this.estudiantesSelectOptions.length > 0) {
+      return this.estudiantesSelectOptions;
+    }
+    return (this.listaEstudiantes || []).map((est) => ({
+      value: est.id,
+      label: est.nombre,
+      sublabel: `Doc. ${est.documento || 'S/D'} • Grado: ${est.grado || ''} (${est.grupo || 'A'})`,
+      badge: est.grado || 'Matriculado',
+      badgeClass: 'badge-secondary',
+      avatarText: est.nombre?.substring(0, 2)?.toUpperCase() || 'ES',
+    }));
+  }
+
   @Output() close = new EventEmitter<void>();
+  @Output() cerrar = new EventEmitter<void>();
   @Output() success = new EventEmitter<any>();
   @Output() nuevoConcepto = new EventEmitter<void>();
 
   isSaving = false;
+
+  onEstudianteSelect(id: string) {
+    this.selectedEstudianteId = id;
+    this.form.estudianteId = id;
+    const found = (this.listaEstudiantes || []).find((e) => e.id === id);
+    if (found) {
+      this.form.estudianteNombre = found.nombre;
+    }
+  }
 
   onConceptoSelect(nombre: string) {
     const found = this.conceptosList.find((c) => c.nombre === nombre);
@@ -85,21 +132,23 @@ export class ModalNuevoCobroComponent {
   }
 
   cerrarModal() {
+    this.modalManager.close('nuevoCobro');
     this.close.emit();
+    this.cerrar.emit();
   }
 
   guardar() {
-    if (!this.form.estudianteNombre) {
-      this.toast.error('Campo Requerido', 'Por favor indique el nombre del estudiante.');
+    if (!this.form.estudianteNombre && !this.selectedEstudianteId) {
+      this.toast.error('Campo Requerido', 'Por favor seleccione o indique el nombre del estudiante.');
       return;
     }
 
     this.isSaving = true;
-    // Mock simulation for saving...
     setTimeout(() => {
       this.toast.success('Cobro Emitido', `Se ha generado la cuenta de cobro para ${this.form.estudianteNombre} exitosamente.`);
       this.isSaving = false;
       this.success.emit(this.form);
-    }, 800);
+      this.cerrarModal();
+    }, 400);
   }
 }

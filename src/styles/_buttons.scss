@@ -129,7 +129,7 @@
     border-color: var(--border-secondary);
   }
 
-  @media (prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: disabled-dark) {
     background-color: var(--slate-700);
     color: var(--text-secondary);
 

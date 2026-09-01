@@ -1,13 +1,15 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { ModalManagerService } from '../../../core/services/modal-manager.service';
+import { imprimirElementoHtml } from '../../../core/utils/print.utils';
 
 @Component({
   selector: 'app-modal-paz-y-salvo',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="modal-backdrop animate-fade-in">
+    <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('pazSalvo')">
       <div class="modal-card card card-glass" style="max-width: 750px;">
         <div class="modal-header">
           <h3>📄 Certificado de Paz y Salvo Financiero</h3>
@@ -88,18 +90,24 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class ModalPazYSalvoComponent {
   readonly authService = inject(AuthService);
+  readonly modalManager = inject(ModalManagerService);
 
   @Input() estudiante: any;
   @Input() hashPazYSalvo: string = '';
   @Input() fechaHoyTexto: string = '';
 
   @Output() close = new EventEmitter<void>();
+  @Output() cerrar = new EventEmitter<void>();
+  @Output() descargar = new EventEmitter<any>();
 
   cerrarModal() {
+    this.modalManager.close('pazSalvo');
     this.close.emit();
+    this.cerrar.emit();
   }
 
   imprimir() {
-    window.print();
+    this.descargar.emit(this.estudiante);
+    imprimirElementoHtml('.print-area', `Paz y Salvo - ${this.estudiante?.nombre || 'Estudiante'}`);
   }
 }

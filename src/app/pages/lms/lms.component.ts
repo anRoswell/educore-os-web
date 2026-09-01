@@ -1002,6 +1002,31 @@ export interface EntregaLmsItem {
           </div>
         </div>
       }
+
+      <!-- MODAL ELIMINAR TAREA -->
+      @if (modalEliminarTarea()) {
+        <div class="modal-backdrop" style="z-index: 10500;">
+          <div class="modal-card" style="max-width: 460px;">
+            <div class="modal-header" style="border: none; padding-bottom: 0;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.25rem;">
+                  🗑️
+                </div>
+                <h3 style="margin: 0; font-size: 1.2rem; color: #0f172a;">Eliminar Tarea Virtual</h3>
+              </div>
+            </div>
+            <div class="modal-body" style="padding-top: 1rem; padding-bottom: 0.5rem;">
+              <p style="color: #64748b; margin: 0; font-size: 0.95rem; line-height: 1.5; padding-left: 58px;">
+                ¿Estás seguro de eliminar la tarea <strong>"{{ modalEliminarTarea()?.titulo }}"</strong>? Esta acción retirará la tarea del aula virtual.
+              </p>
+            </div>
+            <div class="modal-footer" style="border: none; padding-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button (click)="modalEliminarTarea.set(null)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="confirmarEliminarTarea()" class="btn btn-danger">Sí, Eliminar</button>
+            </div>
+          </div>
+        </div>
+      }
       }
     </div>
   
@@ -2093,6 +2118,7 @@ export class LmsComponent implements OnInit {
   readonly modoEdicionTarea = signal(false);
   tareaEditandoId = '';
   readonly modalEntregar = signal(false);
+  readonly modalEliminarTarea = signal<TareaLmsItem | null>(null);
   readonly tareaSeleccionada = signal<TareaLmsItem | null>(null);
   readonly tareaParaEntregar = signal<TareaLmsItem | null>(null);
 
@@ -2517,18 +2543,24 @@ export class LmsComponent implements OnInit {
   }
 
   eliminarTareaConfirm(tarea: TareaLmsItem) {
-    if (confirm(`¿Estás seguro de eliminar la tarea "${tarea.titulo}"?`)) {
-      this.api.delete(`lms/tareas/${tarea.id}`).subscribe({
-        next: () => {
-          this.tareas.update((list) => list.filter((t) => t.id !== tarea.id));
-          this.toast.warning('Tarea Eliminada', `La tarea "${tarea.titulo}" ha sido retirada del aula virtual.`);
-        },
-        error: () => {
-          this.tareas.update((list) => list.filter((t) => t.id !== tarea.id));
-          this.toast.warning('Tarea Eliminada', `La tarea "${tarea.titulo}" fue eliminada.`);
-        },
-      });
-    }
+    this.modalEliminarTarea.set(tarea);
+  }
+
+  confirmarEliminarTarea() {
+    const tarea = this.modalEliminarTarea();
+    if (!tarea) return;
+    this.api.delete(`lms/tareas/${tarea.id}`).subscribe({
+      next: () => {
+        this.tareas.update((list) => list.filter((t) => t.id !== tarea.id));
+        this.toast.warning('Tarea Eliminada', `La tarea "${tarea.titulo}" ha sido retirada del aula virtual.`);
+        this.modalEliminarTarea.set(null);
+      },
+      error: () => {
+        this.tareas.update((list) => list.filter((t) => t.id !== tarea.id));
+        this.toast.warning('Tarea Eliminada', `La tarea "${tarea.titulo}" fue eliminada.`);
+        this.modalEliminarTarea.set(null);
+      },
+    });
   }
 
   // --- ENTREGAS ESTUDIANTE ---

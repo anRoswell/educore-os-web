@@ -191,33 +191,9 @@
    DARK MODE
    ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Backgrounds */
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-tertiary: #334155;
-    --bg-elevated: #1e293b;
-
-    /* Texto */
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
-    --text-muted: #64748b;
-    --text-inverse: #0f172a;
-
-    /* Bordes */
-    --border-primary: #334155;
-    --border-secondary: #475569;
-
-    /* Sombras ajustadas para dark mode */
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
-    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
-  }
-}
+/* @media (prefers-color-scheme: disabled-dark) desactivado a petición del usuario
+   El sistema se comportará siempre en Light Mode por defecto 
+*/
 
 /* ==========================================================================
    MODO DARK CON DATA ATTRIBUTE (Para toggle manual)

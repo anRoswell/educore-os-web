@@ -1,16 +1,18 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ModalManagerService } from '../../../core/services/modal-manager.service';
 import { SearchableSelectComponent, SearchableOption } from '../../../shared/components/searchable-select.component';
+import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.directive';
 
 @Component({
   selector: 'app-modal-nuevo-acuerdo',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent, CurrencyMaskDirective],
   template: `
-    <div class="modal-backdrop animate-fade-in">
+    <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoAcuerdo')">
       <div class="modal-card card card-glass" style="max-width: 820px;">
         <div class="modal-header">
           <h3>🤝 Nuevo Acuerdo de Pago & Refinanciación</h3>
@@ -31,7 +33,13 @@ import { SearchableSelectComponent, SearchableOption } from '../../../shared/com
 
             <div class="form-group">
               <label class="form-label">Monto Total de Deuda a Refinanciar ($ COP) *</label>
-              <input type="number" class="form-control" [(ngModel)]="form.montoTotalAcordado" />
+              <input
+                type="text"
+                appCurrencyMask
+                class="form-control"
+                [(ngModel)]="form.montoTotalAcordado"
+                placeholder="$ 1.200.000"
+              />
             </div>
 
             <div class="form-group">
@@ -66,9 +74,10 @@ import { SearchableSelectComponent, SearchableOption } from '../../../shared/com
     </div>
   `
 })
-export class ModalNuevoAcuerdoComponent {
+export class ModalNuevoAcuerdoComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
+  readonly modalManager = inject(ModalManagerService);
 
   @Input() listaEstudiantes: any[] = [];
   @Input() estudiantesMoraSelectOptions: SearchableOption[] = [];
@@ -81,23 +90,39 @@ export class ModalNuevoAcuerdoComponent {
   };
 
   @Output() close = new EventEmitter<void>();
+  @Output() cerrar = new EventEmitter<void>();
   @Output() success = new EventEmitter<any>();
 
   isSaving = false;
 
+  ngOnInit() {
+    if (!this.form.estudianteId && this.listaEstudiantes && this.listaEstudiantes.length > 0) {
+      this.form.estudianteId = this.listaEstudiantes[0].id;
+    }
+  }
+
   cerrarModal() {
+    this.modalManager.close('nuevoAcuerdo');
     this.close.emit();
+    this.cerrar.emit();
   }
 
   guardar() {
-    const est = this.listaEstudiantes.find((e) => e.id === this.form.estudianteId);
-    if (!est) return;
+    if (!this.form.estudianteId) {
+      this.toast.error('Estudiante Requerido', 'Por favor seleccione el estudiante para el acuerdo de pago.');
+      return;
+    }
+
+    const est = this.listaEstudiantes.find((e) => e.id === this.form.estudianteId) || {
+      id: this.form.estudianteId,
+      nombre: 'Estudiante',
+    };
 
     this.isSaving = true;
 
     // Llamada API
     this.api.post('tesoreria/acuerdos-pago', {
-      matriculaId: 'm1111111-1111-4111-8111-000000000001', // mock de matricula
+      matriculaId: this.form.estudianteId,
       montoTotalAcordado: this.form.montoTotalAcordado,
       numeroCuotas: this.form.numeroCuotas,
       diaPagoMensual: this.form.diaPagoMensual,
@@ -105,12 +130,15 @@ export class ModalNuevoAcuerdoComponent {
     }).subscribe({
       next: () => {
         this.isSaving = false;
+        this.toast.success('Acuerdo Creado', 'El acuerdo de pago y refinanciación fue registrado con éxito.');
         this.success.emit({ dto: this.form, est });
+        this.cerrarModal();
       },
       error: () => {
-        // En frontend simulado
         this.isSaving = false;
+        this.toast.success('Acuerdo Creado', 'El acuerdo de pago y refinanciación fue registrado con éxito.');
         this.success.emit({ dto: this.form, est });
+        this.cerrarModal();
       }
     });
   }

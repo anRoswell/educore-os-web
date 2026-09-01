@@ -20,9 +20,7 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
       <div class="showcase-side">
         <div class="brand-badge-box">
           <div class="logo-circle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-8 h-8">
-              <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
-            </svg>
+            <img src="assets/educoreos_logo_transparent.png" alt="EduCoreOS" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" />
           </div>
           <h1>EduCore<span>OS</span></h1>
         </div>
@@ -52,10 +50,8 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
       <div class="form-side">
         <div class="login-card card card-glass">
           <div class="card-header" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <div style="background: linear-gradient(135deg, #6366f1, #4338ca); color: white; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); margin-bottom: 1rem;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 28px; height: 28px;">
-                <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
-              </svg>
+            <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(67, 56, 202, 0.35)); border: 1px solid rgba(129, 140, 248, 0.3); width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); margin-bottom: 1rem; overflow: hidden; padding: 2px;">
+              <img src="assets/educoreos_logo_transparent.png" alt="EduCoreOS Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" />
             </div>
             <h3>Iniciar Sesión</h3>
             <p>Selecciona tu institución educativa y perfil para ingresar</p>

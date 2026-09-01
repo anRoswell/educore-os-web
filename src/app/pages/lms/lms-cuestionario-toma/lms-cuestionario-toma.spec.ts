@@ -11,8 +11,9 @@ describe('LmsCuestionarioTomaComponent', () => {
       imports: [LmsCuestionarioTomaComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(LmsCuestionarioTomaComponent);
+        fixture = TestBed.createComponent(LmsCuestionarioTomaComponent);
     component = fixture.componentInstance;
+    component.cuestionario = { preguntas: [] };
     await fixture.whenStable();
   });
 

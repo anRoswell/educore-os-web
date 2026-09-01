@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ModalManagerService } from '../../../core/services/modal-manager.service';
+import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.directive';
 
 @Component({
   selector: 'app-modal-nuevo-concepto',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CurrencyMaskDirective],
   template: `
     <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoConcepto')">
       <div class="modal-card card card-glass" style="max-width: 780px;">
@@ -45,10 +46,11 @@ import { ModalManagerService } from '../../../core/services/modal-manager.servic
             <div class="form-group">
               <label class="form-label">Valor Sugerido ($ COP)</label>
               <input
-                type="number"
+                type="text"
+                appCurrencyMask
                 class="form-control"
                 [(ngModel)]="form.valorSugerido"
-                min="0"
+                placeholder="$ 150.000"
               />
             </div>
 
@@ -77,6 +79,7 @@ export class ModalNuevoConceptoComponent {
   readonly modalManager = inject(ModalManagerService);
 
   @Output() close = new EventEmitter<void>();
+  @Output() cerrar = new EventEmitter<void>();
   @Output() success = new EventEmitter<any>();
 
   form = {
@@ -89,7 +92,9 @@ export class ModalNuevoConceptoComponent {
   isSaving = false;
 
   cerrarModal() {
+    this.modalManager.close('nuevoConcepto');
     this.close.emit();
+    this.cerrar.emit();
   }
 
   guardar() {
@@ -101,9 +106,10 @@ export class ModalNuevoConceptoComponent {
     this.isSaving = true;
     this.api.post<any>('tesoreria/conceptos', this.form).subscribe({
       next: (conceptoCreado) => {
-        this.toast.success('¡Concepto Creado!', `El concepto '${conceptoCreado.nombre}' ha sido registrado en PostgreSQL.`);
+        this.toast.success('¡Concepto Creado!', `El concepto '${conceptoCreado.nombre}' ha sido registrado.`);
         this.isSaving = false;
         this.success.emit(conceptoCreado);
+        this.cerrarModal();
       },
       error: (err) => {
         this.toast.error('Error', err?.error?.message || 'No se pudo crear el concepto.');

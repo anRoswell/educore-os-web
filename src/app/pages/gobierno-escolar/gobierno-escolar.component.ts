@@ -5,6 +5,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
+import { imprimirElementoHtml } from '../../core/utils/print.utils';
 
 interface CandidatoTarjeton {
   id: string;
@@ -989,7 +990,7 @@ export class GobiernoEscolarComponent {
             const mapped: CandidatoTarjeton[] = j.candidatos.map((c: any) => ({
               id: c.id,
               numeroTarjeton: c.numeroTarjeton,
-              nombre: c.nombreCompleto,
+              nombre: c.nombreCandidato || c.nombreCompleto || (c.esVotoEnBlanco ? 'VOTO EN BLANCO' : 'Candidato'),
               lema: c.lemaCampana || 'Propuesta de gobierno escolar',
               fotoUrl: c.fotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
               votos: c.totalVotos || 0,
@@ -1007,7 +1008,7 @@ export class GobiernoEscolarComponent {
                 const mapped: CandidatoTarjeton[] = escrutinio.resultados.map((r: any) => ({
                   id: r.candidatoId || r.id,
                   numeroTarjeton: r.numeroTarjeton,
-                  nombre: r.nombreCompleto,
+                  nombre: r.nombreCandidato || r.nombreCompleto || (r.esVotoEnBlanco ? 'VOTO EN BLANCO' : 'Candidato'),
                   lema: r.lemaCampana || 'Propuesta institucional',
                   fotoUrl: r.fotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
                   votos: Number(r.totalVotos) || 0,
@@ -1158,7 +1159,7 @@ export class GobiernoEscolarComponent {
   }
 
   imprimirActa() {
-    window.print();
+    imprimirElementoHtml('.print-area', `Acta Electoral - ${this.jornadaActual()?.nombre || 'Gobierno Escolar'}`);
   }
 
   // --- CRUD: INSCRIBIR CANDIDATO ---

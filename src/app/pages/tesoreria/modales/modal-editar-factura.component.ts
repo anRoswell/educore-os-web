@@ -1,31 +1,39 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ModalManagerService } from '../../../core/services/modal-manager.service';
+import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.directive';
 
 @Component({
   selector: 'app-modal-editar-factura',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CurrencyMaskDirective],
   template: `
-    <div class="modal-backdrop animate-fade-in">
-      <div class="modal-card card card-glass" style="max-width: 480px;">
+    <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('editarFactura')">
+      <div class="modal-card card card-glass" style="max-width: 520px;">
         <div class="modal-header">
-          <h3>✏️ Aplicar Descuento / Beca</h3>
+          <h3>✏️ Editar / Ajustar Valor de Factura</h3>
           <button (click)="cerrarModal()" class="close-btn">&times;</button>
         </div>
 
         <div class="modal-body">
-          <p>Estudiante: <strong>{{ factura?.estudianteNombre }}</strong></p>
+          <p>Ajuste el valor para el alumno <strong>{{ factura?.estudianteNombre }}</strong></p>
           <p>Factura: <span class="font-mono text-xs">{{ factura?.numeroFactura }}</span></p>
 
           <div class="form-group mt-3">
             <label class="form-label">Nuevo Valor a Cobrar ($ COP) *</label>
-            <input type="number" class="form-control" [(ngModel)]="factura.valorTotal" />
+            <input
+              type="text"
+              appCurrencyMask
+              class="form-control"
+              [(ngModel)]="factura.valorTotal"
+              placeholder="$ 450.000"
+            />
           </div>
         </div>
 
         <div class="modal-footer">
-          <button (click)="guardar()" class="btn btn-primary">
+          <button (click)="guardarFactura()" class="btn btn-primary">
             🔄 Actualizar Valor Factura
           </button>
           <button (click)="cerrarModal()" class="btn btn-secondary">Cancelar</button>
@@ -35,16 +43,20 @@ import { FormsModule } from '@angular/forms';
   `
 })
 export class ModalEditarFacturaComponent {
+  readonly modalManager = inject(ModalManagerService);
+
   @Input() factura: any;
 
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<any>();
 
   cerrarModal() {
+    this.modalManager.close('editarFactura');
     this.close.emit();
   }
 
-  guardar() {
+  guardarFactura() {
     this.success.emit(this.factura);
+    this.cerrarModal();
   }
 }

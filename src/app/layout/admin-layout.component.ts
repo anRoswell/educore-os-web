@@ -29,9 +29,11 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
         <!-- Logo y Marca -->
         <div class="brand-header">
           <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="w-6 h-6">
-              <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
-            </svg>
+            <img 
+              src="assets/educoreos_logo_transparent.png" 
+              alt="EduCoreOS" 
+              class="brand-logo-img" 
+            />
           </div>
           <div class="brand-text">
             <h2>EduCore<span>OS</span></h2>
@@ -95,10 +97,8 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
           @if (authService.user()?.role !== 'TESORERO') {
             <div class="nav-section-title">GESTIÓN ACADÉMICA & LMS</div>
             <a routerLink="/academico" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">📝</span>
-              <span class="nav-text">
-                {{ authService.user()?.role === 'DOCENTE' ? 'Mis Calificaciones (1290)' : 'Calificaciones (Dec. 1290)' }}
-              </span>
+              <span class="nav-icon">🎓</span>
+              <span class="nav-text">Gestión Académica (Dec. 1290)</span>
             </a>
             <a routerLink="/lms" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">📚</span>
@@ -166,6 +166,11 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
           <!-- HERRAMIENTAS & SISTEMA (Directivos: Rectoría y Coordinación) -->
           @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'COORDINADOR' || authService.user()?.role === 'SUPER_ADMIN') {
             <div class="nav-section-title">HERRAMIENTAS & GESTIÓN</div>
+            <a routerLink="/comunicaciones" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">📢</span>
+              <span class="nav-text">Comunicados Institucionales</span>
+              <span class="badge-mini" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.3);">NEW</span>
+            </a>
             <a routerLink="/documental" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">📑</span>
               <span class="nav-text">Gestión Documental & Flujos</span>
@@ -211,31 +216,6 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
           </div>
 
           <div class="topbar-right">
-            <!-- Dark Mode Toggle -->
-            <button
-              (click)="toggleDarkMode()"
-              class="dark-mode-toggle"
-              [title]="isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
-              @if (isDarkMode()) {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggle-icon">
-                  <circle cx="12" cy="12" r="5"></circle>
-                  <line x1="12" y1="1" x2="12" y2="3"></line>
-                  <line x1="12" y1="21" x2="12" y2="23"></line>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                  <line x1="1" y1="12" x2="3" y2="12"></line>
-                  <line x1="21" y1="12" x2="23" y2="12"></line>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-              } @else {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toggle-icon">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-              }
-              <span class="toggle-label">{{ isDarkMode() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
-            </button>
-
             <!-- Perfil de Usuario Activo -->
             <div class="user-profile-widget">
               <div class="user-details">
@@ -293,15 +273,25 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
     }
 
     .logo-icon {
-      background: linear-gradient(135deg, #6366f1, #4338ca);
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(67, 56, 202, 0.35));
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+      overflow: hidden;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 9px;
     }
 
     .brand-text h2 {
@@ -325,51 +315,64 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
 
     /* Tenant Selector */
     .tenant-selector-box {
-      padding: 1rem 1.25rem;
-      background-color: rgba(15, 23, 42, 0.6);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 1.125rem 1rem;
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
     }
 
     .tenant-label {
-      font-size: 0.65rem;
+      font-size: 0.725rem;
       font-weight: 700;
-      color: #64748b;
+      color: #94a3b8;
       letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
+      text-transform: uppercase;
       display: block;
     }
 
     .btn-link-crear-colegio {
-      background: none;
-      border: none;
-      color: #818cf8;
-      font-size: 0.68rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(129, 140, 248, 0.35);
+      color: #a5b4fc;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
-      padding: 0;
-      &:hover { color: #a5b4fc; text-decoration: underline; }
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      &:hover {
+        background: rgba(99, 102, 241, 0.3);
+        color: #ffffff;
+        border-color: #818cf8;
+      }
     }
 
     .tenant-card {
       display: flex;
       align-items: center;
-      gap: 0.625rem;
-      margin-bottom: 0.5rem;
+      gap: 0.75rem;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .tenant-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
       background: linear-gradient(135deg, #10b981, #059669);
       color: white;
-      font-size: 0.75rem;
+      font-size: 0.95rem;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
     .tenant-logo-img {
@@ -382,32 +385,62 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      gap: 0.1rem;
     }
 
     .tenant-name {
-      font-size: 0.825rem;
-      font-weight: 600;
-      color: #e2e8f0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #f8fafc;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.25;
     }
 
     .tenant-sub {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #94a3b8;
+      font-weight: 500;
     }
 
     .tenant-select-dropdown {
       width: 100%;
-      background-color: #1e293b;
-      color: #cbd5e1;
-      border: 1px solid #334155;
-      padding: 0.35rem 0.5rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
+      height: 42px;
+      background-color: #0f172a;
+      color: #f1f5f9;
+      border: 1.5px solid #334155;
+      padding: 0.55rem 2.25rem 0.55rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
       outline: none;
       cursor: pointer;
+      transition: all 0.2s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      background-size: 16px;
+
+      &:hover {
+        border-color: #6366f1;
+        background-color: #1e293b;
+      }
+
+      &:focus {
+        border-color: #818cf8;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        background-color: #1e293b;
+      }
+
+      option {
+        background-color: #0f172a;
+        color: #f8fafc;
+        padding: 0.5rem;
+      }
     }
 
     /* Menu Links */
@@ -577,49 +610,7 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
       gap: 0.75rem;
     }
 
-    /* Dark Mode Toggle */
-    .dark-mode-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.875rem;
-      background-color: #f1f5f9;
-      color: #475569;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 150ms ease;
-      margin-right: 1rem;
-    }
 
-    .dark-mode-toggle:hover {
-      background-color: #e2e8f0;
-      color: #0f172a;
-      border-color: #cbd5e1;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .toggle-icon {
-      width: 18px;
-      height: 18px;
-      display: inline-block;
-    }
-
-    .toggle-label {
-      font-size: 0.8rem;
-    }
-
-    @media (max-width: 768px) {
-      .toggle-label {
-        display: none;
-      }
-
-      .dark-mode-toggle {
-        padding: 0.5rem;
-      }
-    }
 
     .btn-logout {
       display: inline-flex;
@@ -684,42 +675,19 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
 export class AdminLayoutComponent {
   readonly authService = inject(AuthService);
   readonly modalNuevoColegio = signal<boolean>(false);
-  readonly isDarkMode = signal<boolean>(false);
 
   constructor() {
-    // Cargar preferencia de dark mode al iniciar
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      this.isDarkMode.set(true);
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else if (!savedTheme) {
-      // Si no hay preferencia guardada, detectar preferencia del sistema
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      this.isDarkMode.set(prefersDark);
-      if (prefersDark) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
-    }
+    // Forzando SIEMPRE modo claro y limpiando caché de temas anteriores
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'light');
   }
 
   onColegioChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const selected = this.authService.colegiosDisponibles().find((c) => c.id === select.value);
+    const selectElement = event.target as HTMLSelectElement;
+    const selected = this.authService.colegiosDisponibles().find((c) => c.id === selectElement.value);
+    
     if (selected) {
       this.authService.setColegio(selected);
-    }
-  }
-
-  toggleDarkMode() {
-    const newMode = !this.isDarkMode();
-    this.isDarkMode.set(newMode);
-
-    if (newMode) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-      localStorage.setItem('theme', 'light');
     }
   }
 }

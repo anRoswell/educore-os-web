@@ -7,7 +7,7 @@ import { AcuerdoPagoItem, EstadoAcuerdo } from '../models/tesoreria.models';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="tab-body animate-fade-in">
+    <div class="animate-fade-in">
       <div class="card-title-bar mb-4">
         <div>
           <h3>🤝 Acuerdos de Pago & Financiación de Cartera</h3>

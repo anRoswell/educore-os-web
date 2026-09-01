@@ -86,6 +86,10 @@ export const routes: Routes = [
         component: HabeasDataComponent,
       },
       {
+        path: 'comunicaciones',
+        loadComponent: () => import('./pages/comunicaciones/comunicaciones.component').then(m => m.ComunicacionesComponent),
+      },
+      {
         path: 'documental',
         component: DocumentalComponent,
       },

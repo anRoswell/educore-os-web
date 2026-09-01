@@ -58,13 +58,14 @@ describe('DocumentalComponent (Flujos BPM & Vault de Firmas Frontend)', () => {
       if (url.includes('flujos')) return of(mockFlujos);
       if (url.includes('instancias')) return of(mockInstancias);
       if (url.includes('firmas-usuario')) return of([]);
-      return of({});
+      return of([]);
     }),
     post: vi.fn().mockReturnValue(of({ success: true, mensaje: 'OK' })),
   };
 
   const mockAuthService = {
     user: () => ({ id: 'user-1', nombres: 'Admin', email: 'admin@educore.io' }),
+    colegio: () => ({ id: 'col-1', nombre: 'Test', logoUrl: '' }),
   };
 
   beforeEach(async () => {

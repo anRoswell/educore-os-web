@@ -53,12 +53,20 @@ export const COLEGIOS_DEMO: Colegio[] = [
   },
 ];
 
+export const TOKENS_BY_ROLE: Record<string, string> = {
+  RECTOR: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InJlY3RvcmlhQHNhbmJhcnRvbG9tZS5lZHUuY28iLCJyb2xlIjoiUkVDVE9SIiwicm9sZXMiOlsiUkVDVE9SIiwiU1VQRVJfQURNSU4iXSwicGVybWlzc2lvbnMiOlsiKiJdLCJjb2xlZ2lvSWQiOiIxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJpYXQiOjE3NzIzOTAwMDAsImV4cCI6MTk5OTk5OTk5OX0.Xrwb9ON-U9pdmv2LL3eh0EAHUusgXqMoA7wtImPgnbs',
+  DOCENTE: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDMiLCJlbWFpbCI6ImRpYW5hLmdvbWV6QHNhbmJhcnRvbG9tZS5lZHUuY28iLCJyb2xlIjoiRE9DRU5URSIsInJvbGVzIjpbIkRPQ0VOVEUiLCJTVVBFUl9BRE1JTiJdLCJwZXJtaXNzaW9ucyI6WyIqIl0sImNvbGVnaW9JZCI6IjExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImlhdCI6MTc3MjM5MDAwMCwiZXhwIjoxOTk5OTk5OTk5fQ.NOptpIEF6LFJEeY9M27LDneX223gwLfxqRwQ4P31BQ0',
+  TESORERO: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDQiLCJlbWFpbCI6InRlc29yZXJpYUBzYW5iYXJ0b2xvbWUuZWR1LmNvIiwicm9sZSI6IlRFU09SRVJPIiwicm9sZXMiOlsiVEVTT1JFUk8iLCJTVVBFUl9BRE1JTiJdLCJwZXJtaXNzaW9ucyI6WyIqIl0sImNvbGVnaW9JZCI6IjExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImlhdCI6MTc3MjM5MDAwMCwiZXhwIjoxOTk5OTk5OTk5fQ.5mU3AyPxvnefxPhWW51nLrBNA2_LMa_w8Pz5bygRJYA',
+  COORDINADOR: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDIiLCJlbWFpbCI6ImNvb3JkaW5hY2lvbkBzYW5iYXJ0b2xvbWUuZWR1LmNvIiwicm9sZSI6IkNPT1JESU5BRE9SIiwicm9sZXMiOlsiQ09PUkRJTkFET1IiLCJTVVBFUl9BRE1JTiJdLCJwZXJtaXNzaW9ucyI6WyIqIl0sImNvbGVnaW9JZCI6IjExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImlhdCI6MTc3MjM5MDAwMCwiZXhwIjoxOTk5OTk5OTk5fQ.VraPpeoWMiqbn84wr0mQr9NZoy5UvknAQnIfSIHlxhE',
+  ESTUDIANTE: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6Im1hcmlhbmFAZWR1Y29yZW9zLmNvbSIsInJvbGUiOiJFU1RVRElBTlRFIiwicm9sZXMiOlsiRVNUVURJQU5URSIsIlNVUEVSX0FETUlOIl0sInBlcm1pc3Npb25zIjpbIioiXSwiY29sZWdpb0lkIjoiMTExMTExMTEtMjIyMi0zMzMzLTQ0NDQtNTU1NTU1NTU1NTU1IiwiaWF0IjoxNzcyMzkwMDAwLCJleHAiOjE5OTk5OTk5OTl9.Lr1MWbGgqI7qK9LhuJ6c9KtOFn8Jdj9IEWf-UazXuGc',
+};
+
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   readonly user = signal<User | null>({
-    id: 'usr-rector-001',
+    id: '71111111-1111-4111-8111-000000000001',
     email: 'rectoria@sanbartolome.edu.co',
     primerNombre: 'Carlos',
     primerApellido: 'Mendoza',
@@ -69,7 +77,7 @@ export class AuthService {
   readonly currentUser = computed(() => this.user());
   readonly colegiosDisponibles = signal<Colegio[]>([]);
   readonly colegio = signal<Colegio>(COLEGIOS_DEMO[0]);
-  readonly token = signal<string | null>('demo-jwt-token-educoreos-2026');
+  readonly token = signal<string | null>(TOKENS_BY_ROLE['RECTOR']);
 
   readonly isAuthenticated = computed(() => !!this.user() && !!this.token());
 
@@ -207,8 +215,16 @@ export class AuthService {
       email = `felipe.garcia@estudiantes.${col.slug}.edu.co`;
     }
 
+    const userUuidMap: Record<string, string> = {
+      RECTOR: '71111111-1111-4111-8111-000000000001',
+      DOCENTE: '71111111-1111-4111-8111-000000000003',
+      TESORERO: '71111111-1111-4111-8111-000000000004',
+      COORDINADOR: '71111111-1111-4111-8111-000000000002',
+      ESTUDIANTE: '11111111-1111-4111-8111-000000000001',
+    };
+
     this.user.set({
-      id: `usr-${role.toLowerCase()}-01`,
+      id: userUuidMap[role] || '71111111-1111-4111-8111-000000000001',
       email,
       primerNombre: nombre,
       primerApellido: apellido,
@@ -216,7 +232,7 @@ export class AuthService {
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     });
 
-    this.token.set('demo-jwt-token-educoreos-2026');
+    this.token.set(TOKENS_BY_ROLE[role] || TOKENS_BY_ROLE['RECTOR']);
     this.router.navigate(['/dashboard']);
   }
 

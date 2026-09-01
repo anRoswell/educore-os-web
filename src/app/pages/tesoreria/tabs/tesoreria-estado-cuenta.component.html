@@ -1,4 +1,4 @@
-        <div class="tab-body animate-fade-in">
+        <div class="animate-fade-in">
           <!-- Selector / Buscador de Alumno -->
           <div class="student-search-header">
             <div>
@@ -6,12 +6,16 @@
               <p>Auditoría financiera integral, cronograma de pensiones, otros cobros, acuerdos de pago y emisión de certificados</p>
             </div>
             <div class="student-picker-group">
-              <label class="form-label" style="margin: 0; font-size: 0.8rem;">Estudiante:</label>
-              <select class="form-select select-sm" [ngModel]="estudianteSeleccionado.id" (ngModelChange)="cambiarEstudiante.emit($event)">
-                @for (est of listaEstudiantes; track est.id) {
-                  <option [value]="est.id">{{ est.nombre }} — {{ est.grado }} (Doc: {{ est.documento }})</option>
-                }
-              </select>
+              <label class="form-label" style="margin: 0; font-size: 0.85rem; font-weight: 700; color: #1e293b;">
+                👤 Buscar Estudiante (Nombre, Grado o Doc):
+              </label>
+              <app-searchable-select
+                [options]="opcionesEstudiantes"
+                [ngModel]="estudianteSeleccionado?.id"
+                (ngModelChange)="cambiarEstudiante.emit($event)"
+                placeholder="🔍 Escriba para buscar estudiante por nombre, grado o cédula/TI..."
+                searchPlaceholder="Filtrar por nombre, grado o cédula/TI..."
+              ></app-searchable-select>
             </div>
           </div>
 
@@ -23,10 +27,24 @@
                 {{ estudianteSeleccionado.nombre.substring(0, 2).toUpperCase() }}
               </div>
               <div class="student-details-main">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                   <h2>{{ estudianteSeleccionado.nombre }}</h2>
                   @if (becaActual.porcentaje > 0) {
-                    <span class="badge badge-info" style="font-size: 0.75rem;">🎓 Beca {{ becaActual.porcentaje }}% ({{ becaActual.nombre }})</span>
+                    <div style="display: inline-flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                      <span class="badge badge-info" style="font-size: 0.75rem;">
+                        🎓 {{ becaActual.nombre || ('Beca ' + becaActual.porcentaje + '%') }} ({{ becaActual.porcentaje }}%)
+                      </span>
+                      @if (becaActual.numeroResolucion) {
+                        <span class="badge" style="font-size: 0.7rem; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;" title="Resolución Rectoral / Acta de Consejo">
+                          📜 {{ becaActual.numeroResolucion }}
+                        </span>
+                      }
+                      @if (becaActual.archivoSoporteUrl) {
+                        <a [href]="becaActual.archivoSoporteUrl" target="_blank" class="badge" style="font-size: 0.7rem; background: #e0e7ff; color: #3730a3; text-decoration: none; border: 1px solid #c7d2fe;" title="Ver o Descargar Soporte PDF">
+                          📎 Soporte PDF
+                        </a>
+                      }
+                    </div>
                   }
                 </div>
                 <div class="student-tags mt-1">
@@ -41,19 +59,30 @@
                   <div class="status-box-pazsalvo al-dia">
                     <span class="icon">🟢</span>
                     <div>
-                      <strong>ESTADO: A PAZ Y SALVO</strong>
-                      <p>Cartera al día (\$0 COP pendientes)</p>
+                      <strong>ESTADO: A PAZ Y SALVO TOTAL</strong>
+                      <p>Año 2026 100% cancelado (\$0 COP pendientes)</p>
                     </div>
                   </div>
                   <button (click)="abrirModalPazSalvoCompleto.emit()" class="btn btn-success mt-2 w-full">
-                    📄 Ver Paz y Salvo Oficial (PDF)
+                    📄 Ver Paz y Salvo Anual (PDF)
+                  </button>
+                } @else if (estadoCuentaEstudiante.cuotasEnMora === 0) {
+                  <div class="status-box-pazsalvo al-dia" style="background: #ecfdf5; border: 1px solid #a7f3d0;">
+                    <span class="icon">🟢</span>
+                    <div>
+                      <strong>ESTADO: AL DÍA A LA FECHA</strong>
+                      <p>Sin cuotas vencidas (Resta año: \${{ estadoCuentaEstudiante.saldoPendienteTotal | number }} COP)</p>
+                    </div>
+                  </div>
+                  <button (click)="abrirModalPazSalvoCompleto.emit()" class="btn btn-success mt-2 w-full">
+                    📄 Paz y Salvo a la Fecha (PDF)
                   </button>
                 } @else {
                   <div class="status-box-pazsalvo en-mora">
                     <span class="icon">🔴</span>
                     <div>
-                      <strong>ESTADO: EN MORA</strong>
-                      <p>Saldo pendiente: \${{ estadoCuentaEstudiante.saldoPendienteTotal | number }} COP</p>
+                      <strong>ESTADO: EN MORA ({{ estadoCuentaEstudiante.cuotasEnMora }} {{ estadoCuentaEstudiante.cuotasEnMora === 1 ? 'mes' : 'meses' }})</strong>
+                      <p>Deuda vencida exigible: \${{ (estadoCuentaEstudiante.saldoEnMoraTotal || estadoCuentaEstudiante.saldoPendienteTotal) | number }} COP</p>
                     </div>
                   </div>
                   <button (click)="abrirModalAcuerdoDesde360.emit()" class="btn btn-warning mt-2 w-full">
@@ -114,6 +143,32 @@
               </div>
             </div>
 
+            <!-- Banner de Saldo a Favor / Anticipos Activos -->
+            @if (totalSaldoAFavor > 0) {
+              <div class="banner-saldo-favor mt-3" style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="font-size: 1.4rem;">💰</span>
+                  <div>
+                    <strong style="color: #1e40af; font-size: 0.95rem; display: block;">
+                      Saldo a Favor Disponible: \${{ totalSaldoAFavor | number }} COP
+                    </strong>
+                    <span style="font-size: 0.76rem; color: #3b82f6;">
+                      Registrado como Anticipo de Clientes (Pasivo Contable NIIF 2805). Listo para ser imputado a mensualidades pendientes.
+                    </span>
+                  </div>
+                </div>
+                @if (planMensualEstudiante && planMensualEstudiante.length > 0) {
+                  @for (m of planMensualEstudiante; track m.mes) {
+                    @if (m.excedente && m.excedente > 0 && getSiguienteMesPendiente(m); as sig) {
+                      <button (click)="cruzarSaldoAFavor.emit({ mesOrigen: m, mesDestino: sig })" class="btn btn-primary btn-sm" style="font-size: 0.8rem; font-weight: 700;">
+                        🔁 Cruzar \${{ m.excedente | number }} a {{ sig.mes }}
+                      </button>
+                    }
+                  }
+                }
+              </div>
+            }
+
             <!-- 1. Línea de Tiempo de Pensiones del Año (Febrero a Noviembre) -->
             <div class="flex-between mt-5">
               <h4 style="margin: 0;">📅 Cronograma de Pensiones Mensuales (Año Lectivo 2026):</h4>
@@ -121,18 +176,74 @@
             </div>
             <div class="tuition-timeline-grid mt-2">
               @for (mes of planMensualEstudiante; track mes.mes) {
-                <div class="month-tuition-card" [class.paid]="mes.estado === 'PAGADO'" [class.due]="mes.estado === EstadoCuenta.POR_VENCER" [class.late]="mes.estado === EstadoCuenta.EN_MORA">
+                <div class="month-tuition-card" [class.paid]="mes.estado === 'PAGADO'" [class.partial]="mes.estado === 'PAGADO_PARCIAL'" [class.due]="mes.estado === EstadoCuenta.POR_VENCER" [class.late]="mes.estado === EstadoCuenta.EN_MORA">
                   <div class="month-header">
                     <span class="month-name">{{ mes.mes }}</span>
-                    <span class="badge badge-status" [class.badge-success]="mes.estado === 'PAGADO'" [class.badge-warning]="mes.estado === EstadoCuenta.POR_VENCER" [class.badge-danger]="mes.estado === EstadoCuenta.EN_MORA">
-                      {{ mes.estado === EstadoCuenta.POR_VENCER ? 'Por Vencer' : (mes.estado === EstadoCuenta.EN_MORA ? 'En Mora' : 'Pagado') }}
-                    </span>
+                    @if (mes.estado === 'PAGADO') {
+                      <span class="badge badge-status badge-success">✓ Pagado</span>
+                    } @else if (mes.estado === 'PAGADO_PARCIAL') {
+                      <span class="badge badge-status badge-warning" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">🟡 Abono Parcial</span>
+                    } @else if (mes.estado === EstadoCuenta.EN_MORA) {
+                      <span class="badge badge-status badge-danger">En Mora</span>
+                    } @else {
+                      <span class="badge badge-status badge-warning">Por Vencer</span>
+                    }
                   </div>
                   <div class="month-body">
-                    <span class="tuition-value">\${{ mes.valor | number }} COP</span>
+                    @if (mes.estado === 'PAGADO_PARCIAL') {
+                      <span class="tuition-value" style="color: #d97706; font-size: 0.95rem;">Resta: \${{ mes.saldoPendiente | number }} COP</span>
+                      <span class="text-xs" style="color: #059669; font-weight: 600; display: block;">✓ Total Abonado: \${{ mes.valorPagado | number }} COP</span>
+                    } @else {
+                      <span class="tuition-value">\${{ mes.valor | number }} COP</span>
+                    }
                     <span class="tuition-date text-xs text-slate-500">Vence: {{ mes.vencimiento }}</span>
-                    @if (mes.recibo) {
+                    
+                    <!-- Desglose de Recibos / Abonos del Mes -->
+                    @if (mes.pagos && mes.pagos.length > 1) {
+                      <div class="tuition-recibos-list mt-2" style="font-size: 0.72rem; border-top: 1px dashed #cbd5e1; padding-top: 0.35rem;">
+                        <span style="font-weight: 700; color: #475569; display: block; margin-bottom: 0.2rem;">
+                          🧾 {{ mes.pagos.length }} Abonos / Pagos:
+                        </span>
+                        @for (p of mes.pagos; track p.id) {
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; background: #f8fafc; padding: 0.15rem 0.3rem; border-radius: 4px; border: 1px solid #e2e8f0;">
+                            <span class="font-mono text-xs" style="color: #4f46e5; font-weight: 700;">{{ p.numeroRecibo }}</span>
+                            <span style="font-weight: 700; color: #059669;">\${{ p.valorPagado | number }}</span>
+                            <button (click)="imprimirReciboIndividual.emit(p)" class="btn btn-secondary btn-xs" style="padding: 0.05rem 0.3rem; font-size: 0.65rem;" title="Ver Recibo Oficial">
+                              🧾
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    } @else if (mes.pagos && mes.pagos.length === 1) {
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; background: #f8fafc; padding: 0.15rem 0.3rem; border-radius: 4px; border: 1px solid #e2e8f0;">
+                        <span class="tuition-recibo font-mono text-xs" style="color: #4f46e5; font-weight: 700;">🧾 {{ mes.pagos[0].numeroRecibo }}</span>
+                        <button (click)="imprimirReciboIndividual.emit(mes.pagos[0])" class="btn btn-secondary btn-xs" style="padding: 0.05rem 0.3rem; font-size: 0.65rem;" title="Ver Recibo Oficial">
+                          🧾 Ver
+                        </button>
+                      </div>
+                    } @else if (mes.recibo) {
                       <span class="tuition-recibo font-mono text-xs">🧾 {{ mes.recibo }}</span>
+                    }
+
+                    <!-- Saldo a Favor / Anticipo NIIF 2805 con Botón de Cruce -->
+                    @if (mes.excedente && mes.excedente > 0) {
+                      <div class="excedente-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 2px;">
+                          <span style="font-size: 0.68rem; font-weight: 700; color: #1e40af;">🔵 Saldo Favor:</span>
+                          <span style="font-size: 0.72rem; font-weight: 800; color: #1e3a8a;">+\${{ mes.excedente | number }}</span>
+                        </div>
+                        <span style="font-size: 0.62rem; color: #3b82f6; display: block;">Anticipo NIIF 2805</span>
+
+                        @if (getSiguienteMesPendiente(mes); as sig) {
+                          <button 
+                            (click)="cruzarSaldoAFavor.emit({ mesOrigen: mes, mesDestino: sig })" 
+                            class="btn btn-primary btn-xs w-full mt-1" 
+                            style="padding: 2px 4px; font-size: 0.65rem; font-weight: 700; background: #2563eb; color: #ffffff;"
+                            title="Abonar estos ${{ mes.excedente | number }} a la cuota de {{ sig.mes }}">
+                            🔁 Aplicar a {{ sig.mes }}
+                          </button>
+                        }
+                      </div>
                     }
                   </div>
                   <div class="month-footer">
@@ -142,8 +253,8 @@
                           💳 Pagar PSE
                         </button>
                         <div class="secondary-actions-row">
-                          <button (click)="abrirModalPagoDirectoMes.emit(mes)" class="btn btn-success btn-xs" style="flex: 1;" title="Registrar Pago en Caja Ventanilla">
-                            💵 Caja
+                          <button (click)="abrirModalPagoDirectoMes.emit(mes)" class="btn btn-success btn-xs" style="flex: 1;" title="Registrar Pago o Abono en Caja">
+                            💵 {{ mes.estado === 'PAGADO_PARCIAL' ? 'Abonar' : 'Caja' }}
                           </button>
                           <button (click)="abrirModalEditarMes.emit(mes)" class="btn btn-secondary btn-xs" title="Editar Valor o Descuento">
                             ✏️
@@ -292,28 +403,40 @@
                   <th>Medio de Pago</th>
                   <th>Referencia</th>
                   <th>Valor Pagado</th>
-                  <th>Acción</th>
+                  <th>Estado Fiscal</th>
+                  <th style="text-align: right;">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 @for (pago of pagosEstudiante; track pago.id) {
-                  <tr>
-                    <td><strong class="font-mono">{{ pago.numeroRecibo }}</strong></td>
-                    <td>{{ pago.fechaPago }}</td>
-                    <td>{{ pago.conceptoNombre }}</td>
+                  <tr [class.opacity-60]="pago.estado === EstadoPago.ANULADO">
+                    <td><strong class="font-mono text-xs">{{ pago.numeroRecibo }}</strong></td>
+                    <td><span class="text-xs">{{ pago.fechaPago }}</span></td>
+                    <td><strong>{{ pago.conceptoNombre }}</strong></td>
                     <td><span class="badge badge-info">{{ pago.medioPago }}</span></td>
-                    <td><code class="text-xs">{{ pago.referenciaTransaccion }}</code></td>
-                    <td><strong>\${{ pago.valorPagado | number }} COP</strong></td>
+                    <td><code class="text-xs font-mono">{{ pago.referenciaTransaccion }}</code></td>
                     <td>
-                      <button (click)="imprimirReciboIndividual.emit(pago)" class="btn btn-secondary btn-sm" title="Imprimir Recibo Oficial">
-                        🖨️ Imprimir
+                      <strong [style.text-decoration]="pago.estado === EstadoPago.ANULADO ? 'line-through' : 'none'">
+                        \${{ pago.valorPagado | number }} COP
+                      </strong>
+                    </td>
+                    <td>
+                      @if (pago.estado === EstadoPago.ANULADO) {
+                        <span class="badge badge-danger" title="Recibo anulado">🚫 Anulado</span>
+                      } @else {
+                        <span class="badge badge-success">✓ Aprobado</span>
+                      }
+                    </td>
+                    <td style="text-align: right;">
+                      <button (click)="imprimirReciboIndividual.emit(pago)" class="btn btn-secondary btn-xs" title="Visualizar e Imprimir Recibo Oficial">
+                        🧾 Ver Recibo
                       </button>
                     </td>
                   </tr>
                 }
                 @if (pagosEstudiante.length === 0) {
                   <tr>
-                    <td colspan="7" class="text-center text-slate-500 p-3">
+                    <td colspan="8" class="text-center text-slate-500 p-3">
                       No se han registrado recaudos recientes para este alumno.
                     </td>
                   </tr>

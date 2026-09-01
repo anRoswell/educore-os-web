@@ -139,6 +139,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
 
       <!-- Barra de Acciones Rápidas con Subtítulos Explicativos -->
       <div class="action-buttons-bar mb-4">
+        <button (click)="abrirModalNuevoAnio()" class="action-card-btn" title="Paso 0: Aperturar o Cambiar Año Lectivo (Vigencia Escolar)">
+          <span class="ac-icon">🗓️</span>
+          <div class="ac-text">
+            <span class="ac-title">0. Año Lectivo</span>
+            <span class="ac-hint">Apertura y Cambio</span>
+          </div>
+        </button>
+
         <button (click)="abrirModalNuevoNivel()" class="action-card-btn" title="Paso 1: Crear Nivel Educativo (Preescolar, Primaria, Secundaria, Media)">
           <span class="ac-icon">🎓</span>
           <div class="ac-text">
@@ -378,6 +386,126 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           </table>
         }
       </div>
+
+      <!-- ========================================== -->
+      <!-- MODAL 0: APERTURAR / GESTIONAR AÑO LECTIVO -->
+      <!-- ========================================== -->
+      @if (modalNuevoAnio()) {
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoAnio')">
+          <div class="modal-card card card-glass" style="max-width: 560px;">
+            <div class="modal-header">
+              <div>
+                <h3>🗓️ Apertura y Cambio de Año Lectivo</h3>
+                <span class="modal-subtitle">Configuración del calendario escolar y vigencia académica</span>
+              </div>
+              <button (click)="cerrarModalNuevoAnio()" class="close-btn">&times;</button>
+            </div>
+
+            <!-- Banner de Ayuda Contextual -->
+            <div class="modal-help-banner">
+              <span class="help-icon">💡</span>
+              <p><strong>¿Cómo funciona?</strong> Define el año calendario (ej: <code>2027</code>), su nombre institucional y sus fechas de inicio y culminación. Si marcas <em>Año Actual</em>, todos los módulos de matrículas, calificaciones y horarios se sincronizarán con esta vigencia.</p>
+            </div>
+
+            <div class="modal-body">
+              <div class="grid-cols-2" style="grid-template-columns: 1fr 2fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Año (Número) *</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [ngModel]="nuevoAnio.anio"
+                    (ngModelChange)="onAnioNumeroChange($event)"
+                    min="1980"
+                    max="2050"
+                    placeholder="Ej: 2023, 2024, 2025, 2026"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nombre del Año Lectivo *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoAnio.nombre"
+                    placeholder="Ej: Año Académico 2024"
+                  />
+                </div>
+              </div>
+
+              <div class="grid-cols-3 mt-3" style="grid-template-columns: 1fr 1fr 1.2fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label">Fecha de Inicio *</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    [(ngModel)]="nuevoAnio.fechaInicio"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fecha de Cierre *</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    [(ngModel)]="nuevoAnio.fechaFin"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Estado de la Vigencia *</label>
+                  <select class="form-select" [(ngModel)]="nuevoAnio.estado">
+                    <option value="EN_CURSO">En Curso (Activo)</option>
+                    <option value="CERRADO">Cerrado (Histórico)</option>
+                    <option value="PLANIFICACION">Planificación (Futuro)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="flex items-center gap-2 cursor-pointer p-3 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                  <input type="checkbox" [(ngModel)]="nuevoAnio.esActual" class="rounded text-indigo-600 focus:ring-indigo-500" />
+                  <span class="text-sm font-medium text-indigo-950">🌟 Establecer como Año Lectivo Activo en Curso</span>
+                </label>
+              </div>
+
+              @if (aniosLectivosList().length > 0) {
+                <div class="mt-4 pt-3 border-t border-slate-200">
+                  <h5 class="text-xs font-bold text-slate-600 uppercase mb-2">Años Lectivos Registrados (Históricos & Actuales):</h5>
+                  <div class="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+                    @for (item of aniosLectivosList(); track item.id) {
+                      <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-slate-800">{{ item.nombre }} ({{ item.anio }})</span>
+                          <span 
+                            class="badge text-[10px] py-0.5 px-1.5 font-bold rounded"
+                            [style.background]="item.estado === 'EN_CURSO' ? '#dcfce7' : (item.estado === 'CERRADO' ? '#f1f5f9' : '#e0e7ff')"
+                            [style.color]="item.estado === 'EN_CURSO' ? '#15803d' : (item.estado === 'CERRADO' ? '#475569' : '#4338ca')"
+                          >
+                            {{ item.estado === 'CERRADO' ? 'HISTÓRICO / CERRADO' : item.estado }}
+                          </span>
+                          @if (item.esActual) {
+                            <span class="badge badge-success text-[10px] py-0.5 px-1.5" style="background:#10b981; color:white; border-radius:4px; font-weight:bold;">ACTUAL</span>
+                          }
+                        </div>
+                        @if (!item.esActual) {
+                          <button (click)="cambiarAnioActivo(item.id)" class="btn btn-xs btn-outline py-0.5 px-2 text-xs">
+                            Activar
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="modal-footer">
+              <button (click)="guardarAnioLectivo()" class="btn btn-primary">
+                💾 Aperturar Año Lectivo
+              </button>
+              <button (click)="cerrarModalNuevoAnio()" class="btn btn-secondary">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      }
 
       <!-- ========================================== -->
       <!-- MODAL 1: CREAR NIVEL EDUCATIVO (MEN)       -->
@@ -956,6 +1084,55 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           </div>
         </div>
       }
+
+      <!-- ========================================== -->
+      <!-- MODAL: CIERRE DE AÑO SIEE (PROMOCIÓN)      -->
+      <!-- ========================================== -->
+      @if (modalCierreAno()) {
+        <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('cierreAno')">
+          <div class="modal-card card card-glass" style="max-width: 560px;">
+            <div class="modal-header">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.6rem;">🚨</span>
+                <div>
+                  <h3 style="margin: 0; color: #dc2626;">Cierre de Año Escolar & Promoción SIEE</h3>
+                  <span class="modal-subtitle">Evaluación masiva según Decreto 1290 de 2009</span>
+                </div>
+              </div>
+              <button (click)="cerrarModalCierreAno()" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="alert alert-danger" style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <strong style="color: #991b1b;">⚠️ Advertencia de Seguridad Académica:</strong>
+                <p style="color: #7f1d1d; font-size: 0.88rem; margin: 0.5rem 0 0 0; line-height: 1.45;">
+                  Este proceso ejecutará el algoritmo de Promoción Institucional para <strong>TODOS</strong> los estudiantes matriculados en el año lectivo. Se consolidarán las calificaciones definitivas, se determinará la aprobación o reprobación y se generará el <strong>Acta Oficial de Promoción</strong>.
+                </p>
+              </div>
+
+              <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.25rem;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                  <input type="checkbox" [(ngModel)]="confirmarCierreAnoCheckbox" style="margin-top: 3px; width: 18px; height: 18px; cursor: pointer;" />
+                  <span style="font-size: 0.88rem; color: #1e293b; font-weight: 500; line-height: 1.4;">
+                    Confirmo irrevocablemente que todas las notas y juicios valorativos de todos los periodos académicos han sido cargados y validados en el sistema.
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button (click)="cerrarModalCierreAno()" class="btn btn-secondary" [disabled]="isEjecutandoCierre()">Cancelar</button>
+              <button (click)="procesarCierreAno()" class="btn btn-danger" [disabled]="!confirmarCierreAnoCheckbox || isEjecutandoCierre()">
+                @if (isEjecutandoCierre()) {
+                  <span>⏳ Calculando...</span>
+                } @else {
+                  <span>🚀 Ejecutar Cierre y Generar Acta</span>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -1368,6 +1545,7 @@ export class AcademicoComponent implements OnInit {
   // Estados de interfaz y Modales
   readonly isSaving = signal(false);
   readonly isLoadingPlanilla = signal(false);
+  readonly modalNuevoAnio = signal(false);
   readonly modalNuevoPeriodo = signal(false);
   readonly modalNuevoNivel = signal(false);
   readonly modalNuevaArea = signal(false);
@@ -1376,6 +1554,18 @@ export class AcademicoComponent implements OnInit {
   readonly modalNuevaAsignatura = signal(false);
   readonly modalNuevaActividad = signal(false);
   readonly modalReglasSiee = signal(false);
+  readonly modalCierreAno = signal(false);
+  confirmarCierreAnoCheckbox = false;
+  readonly isEjecutandoCierre = signal(false);
+
+  nuevoAnio = {
+    anio: new Date().getFullYear(),
+    nombre: `Año Académico ${new Date().getFullYear()}`,
+    fechaInicio: `${new Date().getFullYear()}-01-15`,
+    fechaFin: `${new Date().getFullYear()}-11-30`,
+    estado: 'EN_CURSO',
+    esActual: true,
+  };
 
   // Formularios DTOs
   reglaSiee = {
@@ -1613,6 +1803,72 @@ export class AcademicoComponent implements OnInit {
     }
   }
 
+  // --- CRUD: CREAR Y GESTIONAR AÑO LECTIVO ---
+  abrirModalNuevoAnio() {
+    this.nuevoAnio = {
+      anio: new Date().getFullYear(),
+      nombre: `Año Académico ${new Date().getFullYear()}`,
+      fechaInicio: `${new Date().getFullYear()}-01-15`,
+      fechaFin: `${new Date().getFullYear()}-11-30`,
+      estado: 'EN_CURSO',
+      esActual: true,
+    };
+    this.modalManager.open('nuevoAnio');
+    this.modalNuevoAnio.set(true);
+  }
+
+  onAnioNumeroChange(valor: number) {
+    this.nuevoAnio.anio = valor;
+    this.nuevoAnio.nombre = `Año Académico ${valor}`;
+    this.nuevoAnio.fechaInicio = `${valor}-01-15`;
+    this.nuevoAnio.fechaFin = `${valor}-11-30`;
+    const actual = new Date().getFullYear();
+    if (valor < actual) {
+      this.nuevoAnio.estado = 'CERRADO';
+      this.nuevoAnio.esActual = false;
+    } else if (valor === actual) {
+      this.nuevoAnio.estado = 'EN_CURSO';
+      this.nuevoAnio.esActual = true;
+    } else {
+      this.nuevoAnio.estado = 'PLANIFICACION';
+      this.nuevoAnio.esActual = false;
+    }
+  }
+
+  cerrarModalNuevoAnio() {
+    this.modalManager.close('nuevoAnio');
+    this.modalNuevoAnio.set(false);
+  }
+
+  guardarAnioLectivo() {
+    if (!this.nuevoAnio.anio || !this.nuevoAnio.nombre) {
+      this.toast.error('Campos Requeridos', 'Por favor ingrese el año y nombre de la vigencia escolar.');
+      return;
+    }
+    this.api.post('academico/anios-lectivos', this.nuevoAnio).subscribe({
+      next: () => {
+        this.toast.success('Año Aperturado', `El año lectivo ${this.nuevoAnio.nombre} ha sido creado.`);
+        this.cerrarModalNuevoAnio();
+        this.cargarAniosLectivos();
+      },
+      error: (err) => {
+        this.toast.error('Error al Guardar', err.error?.message || 'No se pudo aperturar el año lectivo.');
+      },
+    });
+  }
+
+  cambiarAnioActivo(id: string) {
+    this.api.patch(`academico/anios-lectivos/${id}/activar`, {}).subscribe({
+      next: () => {
+        this.toast.success('Año Lectivo Activado', 'La vigencia escolar activa ha sido actualizada.');
+        this.cargarAniosLectivos();
+      },
+      error: (err) => {
+        this.toast.error('Error al Activar', err.error?.message || 'No se pudo cambiar el año lectivo activo.');
+      },
+    });
+  }
+
   // --- CRUD: CREAR NIVEL EDUCATIVO ---
   abrirModalNuevoNivel() {
     this.nuevoNivel = {
@@ -1635,7 +1891,13 @@ export class AcademicoComponent implements OnInit {
       return;
     }
 
-    this.api.post<any>('academico/niveles', this.nuevoNivel).subscribe({
+    const payload = {
+      nombre: this.nuevoNivel.nombre,
+      codigo: this.nuevoNivel.codigo,
+      orden: Number(this.nuevoNivel.orden) || 1,
+    };
+
+    this.api.post<any>('academico/niveles', payload).subscribe({
       next: (nivelCreado) => {
         this.cerrarModalNuevoNivel();
         this.toast.success('¡Nivel Creado!', `El nivel educativo '${nivelCreado.nombre}' ha sido registrado exitosamente.`);
@@ -1718,7 +1980,14 @@ export class AcademicoComponent implements OnInit {
       return;
     }
 
-    this.api.post<any>('academico/grupos', this.nuevoGrupo).subscribe({
+    const payload = {
+      gradoId: this.nuevoGrupo.gradoId || this.gradosList()[0]?.id,
+      anioLectivoId: 'a1a1a1a1-1111-4111-8111-000000002026',
+      nombre: this.nuevoGrupo.nombre,
+      cupoMaximo: Number(this.nuevoGrupo.cupoMaximo) || 35,
+    };
+
+    this.api.post<any>('academico/grupos', payload).subscribe({
       next: (grupoCreado) => {
         this.cerrarModalNuevoGrupo();
         this.toast.success('¡Grupo Creado!', `El grupo / salón '${grupoCreado.nombre}' ha sido registrado.`);
@@ -1858,13 +2127,19 @@ export class AcademicoComponent implements OnInit {
 
   // --- CRUD: REGLAS SIEE ---
   abrirModalReglasSiee() {
-    this.api.get<any[]>('academico/siee/reglas').subscribe((reglas) => {
-      if (reglas && reglas.length > 0) {
-        this.reglaSiee.materiasReprobadasLimite = reglas[0].materiasReprobadasLimite || 3;
-        this.reglaSiee.notaMinimaAprobacion = reglas[0].notaMinimaAprobacion || 3.0;
-      }
-      this.modalManager.open('reglasSiee');
-      this.modalReglasSiee.set(true);
+    this.api.get<any[]>('academico/siee/reglas').subscribe({
+      next: (reglas) => {
+        if (reglas && reglas.length > 0) {
+          this.reglaSiee.materiasReprobadasLimite = reglas[0].materiasReprobadasLimite || 3;
+          this.reglaSiee.notaMinimaAprobacion = reglas[0].notaMinimaAprobacion || 3.0;
+        }
+        this.modalManager.open('reglasSiee');
+        this.modalReglasSiee.set(true);
+      },
+      error: () => {
+        this.modalManager.open('reglasSiee');
+        this.modalReglasSiee.set(true);
+      },
     });
   }
 
@@ -1887,26 +2162,36 @@ export class AcademicoComponent implements OnInit {
 
 
   // --- CIERRE DE AÑO SIEE ---
-  ejecutarCierreAno() {
-    // Doble confirmación por seguridad
-    if (!confirm('⚠️ ATENCIÓN: Va a ejecutar el algoritmo de Promoción SIEE.\n\nEsto evaluará a TODOS los estudiantes del año lectivo y determinará si Aprueban o Reprueban.\n\n¿Está seguro de continuar?')) {
-      return;
-    }
-    if (!confirm('🔒 SEGURIDAD: ¿Confirma irrevocablemente que TODAS las notas de todos los periodos han sido cargadas correctamente en el sistema?')) {
-      return;
-    }
+  abrirModalCierreAno() {
+    this.confirmarCierreAnoCheckbox = false;
+    this.modalManager.open('cierreAno');
+    this.modalCierreAno.set(true);
+  }
 
+  cerrarModalCierreAno() {
+    this.modalManager.close('cierreAno');
+    this.modalCierreAno.set(false);
+  }
+
+  ejecutarCierreAno() {
+    this.abrirModalCierreAno();
+  }
+
+  procesarCierreAno() {
     const anioLectivoId = this.aniosLectivosList()[0]?.id;
     if (!anioLectivoId) {
       this.toast.error('Sin Año Lectivo', 'No hay un año lectivo configurado. Cree uno primero.');
       return;
     }
 
+    this.isEjecutandoCierre.set(true);
     this.toast.info('Calculando Promociones', 'El Motor SIEE está evaluando a los estudiantes. Esto puede tardar unos segundos...');
 
     // Llamar al endpoint con responseType 'blob' para recibir el PDF del acta directamente
     this.api.postBlob('academico/cierre-ano', { colegioId: 'auto', anioLectivoId }).subscribe({
       next: (blob: Blob) => {
+        this.isEjecutandoCierre.set(false);
+        this.cerrarModalCierreAno();
         // Descargar el PDF del Acta de Promoción automáticamente
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -1917,6 +2202,7 @@ export class AcademicoComponent implements OnInit {
         this.toast.success('✅ Cierre de Año Exitoso', 'Acta de Promoción generada y descargada exitosamente. Los estados de matrícula han sido actualizados.');
       },
       error: (err) => {
+        this.isEjecutandoCierre.set(false);
         this.toast.error('Error Crítico', err?.error?.message || 'No se pudo completar el cierre de año. Verifique los datos académicos.');
       }
     });

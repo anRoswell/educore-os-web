@@ -231,7 +231,7 @@ table {
   color: var(--primary-900);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: disabled-dark) {
   ::selection {
     background-color: var(--primary-700);
     color: var(--text-inverse);

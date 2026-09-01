@@ -384,15 +384,15 @@ export interface PiarActaItem {
             </div>
 
             <!-- Selector de Estudiante para ver sus Ajustes -->
-            <div class="select-student-row mt-3">
-              <label class="form-label">Estudiante en Seguimiento:</label>
-              <select class="form-select" [ngModel]="caracterizacionSeleccionada()?.id" (ngModelChange)="seleccionarEstudianteParaAjustes($event)">
-                @for (c of caracterizacionesList(); track c.id) {
-                  <option [value]="c.id">
-                    {{ c.primer_apellido }} {{ c.primer_nombre }} — {{ formatCategoria(c.diagnostico_categoria) }} ({{ c.grado_nombre }})
-                  </option>
-                }
-              </select>
+            <div class="select-student-row mt-3" style="max-width: 520px;">
+              <label class="form-label" style="font-size: 0.8rem; font-weight: bold; margin-bottom: 0.35rem;">👤 Estudiante en Seguimiento PIAR:</label>
+              <app-searchable-select
+                [options]="caracterizacionesSelectOptions()"
+                [ngModel]="caracterizacionSeleccionada()?.id"
+                (ngModelChange)="seleccionarEstudianteParaAjustes($event)"
+                placeholder="🔍 Buscar estudiante caracterizado por nombre o documento..."
+                searchPlaceholder="Escriba para filtrar en tiempo real..."
+              ></app-searchable-select>
             </div>
           </div>
 
@@ -1707,6 +1707,18 @@ export class InclusionComponent implements OnInit {
       badge: ent.tipo,
       badgeClass: ent.tipo === 'EPS' ? 'badge-primary' : ent.tipo.includes('IPS') ? 'badge-success' : 'badge-warning',
       avatarText: '🏥',
+    }));
+  });
+
+  // Computed Select Options para selección rápida de estudiantes con PIAR
+  readonly caracterizacionesSelectOptions = computed<SearchableOption[]>(() => {
+    return this.caracterizacionesList().map((c) => ({
+      value: c.id,
+      label: `${c.primer_apellido} ${c.primer_nombre}`,
+      sublabel: `Doc. ${c.numero_documento || 'S/D'} • Grado: ${c.grado_nombre} • ${this.formatCategoria(c.diagnostico_categoria)}`,
+      badge: c.grado_nombre || 'PIAR',
+      badgeClass: 'badge-info',
+      avatarText: `${c.primer_nombre?.charAt(0) || ''}${c.primer_apellido?.charAt(0) || ''}`.toUpperCase() || 'PI',
     }));
   });
 

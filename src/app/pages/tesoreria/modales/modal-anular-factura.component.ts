@@ -1,12 +1,13 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ModalManagerService } from '../../../core/services/modal-manager.service';
 
 @Component({
   selector: 'app-modal-anular-factura',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="modal-backdrop animate-fade-in">
+    <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('anularFactura')">
       <div class="modal-card card card-glass" style="max-width: 480px;">
         <div class="modal-header">
           <h3 style="color: #ef4444;">⚠️ Confirmación de Anulación</h3>
@@ -22,7 +23,7 @@ import { CommonModule } from '@angular/common';
         </div>
 
         <div class="modal-footer">
-          <button (click)="confirmar()" class="btn btn-danger">
+          <button (click)="confirmarAnulacion()" class="btn btn-danger">
             🗑️ Confirmar Anulación
           </button>
           <button (click)="cerrarModal()" class="btn btn-secondary">Cancelar</button>
@@ -32,16 +33,20 @@ import { CommonModule } from '@angular/common';
   `
 })
 export class ModalAnularFacturaComponent {
+  readonly modalManager = inject(ModalManagerService);
+
   @Input() factura: any;
 
   @Output() close = new EventEmitter<void>();
-  @Output() confirm = new EventEmitter<any>();
+  @Output() success = new EventEmitter<any>();
 
   cerrarModal() {
+    this.modalManager.close('anularFactura');
     this.close.emit();
   }
 
-  confirmar() {
-    this.confirm.emit(this.factura);
+  confirmarAnulacion() {
+    this.success.emit(this.factura);
+    this.cerrarModal();
   }
 }

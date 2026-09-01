@@ -444,6 +444,31 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           </div>
         </div>
       }
+
+      <!-- Modal de Confirmación Estilizado -->
+      @if (showConfirmModal()) {
+        <div class="modal-backdrop" style="z-index: 10500;">
+          <div class="modal-content animate-slide-up" style="max-width: 460px;">
+            <div class="modal-header" style="border: none; padding-bottom: 0;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #e0e7ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.25rem;">
+                  📩
+                </div>
+                <h3 style="margin: 0; font-size: 1.2rem; color: #0f172a;">{{ confirmModalConfig().title }}</h3>
+              </div>
+            </div>
+            <div class="modal-body" style="padding-top: 1rem; padding-bottom: 0.5rem;">
+              <p style="color: #64748b; margin: 0; font-size: 0.95rem; line-height: 1.5; padding-left: 58px;">{{ confirmModalConfig().message }}</p>
+            </div>
+            <div class="modal-footer" style="border: none; padding-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button (click)="showConfirmModal.set(false)" class="btn btn-outline">Cancelar</button>
+              <button (click)="confirmModalConfig().onConfirm()" class="btn" [ngClass]="confirmModalConfig().actionClass || 'btn-primary'">
+                {{ confirmModalConfig().confirmText }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -673,6 +698,21 @@ export class MatriculasComponent implements OnInit {
   plantillaContrato = '';
   plantillaPagare = '';
 
+  readonly showConfirmModal = signal(false);
+  readonly confirmModalConfig = signal<{
+    title: string;
+    message: string;
+    confirmText: string;
+    actionClass?: string;
+    onConfirm: () => void;
+  }>({
+    title: '',
+    message: '',
+    confirmText: 'Confirmar',
+    actionClass: 'btn-primary',
+    onConfirm: () => {}
+  });
+
   readonly estudianteEnEdicion = signal<Estudiante | null>(null);
   readonly estudianteParaRetirar = signal<Estudiante | null>(null);
   causalRetiro = 'CAMBIO_RESIDENCIA';
@@ -806,13 +846,16 @@ export class MatriculasComponent implements OnInit {
       segundoNombre: this.nuevoEstudiante.segundoNombre || undefined,
       primerApellido: this.nuevoEstudiante.primerApellido,
       segundoApellido: this.nuevoEstudiante.segundoApellido || undefined,
-      tipoDocumento: this.nuevoEstudiante.tipoDocumento,
+      tipoDocumento: this.nuevoEstudiante.tipoDocumento || 'TI',
       numeroDocumento: this.nuevoEstudiante.numeroDocumento,
-      grupoSanguineoRh: this.nuevoEstudiante.grupoSanguineoRh,
-      eps: this.nuevoEstudiante.eps,
-      nombreAcudiente: this.nuevoEstudiante.nombreAcudiente,
-      emailAcudiente: this.nuevoEstudiante.emailAcudiente,
-      telefonoAcudiente: this.nuevoEstudiante.telefonoAcudiente,
+      grupoSanguineoRh: this.nuevoEstudiante.grupoSanguineoRh || 'O+',
+      eps: this.nuevoEstudiante.eps || 'Sura',
+      nombreAcudiente: this.nuevoEstudiante.nombreAcudiente || 'Acudiente Principal',
+      emailAcudiente: this.nuevoEstudiante.emailAcudiente || 'acudiente@correo.com',
+      telefonoAcudiente: this.nuevoEstudiante.telefonoAcudiente || '3109876543',
+      parentesco: 'PADRE',
+      numeroFolio: `FOLIO-2026-${Date.now().toString().slice(-4)}`,
+      numeroLibro: 'LIBRO-2026-A',
     };
 
     this.api.post<any>('matriculas/formalizar', payload).subscribe({
@@ -924,14 +967,22 @@ export class MatriculasComponent implements OnInit {
 
   // --- ENVIAR A FIRMA ---
   enviarAFirma(matriculaId: string) {
-    if(confirm('¿Desea despachar el código OTP al acudiente para firmar el contrato?')) {
-      this.toast.info('Procesando', 'Generando documentos y enviando email...');
-      this.api.post<any>(`matriculas/${matriculaId}/enviar-firma`, {}).subscribe({
-        next: (res) => {
-          this.toast.success('Enviado', res.mensaje);
-        },
-        error: () => this.toast.error('Error', 'Fallo al procesar el contrato.')
-      });
-    }
+    this.confirmModalConfig.set({
+      title: 'Despachar Código OTP de Firma',
+      message: '¿Desea despachar el código OTP al acudiente para firmar el contrato de matrícula y pagaré?',
+      confirmText: 'Sí, Despachar OTP',
+      actionClass: 'btn-primary',
+      onConfirm: () => {
+        this.showConfirmModal.set(false);
+        this.toast.info('Procesando', 'Generando documentos y enviando email...');
+        this.api.post<any>(`matriculas/${matriculaId}/enviar-firma`, {}).subscribe({
+          next: (res) => {
+            this.toast.success('Enviado', res.mensaje || 'Código OTP y documentos despachados exitosamente.');
+          },
+          error: () => this.toast.error('Error', 'Fallo al procesar el contrato.')
+        });
+      }
+    });
+    this.showConfirmModal.set(true);
   }
 }

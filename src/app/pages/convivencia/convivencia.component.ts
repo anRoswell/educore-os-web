@@ -7,6 +7,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { ModalManagerService } from '../../core/services/modal-manager.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 import { SearchableSelectComponent, SearchableOption } from '../../shared/components/searchable-select.component';
+import { imprimirElementoHtml } from '../../core/utils/print.utils';
 
 export interface CasoConvivenciaItem {
   id: string;
@@ -84,50 +85,50 @@ export interface ActaComiteItem {
       <!-- TARJETAS DE INDICADORES / METRICAS SIUCE -->
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="metric-header">
+          <span class="metric-icon">📁</span>
+          <div class="metric-info">
             <span class="metric-label">Total Expedientes</span>
-            <span class="metric-icon">📁</span>
-          </div>
-          <div class="metric-value">{{ metricas().total_anotaciones || casosList().length }}</div>
-          <div class="metric-footer">
-            <span class="text-emerald font-semibold">{{ metricas().casos_cerrados || 0 }} conciliados</span> · {{ metricas().casos_abiertos || 0 }} en trámite
+            <div class="metric-value">{{ metricas().total_anotaciones || casosList().length }}</div>
+            <div class="metric-footer">
+              <span class="text-emerald font-semibold">{{ metricas().casos_cerrados || 0 }} conciliados</span> · {{ metricas().casos_abiertos || 0 }} en trámite
+            </div>
           </div>
         </div>
 
         <div class="metric-card border-green">
-          <div class="metric-header">
+          <span class="metric-icon">🟢</span>
+          <div class="metric-info">
             <span class="metric-label">
               Faltas Tipo I (Leves)
               <app-help-badge term="TIPO_I"></app-help-badge>
             </span>
-            <span class="metric-icon">🟢</span>
+            <div class="metric-value text-green">{{ metricas().tipo_1_leves || totalTipo1() }}</div>
+            <div class="metric-footer">Mediación en aula / Compromiso</div>
           </div>
-          <div class="metric-value text-green">{{ metricas().tipo_1_leves || totalTipo1() }}</div>
-          <div class="metric-footer">Mediación en aula / Compromiso</div>
         </div>
 
         <div class="metric-card border-amber">
-          <div class="metric-header">
+          <span class="metric-icon">🟠</span>
+          <div class="metric-info">
             <span class="metric-label">
               Faltas Tipo II (Bullying)
               <app-help-badge term="TIPO_II"></app-help-badge>
             </span>
-            <span class="metric-icon">🟠</span>
+            <div class="metric-value text-amber">{{ metricas().tipo_2_acoso || totalTipo2() }}</div>
+            <div class="metric-footer">Acoso reiterado / Comité Convivencia</div>
           </div>
-          <div class="metric-value text-amber">{{ metricas().tipo_2_acoso || totalTipo2() }}</div>
-          <div class="metric-footer">Acoso reiterado / Comité Convivencia</div>
         </div>
 
         <div class="metric-card border-red">
-          <div class="metric-header">
+          <span class="metric-icon">🔴</span>
+          <div class="metric-info">
             <span class="metric-label">
               Faltas Tipo III (Graves)
               <app-help-badge term="TIPO_III"></app-help-badge>
             </span>
-            <span class="metric-icon">🔴</span>
+            <div class="metric-value text-red">{{ metricas().tipo_3_graves || totalTipo3() }}</div>
+            <div class="metric-footer">Delitos / Remisión Externa ICBF</div>
           </div>
-          <div class="metric-value text-red">{{ metricas().tipo_3_graves || totalTipo3() }}</div>
-          <div class="metric-footer">Delitos / Remisión Externa ICBF</div>
         </div>
       </div>
 
@@ -888,6 +889,31 @@ export interface ActaComiteItem {
           </div>
         </div>
       }
+
+      <!-- Modal de Confirmación Estilizado -->
+      @if (showConfirmModal()) {
+        <div class="modal-backdrop" style="z-index: 10500;">
+          <div class="modal-card animate-slide-up" style="max-width: 460px;">
+            <div class="modal-header" style="border: none; padding-bottom: 0;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.25rem;">
+                  📨
+                </div>
+                <h3 style="margin: 0; font-size: 1.2rem; color: #0f172a;">{{ confirmModalConfig().title }}</h3>
+              </div>
+            </div>
+            <div class="modal-body" style="padding-top: 1rem; padding-bottom: 0.5rem;">
+              <p style="color: #64748b; margin: 0; font-size: 0.95rem; line-height: 1.5; padding-left: 58px;">{{ confirmModalConfig().message }}</p>
+            </div>
+            <div class="modal-footer" style="border: none; padding-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button (click)="showConfirmModal.set(false)" class="btn btn-outline">Cancelar</button>
+              <button (click)="confirmModalConfig().onConfirm()" class="btn" [ngClass]="confirmModalConfig().actionClass || 'btn-primary'">
+                {{ confirmModalConfig().confirmText }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -948,28 +974,59 @@ export interface ActaComiteItem {
     }
 
     .metric-card {
-      background: #ffffff;
+      background: linear-gradient(135deg, #ffffff 50%, rgba(99,102,241,0.06) 100%);
       border-radius: 12px;
       padding: 1.25rem;
       border: 1px solid #e2e8f0;
+      border-left: 4px solid #6366f1;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: all 0.3s ease;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
 
     .metric-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 25px -5px rgba(99,102,241,0.2);
     }
 
-    .metric-card.border-green { border-left: 4px solid #10b981; }
-    .metric-card.border-amber { border-left: 4px solid #f59e0b; }
-    .metric-card.border-red { border-left: 4px solid #ef4444; }
+    .metric-card.border-green {
+      border-left: 4px solid #10b981;
+      background: linear-gradient(135deg, #ffffff 50%, rgba(16,185,129,0.08) 100%);
+    }
+    .metric-card.border-green:hover { box-shadow: 0 10px 25px -5px rgba(16,185,129,0.2); }
 
-    .metric-header {
+    .metric-card.border-amber {
+      border-left: 4px solid #f59e0b;
+      background: linear-gradient(135deg, #ffffff 50%, rgba(245,158,11,0.08) 100%);
+    }
+    .metric-card.border-amber:hover { box-shadow: 0 10px 25px -5px rgba(245,158,11,0.2); }
+
+    .metric-card.border-red {
+      border-left: 4px solid #ef4444;
+      background: linear-gradient(135deg, #ffffff 50%, rgba(239,68,68,0.08) 100%);
+    }
+    .metric-card.border-red:hover { box-shadow: 0 10px 25px -5px rgba(239,68,68,0.2); }
+
+    .metric-icon {
+      font-size: 1.6rem;
+      width: 48px;
+      height: 48px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .metric-card.border-green .metric-icon { background: rgba(16, 185, 129, 0.12); }
+    .metric-card.border-amber .metric-icon { background: rgba(245, 158, 11, 0.12); }
+    .metric-card.border-red .metric-icon { background: rgba(239, 68, 68, 0.12); }
+
+    .metric-info {
+      flex: 1;
     }
 
     .metric-label {
@@ -981,16 +1038,12 @@ export interface ActaComiteItem {
       gap: 0.25rem;
     }
 
-    .metric-icon {
-      font-size: 1.2rem;
-    }
-
     .metric-value {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 800;
       color: #0f172a;
-      line-height: 1;
-      margin-bottom: 0.5rem;
+      line-height: 1.2;
+      margin: 0.15rem 0 0.25rem 0;
     }
 
     .text-green { color: #059669; }
@@ -1498,6 +1551,21 @@ export class ConvivenciaComponent implements OnInit {
   readonly modalNuevaActa = signal(false);
   readonly modalConfiguracion = signal(false);
 
+  readonly showConfirmModal = signal(false);
+  readonly confirmModalConfig = signal<{
+    title: string;
+    message: string;
+    confirmText: string;
+    actionClass?: string;
+    onConfirm: () => void;
+  }>({
+    title: '',
+    message: '',
+    confirmText: 'Confirmar',
+    actionClass: 'btn-primary',
+    onConfirm: () => {}
+  });
+
   // Settings state
   colegioSettings = {
     id: '',
@@ -1668,17 +1736,25 @@ export class ConvivenciaComponent implements OnInit {
 
   // --- ENVIO A DEMANDA ---
   reenviarNotificacion(casoId: string) {
-    if (confirm('¿Deseas reenviar la notificación al acudiente? Se dejará registro de auditoría.')) {
-      this.toast.info('Enviando...', 'Despachando correo al acudiente.');
-      this.api.post<any>(`convivencia/faltas/${casoId}/notificar-acudiente`, { ejecutadoPor: this.authService.currentUser()?.id }).subscribe({
-        next: (res) => {
-          this.toast.success('Enviado', 'La notificación fue enviada exitosamente.');
-        },
-        error: () => {
-          this.toast.error('Error', 'Fallo al enviar la notificación.');
-        }
-      });
-    }
+    this.confirmModalConfig.set({
+      title: 'Reenviar Notificación a Acudiente',
+      message: '¿Deseas reenviar la notificación disciplinaria oficial al acudiente? Se dejará registro en la pista de auditoría.',
+      confirmText: 'Sí, Reenviar',
+      actionClass: 'btn-primary',
+      onConfirm: () => {
+        this.showConfirmModal.set(false);
+        this.toast.info('Enviando...', 'Despachando correo al acudiente.');
+        this.api.post<any>(`convivencia/faltas/${casoId}/notificar-acudiente`, { ejecutadoPor: this.authService.currentUser()?.id }).subscribe({
+          next: () => {
+            this.toast.success('Enviado', 'La notificación fue enviada exitosamente.');
+          },
+          error: () => {
+            this.toast.error('Error', 'Fallo al enviar la notificación.');
+          }
+        });
+      }
+    });
+    this.showConfirmModal.set(true);
   }
 
   abrirModalNuevoCaso() {
@@ -1813,7 +1889,13 @@ export class ConvivenciaComponent implements OnInit {
       return;
     }
 
-    this.api.post<any>('convivencia/actas-comite', this.nuevaActaForm).subscribe({
+    const payload = {
+      ...this.nuevaActaForm,
+      asistentes: ['Rector', 'Coordinador de Convivencia', 'Orientadora', 'Personero Estudiantil'],
+      casosTratados: [],
+    };
+
+    this.api.post<any>('convivencia/actas-comite', payload).subscribe({
       next: () => {
         this.cerrarModalNuevaActa();
         this.toast.success('¡Acta Registrada!', `El acta ${this.nuevaActaForm.numeroActa} ha sido foliada en el libro de actas.`);
@@ -1830,7 +1912,7 @@ export class ConvivenciaComponent implements OnInit {
   }
 
   imprimirActaDoc() {
-    window.print();
+    imprimirElementoHtml('.print-area', `Acta de Convivencia - ${this.actaParaVer()?.numero_acta || 'EduCoreOS'}`);
   }
 
   exportarReporteSiuce() {

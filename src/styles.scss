@@ -37,14 +37,13 @@
 
 .student-search-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   background: var(--bg-tertiary);
-  padding: var(--spacing-4) var(--spacing-6);
+  padding: var(--spacing-5) var(--spacing-6);
   border-radius: var(--radius-xl);
   margin-bottom: var(--spacing-6);
   border: 1px solid var(--border-primary);
-  flex-wrap: wrap;
   gap: var(--spacing-4);
 
   h3 {
@@ -62,8 +61,10 @@
 
 .student-picker-group {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-2);
+  width: 100%;
 }
 
 /* ─────────────────────────────────────────────────────────────────────
@@ -72,7 +73,7 @@
 
 .tuition-timeline-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: var(--spacing-3);
 }
 
@@ -87,6 +88,7 @@
   gap: var(--spacing-3);
   transition: all var(--transition-fast);
   min-width: 0;
+  box-sizing: border-box;
 
   &.paid {
     border-color: #86efac;
@@ -101,6 +103,12 @@
   &.due {
     border-color: #fde68a;
     background-color: #fefce8;
+  }
+
+  &.partial {
+    border-color: #f59e0b;
+    background-color: #fffbeb;
+    box-shadow: 0 0 0 1px #f59e0b;
   }
 
   &:hover {
@@ -143,6 +151,19 @@
   font-size: var(--text-xs);
   color: var(--success);
   font-family: var(--font-mono);
+}
+
+.excedente-card {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 .month-footer {
@@ -313,23 +334,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  padding: var(--spacing-5);
-
-  .label {
-    font-size: var(--text-xs);
-    font-weight: var(--font-bold);
-    color: var(--text-tertiary);
-    display: block;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .value {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-extrabold);
-    color: var(--text-primary);
-    font-family: var(--font-display);
-  }
+  padding: var(--spacing-4) var(--spacing-5);
 }
 
 /* ─────────────────────────────────────────────────────────────────────
@@ -457,26 +462,124 @@
 }
 
 /* ==========================================================================
-   PRINT STYLES
+   PRINT STYLES (Aislamiento de Recibos de Caja, Paz y Salvo y Certificados)
    ========================================================================== */
 
 @media print {
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow: visible !important;
+  }
+
+  // Ocultar barras de navegación, botones y encabezados web
+  .no-print,
+  .modal-header,
+  .modal-footer,
+  .close-btn,
   .btn,
-  .modal-backdrop,
+  button,
   .header-actions,
   .filters-bar,
-  .close-btn {
+  .app-sidebar,
+  .sidebar,
+  .top-header,
+  .tabs-bar,
+  .header-container,
+  .main-nav {
     display: none !important;
+    visibility: hidden !important;
   }
 
-  body {
-    background: white;
-    color: black;
+  // Contenedores modales en modo plano para impresión
+  .modal-backdrop,
+  .print-backdrop {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    inset: auto !important;
   }
 
-  .card,
   .modal-card {
-    box-shadow: none;
-    border: 1px solid #000;
+    position: static !important;
+    display: block !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+    transform: none !important;
   }
+
+  .modal-body.print-area,
+  .print-area,
+  .recibo-caja-print {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  .print-area table,
+  .recibo-caja-print table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .print-area th,
+  .print-area td,
+  .recibo-caja-print th,
+  .recibo-caja-print td {
+    padding: 6px 8px !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+}
+
+/* ==========================================================================
+   FIXES PARA EL EDITOR QUILL (ngx-quill)
+   ========================================================================== */
+.ql-toolbar svg {
+  display: inline-block !important;
+  max-width: none !important;
+  height: 18px !important;
+  vertical-align: middle;
+}
+
+.ql-editor {
+  p { margin-bottom: 1em !important; }
+  h1 { font-size: 2em !important; font-weight: bold !important; margin-bottom: 0.5em !important; }
+  h2 { font-size: 1.5em !important; font-weight: bold !important; margin-bottom: 0.5em !important; }
+  h3 { font-size: 1.17em !important; font-weight: bold !important; margin-bottom: 0.5em !important; }
+  ul { padding-left: 1.5em !important; list-style-type: disc !important; margin-bottom: 1em !important; }
+  ol { padding-left: 1.5em !important; list-style-type: decimal !important; margin-bottom: 1em !important; }
 }

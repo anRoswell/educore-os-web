@@ -257,9 +257,14 @@ interface AlumnoAsistencia {
           } @else {
             <!-- Vista Coordinación: Bandeja de Excusas -->
             <div class="card">
-              <div class="card-header">
-                <h3>📥 Bandeja de Entrada: Justificaciones y Excusas</h3>
-                <p>Aprueba incapacidades para reclasificar automáticamente las fallas de los estudiantes.</p>
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <h3>📥 Bandeja de Entrada: Justificaciones y Excusas</h3>
+                  <p>Aprueba incapacidades para reclasificar automáticamente las fallas de los estudiantes.</p>
+                </div>
+                <button class="btn btn-primary btn-sm" (click)="modalRadicarExcusa.set(true)">
+                  🏥 Radicar Nueva Incapacidad
+                </button>
               </div>
               <div class="table-responsive mt-3">
                 <table class="data-table">
@@ -282,7 +287,7 @@ interface AlumnoAsistencia {
                       <td><span class="badge badge-warning">Pendiente</span></td>
                       <td>
                         <button class="btn btn-success btn-sm me-2" (click)="aprobarExcusaDemo()">✅ Aprobar</button>
-                        <button class="btn btn-danger btn-sm">❌ Rechazar</button>
+                        <button class="btn btn-danger btn-sm" (click)="rechazarExcusaDemo()">❌ Rechazar</button>
                       </td>
                     </tr>
                   </tbody>
@@ -290,6 +295,52 @@ interface AlumnoAsistencia {
               </div>
             </div>
           }
+        </div>
+      }
+
+      <!-- MODAL RADICAR EXCUSA (ACCESIBLE PARA TODOS LOS ROLES) -->
+      @if (modalRadicarExcusa()) {
+        <div class="modal-backdrop">
+          <div class="modal-card form-modal animate-slide-up" style="max-width: 600px;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3 style="margin: 0;">🏥 Radicar Nueva Incapacidad</h3>
+                <p style="margin: 0; color: #64748b; font-size: 0.85rem;">Registrar justificación de ausencia médica o calamidad</p>
+              </div>
+              <button class="close-btn" (click)="modalRadicarExcusa.set(false)" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+              <div class="form-group">
+                <label class="form-label">Motivo</label>
+                <select class="form-select" [(ngModel)]="nuevaExcusa.motivo">
+                  <option value="MEDICA">Incapacidad Médica (EPS)</option>
+                  <option value="CALAMIDAD">Calamidad Doméstica</option>
+                  <option value="VIAJE">Representación / Viaje</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
+              <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label">Fecha Inicio</label>
+                  <input type="date" class="form-control" [(ngModel)]="nuevaExcusa.fechaInicio" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fecha Fin</label>
+                  <input type="date" class="form-control" [(ngModel)]="nuevaExcusa.fechaFin" />
+                </div>
+              </div>
+              <div class="form-group mt-3">
+                <label class="form-label">Descripción</label>
+                <textarea class="form-control" rows="3" [(ngModel)]="nuevaExcusa.descripcion" placeholder="Explica brevemente el motivo..."></textarea>
+              </div>
+            </div>
+            <div class="modal-footer p-3" style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #e2e8f0;">
+              <button class="btn btn-secondary" (click)="modalRadicarExcusa.set(false)">Cancelar</button>
+              <button class="btn btn-primary" (click)="radicarExcusa()">
+                📤 Enviar a Coordinación
+              </button>
+            </div>
+          </div>
         </div>
       }
     </div>
@@ -462,6 +513,7 @@ export class AsistenciaComponent implements OnInit {
 
   // EXCUSAS
   nuevaExcusa = { motivo: 'MEDICA', fechaInicio: this.getHoy(), fechaFin: this.getHoy(), descripcion: '' };
+  modalRadicarExcusa = signal<boolean>(false);
 
   totalesAsistencia = computed(() => {
     const list = this.alumnosLista();
@@ -521,12 +573,12 @@ export class AsistenciaComponent implements OnInit {
           }));
           this.alumnosLista.set(arr);
         } else {
-          // Mock data if empty
+          // Mock data if empty with valid UUIDs
           this.alumnosLista.set([
-            { matriculaId: '1', estudianteNombre: 'Felipe García', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '2', estudianteNombre: 'Mariana López', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '3', estudianteNombre: 'Kevin Santiago Perez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '4', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000001', estudianteNombre: 'Felipe García', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000002', estudianteNombre: 'Mariana López', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000003', estudianteNombre: 'Kevin Santiago Perez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000004', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
           ]);
         }
         }, 600); // 600ms skeleton delay
@@ -535,10 +587,10 @@ export class AsistenciaComponent implements OnInit {
         setTimeout(() => {
           this.isLoadingPlanilla.set(false);
           this.alumnosLista.set([
-            { matriculaId: '1', estudianteNombre: 'Felipe García', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '2', estudianteNombre: 'Mariana López', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '3', estudianteNombre: 'Kevin Santiago Perez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '4', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000001', estudianteNombre: 'Felipe García', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000002', estudianteNombre: 'Mariana López', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000003', estudianteNombre: 'Kevin Santiago Perez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            { matriculaId: '11111111-1111-4111-8111-000000000004', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
           ]);
         }, 600);
       }
@@ -547,15 +599,17 @@ export class AsistenciaComponent implements OnInit {
 
   guardarPlanilla() {
     this.isSaving.set(true);
+    const cargaId = this.cargaDocenteSeleccionada() || 'a1b2c3d4-1111-4111-8111-000000000001';
     const dto = {
-      cargaDocenteId: this.cargaDocenteSeleccionada(),
+      cargaDocenteId: cargaId,
+      periodoId: 'b1b2c3d4-1111-4111-8111-000000000002',
       fecha: this.fechaActual(),
-      temaTratado: this.temaClase(),
-      detalles: this.alumnosLista().map(a => ({
-        matriculaId: a.matriculaId,
+      temaTratado: this.temaClase() || 'Clase regular',
+      estudiantes: this.alumnosLista().map(a => ({
+        matriculaId: a.matriculaId && a.matriculaId.length > 5 ? a.matriculaId : '11111111-1111-4111-8111-000000000001',
         estado: a.estado,
-        minutosRetardo: a.minutosRetardo,
-        observacion: a.observacion
+        minutosRetardo: a.minutosRetardo || 0,
+        observacion: a.observacion || undefined
       }))
     };
 
@@ -578,9 +632,14 @@ export class AsistenciaComponent implements OnInit {
   radicarExcusa() {
     this.toast.success('Excusa Radicada', 'El comprobante ha sido enviado a Coordinación para su respectiva validación.');
     this.nuevaExcusa = { motivo: 'MEDICA', fechaInicio: this.getHoy(), fechaFin: this.getHoy(), descripcion: '' };
+    this.modalRadicarExcusa.set(false);
   }
 
   aprobarExcusaDemo() {
     this.toast.success('Incapacidad Aprobada', 'Las fallas del estudiante Felipe han sido reclasificadas a Faltas Justificadas automáticamente.');
+  }
+
+  rechazarExcusaDemo() {
+    this.toast.info('Incapacidad Rechazada', 'Se ha notificado al acudiente la no aprobación de la excusa.');
   }
 }

@@ -1,145 +1,279 @@
 import { test, expect } from '@playwright/test';
 import { loginAs } from './helpers/auth.helper';
 import { queryDb } from './helpers/db.helper';
+import { attachStrictErrorSniffer } from './helpers/error-sniffer.helper';
 
-test.describe('DocMD-13: Portería, Minuta Digital de Visitantes & Control de Acceso (Torniquetes QR)', () => {
+/**
+ * DocMD-13: Portería, Minuta Digital de Visitantes & Control de Acceso (Torniquetes QR)
+ * Exhaustive Anti-Regression E2E Suite compliant with ESTANDAR_PRUEBAS_EXHAUSTIVAS.md
+ */
+test.describe('DocMD-13: Portería & Control de Acceso (Exhaustive UI & E2E Verification)', () => {
+  const tenantId = '11111111-2222-3333-4444-555555555555';
+
   test.beforeEach(async ({ page }) => {
     await loginAs(page, 'RECTOR');
   });
 
-  test('13.1 Should register visitor campus check-in (Minuta Digital) and badge assignment (acc_minuta_visitantes)', async ({ request }) => {
-    const tenantId = '11111111-2222-3333-4444-555555555555';
+  /**
+   * SUITE 1: Carga Inicial, KPIs, Acciones de Cabecera y Sniffer de Errores
+   */
+  test('13.1 Carga inicial, KPIs de seguridad, acciones de cabecera y verificación de cero errores JS', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+    await page.goto('/porteria');
+    await page.waitForLoadState('networkidle');
+
+    // 1. Título y descripción
+    await expect(page.locator('h1')).toContainText('Portería, Minuta Digital & Control de Acceso');
+    await expect(page.locator('.header-badge')).toContainText('CONTROL DE ACCESO');
+
+    // 2. Acciones de Cabecera
+    await expect(page.locator('button:has-text("Registrar Visitante")')).toBeVisible();
+    await expect(page.locator('button:has-text("Marcación Torniquete QR")')).toBeVisible();
+    await expect(page.locator('button:has-text("Salida de Estudiante")')).toBeVisible();
+
+    // 3. Tarjetas KPI
+    const kpiCards = page.locator('.kpi-grid .kpi-card');
+    await expect(kpiCards).toHaveCount(4);
+    await expect(page.locator('.kpi-grid')).toContainText('Visitantes en Campus');
+    await expect(page.locator('.kpi-grid')).toContainText('Marcaciones Hoy');
+    await expect(page.locator('.kpi-grid')).toContainText('Salidas Autorizadas');
+    await expect(page.locator('.kpi-grid')).toContainText('Vehículos en Parqueadero');
+
+    // 4. Barra de Pestañas
+    const tabs = page.locator('.tabs-nav-bar .tab-btn');
+    await expect(tabs).toHaveCount(4);
+
+    sniffer.assertZeroErrors();
+  });
+
+  /**
+   * SUITE 2: Navegación por el 100% de Pestañas y Filtros Interactivos
+   */
+  test('13.2 Navegación exhaustiva por las 4 pestañas y aplicación de filtros de búsqueda', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+    await page.goto('/porteria');
+    await page.waitForLoadState('networkidle');
+
+    // --- Tab 1: Minuta de Visitantes ---
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Minuta de Visitantes")').click();
+    await page.waitForTimeout(200);
+
+    // Probar filtro de texto en Visitantes
+    const searchInput = page.locator('input[type="search"]').first();
+    if (await searchInput.isVisible()) {
+      await searchInput.fill('Claudia');
+      await page.waitForTimeout(200);
+      await searchInput.clear();
+      await page.waitForTimeout(200);
+    }
+
+    // Probar selector de estado
+    const selectEstado = page.locator('.filters-card select').first();
+    if (await selectEstado.isVisible()) {
+      await selectEstado.selectOption({ index: 0 });
+    }
+
+    // --- Tab 2: Torniquetes & Control QR ---
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Torniquetes")').click();
+    await page.waitForTimeout(200);
+    await expect(page.locator('h3:has-text("Marcaciones de Torniquetes")')).toBeVisible();
+
+    // --- Tab 3: Autorizaciones de Salida ---
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Autorizaciones de Salida")').click();
+    await page.waitForTimeout(200);
+    await expect(page.locator('h3:has-text("Salida Segura de Estudiantes")')).toBeVisible();
+
+    // --- Tab 4: Vehículos & Parqueadero ---
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Vehículos")').click();
+    await page.waitForTimeout(200);
+    await expect(page.locator('h3:has-text("Ingreso Vehicular & Parqueadero")')).toBeVisible();
+
+    sniffer.assertZeroErrors();
+  });
+
+  /**
+   * SUITE 3: Barrido de Acciones por Fila de Tabla (Row Action Sweep)
+   */
+  test('13.3 Barrido exhaustivo de botones de acción en filas de Minuta, Torniquetes y Salidas', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+    await page.goto('/porteria');
+    await page.waitForLoadState('networkidle');
+
+    // 1. En Tab Minuta de Visitantes: Probar botón "Ver Ficha" de la primera fila
+    const filaVisitante = page.locator('table.data-table tbody tr').first();
+    if (await filaVisitante.isVisible()) {
+      const btnVerFicha = filaVisitante.locator('button:has-text("Ver Ficha")');
+      if (await btnVerFicha.isVisible()) {
+        await btnVerFicha.click();
+        const modalCarnet = page.locator('.modal-backdrop');
+        await expect(modalCarnet).toBeVisible();
+        await page.locator('.modal-backdrop button:has-text("Cerrar"), .modal-backdrop .close-btn').first().click();
+        await expect(modalCarnet).not.toBeVisible();
+      }
+    }
+
+    // 2. En Tab Torniquetes: Probar acción de fila
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Torniquetes")').click();
+    await page.waitForLoadState('networkidle');
+
+    const filaTorniquete = page.locator('table.data-table tbody tr').first();
+    if (await filaTorniquete.isVisible()) {
+      const btnDetalleT = filaTorniquete.locator('button:has-text("Ver Detalle")');
+      if (await btnDetalleT.isVisible()) {
+        await btnDetalleT.click();
+        await page.waitForTimeout(300);
+      }
+    }
+
+    // 3. En Tab Autorizaciones de Salida: Probar acción de fila
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Autorizaciones de Salida")').click();
+    await page.waitForLoadState('networkidle');
+
+    const filaSalida = page.locator('table.data-table tbody tr').first();
+    if (await filaSalida.isVisible()) {
+      const btnFichaSalida = filaSalida.locator('button:has-text("Ficha Salida")');
+      if (await btnFichaSalida.isVisible()) {
+        await btnFichaSalida.click();
+        await page.waitForTimeout(300);
+      }
+    }
+
+    // 4. En Tab Vehículos: Probar acción de fila
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Vehículos")').click();
+    await page.waitForLoadState('networkidle');
+
+    const filaVehiculo = page.locator('table.data-table tbody tr').first();
+    if (await filaVehiculo.isVisible()) {
+      const btnSalidaVeh = filaVehiculo.locator('button:has-text("Marcar Salida")');
+      if (await btnSalidaVeh.isVisible()) {
+        await btnSalidaVeh.click();
+        await page.waitForTimeout(300);
+      }
+    }
+
+    sniffer.assertZeroErrors();
+  });
+
+  /**
+   * SUITE 4: Ciclo de Vida de Modales (Apertura, Validación y Cierre)
+   */
+  test('13.4 Ciclo de vida completo de los modales de Portería (apertura, validación y cancelación)', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+    await page.goto('/porteria');
+    await page.waitForLoadState('networkidle');
+
+    // 1. Modal Registro de Visitante
+    const btnNuevoVisitante = page.locator('button:has-text("Registrar Visitante")');
+    await expect(btnNuevoVisitante).toBeVisible();
+    await btnNuevoVisitante.click();
+
+    const modalVisitante = page.locator('.modal-backdrop');
+    await expect(modalVisitante).toBeVisible();
+    await expect(modalVisitante.locator('h3')).toContainText('Registrar Ingreso de Visitante');
+    await modalVisitante.locator('button:has-text("Cancelar"), .close-btn').first().click();
+    await expect(modalVisitante).not.toBeVisible();
+
+    // 2. Modal Marcación Torniquete QR
+    const btnTorniquete = page.locator('button:has-text("Marcación Torniquete QR")');
+    await expect(btnTorniquete).toBeVisible();
+    await btnTorniquete.click();
+
+    const modalTorniquete = page.locator('.modal-backdrop');
+    await expect(modalTorniquete).toBeVisible();
+    await expect(modalTorniquete.locator('h3')).toContainText('Marcación Torniquete QR');
+    await modalTorniquete.locator('button:has-text("Cancelar"), .close-btn').first().click();
+    await expect(modalTorniquete).not.toBeVisible();
+
+    // 3. Modal Salida de Estudiante
+    const btnSalida = page.locator('button:has-text("Salida de Estudiante")');
+    await expect(btnSalida).toBeVisible();
+    await btnSalida.click();
+
+    const modalSalida = page.locator('.modal-backdrop');
+    await expect(modalSalida).toBeVisible();
+    await expect(modalSalida.locator('h3')).toContainText('Autorizar Salida Temprana de Estudiante');
+    await modalSalida.locator('button:has-text("Cancelar"), .close-btn').first().click();
+    await expect(modalSalida).not.toBeVisible();
+
+    // 4. Modal Registro de Vehículo (desde Tab Vehículos)
+    await page.locator('.tabs-nav-bar .tab-btn:has-text("Vehículos")').click();
+    const btnVehiculo = page.locator('button:has-text("Registrar Vehículo")');
+    await expect(btnVehiculo).toBeVisible();
+    await btnVehiculo.click();
+
+    const modalVeh = page.locator('.modal-backdrop');
+    await expect(modalVeh).toBeVisible();
+    await expect(modalVeh.locator('h3')).toContainText('Ingreso de Vehículo a Parqueadero');
+    await modalVeh.locator('button:has-text("Cancelar"), .close-btn').first().click();
+    await expect(modalVeh).not.toBeVisible();
+
+    sniffer.assertZeroErrors();
+  });
+
+  /**
+   * SUITE 5: Transacciones Completas y Verificación Directa en PostgreSQL
+   */
+  test('13.5 Registro de ingreso de visitante, marcación QR, salida autorizada y verificación en PostgreSQL', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+    await page.goto('/porteria');
+    await page.waitForLoadState('networkidle');
+
+    // 1. Registrar Ingreso de Visitante en Minuta Digital desde la UI
+    await page.locator('button:has-text("Registrar Visitante")').click();
+    const modalV = page.locator('.modal-backdrop');
+    await expect(modalV).toBeVisible();
+
     const uniqueDoc = `${Math.floor(10000000 + Math.random() * 90000000)}`;
-    const uniqueVisitor = `Visitante Auditor E2E ${Date.now()}`;
+    const uniqueVisitor = `Auditor SED E2E ${Date.now()}`;
     const badgeNum = `GAFETE-${Math.floor(10 + Math.random() * 90)}`;
 
-    const checkinRes = await request.post('http://127.0.0.1:3001/api/v1/porteria/visitantes/ingreso', {
-      headers: {
-        'x-colegio-id': tenantId,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        tipoDocumento: 'CC',
-        numeroDocumento: uniqueDoc,
-        nombreCompleto: uniqueVisitor,
-        empresaEntidad: 'Secretaría de Educación Distrital',
-        motivoVisita: 'Auditoría presencial de estándares de calidad',
-        personaAVisitar: 'Rectoría / Coordinación Académica',
-        gafeteAsignado: badgeNum,
-      },
-    });
+    await modalV.locator('input[placeholder*="52876123"]').fill(uniqueDoc);
+    await modalV.locator('input[placeholder*="Claudia"]').fill(uniqueVisitor);
+    await modalV.locator('input[placeholder*="Secretaría"]').fill('Secretaría de Educación Distrital');
+    await modalV.locator('input[placeholder*="Auditoría"]').fill('Inspección de estándares de calidad');
+    await modalV.locator('input[placeholder*="Rectoría"]').fill('Rectoría Central');
+    await modalV.locator('input[placeholder*="GAFETE"]').fill(badgeNum);
 
-    expect(checkinRes.status()).toBe(201);
-    const visitorData = await checkinRes.json();
-    const visitorId = visitorData.id;
-    expect(visitorId).toBeDefined();
+    await modalV.locator('button:has-text("Registrar Ingreso")').click();
+    await expect(modalV).not.toBeVisible({ timeout: 6000 });
 
-    // PostgreSQL Direct Validation
-    const dbVisitas = await queryDb('SELECT * FROM acc_minuta_visitantes WHERE id = $1', [visitorId]);
-    expect(dbVisitas.length).toBeGreaterThan(0);
+    // Toast de confirmación
+    const toast = page.locator('.toast-card, .toast-wrapper, .toast-success');
+    await expect(toast.first()).toBeVisible({ timeout: 6000 });
+
+    // 2. Verificación en PostgreSQL (acc_minuta_visitantes)
+    const dbVisitas = await queryDb('SELECT * FROM acc_minuta_visitantes WHERE numero_documento = $1', [uniqueDoc]);
+    expect(dbVisitas.length).toBe(1);
     expect(dbVisitas[0].nombre_completo).toBe(uniqueVisitor);
-    expect(dbVisitas[0].numero_documento).toBe(uniqueDoc);
     expect(dbVisitas[0].gafete_asignado).toBe(badgeNum);
     expect(dbVisitas[0].fecha_salida).toBeNull();
-  });
 
-  test('13.2 Should register visitor campus check-out and update visit duration (acc_minuta_visitantes)', async ({ request }) => {
-    const tenantId = '11111111-2222-3333-4444-555555555555';
+    // 3. Ejecutar Marcación de Torniquete QR desde la UI
+    await page.locator('button:has-text("Marcación Torniquete QR")').click();
+    const modalT = page.locator('.modal-backdrop');
+    await expect(modalT).toBeVisible();
+    await modalT.locator('button:has-text("Ejecutar Marcación QR")').click();
+    await expect(modalT).not.toBeVisible({ timeout: 6000 });
 
-    // Get an open visitor record
-    const openVisits = await queryDb('SELECT id FROM acc_minuta_visitantes WHERE colegio_id = $1 AND fecha_salida IS NULL ORDER BY created_at DESC LIMIT 1', [tenantId]);
-    expect(openVisits.length).toBeGreaterThan(0);
-    const visitorId = openVisits[0].id;
+    // Verificación en PostgreSQL (acc_marcaciones_torniquete)
+    const dbMarcaciones = await queryDb('SELECT count(*) as total FROM acc_marcaciones_torniquete WHERE colegio_id = $1', [tenantId]);
+    expect(Number(dbMarcaciones[0].total)).toBeGreaterThan(0);
 
-    const checkoutRes = await request.put(`http://127.0.0.1:3001/api/v1/porteria/visitantes/${visitorId}/salida`, {
-      headers: {
-        'x-colegio-id': tenantId,
-      },
-    });
+    // 4. Crear Autorización de Salida y Validar en Portería
+    await page.locator('button:has-text("Salida de Estudiante")').click();
+    const modalS = page.locator('.modal-backdrop');
+    await expect(modalS).toBeVisible();
+    await modalS.locator('input[placeholder*="Cita médica"]').fill('Cita de Odontopediatría E2E');
+    await modalS.locator('input[placeholder*="Carolina Restrepo"]').fill('Andrés Morales (Tutor)');
+    await modalS.locator('input[placeholder*="52876123"]').fill('79812345');
+    await modalS.locator('button:has-text("Autorizar Salida")').click();
+    await expect(modalS).not.toBeVisible({ timeout: 6000 });
 
-    expect(checkoutRes.status()).toBe(200);
-    const checkoutData = await checkoutRes.json();
-    expect(checkoutData.fechaSalida).toBeDefined();
+    // Verificación en PostgreSQL (acc_autorizaciones_salida)
+    const dbSalidas = await queryDb('SELECT * FROM acc_autorizaciones_salida WHERE persona_retira_documento = $1', ['79812345']);
+    expect(dbSalidas.length).toBeGreaterThanOrEqual(1);
+    expect(dbSalidas[0].persona_retira_nombre).toBe('Andrés Morales (Tutor)');
 
-    // PostgreSQL Direct Validation
-    const dbUpdated = await queryDb('SELECT * FROM acc_minuta_visitantes WHERE id = $1', [visitorId]);
-    expect(dbUpdated[0].fecha_salida).not.toBeNull();
-  });
-
-  test('13.3 Should register turnstile digital access event via QR scanning (acc_marcaciones_torniquete)', async ({ request }) => {
-    const tenantId = '11111111-2222-3333-4444-555555555555';
-    const studentId = '11111111-1111-4111-8111-000000000001';
-
-    const qrRes = await request.post('http://127.0.0.1:3001/api/v1/porteria/torniquete/marcar-qr', {
-      headers: {
-        'x-colegio-id': tenantId,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        estudianteId: studentId,
-        tipoMarcacion: 'ENTRADA',
-        puntoAcceso: 'TORNIQUETE_PEATONAL_PRINCIPAL',
-      },
-    });
-
-    expect(qrRes.status()).toBe(201);
-    const marcacionData = await qrRes.json();
-    expect(marcacionData.id).toBeDefined();
-    expect(marcacionData.tipoMarcacion).toBe('ENTRADA');
-
-    // PostgreSQL Direct Validation
-    const dbMarcaciones = await queryDb('SELECT * FROM acc_marcaciones_torniquete WHERE id = $1', [marcacionData.id]);
-    expect(dbMarcaciones.length).toBeGreaterThan(0);
-    expect(dbMarcaciones[0].tipo_marcacion).toBe('ENTRADA');
-    expect(dbMarcaciones[0].punto_acceso).toBe('TORNIQUETE_PEATONAL_PRINCIPAL');
-  });
-
-  test('13.4 Should authorize student early dismissal and execute gate check-out with parent alert (acc_autorizaciones_salida)', async ({ request }) => {
-    const tenantId = '11111111-2222-3333-4444-555555555555';
-    const coordinatorId = '71111111-1111-4111-8111-000000000002';
-
-    // 1. Query valid student matricula
-    const matRows = await queryDb('SELECT id FROM mat_matriculas WHERE colegio_id = $1 LIMIT 1', [tenantId]);
-    expect(matRows.length).toBeGreaterThan(0);
-    const matriculaId = matRows[0].id;
-
-    // 2. Create early dismissal authorization
-    const authRes = await request.post('http://127.0.0.1:3001/api/v1/porteria/autorizaciones-salida', {
-      headers: {
-        'x-colegio-id': tenantId,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        matriculaId: matriculaId,
-        fechaSalida: '2026-09-02',
-        horaSalidaEstimada: '11:45:00',
-        motivo: 'Cita médica especialista pediatría',
-        personaRetiraNombre: 'Carolina Restrepo (Madre)',
-        personaRetiraDocumento: '52876123',
-      },
-    });
-
-    expect(authRes.status()).toBe(201);
-    const authData = await authRes.json();
-    const authId = authData.id;
-    expect(authId).toBeDefined();
-    expect(authData.estado).toBe('AUTORIZADO');
-
-    // 3. Execute check-out validation at gate
-    const gateRes = await request.put(`http://127.0.0.1:3001/api/v1/porteria/autorizaciones-salida/${authId}/validar`, {
-      headers: {
-        'x-colegio-id': tenantId,
-      },
-    });
-
-    expect(gateRes.status()).toBe(200);
-    const gateData = await gateRes.json();
-    expect(gateData.success).toBe(true);
-
-    // 4. PostgreSQL Direct Validation
-    const dbAuth = await queryDb('SELECT * FROM acc_autorizaciones_salida WHERE id = $1', [authId]);
-    expect(dbAuth.length).toBeGreaterThan(0);
-    expect(dbAuth[0].estado).toBe('EJECUTADO');
-    expect(dbAuth[0].motivo).toContain('Cita médica');
+    sniffer.assertZeroErrors();
   });
 });

@@ -2232,11 +2232,30 @@ export class AcademicoComponent implements OnInit {
       return;
     }
 
-    this.cerrarModalNuevaActividad();
-    this.toast.success(
-      '¡Actividad Creada!',
-      `La actividad evaluativa '${this.nuevaActividad.titulo}' (${this.nuevaActividad.pesoPorcentaje}%) fue programada exitosamente.`
-    );
+    const payload = {
+      cargaDocenteId: 'a1b2c3d4-1111-4111-8111-000000000001',
+      periodoId: this.selectedPeriodoId() || this.periodosList()[0]?.id || 'b1b2c3d4-1111-4111-8111-000000000002',
+      titulo: this.nuevaActividad.titulo,
+      dimension: this.nuevaActividad.dimension,
+      pesoPorcentaje: Number(this.nuevaActividad.pesoPorcentaje) || 20,
+      fechaEntrega: this.nuevaActividad.fechaEntrega || '2026-03-30',
+    };
+
+    this.api.post('academico/actividades', payload).subscribe({
+      next: (res: any) => {
+        this.cerrarModalNuevaActividad();
+        this.toast.success(
+          '¡Actividad Creada!',
+          `La actividad evaluativa '${this.nuevaActividad.titulo}' (${this.nuevaActividad.pesoPorcentaje}%) fue programada exitosamente.`
+        );
+      },
+      error: (err: any) => {
+        this.toast.error(
+          'Error al crear actividad',
+          err?.error?.message || 'No fue posible registrar la actividad evaluativa.'
+        );
+      },
+    });
   }
 
   // --- CRUD: ACTUALIZAR / GUARDAR PLANILLA EN LOTE ---
@@ -2244,8 +2263,8 @@ export class AcademicoComponent implements OnInit {
     this.isSaving.set(true);
 
     const payload = {
-      actividadId: 'a1b2c3d4-1111-4111-8111-000000000001',
-      periodoId: this.selectedPeriodoId() || 'b1b2c3d4-1111-4111-8111-000000000002',
+      actividadId: 'fa111111-1111-4111-8111-000000000001',
+      periodoId: this.selectedPeriodoId() || 'b1b2c3d4-1111-4111-8111-000000000001',
       calificaciones: this.planilla().map((p) => ({
         matriculaId: p.matriculaId,
         nota: Number(p.nota),

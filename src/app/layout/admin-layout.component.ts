@@ -121,12 +121,17 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
             }
           }
 
-          <!-- ÁREA FINANCIERA (Únicamente para Rectoría y Tesorería - NUNCA Docentes) -->
+          <!-- ÁREA FINANCIERA & TALENTO HUMANO (Únicamente para Rectoría y Tesorería - NUNCA Docentes) -->
           @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'TESORERO' || authService.user()?.role === 'SUPER_ADMIN') {
-            <div class="nav-section-title">TESORERÍA & CARTERA</div>
+            <div class="nav-section-title">FINANZAS & TALENTO HUMANO</div>
             <a routerLink="/tesoreria" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">💰</span>
               <span class="nav-text">Tesorería & Facturación</span>
+            </a>
+            <a routerLink="/talento-humano" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">👔</span>
+              <span class="nav-text">Talento Humano & Nómina</span>
+              <span class="badge-mini" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">RRHH</span>
             </a>
           }
 
@@ -181,6 +186,16 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
               <span class="nav-text">Importador Excel & SIMAT</span>
               <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">XLS</span>
             </a>
+            <a routerLink="/porteria" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">🛡️</span>
+              <span class="nav-text">Portería & Control Acceso</span>
+              <span class="badge-mini" style="background: rgba(52, 211, 153, 0.2); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">QR</span>
+            </a>
+            <a routerLink="/transporte-restaurante" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">🚌</span>
+              <span class="nav-text">Transporte & Restaurante</span>
+              <span class="badge-mini" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">GPS</span>
+            </a>
           }
         </nav>
 
@@ -191,7 +206,7 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
               <span class="status-dot"></span>
               <span>API Online (v1.0.0)</span>
             </div>
-            <a href="http://localhost:3000/docs" target="_blank" class="swagger-link">
+            <a href="http://localhost:3001/docs" target="_blank" class="swagger-link">
               <span>📚 Swagger</span>
             </a>
           </div>

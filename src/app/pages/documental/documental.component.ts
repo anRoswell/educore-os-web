@@ -1942,7 +1942,7 @@ export class DocumentalComponent implements OnInit {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     const clean = url.startsWith('/') ? url : `/${url}`;
-    return `http://localhost:3000${clean}`;
+    return `http://localhost:3001${clean}`;
   }
 
   verTrazabilidad(inst: InstanciaItem) {

@@ -65,19 +65,30 @@ export const TOKENS_BY_ROLE: Record<string, string> = {
   providedIn: 'root',
 })
 export class AuthService {
-  readonly user = signal<User | null>({
-    id: '71111111-1111-4111-8111-000000000001',
-    email: 'rectoria@sanbartolome.edu.co',
-    primerNombre: 'Carlos',
-    primerApellido: 'Mendoza',
-    role: 'RECTOR',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  });
+  private getInitialUser(): User | null {
+    const saved = localStorage.getItem('educore_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return {
+      id: '71111111-1111-4111-8111-000000000001',
+      email: 'rectoria@sanbartolome.edu.co',
+      primerNombre: 'Carlos',
+      primerApellido: 'Mendoza',
+      role: 'RECTOR',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    };
+  }
 
+  private getInitialToken(): string | null {
+    return localStorage.getItem('educore_token') || TOKENS_BY_ROLE['RECTOR'];
+  }
+
+  readonly user = signal<User | null>(this.getInitialUser());
   readonly currentUser = computed(() => this.user());
   readonly colegiosDisponibles = signal<Colegio[]>([]);
   readonly colegio = signal<Colegio>(COLEGIOS_DEMO[0]);
-  readonly token = signal<string | null>(TOKENS_BY_ROLE['RECTOR']);
+  readonly token = signal<string | null>(this.getInitialToken());
 
   readonly isAuthenticated = computed(() => !!this.user() && !!this.token());
 
@@ -223,22 +234,27 @@ export class AuthService {
       ESTUDIANTE: '11111111-1111-4111-8111-000000000001',
     };
 
-    this.user.set({
+    const userObj = {
       id: userUuidMap[role] || '71111111-1111-4111-8111-000000000001',
       email,
       primerNombre: nombre,
       primerApellido: apellido,
       role,
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    });
+    };
 
-    this.token.set(TOKENS_BY_ROLE[role] || TOKENS_BY_ROLE['RECTOR']);
+    this.user.set(userObj);
+    const tokenVal = TOKENS_BY_ROLE[role] || TOKENS_BY_ROLE['RECTOR'];
+    this.token.set(tokenVal);
+    localStorage.setItem('educore_user', JSON.stringify(userObj));
+    localStorage.setItem('educore_token', tokenVal);
     this.router.navigate(['/dashboard']);
   }
 
   logout() {
     this.user.set(null);
     this.token.set(null);
+    localStorage.removeItem('educore_user');
     localStorage.removeItem('educore_token');
     this.router.navigate(['/login']);
   }

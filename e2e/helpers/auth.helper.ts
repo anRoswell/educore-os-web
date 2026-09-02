@@ -6,8 +6,8 @@ export type DemoRole = 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTU
  * Log into EduCoreOS Web application using a specific role.
  */
 export async function loginAs(page: Page, role: DemoRole = 'RECTOR', colegioIndex: number = 0) {
-  await page.goto('/login');
-  await page.waitForLoadState('networkidle');
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  await page.waitForLoadState('domcontentloaded');
 
   // Select school if needed
   const colegioSelect = page.locator('select.form-select');

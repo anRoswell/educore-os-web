@@ -1,7 +1,29 @@
 import { Client } from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Load backend .env for database config only if available
+try {
+  const envPath = path.resolve(__dirname, '../../../EduCoreOS-api/.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    for (const line of envContent.split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        const [key, ...vals] = trimmed.split('=');
+        const k = key?.trim();
+        if (k && k.startsWith('DB_') && vals.length > 0 && !process.env[k]) {
+          process.env[k] = vals.join('=').trim();
+        }
+      }
+    }
+  }
+} catch (e) {
+  // Ignore fallback
+}
 
 export const dbConfig = {
-  host: process.env['DB_HOST'] || '127.0.0.1',
+  host: process.env['DB_HOST'] || '100.120.112.79',
   port: Number(process.env['DB_PORT']) || 52132,
   user: process.env['DB_USER'] || 'educore_user_qa',
   password: process.env['DB_PASSWORD'] || 'Ing3n13r0D3v3l0p3r_EduCoreOS_QA2026*',

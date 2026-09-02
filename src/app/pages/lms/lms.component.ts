@@ -1918,7 +1918,7 @@ export class LmsComponent implements OnInit {
     this.isSaving.set(true);
     const dto = {
       ...this.nuevaAula,
-      cargaDocenteId: '99999999-9999-9999-9999-999999999999' // mock
+      cargaDocenteId: this.nuevaAula.cargaDocenteId || 'a1b2c3d4-1111-4111-8111-000000000001'
     };
 
     const idToEdit = this.editandoAulaId();
@@ -1930,7 +1930,10 @@ export class LmsComponent implements OnInit {
           this.isSaving.set(false);
           this.toast.success('Aula actualizada', 'El aula se actualizó correctamente.');
         },
-        error: () => this.isSaving.set(false)
+        error: () => {
+          this.isSaving.set(false);
+          this.modalCrearAula.set(false);
+        }
       });
     } else {
       this.api.post<any>('lms/aulas', dto).subscribe({
@@ -1940,7 +1943,10 @@ export class LmsComponent implements OnInit {
           this.isSaving.set(false);
           this.toast.success('Aula creada', 'El aula se ha creado correctamente.');
         },
-        error: () => this.isSaving.set(false)
+        error: () => {
+          this.isSaving.set(false);
+          this.modalCrearAula.set(false);
+        }
       });
     }
   }
@@ -2288,7 +2294,7 @@ export class LmsComponent implements OnInit {
             estudianteApellidos: e.estudiante_apellidos,
             estudianteDocumento: e.estudiante_documento || 'TI-1029384756',
             entregaId: e.entrega_id,
-            fechaEntrega: e.fecha_entrega ? new Date(e.fecha_entrega).toLocaleString('es-CO') : undefined,
+            fechaEntrega: e.fecha_entrega ? new Date(e.fecha_entrega).toISOString() : undefined,
             esTardia: e.es_tardia,
             urlArchivoEntrega: e.url_archivo_entrega,
             contenidoTexto: e.contenido_texto,

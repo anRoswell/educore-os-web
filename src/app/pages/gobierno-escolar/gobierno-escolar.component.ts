@@ -84,131 +84,318 @@ interface JornadaInfo {
         </div>
       }
 
-      <div class="grid-cols-2 mt-4">
-        <!-- Columna 1: Tarjetón Electoral Interactivo -->
-        <div class="card tarjeton-card">
-          <div class="tarjeton-header">
-            <div class="flex-between">
-              <div>
-                <h3>Tarjetón Electoral Digital</h3>
-                <p>{{ jornadaActual().nombre }} — Cargo: <strong>{{ getCargoLabel(jornadaActual().cargo) }}</strong></p>
-              </div>
-              <span class="badge" [class.badge-success]="jornadaActual().estado === 'ABIERTA'" [class.badge-danger]="jornadaActual().estado === 'CERRADA'">
-                {{ jornadaActual().estado === 'ABIERTA' ? 'Urna Abierta' : 'Urna Sellada' }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Banner Informativo si la Elección está Cerrada -->
-          @if (jornadaActual().estado === 'CERRADA') {
-            <div class="urna-cerrada-banner animate-fade-in mt-3">
-              <span class="lock-icon">🔒</span>
-              <div>
-                <strong>Mesa de Votación Cerrada</strong>
-                <p class="text-xs">El proceso de sufragio ha finalizado. Las urnas han sido selladas electrónicamente y el escrutinio oficial ha sido consolidado.</p>
-              </div>
-            </div>
-          }
-
-          <div class="candidatos-grid mt-4">
-            @for (cand of candidatos(); track cand.id) {
-              <div 
-                class="candidato-card card-hover" 
-                [class.selected]="selectedCandidatoId() === cand.id"
-                [class.disabled-card]="jornadaActual().estado === 'CERRADA'"
-                (click)="seleccionarCandidato(cand.id)">
-                <div class="tarjeton-number">{{ cand.numeroTarjeton }}</div>
-                <img [src]="cand.fotoUrl" [alt]="cand.nombre" class="candidato-foto" />
-                <div class="candidato-info">
-                  <h4>{{ cand.nombre }}</h4>
-                  <p class="candidato-lema">"{{ cand.lema }}"</p>
-                </div>
-                <div class="cand-actions">
-                  <span class="select-indicator">
-                    {{ selectedCandidatoId() === cand.id ? '✓ Elegido' : 'Elegir' }}
-                  </span>
-                  @if (!cand.esBlanco && jornadaActual().estado !== 'CERRADA') {
-                    <div class="micro-buttons" (click)="$event.stopPropagation()">
-                      <button (click)="abrirModalEditar(cand)" class="btn-micro" title="Editar Propuesta">✏️</button>
-                      <button (click)="abrirModalEliminar(cand)" class="btn-micro" title="Retirar Candidato">🗑️</button>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-
-          <div class="votar-action-bar mt-4">
-            <button 
-              (click)="emitirVoto()" 
-              class="btn btn-primary w-full" 
-              [disabled]="jornadaActual().estado === 'CERRADA' || !selectedCandidatoId() || isVoting()">
-              <span>
-                @if (jornadaActual().estado === 'CERRADA') {
-                  🔒 Votación Finalizada (Urnas Cerradas)
-                } @else if (isVoting()) {
-                  Cifrando Voto...
-                } @else {
-                  🗳️ Depositar Voto en Urna Secreta
-                }
-              </span>
-            </button>
+      <!-- TARJETAS KPI GOBIERNO ESCOLAR -->
+      <div class="kpi-grid mb-4" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+        <div class="kpi-card card" style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem;">
+          <div class="kpi-icon-box" style="width: 44px; height: 44px; border-radius: 10px; background: #e0e7ff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🗳️</div>
+          <div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Sufragios</span>
+            <h3 style="font-size: 1.5rem; font-weight: 800; margin: 0; color: #0f172a;">{{ totalVotos() }}</h3>
+            <span style="font-size: 0.75rem; color: #16a34a;">Votos secretos SHA-256</span>
           </div>
         </div>
 
-        <!-- Columna 2: Escrutinio en Vivo y Resultados -->
-        <div class="card escrutinio-card">
-          <div class="card-title-bar">
-            <div>
-              <h3>📊 Escrutinio & Mesa de Votación</h3>
-              <p>Total sufragios emitidos: <strong>{{ totalVotos() }} votos</strong></p>
-            </div>
-            <span class="badge" [class.badge-info]="jornadaActual().estado === 'ABIERTA'" [class.badge-success]="jornadaActual().estado === 'CERRADA'">
-              {{ jornadaActual().estado === 'CERRADA' ? 'Escrutinio Oficial 100%' : 'Escrutinio en Vivo' }}
-            </span>
+        <div class="kpi-card card" style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem;">
+          <div class="kpi-icon-box" style="width: 44px; height: 44px; border-radius: 10px; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">👥</div>
+          <div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Candidatos</span>
+            <h3 style="font-size: 1.5rem; font-weight: 800; margin: 0; color: #0f172a;">{{ candidatos().length }}</h3>
+            <span style="font-size: 0.75rem; color: #64748b;">En tarjetón digital</span>
           </div>
+        </div>
 
-          <!-- Candidato Ganador -->
-          @if (candidatos().length > 0 && totalVotos() > 0) {
-            <div class="winner-box mt-3" [class.official-winner]="jornadaActual().estado === 'CERRADA'">
-              <span class="trophy-icon">🏆</span>
-              <div>
-                <span class="winner-label">
-                  {{ jornadaActual().estado === 'CERRADA' ? (getCargoLabel(jornadaActual().cargo) + ' ELECTO(A) OFICIAL:') : ('VIRTUAL ' + getCargoLabel(jornadaActual().cargo) + ' ELECTO(A):') }}
-                </span>
-                <h4 class="winner-name">{{ getGanador()?.nombre }}</h4>
-                <span class="winner-stats">{{ getGanador()?.votos }} votos ({{ getGanador()?.porcentaje }}% de la votación)</span>
-              </div>
-            </div>
-          } @else {
-            <div class="empty-state-box mt-3">
-              <span>🗳️</span>
-              <p>Aún no se han registrado votos en esta elección.</p>
-            </div>
-          }
-
-          <!-- Barras de Escrutinio -->
-          <div class="tally-bars-list mt-4">
-            @for (cand of candidatos(); track cand.id) {
-              <div class="tally-item">
-                <div class="tally-info">
-                  <span>#{{ cand.numeroTarjeton }} — {{ cand.nombre }}</span>
-                  <strong>{{ cand.votos }} votos ({{ cand.porcentaje }}%)</strong>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" [style.width.%]="cand.porcentaje"></div>
-                </div>
-              </div>
-            }
+        <div class="kpi-card card" style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem;">
+          <div class="kpi-icon-box" style="width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🏛️</div>
+          <div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Cargo en Disputa</span>
+            <h3 style="font-size: 1.2rem; font-weight: 800; margin: 0; color: #0f172a;">{{ getCargoLabel(jornadaActual().cargo) }}</h3>
+            <span style="font-size: 0.75rem; color: #64748b;">Elección Institucional</span>
           </div>
+        </div>
 
-          <div class="acta-box mt-4">
-            <p class="text-xs text-slate-500">
-              🔒 Las urnas digitales de EduCoreOS utilizan sellado criptográfico inmutable SHA-256 para garantizar transparencia electoral conforme al Manual de Convivencia y Gobierno Escolar (Ley 115).
-            </p>
+        <div class="kpi-card card" style="display: flex; align-items: center; gap: 1rem; padding: 1.25rem;">
+          <div class="kpi-icon-box" style="width: 44px; height: 44px; border-radius: 10px; background: #f3e8ff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🔒</div>
+          <div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Estado de Urnas</span>
+            <h3 style="font-size: 1.2rem; font-weight: 800; margin: 0; color: #0f172a;">{{ jornadaActual().estado === 'ABIERTA' ? '🟢 ABIERTA' : '🔴 CERRADA' }}</h3>
+            <span style="font-size: 0.75rem; color: #64748b;">Mesa de votación</span>
           </div>
         </div>
       </div>
+
+      <!-- BARRA DE PESTAÑAS GOBIERNO ESCOLAR -->
+      <div class="tabs-nav tabs-nav-bar mb-4" style="display: flex; gap: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'tarjeton'"
+          (click)="activeTab.set('tarjeton')"
+        >
+          <span>🗳️ Tarjetón Electoral</span>
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'escrutinio'"
+          (click)="activeTab.set('escrutinio')"
+        >
+          <span>📊 Escrutinio en Vivo</span>
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'candidatos'"
+          (click)="activeTab.set('candidatos')"
+        >
+          <span>👥 Candidatos Inscritos</span>
+          <span class="tab-badge" style="background: #e2e8f0; font-size: 0.75rem; padding: 0.1rem 0.4rem; border-radius: 9999px; margin-left: 0.35rem;">{{ candidatos().length }}</span>
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'historico'"
+          (click)="activeTab.set('historico')"
+        >
+          <span>📜 Histórico de Elecciones</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: TARJETÓN DIGITAL -->
+      @if (activeTab() === 'tarjeton') {
+        <div class="tab-content animate-fade-in">
+          <div class="card tarjeton-card" style="max-width: 800px; margin: 0 auto;">
+            <div class="tarjeton-header">
+              <div class="flex-between">
+                <div>
+                  <h3>Tarjetón Electoral Digital</h3>
+                  <p>{{ jornadaActual().nombre }} — Cargo: <strong>{{ getCargoLabel(jornadaActual().cargo) }}</strong></p>
+                </div>
+                <span class="badge" [class.badge-success]="jornadaActual().estado === 'ABIERTA'" [class.badge-danger]="jornadaActual().estado === 'CERRADA'">
+                  {{ jornadaActual().estado === 'ABIERTA' ? 'Urna Abierta' : 'Urna Sellada' }}
+                </span>
+              </div>
+            </div>
+
+            @if (jornadaActual().estado === 'CERRADA') {
+              <div class="urna-cerrada-banner animate-fade-in mt-3">
+                <span class="lock-icon">🔒</span>
+                <div>
+                  <strong>Mesa de Votación Cerrada</strong>
+                  <p class="text-xs">El proceso de sufragio ha finalizado. Las urnas han sido selladas electrónicamente y el escrutinio oficial ha sido consolidado.</p>
+                </div>
+              </div>
+            }
+
+            <div class="candidatos-grid mt-4">
+              @for (cand of candidatos(); track cand.id) {
+                <div 
+                  class="candidato-card card-hover" 
+                  [class.selected]="selectedCandidatoId() === cand.id"
+                  [class.disabled-card]="jornadaActual().estado === 'CERRADA'"
+                  (click)="seleccionarCandidato(cand.id)">
+                  <div class="tarjeton-number">{{ cand.numeroTarjeton }}</div>
+                  <img [src]="cand.fotoUrl" [alt]="cand.nombre" class="candidato-foto" />
+                  <div class="candidato-info">
+                    <h4>{{ cand.nombre }}</h4>
+                    <p class="candidato-lema">"{{ cand.lema }}"</p>
+                  </div>
+                  <div class="cand-actions">
+                    <span class="select-indicator">
+                      {{ selectedCandidatoId() === cand.id ? '✓ Elegido' : 'Elegir' }}
+                    </span>
+                    @if (!cand.esBlanco && jornadaActual().estado !== 'CERRADA') {
+                      <div class="micro-buttons" (click)="$event.stopPropagation()">
+                        <button (click)="abrirModalEditar(cand)" class="btn-micro" title="Editar Propuesta">✏️</button>
+                        <button (click)="abrirModalEliminar(cand)" class="btn-micro" title="Retirar Candidato">🗑️</button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="votar-action-bar mt-4">
+              <button 
+                (click)="emitirVoto()" 
+                class="btn btn-primary w-full" 
+                [disabled]="jornadaActual().estado === 'CERRADA' || !selectedCandidatoId() || isVoting()">
+                <span>
+                  @if (jornadaActual().estado === 'CERRADA') {
+                    🔒 Votación Finalizada (Urnas Cerradas)
+                  } @else if (isVoting()) {
+                    Cifrando Voto...
+                  } @else {
+                    🗳️ Depositar Voto en Urna Secreta
+                  }
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 2: ESCRUTINIO EN VIVO -->
+      @if (activeTab() === 'escrutinio') {
+        <div class="tab-content animate-fade-in">
+          <div class="card escrutinio-card" style="max-width: 800px; margin: 0 auto;">
+            <div class="card-title-bar">
+              <div>
+                <h3>📊 Escrutinio & Mesa de Votación</h3>
+                <p>Total sufragios emitidos: <strong>{{ totalVotos() }} votos</strong></p>
+              </div>
+              <span class="badge" [class.badge-info]="jornadaActual().estado === 'ABIERTA'" [class.badge-success]="jornadaActual().estado === 'CERRADA'">
+                {{ jornadaActual().estado === 'CERRADA' ? 'Escrutinio Oficial 100%' : 'Escrutinio en Vivo' }}
+              </span>
+            </div>
+
+            @if (candidatos().length > 0 && totalVotos() > 0) {
+              <div class="winner-box mt-3" [class.official-winner]="jornadaActual().estado === 'CERRADA'">
+                <span class="trophy-icon">🏆</span>
+                <div>
+                  <span class="winner-label">
+                    {{ jornadaActual().estado === 'CERRADA' ? (getCargoLabel(jornadaActual().cargo) + ' ELECTO(A) OFICIAL:') : ('VIRTUAL ' + getCargoLabel(jornadaActual().cargo) + ' ELECTO(A):') }}
+                  </span>
+                  <h4 class="winner-name">{{ getGanador()?.nombre }}</h4>
+                  <span class="winner-stats">{{ getGanador()?.votos }} votos ({{ getGanador()?.porcentaje }}% de la votación)</span>
+                </div>
+              </div>
+            } @else {
+              <div class="empty-state-box mt-3">
+                <span>🗳️</span>
+                <p>Aún no se han registrado votos en esta elección.</p>
+              </div>
+            }
+
+            <div class="tally-bars-list mt-4">
+              @for (cand of candidatos(); track cand.id) {
+                <div class="tally-item">
+                  <div class="tally-info">
+                    <span>#{{ cand.numeroTarjeton }} — {{ cand.nombre }}</span>
+                    <strong>{{ cand.votos }} votos ({{ cand.porcentaje }}%)</strong>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill" [style.width.%]="cand.porcentaje"></div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="acta-box mt-4">
+              <p class="text-xs text-slate-500">
+                🔒 Las urnas digitales de EduCoreOS utilizan sellado criptográfico inmutable SHA-256 para garantizar transparencia electoral conforme al Manual de Convivencia y Gobierno Escolar (Ley 115).
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 3: CANDIDATOS INSCRITOS -->
+      @if (activeTab() === 'candidatos') {
+        <div class="tab-content animate-fade-in">
+          <div class="section-intro card">
+            <div class="flex-between">
+              <div>
+                <h3>👥 Candidatos Inscritos en la Elección</h3>
+                <p class="text-sm">Listado oficial de postulantes para {{ jornadaActual().nombre }}</p>
+              </div>
+              <button (click)="abrirModalNuevoCandidato()" class="btn btn-primary">
+                ➕ Inscribir Candidato
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container card mt-3">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Tarjetón</th>
+                  <th>Candidato(a)</th>
+                  <th>Lema / Propuesta</th>
+                  <th>Votos Obtenidos</th>
+                  <th>Porcentaje</th>
+                  <th style="text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cand of candidatos(); track cand.id) {
+                  <tr>
+                    <td><strong>#{{ cand.numeroTarjeton }}</strong></td>
+                    <td>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <img [src]="cand.fotoUrl" [alt]="cand.nombre" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+                        <strong>{{ cand.nombre }}</strong>
+                      </div>
+                    </td>
+                    <td><span class="text-xs">{{ cand.lema }}</span></td>
+                    <td><strong>{{ cand.votos }}</strong></td>
+                    <td><span class="badge badge-primary">{{ cand.porcentaje }}%</span></td>
+                    <td style="text-align: right;">
+                      <div class="actions-group" style="display: flex; justify-content: flex-end; gap: 0.35rem;">
+                        <button (click)="abrirModalEditar(cand)" class="btn btn-secondary btn-sm" title="Editar Propuesta">
+                          ✏️ Editar
+                        </button>
+                        <button (click)="abrirModalEliminar(cand)" class="btn btn-danger btn-sm" title="Retirar Candidato">
+                          🗑️ Retirar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 4: HISTÓRICO DE ELECCIONES -->
+      @if (activeTab() === 'historico') {
+        <div class="tab-content animate-fade-in">
+          <div class="section-intro card">
+            <div class="flex-between">
+              <div>
+                <h3>📜 Histórico de Procesos Electorales</h3>
+                <p class="text-sm">Registro inmutable de jornadas de Gobierno Escolar y sus actas de escrutinio.</p>
+              </div>
+              <button (click)="abrirModalNuevaJornada()" class="btn btn-primary">
+                🏛️ Nueva Elección
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container card mt-3">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Proceso Electoral</th>
+                  <th>Cargo</th>
+                  <th>Fecha Apertura</th>
+                  <th>Total Sufragios</th>
+                  <th>Estado</th>
+                  <th style="text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (j of historicoJornadas(); track j.id) {
+                  <tr>
+                    <td><strong>{{ j.nombre }}</strong></td>
+                    <td><span class="badge badge-info">{{ getCargoLabel(j.cargo) }}</span></td>
+                    <td>{{ j.fechaApertura }}</td>
+                    <td><strong>{{ j.totalVotos }}</strong></td>
+                    <td>
+                      <span class="badge" [class.badge-success]="j.estado === 'ABIERTA'" [class.badge-secondary]="j.estado === 'CERRADA'">
+                        {{ j.estado }}
+                      </span>
+                    </td>
+                    <td style="text-align: right;">
+                      <div class="actions-group" style="display: flex; justify-content: flex-end; gap: 0.35rem;">
+                        <button (click)="abrirModalActaEscrutinio()" class="btn btn-secondary btn-sm" title="Ver Acta">
+                          📄 Acta
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
 
       <!-- MODAL 1: NUEVA ELECCIÓN DESDE CERO -->
       @if (modalNuevaJornada()) {
@@ -930,6 +1117,37 @@ export class GobiernoEscolarComponent {
   readonly votoComprobante = signal<string | null>(null);
   readonly totalVotos = signal(420);
 
+  // Navegación de Pestañas
+  readonly activeTab = signal<'tarjeton' | 'escrutinio' | 'candidatos' | 'historico'>('tarjeton');
+
+  // Histórico de Jornadas Electorales
+  readonly historicoJornadas = signal<any[]>([
+    {
+      id: '22222222-2222-4222-8222-222222222222',
+      nombre: 'Elecciones de Personero Estudiantil 2026',
+      cargo: 'PERSONERO',
+      fechaApertura: '01/03/2026 08:00 AM',
+      totalVotos: 420,
+      estado: 'ABIERTA',
+    },
+    {
+      id: '22222222-2222-4222-8222-222222222221',
+      nombre: 'Elecciones de Contralor Escolar 2025',
+      cargo: 'CONTRALOR',
+      fechaApertura: '15/03/2025 08:00 AM',
+      totalVotos: 395,
+      estado: 'CERRADA',
+    },
+    {
+      id: '22222222-2222-4222-8222-222222222220',
+      nombre: 'Representante al Consejo Directivo 2025',
+      cargo: 'CONSEJO_DIRECTIVO',
+      fechaApertura: '20/03/2025 09:00 AM',
+      totalVotos: 412,
+      estado: 'CERRADA',
+    },
+  ]);
+
   // Estados para Modales
   readonly modalNuevaJornada = signal(false);
   readonly modalCerrarJornada = signal(false);
@@ -1150,6 +1368,10 @@ export class GobiernoEscolarComponent {
 
   reabrirJornada() {
     this.jornadaActual.update((j) => ({ ...j, estado: 'ABIERTA' }));
+    this.api.put(`gobierno-escolar/jornadas/${this.jornadaActual().id}`, { estado: 'ABIERTA' }).subscribe({
+      next: () => {},
+      error: () => {},
+    });
     this.toast.info('Urnas Reabiertas', 'El proceso electoral ha sido reabierto para recibir sufragios.');
   }
 

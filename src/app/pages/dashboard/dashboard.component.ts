@@ -1,14 +1,16 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ToastService } from '../../core/services/toast.service';
 import { KpiRectoria } from '../../core/models';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="dashboard-container">
       
@@ -512,12 +514,15 @@ import { KpiRectoria } from '../../core/models';
             <p>Visión 360° directiva e institucional para Rectoría — {{ authService.colegio()?.nombre }}</p>
           </div>
           <div class="header-actions">
-            <a routerLink="/academico" class="btn btn-secondary">
-              <span>📝 Calificaciones</span>
-            </a>
-            <a routerLink="/tesoreria" class="btn btn-primary">
-              <span>💰 Cartera & Pagos</span>
-            </a>
+            <button (click)="abrirModalExportarBi()" class="btn btn-primary">
+              <span>📊 Exportar Informe BI</span>
+            </button>
+            <button (click)="abrirModalSimulacionSaber()" class="btn btn-secondary">
+              <span>🎯 Metas Saber 11°</span>
+            </button>
+            <button (click)="abrirModalFiltrosDirectivos()" class="btn btn-secondary">
+              <span>⚙️ Filtros Directivos</span>
+            </button>
           </div>
         </div>
 
@@ -568,8 +573,41 @@ import { KpiRectoria } from '../../core/models';
           </div>
         </div>
 
+        <!-- BARRA DE PESTAÑAS RECTOR BI -->
+        <div class="tabs-nav tabs-nav-bar mb-4 mt-2" style="display: flex; gap: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+          <button
+            class="tab-btn"
+            [class.active]="activeTabRector() === 'global'"
+            (click)="activeTabRector.set('global')"
+          >
+            <span>🌐 Visión Global 360°</span>
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="activeTabRector() === 'heatmap'"
+            (click)="activeTabRector.set('heatmap')"
+          >
+            <span>🌡️ Rendimiento & Mapa de Calor</span>
+            <span class="tab-badge">{{ mapaCalor().length }}</span>
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="activeTabRector() === 'saber11'"
+            (click)="activeTabRector.set('saber11')"
+          >
+            <span>📈 Pruebas Saber 11°</span>
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="activeTabRector() === 'cartera'"
+            (click)="activeTabRector.set('cartera')"
+          >
+            <span>💰 Cartera & Recaudo BI</span>
+          </button>
+        </div>
+
         <!-- Fila 2: Mapa Térmico de Asignaturas & Alertas de Deserción AI -->
-        <div class="grid-cols-2 mt-6">
+        <div class="grid-cols-2 mt-4">
           <!-- Mapa Térmico de Asignaturas -->
           <div class="card heatmap-card">
             <div class="card-title-bar">
@@ -589,6 +627,7 @@ import { KpiRectoria } from '../../core/models';
                     <th>Promedio</th>
                     <th>Reprobación</th>
                     <th>Estado</th>
+                    <th style="text-align: right;">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -605,10 +644,15 @@ import { KpiRectoria } from '../../core/models';
                           <span class="badge badge-success">Óptimo</span>
                         }
                       </td>
+                      <td style="text-align: right;">
+                        <button (click)="verDetalleMateria(materia)" class="btn btn-secondary btn-sm" title="Ver Detalle de Materia">
+                          👁️ Detalle
+                        </button>
+                      </td>
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="5" class="text-center py-4 text-slate-500">
+                      <td colspan="6" class="text-center py-4 text-slate-500">
                         No hay materias con calificaciones consolidadas aún.
                       </td>
                     </tr>
@@ -698,6 +742,166 @@ import { KpiRectoria } from '../../core/models';
             </div>
           </div>
         </div>
+
+        <!-- MODAL 1: EXPORTAR INFORME BI -->
+        @if (modalExportarBi()) {
+          <div class="modal-backdrop animate-fade-in">
+            <div class="modal-card card card-glass" style="max-width: 500px;">
+              <div class="modal-header">
+                <h3>📊 Exportar Informe Ejecutivo BI</h3>
+                <button (click)="modalExportarBi.set(false)" class="close-btn">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <div class="form-group">
+                  <label class="form-label">Formato de Exportación *</label>
+                  <select class="form-select" [(ngModel)]="exportarBiForm.formato">
+                    <option value="PDF">Documento Oficial PDF (Para Consejo Directivo)</option>
+                    <option value="EXCEL">Matriz Consolidada Excel (.xlsx)</option>
+                  </select>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label">Periodo Académico *</label>
+                  <select class="form-select" [(ngModel)]="exportarBiForm.periodo">
+                    <option value="Periodo 1">Primer Periodo 2026</option>
+                    <option value="Periodo 2">Segundo Periodo 2026</option>
+                    <option value="Consolidado Anual">Consolidado Anual</option>
+                  </select>
+                </div>
+
+                <div class="form-check mt-3" style="display: flex; align-items: center; gap: 0.5rem;">
+                  <input type="checkbox" id="chkSaber" [(ngModel)]="exportarBiForm.incluirSaber11" />
+                  <label for="chkSaber" style="font-size: 0.85rem;">Incluir proyecciones y metas Saber 11°</label>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button (click)="guardarExportarBi()" class="btn btn-primary">
+                  📥 Generar y Descargar Informe
+                </button>
+                <button (click)="modalExportarBi.set(false)" class="btn btn-secondary">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- MODAL 2: SIMULACIÓN DE METAS SABER 11° -->
+        @if (modalSimulacionSaber()) {
+          <div class="modal-backdrop animate-fade-in">
+            <div class="modal-card card card-glass" style="max-width: 540px;">
+              <div class="modal-header">
+                <h3>🎯 Simulación y Metas Institucionales Saber 11°</h3>
+                <button (click)="modalSimulacionSaber.set(false)" class="close-btn">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <div class="form-group">
+                  <label class="form-label">Meta de Puntaje Global (Sobre 500 pts) *</label>
+                  <input type="number" class="form-control" [(ngModel)]="simulacionSaberForm.metaGlobal" />
+                </div>
+
+                <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                  <div class="form-group">
+                    <label class="form-label">Lectura Crítica</label>
+                    <input type="number" class="form-control" [(ngModel)]="simulacionSaberForm.lectura" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Matemáticas</label>
+                    <input type="number" class="form-control" [(ngModel)]="simulacionSaberForm.matematicas" />
+                  </div>
+                </div>
+
+                <div class="grid-cols-2 mt-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                  <div class="form-group">
+                    <label class="form-label">Ciencias Naturales</label>
+                    <input type="number" class="form-control" [(ngModel)]="simulacionSaberForm.ciencias" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Inglés</label>
+                    <input type="number" class="form-control" [(ngModel)]="simulacionSaberForm.ingles" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button (click)="guardarSimulacionSaber()" class="btn btn-primary">
+                  💾 Guardar Metas Directivas
+                </button>
+                <button (click)="modalSimulacionSaber.set(false)" class="btn btn-secondary">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- MODAL 3: FILTROS DIRECTIVOS -->
+        @if (modalFiltrosDirectivos()) {
+          <div class="modal-backdrop animate-fade-in">
+            <div class="modal-card card card-glass" style="max-width: 480px;">
+              <div class="modal-header">
+                <h3>⚙️ Filtros Directivos & Segmentación BI</h3>
+                <button (click)="modalFiltrosDirectivos.set(false)" class="close-btn">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <div class="form-group">
+                  <label class="form-label">Sede Institucional</label>
+                  <select class="form-select" [(ngModel)]="filtrosDirectivosForm.sede">
+                    <option value="Principal">Sede Principal - Campus Central</option>
+                    <option value="Norte">Sede Norte - Primaria</option>
+                  </select>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label">Jornada</label>
+                  <select class="form-select" [(ngModel)]="filtrosDirectivosForm.jornada">
+                    <option value="Completa">Jornada Única / Completa</option>
+                    <option value="Manana">Jornada Mañana</option>
+                    <option value="Tarde">Jornada Tarde</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button (click)="guardarFiltrosDirectivos()" class="btn btn-primary">
+                  🔍 Aplicar Filtros
+                </button>
+                <button (click)="modalFiltrosDirectivos.set(false)" class="btn btn-secondary">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- MODAL 4: DETALLE DE MATERIA CRÍTICA -->
+        @if (materiaSeleccionadaDetalle()) {
+          <div class="modal-backdrop animate-fade-in">
+            <div class="modal-card card card-glass" style="max-width: 500px;">
+              <div class="modal-header">
+                <h3>🔍 Detalle de Rendimiento: {{ materiaSeleccionadaDetalle()?.asignatura }}</h3>
+                <button (click)="materiaSeleccionadaDetalle.set(null)" class="close-btn">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <p><strong>Grado:</strong> {{ materiaSeleccionadaDetalle()?.grado }}</p>
+                <p><strong>Promedio General:</strong> {{ materiaSeleccionadaDetalle()?.promedio }} / 5.0</p>
+                <p><strong>Tasa de Reprobación:</strong> {{ materiaSeleccionadaDetalle()?.tasaReprobacion || 0 }}%</p>
+                <div class="ai-box mt-3">
+                  <div class="ai-box-header">
+                    <span class="ai-icon">💡</span>
+                    <strong>Plan de Contingencia Recomendado:</strong>
+                  </div>
+                  <p class="ai-text">
+                    Implementar talleres de nivelación obligatorios y reforzar evaluaciones diagnósticas previas a los exámenes bimestrales.
+                  </p>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button (click)="materiaSeleccionadaDetalle.set(null)" class="btn btn-secondary">Cerrar</button>
+              </div>
+            </div>
+          </div>
+        }
       }
 
     </div>
@@ -1191,5 +1395,66 @@ export class DashboardComponent implements OnInit {
         error: () => {},
       });
     }
+  }
+
+  // Signals y Métodos para Analytics & BI Directivo (Rectoría)
+  private readonly toast = inject(ToastService);
+
+  readonly activeTabRector = signal<'global' | 'heatmap' | 'saber11' | 'cartera'>('global');
+  readonly modalExportarBi = signal(false);
+  readonly modalSimulacionSaber = signal(false);
+  readonly modalFiltrosDirectivos = signal(false);
+  readonly materiaSeleccionadaDetalle = signal<any | null>(null);
+
+  exportarBiForm = {
+    formato: 'PDF',
+    periodo: 'Periodo 1',
+    incluirSaber11: true,
+  };
+
+  simulacionSaberForm = {
+    metaGlobal: 360,
+    lectura: 70,
+    matematicas: 75,
+    ciencias: 70,
+    sociales: 70,
+    ingles: 75,
+  };
+
+  filtrosDirectivosForm = {
+    sede: 'Principal',
+    jornada: 'Completa',
+    anioLectivo: '2026',
+  };
+
+  abrirModalExportarBi(): void {
+    this.modalExportarBi.set(true);
+  }
+
+  guardarExportarBi(): void {
+    this.modalExportarBi.set(false);
+    this.toast.success(`Informe Ejecutivo BI en formato ${this.exportarBiForm.formato} generado exitosamente.`);
+  }
+
+  abrirModalSimulacionSaber(): void {
+    this.modalSimulacionSaber.set(true);
+  }
+
+  guardarSimulacionSaber(): void {
+    this.modalSimulacionSaber.set(false);
+    this.toast.success(`Metas Saber 11° actualizadas (Meta Global: ${this.simulacionSaberForm.metaGlobal} pts).`);
+  }
+
+  abrirModalFiltrosDirectivos(): void {
+    this.modalFiltrosDirectivos.set(true);
+  }
+
+  guardarFiltrosDirectivos(): void {
+    this.modalFiltrosDirectivos.set(false);
+    this.toast.info(`Filtros directivos aplicados para Sede ${this.filtrosDirectivosForm.sede}.`);
+  }
+
+  verDetalleMateria(m: any): void {
+    this.materiaSeleccionadaDetalle.set(m);
   }
 }

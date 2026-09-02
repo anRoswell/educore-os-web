@@ -16,6 +16,9 @@ import { LmsComponent } from './pages/lms/lms.component';
 import { ConvivenciaComponent } from './pages/convivencia/convivencia.component';
 import { InclusionComponent } from './pages/inclusion/inclusion.component';
 import { HabeasDataComponent } from './pages/habeas-data/habeas-data.component';
+import { PorteriaComponent } from './pages/porteria/porteria.component';
+import { TalentoHumanoComponent } from './pages/talento-humano/talento-humano.component';
+import { TransporteRestauranteComponent } from './pages/transporte-restaurante/transporte-restaurante.component';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -96,6 +99,28 @@ export const routes: Routes = [
       {
         path: 'importador',
         component: ImportadorComponent,
+      },
+      {
+        path: 'porteria',
+        component: PorteriaComponent,
+      },
+      {
+        path: 'talento-humano',
+        component: TalentoHumanoComponent,
+      },
+      {
+        path: 'rrhh',
+        redirectTo: 'talento-humano',
+        pathMatch: 'full',
+      },
+      {
+        path: 'transporte-restaurante',
+        component: TransporteRestauranteComponent,
+      },
+      {
+        path: 'transporte',
+        redirectTo: 'transporte-restaurante',
+        pathMatch: 'full',
       },
     ],
   },

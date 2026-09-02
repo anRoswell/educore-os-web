@@ -127,6 +127,7 @@ export class ComunicacionesComponent implements OnInit {
   
   guardar(publicar: boolean) {
     this.selectedComunicado.activo = publicar;
+    this.selectedComunicado.contenido = this.selectedComunicado.contenidoHtml || this.selectedComunicado.titulo || 'Comunicado institucional';
     
     if (this.selectedComunicado.id) {
       this.api.put(`comunicaciones/${this.selectedComunicado.id}`, this.selectedComunicado).subscribe({

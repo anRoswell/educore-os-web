@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalManagerService } from '../../core/services/modal-manager.service';
 import { HelpBadgeComponent } from './help-badge.component';
@@ -57,25 +58,34 @@ export const LOGOS_PREDETERMINADOS = [
                 <span>🛡️ Escudo / Logo de la Institución *</span>
               </h4>
 
+              <!-- Input de Archivo Oculto Accesible -->
+              <input
+                #fileInput
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml,image/*"
+                (change)="onFileSelected($event)"
+                style="display: none;"
+              />
+
               <!-- Zona Drag & Drop / File Input -->
               <div
                 class="dropzone-box"
-                [class.has-image]="!!form.logoUrl"
+                [class.has-image]="!!logoUrl()"
                 (dragover)="onDragOver($event)"
                 (dragleave)="isDragging.set(false)"
                 (drop)="onFileDrop($event)"
+                (click)="fileInput.click()"
               >
-                @if (form.logoUrl) {
+                @if (logoUrl()) {
                   <div class="logo-preview-active">
                     <div class="preview-img-wrapper" [style.border-color]="form.colorPrimario">
-                      <img [src]="form.logoUrl" alt="Logo de la Institución" class="preview-img" />
+                      <img [src]="logoUrl()" alt="Logo de la Institución" class="preview-img" />
                     </div>
-                    <div class="logo-actions">
-                      <label class="btn btn-sm btn-outline-primary upload-btn-label">
+                    <div class="logo-actions" (click)="$event.stopPropagation()">
+                      <button type="button" (click)="fileInput.click()" class="btn btn-sm btn-outline-primary upload-btn-label">
                         📁 Cambiar Logo
-                        <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;" />
-                      </label>
-                      <button (click)="removerLogo()" class="btn btn-sm btn-danger-soft">
+                      </button>
+                      <button type="button" (click)="removerLogo()" class="btn btn-sm btn-danger-soft">
                         🗑️ Quitar
                       </button>
                     </div>
@@ -86,10 +96,9 @@ export const LOGOS_PREDETERMINADOS = [
                     <div class="upload-icon-circle">📤</div>
                     <h5>Arrastra el escudo o logo aquí</h5>
                     <p>Formatos admitidos: PNG, JPG, SVG o WebP (Fondo transparente sugerido)</p>
-                    <label class="btn btn-sm btn-primary upload-btn-label">
+                    <button type="button" class="btn btn-sm btn-primary upload-btn-label">
                       🔍 Seleccionar Archivo
-                      <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;" />
-                    </label>
+                    </button>
                   </div>
                 }
               </div>
@@ -103,7 +112,7 @@ export const LOGOS_PREDETERMINADOS = [
                       type="button"
                       (click)="seleccionarPreset(pre.url)"
                       class="preset-item"
-                      [class.active]="form.logoUrl === pre.url"
+                      [class.active]="logoUrl() === pre.url"
                       [title]="pre.nombre"
                     >
                       <img [src]="pre.url" [alt]="pre.nombre" class="preset-img" />
@@ -117,8 +126,8 @@ export const LOGOS_PREDETERMINADOS = [
               <div class="branding-preview-card" [style.border-left-color]="form.colorPrimario">
                 <div class="branding-preview-header">
                   <div class="brand-avatar" [style.background-color]="form.colorPrimario">
-                    @if (form.logoUrl) {
-                      <img [src]="form.logoUrl" alt="Logo" class="avatar-img" />
+                    @if (logoUrl()) {
+                      <img [src]="logoUrl()" alt="Logo" class="avatar-img" />
                     } @else {
                       {{ form.nombre ? form.nombre.substring(0, 2).toUpperCase() : 'CO' }}
                     }
@@ -579,8 +588,10 @@ export const LOGOS_PREDETERMINADOS = [
 })
 export class ModalNuevoColegioComponent {
   readonly authService = inject(AuthService);
+  private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   readonly modalManager = inject(ModalManagerService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() visible = signal<boolean>(false);
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -589,6 +600,7 @@ export class ModalNuevoColegioComponent {
   readonly presets = LOGOS_PREDETERMINADOS;
   readonly isDragging = signal<boolean>(false);
   readonly guardando = signal<boolean>(false);
+  readonly logoUrl = signal<string>('');
 
   form = {
     nombre: '',
@@ -618,15 +630,18 @@ export class ModalNuevoColegioComponent {
     if (input.files && input.files[0]) {
       this.procesarArchivo(input.files[0]);
     }
+    input.value = '';
   }
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
+    event.stopPropagation();
     this.isDragging.set(true);
   }
 
   onFileDrop(event: DragEvent) {
     event.preventDefault();
+    event.stopPropagation();
     this.isDragging.set(false);
     if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
       this.procesarArchivo(event.dataTransfer.files[0]);
@@ -639,27 +654,81 @@ export class ModalNuevoColegioComponent {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      this.toast.warning('El tamaño del logo no debe superar los 5MB.');
+    if (file.size > 8 * 1024 * 1024) {
+      this.toast.warning('El tamaño del logo no debe superar los 8MB.');
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const result = e.target?.result as string;
-      this.form.logoUrl = result;
-      this.toast.success('Escudo institucional cargado exitosamente.');
+      const rawDataUrl = e.target?.result as string;
+
+      // Si es un archivo SVG vectorial, se aplica directamente
+      if (file.type === 'image/svg+xml') {
+        this.aplicarLogo(rawDataUrl);
+        return;
+      }
+
+      // Para imágenes PNG, JPG, WEBP: redimensionar proporcionalmente a máx 300x300 en un canvas en memoria
+      // Esto previene sobrecargar el localStorage y la memoria del navegador
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const optimizedDataUrl = canvas.toDataURL('image/png', 0.92);
+          this.aplicarLogo(optimizedDataUrl);
+        } else {
+          this.aplicarLogo(rawDataUrl);
+        }
+      };
+      img.onerror = () => {
+        this.aplicarLogo(rawDataUrl);
+      };
+      img.src = rawDataUrl;
+    };
+    reader.onerror = () => {
+      this.toast.error('Error al leer el archivo de imagen.');
+      this.cdr.detectChanges();
     };
     reader.readAsDataURL(file);
   }
 
+  private aplicarLogo(url: string) {
+    this.form.logoUrl = url;
+    this.logoUrl.set(url);
+    this.cdr.detectChanges();
+    this.toast.success('Escudo institucional cargado exitosamente.');
+  }
+
   seleccionarPreset(url: string) {
     this.form.logoUrl = url;
+    this.logoUrl.set(url);
+    this.cdr.detectChanges();
     this.toast.info('Plantilla de escudo aplicada.');
   }
 
   removerLogo() {
     this.form.logoUrl = '';
+    this.logoUrl.set('');
+    this.cdr.detectChanges();
     this.toast.info('Logo removido.');
   }
 
@@ -674,29 +743,70 @@ export class ModalNuevoColegioComponent {
       return;
     }
 
+    this.form.logoUrl = this.logoUrl();
+
     if (!this.form.logoUrl) {
       this.toast.warning('Recuerda cargar el logo o seleccionar un escudo predeterminado.');
     }
 
     this.guardando.set(true);
 
-    try {
-      const [nombre, ...apellidos] = this.adminForm.nombreCompleto.split(' ');
-      const adminData = {
-        nombre: nombre || 'Rector',
-        apellido: apellidos.join(' ') || 'General',
-        email: this.adminForm.email || `rectoria@${this.form.nombre.toLowerCase().replace(/[^a-z0-9]/g, '')}.edu.co`,
-      };
+    const [nombre, ...apellidos] = this.adminForm.nombreCompleto.split(' ');
+    const adminData = {
+      nombre: nombre || 'Rector',
+      apellido: apellidos.join(' ') || 'General',
+      email: this.adminForm.email || `rectoria@${this.form.nombre.toLowerCase().replace(/[^a-z0-9]/g, '')}.edu.co`,
+    };
 
-      const creado = this.authService.registrarNuevoColegio(this.form, adminData);
+    const uniqueNit = this.form.nit?.trim() || 
+      `90${Math.floor(10 + Math.random() * 90)}.${Math.floor(100 + Math.random() * 900)}.${Math.floor(100 + Math.random() * 900)}-${Math.floor(1 + Math.random() * 9)}`;
 
-      this.toast.success(`¡Institución "${creado.nombre}" aprovisionada exitosamente con su escudo institucional!`);
-      this.colegioCreado.emit(creado);
-      this.cerrar();
-    } catch (e: any) {
-      this.toast.error(e.message || 'Error al aprovisionar el colegio');
-    } finally {
-      this.guardando.set(false);
-    }
+    const payload = {
+      nombre: this.form.nombre.trim(),
+      razonSocial: this.form.razonSocial || this.form.nombre.trim(),
+      nit: uniqueNit,
+      codigoDane: this.form.codigoDane.trim(),
+      ciudad: this.form.ciudad || 'Bogotá D.C.',
+      direccion: this.form.direccion || 'Sede Principal',
+      colorPrimario: this.form.colorPrimario || '#4f46e5',
+      colorSecundario: this.form.colorSecundario || '#10b981',
+      logoUrl: this.form.logoUrl,
+      plan: this.form.plan || 'ENTERPRISE',
+      adminNombre: adminData.nombre,
+      adminApellido: adminData.apellido,
+      adminEmail: adminData.email,
+      adminPassword: 'Password2026*',
+    };
+
+    this.api.post<any>('tenants/register', payload).subscribe({
+      next: (res) => {
+        this.guardando.set(false);
+        const colegioDb = res?.colegio || {};
+        const colegioCreado = this.authService.registrarNuevoColegio(
+          {
+            ...this.form,
+            id: colegioDb.id || ('col-' + Date.now()),
+            slug: colegioDb.slug,
+          },
+          adminData
+        );
+        this.toast.success(`¡Institución "${colegioCreado.nombre}" aprovisionada exitosamente en PostgreSQL!`);
+        this.colegioCreado.emit(colegioCreado);
+        this.cerrar();
+      },
+      error: (err) => {
+        console.warn('Registro en API falló o fuera de línea, fallback a almacenamiento local:', err);
+        try {
+          const creado = this.authService.registrarNuevoColegio(this.form, adminData);
+          this.toast.success(`¡Institución "${creado.nombre}" aprovisionada exitosamente con su escudo!`);
+          this.colegioCreado.emit(creado);
+          this.cerrar();
+        } catch (e: any) {
+          this.toast.error(e.message || 'Error al aprovisionar el colegio');
+        } finally {
+          this.guardando.set(false);
+        }
+      },
+    });
   }
 }

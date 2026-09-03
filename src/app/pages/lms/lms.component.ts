@@ -567,7 +567,7 @@ export interface EntregaLmsItem {
                     <span class="guia-icon">📎</span>
                     <div class="guia-info">
                       <span class="guia-label">Guía / Material de Trabajo</span>
-                      <a [href]="tarea.urlGuiaAdjunta" target="_blank" class="guia-link">Descargar / Ver Documento ↗</a>
+                      <a [href]="resolveUrl(tarea.urlGuiaAdjunta)" target="_blank" class="guia-link">Descargar / Ver Documento ↗</a>
                     </div>
                   </div>
                 }
@@ -713,9 +713,14 @@ export interface EntregaLmsItem {
                     </td>
                     <td>
                       @if (est.urlArchivoEntrega) {
-                        <a [href]="est.urlArchivoEntrega" target="_blank" class="btn btn-secondary btn-xs">
-                          <span>📎 Ver Evidencia (PDF/Foto) ↗</span>
-                        </a>
+                        <div class="flex items-center gap-1">
+                          <button (click)="abrirVisorEvidencia(est.urlArchivoEntrega, 'Evidencia: ' + est.estudianteNombres)" class="btn btn-secondary btn-xs btn-ver-evidencia">
+                            <span>📎 Ver Evidencia</span>
+                          </button>
+                          <a [href]="resolveUrl(est.urlArchivoEntrega)" target="_blank" class="btn btn-outline btn-xs" title="Abrir en pestaña nueva">
+                            ↗
+                          </a>
+                        </div>
                         @if (est.contenidoTexto) {
                           <p class="text-xs text-slate-600 mt-1 italic font-serif">"{{ est.contenidoTexto }}"</p>
                         }
@@ -822,7 +827,7 @@ export interface EntregaLmsItem {
                 <p class="tarea-instrucciones">{{ tarea.instrucciones }}</p>
 
                 @if (tarea.urlGuiaAdjunta) {
-                  <a [href]="tarea.urlGuiaAdjunta" target="_blank" class="guia-attachment">
+                  <a [href]="resolveUrl(tarea.urlGuiaAdjunta)" target="_blank" class="guia-attachment">
                     <span class="guia-icon">📎</span>
                     <span class="guia-link">Descargar Guía de Trabajo ↗</span>
                   </a>
@@ -1023,6 +1028,33 @@ export interface EntregaLmsItem {
             <div class="modal-footer" style="border: none; padding-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
               <button (click)="modalEliminarTarea.set(null)" class="btn btn-secondary">Cancelar</button>
               <button (click)="confirmarEliminarTarea()" class="btn btn-danger">Sí, Eliminar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- MODAL VISOR DE EVIDENCIAS Y DOCUMENTOS -->
+      @if (modalVisorEvidencia().visible) {
+        <div class="modal-backdrop" style="z-index: 10500;">
+          <div class="modal-card visor-modal animate-slide-up" style="max-width: 900px; width: 95%; height: 85vh; display: flex; flex-direction: column;">
+            <div class="modal-header flex justify-between items-center p-4 border-b">
+              <h3 class="font-bold text-lg text-slate-800">📄 {{ modalVisorEvidencia().titulo }}</h3>
+              <div class="flex items-center gap-2">
+                <a [href]="modalVisorEvidencia().url" target="_blank" download class="btn btn-secondary btn-xs">Descargar</a>
+                <button (click)="cerrarVisorEvidencia()" class="close-btn">&times;</button>
+              </div>
+            </div>
+            <div class="modal-body flex-1 p-2 bg-slate-100 flex items-center justify-center overflow-hidden">
+              @if (modalVisorEvidencia().esImagen) {
+                <img [src]="modalVisorEvidencia().url" [alt]="modalVisorEvidencia().titulo" class="max-h-full max-w-full object-contain rounded shadow" />
+              } @else if (modalVisorEvidencia().esPdf) {
+                <iframe [src]="getSafeUrl(modalVisorEvidencia().url)" class="w-full h-full border-0 rounded" title="Visor PDF"></iframe>
+              } @else {
+                <iframe [src]="getSafeUrl(modalVisorEvidencia().url)" class="w-full h-full border-0 rounded" title="Visor Documento"></iframe>
+              }
+            </div>
+            <div class="modal-footer p-3 border-t flex justify-end">
+              <button (click)="cerrarVisorEvidencia()" class="btn btn-secondary">Cerrar Visor</button>
             </div>
           </div>
         </div>
@@ -2092,6 +2124,39 @@ export class LmsComponent implements OnInit {
   getSafeUrl(url: string) {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
+
+  resolveUrl(url?: string): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const clean = url.startsWith('/') ? url : `/${url}`;
+    return `http://localhost:3001${clean}`;
+  }
+
+  modalVisorEvidencia = signal<{ visible: boolean; url: string; titulo: string; esPdf: boolean; esImagen: boolean }>({
+    visible: false,
+    url: '',
+    titulo: '',
+    esPdf: false,
+    esImagen: false,
+  });
+
+  abrirVisorEvidencia(url: string, titulo: string) {
+    const resolved = this.resolveUrl(url);
+    const esPdf = resolved.toLowerCase().endsWith('.pdf') || resolved.includes('/pdf');
+    const esImagen = /\.(png|jpg|jpeg|webp|gif|svg)($|\?)/i.test(resolved);
+    this.modalVisorEvidencia.set({
+      visible: true,
+      url: resolved,
+      titulo: titulo || 'Evidencia Adjunta',
+      esPdf,
+      esImagen,
+    });
+  }
+
+  cerrarVisorEvidencia() {
+    this.modalVisorEvidencia.set({ visible: false, url: '', titulo: '', esPdf: false, esImagen: false });
+  }
+
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
@@ -2425,12 +2490,12 @@ export class LmsComponent implements OnInit {
       this.api.uploadFile<any>(file, 'lms', 'web').subscribe({
         next: (res) => {
           this.isUploading.set(false);
-          this.nuevaTareaForm.urlGuiaAdjunta = res?.urlPublica || `https://storage.educoreos.com/guias/${file.name}`;
+          this.nuevaTareaForm.urlGuiaAdjunta = res?.url || res?.urlPublica || `/uploads/guias/${file.name}`;
           this.toast.success('Guía Adjuntada', `Archivo ${file.name} subido exitosamente al servidor.`);
         },
         error: () => {
           this.isUploading.set(false);
-          this.nuevaTareaForm.urlGuiaAdjunta = `https://storage.educoreos.com/guias/${file.name}`;
+          this.nuevaTareaForm.urlGuiaAdjunta = `/uploads/guias/${file.name}`;
           this.toast.success('Guía Adjuntada', `Archivo ${file.name} preparado para publicación.`);
         },
       });
@@ -2588,12 +2653,12 @@ export class LmsComponent implements OnInit {
       this.api.uploadFile<any>(file, 'lms', 'movil').subscribe({
         next: (res) => {
           this.isUploading.set(false);
-          this.entregaForm.urlArchivoEntrega = res?.urlPublica || `https://storage.educoreos.com/entregas/${file.name}`;
+          this.entregaForm.urlArchivoEntrega = res?.url || res?.urlPublica || `/uploads/entregas/${file.name}`;
           this.toast.success('Evidencia Cargada', `Archivo ${file.name} cargado exitosamente.`);
         },
         error: () => {
           this.isUploading.set(false);
-          this.entregaForm.urlArchivoEntrega = `https://storage.educoreos.com/entregas/${file.name}`;
+          this.entregaForm.urlArchivoEntrega = `/uploads/entregas/${file.name}`;
           this.toast.success('Evidencia Cargada', `Archivo ${file.name} preparado para envío.`);
         },
       });
@@ -2606,9 +2671,9 @@ export class LmsComponent implements OnInit {
 
     this.isSaving.set(true);
     const payload = {
-      matriculaId: 'mat-001',
+      matriculaId: '11111111-1111-4111-8111-000000000001',
       contenidoTexto: this.entregaForm.contenidoTexto,
-      urlArchivoEntrega: this.entregaForm.urlArchivoEntrega || 'https://storage.educoreos.com/entregas/evidencia_cuaderno.pdf',
+      urlArchivoEntrega: this.entregaForm.urlArchivoEntrega || '/uploads/entregas/evidencia_cuaderno.pdf',
     };
 
     this.api.post(`lms/tareas/${tarea.id}/entregar`, payload).subscribe({

@@ -8,24 +8,24 @@
    ───────────────────────────────────────────────────────────────────── */
 
 /* 1. Tokens y Variables */
-@import 'styles/tokens';
+@use 'styles/tokens';
 
 /* 2. Reset y Base */
-@import 'styles/base';
+@use 'styles/base';
 
 /* 3. Componentes */
-@import 'styles/buttons';
-@import 'styles/forms';
-@import 'styles/cards';
-@import 'styles/modals';
-@import 'styles/tables';
-@import 'styles/components';
+@use 'styles/buttons';
+@use 'styles/forms';
+@use 'styles/cards';
+@use 'styles/modals';
+@use 'styles/tables';
+@use 'styles/components';
 
 /* 4. Utilidades */
-@import 'styles/utilities';
+@use 'styles/utilities';
 
 /* 5. Editor de texto enriquecido (Quill) */
-@import 'quill/dist/quill.snow.css';
+@use 'quill/dist/quill.snow.css';
 
 /* ==========================================================================
    COMPONENTES ESPECÍFICOS DE EDUCORE (Compatibilidad con código existente)

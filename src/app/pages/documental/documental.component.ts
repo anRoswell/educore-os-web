@@ -1043,11 +1043,11 @@ export interface FirmaUsuarioItem {
                 <div class="details-grid">
                   <div class="det-item">
                     <span>Título:</span>
-                    <strong>{{ resultadoVerificacion().expediente?.titulo || 'Resolución Institucional' }}</strong>
+                    <strong>{{ resultadoVerificacion()?.expediente?.titulo }}</strong>
                   </div>
                   <div class="det-item">
                     <span>Consecutivo:</span>
-                    <strong>{{ resultadoVerificacion().expediente?.codigoConsecutivo || 'RAD-2026-0001' }}</strong>
+                    <strong>{{ resultadoVerificacion()?.expediente?.codigoConsecutivo }}</strong>
                   </div>
                   <div class="det-item">
                     <span>Hash SHA-256:</span>
@@ -2073,16 +2073,8 @@ export class DocumentalComponent implements OnInit {
         this.toast.success('Documento verificado e íntegro.');
       },
       error: () => {
-        this.resultadoVerificacion.set({
-          autentico: true,
-          estadoIntegridad: 'INMUTABLE_VERIFICADO',
-          hashSha256: this.hashBusqueda,
-          expediente: {
-            titulo: 'Resolución Rectoral N° 042 - Autorización Salida Pedagógica',
-            codigoConsecutivo: 'RAD-2026-0001',
-          },
-        });
-        this.toast.info('Verificación completada.');
+        this.resultadoVerificacion.set(null);
+        this.toast.error('Documento no encontrado o hash criptográfico no registrado.');
       },
     });
   }

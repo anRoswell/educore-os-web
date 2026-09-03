@@ -66,40 +66,41 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
     </div>
 
     <!-- KPIs Financieros -->
+    <!-- KPIs Financieros -->
     <div class="kpi-summary-grid grid-cols-5 animate-fade-in">
       <div class="summary-card kpi-mini-card">
         <div class="status-indicator-dot green"></div>
         <div>
           <span class="label">Recaudo del Mes</span>
-          <span class="value text-success">\$85.4M</span>
+          <span class="value text-success">{{ formatearMonto(totalRecaudoMes()) }}</span>
         </div>
       </div>
       <div class="summary-card kpi-mini-card">
         <div class="status-indicator-dot amber"></div>
         <div>
           <span class="label">Cartera Vencida</span>
-          <span class="value text-warning">\$12.3M</span>
+          <span class="value text-warning">{{ formatearMonto(totalCarteraVencida()) }}</span>
         </div>
       </div>
       <div class="summary-card kpi-mini-card">
         <div class="status-indicator-dot blue"></div>
         <div>
           <span class="label">Proyección Mes</span>
-          <span class="value">\$115.0M</span>
+          <span class="value">{{ formatearMonto(totalProyeccionMes()) }}</span>
         </div>
       </div>
       <div class="summary-card kpi-mini-card">
         <div class="status-indicator-dot red"></div>
         <div>
           <span class="label">Acuerdos Incumplidos</span>
-          <span class="value text-danger">4</span>
+          <span class="value text-danger">{{ totalAcuerdosIncumplidos() }}</span>
         </div>
       </div>
       <div class="summary-card kpi-mini-card">
         <div class="status-indicator-dot green"></div>
         <div>
           <span class="label">Caja Actual</span>
-          <span class="value">\$1.2M</span>
+          <span class="value">{{ formatearMonto(totalCajaEfectivo()) }}</span>
         </div>
       </div>
     </div>
@@ -668,6 +669,39 @@ export class TesoreriaComponent implements OnInit {
   readonly cuentas = signal<CuentaCobroItem[]>([]);
   readonly pagos = signal<PagoRecaudoItem[]>([]);
   readonly acuerdos = signal<AcuerdoPagoItem[]>([]);
+
+  // KPIs Financieros Computados en Tiempo Real
+  readonly totalRecaudoMes = computed(() => {
+    return this.pagos().reduce((acc, p) => acc + (p.valorPagado || 0), 0);
+  });
+
+  readonly totalCarteraVencida = computed(() => {
+    return this.cuentas()
+      .filter((c) => c.estado === EstadoCuenta.EN_MORA)
+      .reduce((acc, c) => acc + (c.valorTotal || 0) - (c.descuento || 0), 0);
+  });
+
+  readonly totalProyeccionMes = computed(() => {
+    return this.cuentas().reduce((acc, c) => acc + (c.valorTotal || 0) - (c.descuento || 0), 0);
+  });
+
+  readonly totalAcuerdosIncumplidos = computed(() => {
+    return this.acuerdos().filter((a) => a.estado === EstadoAcuerdo.INCUMPLIDO).length;
+  });
+
+  readonly totalCajaEfectivo = computed(() => {
+    return this.pagos()
+      .filter((p) => p.medioPago === 'EFECTIVO')
+      .reduce((acc, p) => acc + (p.valorPagado || 0), 0);
+  });
+
+  formatearMonto(valor: number): string {
+    if (!valor || valor === 0) return '$0';
+    if (valor >= 1000000) {
+      return `$${(valor / 1000000).toFixed(1)}M`;
+    }
+    return `$${Math.round(valor).toLocaleString('es-CO')}`;
+  }
 
   // Cuentas filtradas computadas
   readonly cuentasFiltradas = computed(() => {

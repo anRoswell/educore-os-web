@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import * as path from 'path';
 import { loginAs } from './helpers/auth.helper';
 import { queryDb } from './helpers/db.helper';
 import { attachStrictErrorSniffer } from './helpers/error-sniffer.helper';
@@ -8,9 +9,12 @@ import { attachStrictErrorSniffer } from './helpers/error-sniffer.helper';
  * Compliant with ESTANDAR_PRUEBAS_EXHAUSTIVAS.md
  * 
  * Tests 100% of header actions, dynamic search, row action sweep,
+ * real identity document upload (PDF), student file preview modal, digital carnet photo & HMAC QR,
  * all modal lifecycles, and direct PostgreSQL persistence.
  */
 test.describe('DocMD-02: Matrículas & Directorio Escolar 360° SIMAT (Exhaustive UI & E2E Verification)', () => {
+  const fixtureDocIdentidadPdf = path.resolve(__dirname, 'fixtures/documento_identidad.pdf');
+
   test.beforeEach(async ({ page }) => {
     await loginAs(page, 'RECTOR');
   });
@@ -98,10 +102,14 @@ test.describe('DocMD-02: Matrículas & Directorio Escolar 360° SIMAT (Exhaustiv
       await expect(modalFicha).toBeVisible();
       await expect(modalFicha.locator('h3')).toContainText('Ficha Integral 360° del Estudiante');
 
-      // Validar sección de Carnet Digital QR rotativo
+      // Validar sección de Carnet Digital QR rotativo y foto
       const carnetCard = modalFicha.locator('.carnet-card-sim');
       await expect(carnetCard).toBeVisible();
       await expect(carnetCard).toContainText('QR ACTIVO');
+
+      // Validar foto carnet
+      const photoImg = carnetCard.locator('img');
+      await expect(photoImg.first()).toBeVisible();
 
       // Cerrar modal
       await modalFicha.locator('button:has-text("Cerrar"), .close-btn').first().click();
@@ -145,30 +153,64 @@ test.describe('DocMD-02: Matrículas & Directorio Escolar 360° SIMAT (Exhaustiv
   });
 
   /**
-   * SUITE 4: Ciclo de Vida de Modales (Modal Lifecycle Sweeps)
+   * SUITE 4: Carga Real de Documento de Identidad, Previsualización de Expediente y Modal Lifecycles
    */
-  test('2.4 Ciclo de vida completo de cada modal del módulo de Matrículas (apertura, validación y cierre)', async ({ page }) => {
+  test('2.4 Carga real de documento de identidad al expediente SIMAT, visor de documentos y ciclo de modales', async ({ page }) => {
     const sniffer = attachStrictErrorSniffer(page);
     await page.goto('/matriculas');
     await page.waitForLoadState('networkidle');
 
-    // 1. Modal Formalizar Matrícula
-    const btnNuevaMatricula = page.locator('button:has-text("Formalizar Nueva Matrícula")');
-    await btnNuevaMatricula.click();
+    // 1. Abrir Ficha 360 del primer estudiante
+    const btnFicha = page.locator('table.data-table tbody tr button:has-text("Ficha")').first();
+    await expect(btnFicha).toBeVisible();
+    await btnFicha.click();
 
-    const modalMatricula = page.locator('.modal-backdrop');
-    await expect(modalMatricula).toBeVisible();
-    await expect(modalMatricula.locator('h3')).toContainText('Formalizar Nueva Matrícula');
+    const modalFicha = page.locator('.modal-backdrop');
+    await expect(modalFicha).toBeVisible();
 
-    // Validar presencia de campos requeridos
-    await expect(modalMatricula.locator('input[placeholder*="Santiago"]')).toBeVisible();
-    await expect(modalMatricula.locator('select.form-select').first()).toBeVisible();
+    // 2. Inyectar archivo binario real (documento_identidad.pdf) en input file del expediente
+    const fileInputExp = modalFicha.locator('input[type="file"]');
+    await expect(fileInputExp).toBeAttached();
+    await fileInputExp.setInputFiles(fixtureDocIdentidadPdf);
+    await page.waitForTimeout(500);
 
-    // Cancelar y validar cierre limpio
-    await modalMatricula.locator('button:has-text("Cancelar"), .close-btn').first().click();
-    await expect(modalMatricula).not.toBeVisible();
+    // Click subir soporte
+    const btnSubirSoporte = modalFicha.locator('button:has-text("Subir Soporte")');
+    await expect(btnSubirSoporte).toBeEnabled();
+    await btnSubirSoporte.click();
+    await page.waitForTimeout(600);
 
-    // 2. Modal Plantillas Legales
+    // 3. Probar botón "👁️ Ver" en la lista de documentos del expediente
+    const btnVerDoc = modalFicha.locator('button.btn-ver-documento, button:has-text("Ver")').first();
+    if (await btnVerDoc.isVisible()) {
+      await btnVerDoc.click();
+
+      // Validar que se abre el modal visor
+      const modalVisor = page.locator('.modal-card.visor-modal, .modal-backdrop').last();
+      await expect(modalVisor).toBeVisible({ timeout: 5000 });
+
+      // Validar elemento visor (iframe o img)
+      await expect(modalVisor.locator('iframe, img').first()).toBeVisible();
+
+      // Validar streaming HTTP 200
+      const linkDirecto = modalVisor.locator('a[download]').first();
+      if (await linkDirecto.isVisible()) {
+        const url = await linkDirecto.getAttribute('href');
+        if (url && url.startsWith('http')) {
+          const res = await page.request.get(url);
+          expect(res.status()).toBe(200);
+        }
+      }
+
+      // Cerrar visor
+      await modalVisor.locator('button:has-text("Cerrar Visor"), .close-btn').first().click();
+    }
+
+    // Cerrar Ficha 360
+    await modalFicha.locator('button:has-text("Cerrar")').first().click();
+    await expect(modalFicha).not.toBeVisible();
+
+    // 4. Modal Plantillas Legales
     const btnPlantillas = page.locator('button:has-text("Plantillas Legales")');
     await btnPlantillas.click();
 
@@ -199,7 +241,7 @@ test.describe('DocMD-02: Matrículas & Directorio Escolar 360° SIMAT (Exhaustiv
     const modal = page.locator('.modal-backdrop');
     await expect(modal).toBeVisible();
 
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const randomSuffix = `${Date.now().toString().slice(-6)}`;
     const docNumber = `103050${randomSuffix}`;
     const firstName = `JuanE2E${randomSuffix}`;
     const lastName = `PérezE2E${randomSuffix}`;
@@ -223,7 +265,7 @@ test.describe('DocMD-02: Matrículas & Directorio Escolar 360° SIMAT (Exhaustiv
     await expect(toast.first()).toBeVisible({ timeout: 8000 });
 
     // 3. Verificación directa en PostgreSQL (mat_estudiantes)
-    const dbStudents = await queryDb('SELECT * FROM mat_estudiantes WHERE primer_nombre = $1', [firstName]);
+    const dbStudents = await queryDb('SELECT * FROM mat_estudiantes WHERE primer_nombre = $1 ORDER BY created_at DESC', [firstName]);
     expect(dbStudents.length).toBeGreaterThan(0);
     expect(dbStudents[0].primer_nombre).toBe(firstName);
     expect(dbStudents[0].primer_apellido).toBe(lastName);

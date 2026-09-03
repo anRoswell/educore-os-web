@@ -546,7 +546,11 @@ import { KpiRectoria } from '../../core/models';
             <div class="kpi-content">
               <span class="kpi-label">APROBACIÓN ACADÉMICA</span>
               <div class="kpi-value">{{ kpis().porcentajeAprobacionAcademica }}%</div>
-              <span class="kpi-sub positive">Promedio: {{ kpis().promedioGeneralInstitucional }} / 5.0</span>
+              @if (kpis().totalEstudiantesMatriculados === 0 || kpis().promedioGeneralInstitucional === 0) {
+                <span class="kpi-sub text-muted">Sin notas consolidadas aún</span>
+              } @else {
+                <span class="kpi-sub positive">Promedio: {{ kpis().promedioGeneralInstitucional }} / 5.0</span>
+              }
             </div>
           </div>
 
@@ -557,7 +561,11 @@ import { KpiRectoria } from '../../core/models';
             <div class="kpi-content">
               <span class="kpi-label">EFECTIVIDAD DE RECAUDO</span>
               <div class="kpi-value">{{ kpis().porcentajeEfectividadRecaudo }}%</div>
-              <span class="kpi-sub">Wompi / PSE / Efectivo</span>
+              @if (kpis().porcentajeEfectividadRecaudo === 0 && kpis().carteraPendientePesos === 0) {
+                <span class="kpi-sub text-muted">Sin cobros emitidos aún</span>
+              } @else {
+                <span class="kpi-sub">Wompi / PSE / Efectivo</span>
+              }
             </div>
           </div>
 
@@ -606,142 +614,443 @@ import { KpiRectoria } from '../../core/models';
           </button>
         </div>
 
-        <!-- Fila 2: Mapa Térmico de Asignaturas & Alertas de Deserción AI -->
-        <div class="grid-cols-2 mt-4">
-          <!-- Mapa Térmico de Asignaturas -->
-          <div class="card heatmap-card">
-            <div class="card-title-bar">
-              <div>
-                <h3>🌡️ Mapa de Calor: Rendimiento por Asignatura</h3>
-                <p>Detección temprana de materias críticas y cuellos de botella académicos</p>
+        <!-- TAB 1: VISIÓN GLOBAL 360° -->
+        @if (activeTabRector() === 'global') {
+          <div class="grid-cols-2 mt-4 animate-fade-in">
+            <!-- Mapa Térmico de Asignaturas (Resumen) -->
+            <div class="card heatmap-card">
+              <div class="card-title-bar">
+                <div>
+                  <h3>🌡️ Mapa de Calor: Rendimiento por Asignatura</h3>
+                  <p>Detección temprana de materias críticas y cuellos de botella académicos</p>
+                </div>
+                <button (click)="activeTabRector.set('heatmap')" class="btn btn-secondary btn-sm">
+                  Ver Completo →
+                </button>
               </div>
-              <span class="badge badge-info">Periodo 1</span>
+
+              <div class="heatmap-table-container table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Grado</th>
+                      <th>Asignatura</th>
+                      <th>Promedio</th>
+                      <th>Reprobación</th>
+                      <th>Estado</th>
+                      <th style="text-align: right;">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (materia of mapaCalor(); track materia.asignatura) {
+                      <tr>
+                        <td style="white-space: nowrap;"><strong>{{ materia.grado }}</strong></td>
+                        <td>{{ materia.asignatura }}</td>
+                        <td style="white-space: nowrap;"><strong>{{ materia.promedio }}</strong> / 5.0</td>
+                        <td style="white-space: nowrap;">{{ materia.tasaReprobacion || 0 }}%</td>
+                        <td style="white-space: nowrap;">
+                          @if (materia.alertaCritica) {
+                            <span class="badge badge-danger">Crítico</span>
+                          } @else {
+                            <span class="badge badge-success">Óptimo</span>
+                          }
+                        </td>
+                        <td style="text-align: right;">
+                          <button (click)="verDetalleMateria(materia)" class="btn btn-secondary btn-sm" title="Ver Detalle de Materia">
+                            👁️ Detalle
+                          </button>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="6" class="text-center py-4 text-slate-500">
+                          No hay materias con calificaciones consolidadas aún.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div class="heatmap-table-container table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Grado</th>
-                    <th>Asignatura</th>
-                    <th>Promedio</th>
-                    <th>Reprobación</th>
-                    <th>Estado</th>
-                    <th style="text-align: right;">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (materia of mapaCalor(); track materia.asignatura) {
-                    <tr>
-                      <td style="white-space: nowrap;"><strong>{{ materia.grado }}</strong></td>
-                      <td>{{ materia.asignatura }}</td>
-                      <td style="white-space: nowrap;"><strong>{{ materia.promedio }}</strong> / 5.0</td>
-                      <td style="white-space: nowrap;">{{ materia.tasaReprobacion || 0 }}%</td>
-                      <td style="white-space: nowrap;">
-                        @if (materia.alertaCritica) {
-                          <span class="badge badge-danger">Crítico</span>
-                        } @else {
-                          <span class="badge badge-success">Óptimo</span>
-                        }
-                      </td>
-                      <td style="text-align: right;">
-                        <button (click)="verDetalleMateria(materia)" class="btn btn-secondary btn-sm" title="Ver Detalle de Materia">
-                          👁️ Detalle
-                        </button>
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr>
-                      <td colspan="6" class="text-center py-4 text-slate-500">
-                        No hay materias con calificaciones consolidadas aún.
-                      </td>
-                    </tr>
+            <!-- Proyecciones Saber 11° & IA Deserción (Resumen) -->
+            <div class="card ai-analytics-card">
+              <div class="card-title-bar">
+                <div>
+                  <h3>📈 Proyecciones Pruebas Saber 11°</h3>
+                  <p>Meta institucional: 360 pts • {{ saber11()?.clasificacionIcfesProyectada || 'Sin Datos Registrados' }}</p>
+                </div>
+                <button (click)="activeTabRector.set('saber11')" class="btn btn-secondary btn-sm">
+                  Diagnóstico Completo →
+                </button>
+              </div>
+
+              @if ((saber11()?.puntajeGlobalPromedio ?? 0) > 0) {
+                <div class="saber-bars-list">
+                  <div class="saber-bar-item">
+                    <div class="bar-info">
+                      <span>Lectura Crítica</span>
+                      <strong>{{ saber11()?.componentes?.lecturaCritica ?? 0 }} pts</strong>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill" [style.width.%]="saber11()?.componentes?.lecturaCritica ?? 0"></div>
+                    </div>
+                  </div>
+
+                  <div class="saber-bar-item">
+                    <div class="bar-info">
+                      <span>Matemáticas</span>
+                      <strong>{{ saber11()?.componentes?.matematicas ?? 0 }} pts</strong>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill green" [style.width.%]="saber11()?.componentes?.matematicas ?? 0"></div>
+                    </div>
+                  </div>
+
+                  <div class="saber-bar-item">
+                    <div class="bar-info">
+                      <span>Ciencias Naturales</span>
+                      <strong>{{ saber11()?.componentes?.cienciasNaturales ?? 0 }} pts</strong>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill purple" [style.width.%]="saber11()?.componentes?.cienciasNaturales ?? 0"></div>
+                    </div>
+                  </div>
+
+                  <div class="saber-bar-item">
+                    <div class="bar-info">
+                      <span>Sociales & Ciudadanas</span>
+                      <strong>{{ saber11()?.componentes?.socialesCiudadanas ?? 0 }} pts</strong>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill amber" [style.width.%]="saber11()?.componentes?.socialesCiudadanas ?? 0"></div>
+                    </div>
+                  </div>
+
+                  <div class="saber-bar-item">
+                    <div class="bar-info">
+                      <span>Inglés (Bilingüismo)</span>
+                      <strong>{{ saber11()?.componentes?.ingles ?? 0 }} pts</strong>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill indigo" [style.width.%]="saber11()?.componentes?.ingles ?? 0"></div>
+                    </div>
+                  </div>
+                </div>
+              } @else {
+                <div class="empty-saber-state" style="padding: 1.5rem 1rem; text-align: center; color: var(--text-muted); background: var(--bg-card-hover, rgba(255,255,255,0.02)); border: 1px dashed var(--border-color, rgba(255,255,255,0.1)); border-radius: 8px; margin-top: 1rem;">
+                  <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📝</span>
+                  <strong style="color: var(--text-primary); display: block; font-size: 0.95rem; margin-bottom: 0.25rem;">Sin simulacros registrados aún</strong>
+                  <p style="margin: 0; font-size: 0.82rem; line-height: 1.4;">Las proyecciones Saber 11° y niveles de desempeño ICFES se calcularán automáticamente al consolidar calificaciones en las áreas evaluadas.</p>
+                </div>
+              }
+
+              <div class="ai-box mt-4">
+                <div class="ai-box-header">
+                  <span class="ai-icon">✨</span>
+                  <strong>EduCore AI — Alertas Tempranas de Rendimiento</strong>
+                </div>
+                <p class="ai-text">
+                  @if (alertasDesercion().length > 0) {
+                    Se detectaron <strong>{{ alertasDesercion().length }} estudiantes</strong> con alerta de bajo rendimiento o riesgo de rezago escolar.
+                  } @else {
+                    🟢 No se registran estudiantes en riesgo crítico de deserción escolar.
                   }
-                </tbody>
-              </table>
+                </p>
+                <a routerLink="/educore-ai" class="btn btn-outline btn-sm mt-2">
+                  Ver Diagnóstico con Psicoorientación →
+                </a>
+              </div>
             </div>
           </div>
+        }
 
-          <!-- Proyecciones Saber 11° & IA Deserción -->
-          <div class="card ai-analytics-card">
-            <div class="card-title-bar">
-              <div>
-                <h3>📈 Proyecciones Pruebas Saber 11°</h3>
-                <p>Meta institucional: 360 pts • {{ saber11()?.clasificacionIcfesProyectada || 'Categoría A+ (Muy Superior)' }}</p>
-              </div>
-              <span class="badge badge-purple" style="white-space: nowrap;">{{ saber11()?.puntajeGlobalPromedio || 342 }} pts Global</span>
-            </div>
-
-            <div class="saber-bars-list">
-              <div class="saber-bar-item">
-                <div class="bar-info">
-                  <span>Lectura Crítica</span>
-                  <strong>{{ saber11()?.componentes?.lecturaCritica || 69 }} pts</strong>
+        <!-- TAB 2: RENDIMIENTO & MAPA DE CALOR DETALLADO -->
+        @if (activeTabRector() === 'heatmap') {
+          <div class="mt-4 animate-fade-in">
+            <div class="card heatmap-card">
+              <div class="card-title-bar">
+                <div>
+                  <h3>🌡️ Rendimiento Curricular & Mapa de Calor Detallado</h3>
+                  <p>Consolidado institucional por grado, asignatura y porcentaje de reprobación (Decreto 1290)</p>
                 </div>
-                <div class="progress-track">
-                  <div class="progress-fill" [style.width.%]="saber11()?.componentes?.lecturaCritica || 69"></div>
+                <div class="flex items-center gap-2">
+                  <span class="badge badge-info">Periodo 1</span>
+                  <span class="badge badge-purple">{{ mapaCalor().length }} Asignaturas</span>
                 </div>
               </div>
 
-              <div class="saber-bar-item">
-                <div class="bar-info">
-                  <span>Matemáticas</span>
-                  <strong>{{ saber11()?.componentes?.matematicas || 72 }} pts</strong>
+              <!-- Mini stats de calor -->
+              <div class="kpi-mini-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                <div class="card" style="padding: 1rem; background: var(--bg-surface, #f8fafc); border-left: 4px solid #3b82f6;">
+                  <span style="font-size: 0.8rem; color: #64748b; text-transform: uppercase;">Total Asignaturas</span>
+                  <strong style="display: block; font-size: 1.4rem; color: #0f172a;">{{ mapaCalor().length }}</strong>
                 </div>
-                <div class="progress-track">
-                  <div class="progress-fill green" [style.width.%]="saber11()?.componentes?.matematicas || 72"></div>
+                <div class="card" style="padding: 1rem; background: var(--bg-surface, #f8fafc); border-left: 4px solid #ef4444;">
+                  <span style="font-size: 0.8rem; color: #64748b; text-transform: uppercase;">Materias en Alerta Crítica</span>
+                  <strong style="display: block; font-size: 1.4rem; color: #ef4444;">
+                    {{ contarMateriasCriticas() }}
+                  </strong>
                 </div>
-              </div>
-
-              <div class="saber-bar-item">
-                <div class="bar-info">
-                  <span>Ciencias Naturales</span>
-                  <strong>{{ saber11()?.componentes?.cienciasNaturales || 68 }} pts</strong>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill purple" [style.width.%]="saber11()?.componentes?.cienciasNaturales || 68"></div>
-                </div>
-              </div>
-
-              <div class="saber-bar-item">
-                <div class="bar-info">
-                  <span>Sociales & Ciudadanas</span>
-                  <strong>{{ saber11()?.componentes?.socialesCiudadanas || 66 }} pts</strong>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill amber" [style.width.%]="saber11()?.componentes?.socialesCiudadanas || 66"></div>
+                <div class="card" style="padding: 1rem; background: var(--bg-surface, #f8fafc); border-left: 4px solid #10b981;">
+                  <span style="font-size: 0.8rem; color: #64748b; text-transform: uppercase;">Materias con Desempeño Óptimo</span>
+                  <strong style="display: block; font-size: 1.4rem; color: #10b981;">
+                    {{ contarMateriasOptimas() }}
+                  </strong>
                 </div>
               </div>
 
-              <div class="saber-bar-item">
-                <div class="bar-info">
-                  <span>Inglés (Bilingüismo)</span>
-                  <strong>{{ saber11()?.componentes?.ingles || 74 }} pts</strong>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill indigo" [style.width.%]="saber11()?.componentes?.ingles || 74"></div>
-                </div>
+              <div class="heatmap-table-container table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Grado</th>
+                      <th>Asignatura</th>
+                      <th>Promedio</th>
+                      <th>Reprobación</th>
+                      <th>Estado</th>
+                      <th style="text-align: right;">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (materia of mapaCalor(); track materia.asignatura) {
+                      <tr>
+                        <td style="white-space: nowrap;"><strong>{{ materia.grado }}</strong></td>
+                        <td>{{ materia.asignatura }}</td>
+                        <td style="white-space: nowrap;"><strong>{{ materia.promedio }}</strong> / 5.0</td>
+                        <td style="white-space: nowrap;">{{ materia.tasaReprobacion || 0 }}%</td>
+                        <td style="white-space: nowrap;">
+                          @if (materia.alertaCritica) {
+                            <span class="badge badge-danger">Crítico</span>
+                          } @else {
+                            <span class="badge badge-success">Óptimo</span>
+                          }
+                        </td>
+                        <td style="text-align: right;">
+                          <button (click)="verDetalleMateria(materia)" class="btn btn-secondary btn-sm" title="Ver Detalle de Materia">
+                            👁️ Detalle
+                          </button>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="6" class="text-center py-6 text-slate-500">
+                          No hay materias con calificaciones consolidadas aún en este periodo.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
-            </div>
-
-            <div class="ai-box mt-4">
-              <div class="ai-box-header">
-                <span class="ai-icon">✨</span>
-                <strong>EduCore AI — Alertas Tempranas de Rendimiento</strong>
-              </div>
-              <p class="ai-text">
-                @if (alertasDesercion().length > 0) {
-                  Se detectaron <strong>{{ alertasDesercion().length }} estudiantes</strong> con alerta de bajo rendimiento o riesgo de rezago escolar.
-                } @else {
-                  🟢 No se registran estudiantes en riesgo crítico de deserción escolar.
-                }
-              </p>
-              <a routerLink="/educore-ai" class="btn btn-outline btn-sm mt-2">
-                Ver Diagnóstico con Psicoorientación →
-              </a>
             </div>
           </div>
-        </div>
+        }
+
+        <!-- TAB 3: PROYECCIONES SABER 11° DEDICADA -->
+        @if (activeTabRector() === 'saber11') {
+          <div class="mt-4 animate-fade-in">
+            <div class="card ai-analytics-card">
+              <div class="card-title-bar">
+                <div>
+                  <h3>📈 Diagnóstico Integral Pruebas Saber 11° & ICFES</h3>
+                  <p>Monitoreo de competencias evaluadas, clasificación proyectada y meta institucional</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="badge badge-purple" style="white-space: nowrap;">
+                    {{ (saber11()?.puntajeGlobalPromedio ?? 0) > 0 ? (saber11()?.puntajeGlobalPromedio + ' pts Global') : 'Sin Simulacros' }}
+                  </span>
+                  <button (click)="abrirModalSimulacionSaber()" class="btn btn-secondary btn-sm">🎯 Ajustar Metas</button>
+                </div>
+              </div>
+
+              <div class="grid-cols-2 gap-4 mt-2">
+                <div>
+                  <h4 style="margin-bottom: 0.75rem; font-size: 0.95rem; color: var(--text-primary);">Desglose por Áreas Evaluadas (ICFES)</h4>
+                  @if ((saber11()?.puntajeGlobalPromedio ?? 0) > 0) {
+                    <div class="saber-bars-list">
+                      <div class="saber-bar-item">
+                        <div class="bar-info">
+                          <span>Lectura Crítica</span>
+                          <strong>{{ saber11()?.componentes?.lecturaCritica ?? 0 }} pts</strong>
+                        </div>
+                        <div class="progress-track">
+                          <div class="progress-fill" [style.width.%]="saber11()?.componentes?.lecturaCritica ?? 0"></div>
+                        </div>
+                      </div>
+
+                      <div class="saber-bar-item">
+                        <div class="bar-info">
+                          <span>Matemáticas</span>
+                          <strong>{{ saber11()?.componentes?.matematicas ?? 0 }} pts</strong>
+                        </div>
+                        <div class="progress-track">
+                          <div class="progress-fill green" [style.width.%]="saber11()?.componentes?.matematicas ?? 0"></div>
+                        </div>
+                      </div>
+
+                      <div class="saber-bar-item">
+                        <div class="bar-info">
+                          <span>Ciencias Naturales</span>
+                          <strong>{{ saber11()?.componentes?.cienciasNaturales ?? 0 }} pts</strong>
+                        </div>
+                        <div class="progress-track">
+                          <div class="progress-fill purple" [style.width.%]="saber11()?.componentes?.cienciasNaturales ?? 0"></div>
+                        </div>
+                      </div>
+
+                      <div class="saber-bar-item">
+                        <div class="bar-info">
+                          <span>Sociales & Ciudadanas</span>
+                          <strong>{{ saber11()?.componentes?.socialesCiudadanas ?? 0 }} pts</strong>
+                        </div>
+                        <div class="progress-track">
+                          <div class="progress-fill amber" [style.width.%]="saber11()?.componentes?.socialesCiudadanas ?? 0"></div>
+                        </div>
+                      </div>
+
+                      <div class="saber-bar-item">
+                        <div class="bar-info">
+                          <span>Inglés (Bilingüismo)</span>
+                          <strong>{{ saber11()?.componentes?.ingles ?? 0 }} pts</strong>
+                        </div>
+                        <div class="progress-track">
+                          <div class="progress-fill indigo" [style.width.%]="saber11()?.componentes?.ingles ?? 0"></div>
+                        </div>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="empty-saber-state" style="padding: 2rem 1.5rem; text-align: center; color: var(--text-muted); background: var(--bg-card-hover, rgba(255,255,255,0.02)); border: 1px dashed var(--border-color, rgba(255,255,255,0.1)); border-radius: 8px;">
+                      <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">📝</span>
+                      <strong style="color: var(--text-primary); display: block; font-size: 1rem; margin-bottom: 0.25rem;">Sin simulacros registrados aún</strong>
+                      <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Las proyecciones Saber 11° y niveles de desempeño ICFES se calcularán automáticamente al consolidar calificaciones en las áreas evaluadas.</p>
+                    </div>
+                  }
+                </div>
+
+                <div class="flex flex-col gap-3">
+                  <div class="card" style="padding: 1.25rem; background: var(--bg-surface, #f8fafc); border-radius: 8px;">
+                    <h4 style="margin: 0 0 0.5rem; font-size: 0.95rem;">🏆 Categoría ICFES Proyectada</h4>
+                    <p style="margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 700; color: #4f46e5;">
+                      {{ saber11()?.clasificacionIcfesProyectada || 'Sin Datos Registrados' }}
+                    </p>
+                    <p style="font-size: 0.85rem; color: #64748b; margin: 0;">
+                      Meta institucional vigente: <strong>{{ simulacionSaberForm.metaGlobal }} puntos</strong>. La clasificación final se basa en la desviación estándar nacional del ICFES.
+                    </p>
+                  </div>
+
+                  <div class="ai-box">
+                    <div class="ai-box-header">
+                      <span class="ai-icon">✨</span>
+                      <strong>EduCore AI — Alertas Tempranas de Rendimiento</strong>
+                    </div>
+                    <p class="ai-text">
+                      @if (alertasDesercion().length > 0) {
+                        Se detectaron <strong>{{ alertasDesercion().length }} estudiantes</strong> con alerta de bajo rendimiento en áreas ICFES.
+                      } @else {
+                        🟢 No se registran estudiantes en riesgo crítico de rezago en pruebas estandarizadas.
+                      }
+                    </p>
+                    <a routerLink="/educore-ai" class="btn btn-outline btn-sm mt-2">
+                      Ver Diagnóstico con Psicoorientación →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- TAB 4: CARTERA & RECAUDO BI DEDICADA -->
+        @if (activeTabRector() === 'cartera') {
+          <div class="mt-4 animate-fade-in">
+            <div class="card">
+              <div class="card-title-bar">
+                <div>
+                  <h3>💰 Cartera, Recaudo & Aging Financiero BI</h3>
+                  <p>Métricas directivas de efectividad de cobranza, saldos vencidos y antigüedad de mora</p>
+                </div>
+                <a routerLink="/tesoreria" class="btn btn-primary btn-sm">
+                  Ir al Módulo de Tesorería →
+                </a>
+              </div>
+
+              <!-- 4 KPIs Financieros -->
+              <div class="kpi-cards-grid grid-cols-4 mt-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                <div class="card kpi-card" style="border-left: 4px solid #10b981;">
+                  <div>
+                    <span class="kpi-label">EFECTIVIDAD DE RECAUDO</span>
+                    <div class="kpi-value" style="color: #10b981;">{{ kpis().porcentajeEfectividadRecaudo || 0 }}%</div>
+                    <div class="kpi-subtext">Del total facturado en el periodo</div>
+                  </div>
+                </div>
+                <div class="card kpi-card" style="border-left: 4px solid #f59e0b;">
+                  <div>
+                    <span class="kpi-label">CARTERA PENDIENTE</span>
+                    <div class="kpi-value" style="color: #f59e0b;">\${{ carteraPorCobrarFormatted() }}</div>
+                    <div class="kpi-subtext">Suma de saldos por cobrar</div>
+                  </div>
+                </div>
+                <div class="card kpi-card" style="border-left: 4px solid #3b82f6;">
+                  <div>
+                    <span class="kpi-label">AL DÍA (CORRIENTE)</span>
+                    <div class="kpi-value" style="color: #3b82f6;">\${{ obtenerSaldoTramo('AL_DIA') }}</div>
+                    <div class="kpi-subtext">Cuentas sin vencimiento</div>
+                  </div>
+                </div>
+                <div class="card kpi-card" style="border-left: 4px solid #ef4444;">
+                  <div>
+                    <span class="kpi-label">MORA CRÍTICA (> 30 DÍAS)</span>
+                    <div class="kpi-value" style="color: #ef4444;">\${{ obtenerSaldoMoraCritica() }}</div>
+                    <div class="kpi-subtext">Con alertas de cobranza activas</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tabla de Aging de Cartera -->
+              <div class="mt-4">
+                <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem;">Balance de Cartera por Antigüedad (Aging)</h4>
+                <div class="table-container">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Tramo de Vencimiento</th>
+                        <th>Cuentas / Recibos</th>
+                        <th>Saldo Total (COP)</th>
+                        <th>Estado de Cartera</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of carteraAntiguedad(); track item.tramo) {
+                        <tr>
+                          <td><strong>{{ formatearTramo(item.tramo) }}</strong></td>
+                          <td>{{ item.cantidadRecibos }} cuentas</td>
+                          <td><strong>\${{ (item.saldoTotalPesos || 0).toLocaleString('es-CO') }}</strong></td>
+                          <td>
+                            @if (item.tramo.includes('MORA') || item.tramo.includes('>')) {
+                              <span class="badge badge-danger">En Mora</span>
+                            } @else {
+                              <span class="badge badge-success">Corriente / Al Día</span>
+                            }
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="4" class="text-center py-6 text-slate-500">
+                            @if (kpis().carteraPendientePesos === 0) {
+                              🟢 No hay cartera vencida registrada. Todas las cuentas están al día o sin facturación pendiente.
+                            } @else {
+                              Cargando balance de antigüedad de cartera...
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- MODAL 1: EXPORTAR INFORME BI -->
         @if (modalExportarBi()) {
@@ -907,6 +1216,57 @@ import { KpiRectoria } from '../../core/models';
     </div>
   `,
   styles: [`
+    .tabs-nav-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid rgba(226, 232, 240, 0.8);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.25rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.06);
+    }
+
+    .tab-btn.active {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(37, 99, 235, 0.3);
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .tab-badge {
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 700;
+    }
+
+    .tab-btn.active .tab-badge {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
     .dashboard-header {
       display: flex;
       justify-content: space-between;
@@ -1165,6 +1525,7 @@ export class DashboardComponent implements OnInit {
   readonly mapaCalor = signal<any[]>([]);
   readonly saber11 = signal<any>(null);
   readonly alertasDesercion = signal<any[]>([]);
+  readonly carteraAntiguedad = signal<any[]>([]);
 
   // Datos para Vista Docente
   readonly totalEstudiantesDocente = signal<number>(0);
@@ -1275,6 +1636,16 @@ export class DashboardComponent implements OnInit {
       next: (res) => {
         if (res?.alertasTempranas) {
           this.alertasDesercion.set(res.alertasTempranas);
+        }
+      },
+      error: () => {},
+    });
+
+    // 5. Antigüedad y Aging de Cartera
+    this.api.get<any>('analytics/cartera-antiguedad').subscribe({
+      next: (res) => {
+        if (res?.agingCartera) {
+          this.carteraAntiguedad.set(res.agingCartera);
         }
       },
       error: () => {},
@@ -1456,5 +1827,37 @@ export class DashboardComponent implements OnInit {
 
   verDetalleMateria(m: any): void {
     this.materiaSeleccionadaDetalle.set(m);
+  }
+
+  contarMateriasCriticas(): number {
+    return this.mapaCalor().filter((m) => m.alertaCritica || (m.tasaReprobacion && m.tasaReprobacion > 25)).length;
+  }
+
+  contarMateriasOptimas(): number {
+    return this.mapaCalor().filter((m) => !m.alertaCritica && (m.promedio >= 3.8)).length;
+  }
+
+  formatearTramo(tramo: string): string {
+    const dict: Record<string, string> = {
+      'AL_DIA': '0 a 30 Días (Corriente)',
+      'MORA_1_30': '1 a 30 Días de Mora',
+      'MORA_31_60': '31 a 60 Días de Mora',
+      'MORA_61_90': '61 a 90 Días de Mora',
+      'MORA_MAS_90': 'Más de 90 Días (Crítica)',
+    };
+    return dict[tramo] || tramo.replace(/_/g, ' ');
+  }
+
+  obtenerSaldoTramo(tramo: string): string {
+    const item = this.carteraAntiguedad().find((i) => i.tramo === tramo);
+    const val = item?.saldoTotalPesos || 0;
+    return val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : Math.round(val).toLocaleString('es-CO');
+  }
+
+  obtenerSaldoMoraCritica(): string {
+    const suma = this.carteraAntiguedad()
+      .filter((i) => i.tramo !== 'AL_DIA')
+      .reduce((acc, i) => acc + (i.saldoTotalPesos || 0), 0);
+    return suma >= 1000000 ? `${(suma / 1000000).toFixed(1)}M` : Math.round(suma).toLocaleString('es-CO');
   }
 }

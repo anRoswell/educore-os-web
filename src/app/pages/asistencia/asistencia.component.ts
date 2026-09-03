@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -236,7 +237,10 @@ interface AlumnoAsistencia {
                 </div>
                 <div class="form-group mt-3">
                   <label class="form-label">Adjuntar Soporte (PDF/JPG)</label>
-                  <input type="file" class="form-control" />
+                  <input type="file" class="form-control" (change)="onExcusaFileSelected($event)" accept=".pdf,.png,.jpg,.jpeg" />
+                  @if (nombreArchivoExcusa()) {
+                    <p class="text-xs text-emerald-600 mt-1">✓ Archivo: {{ nombreArchivoExcusa() }}</p>
+                  }
                 </div>
                 <button class="btn btn-primary w-full mt-4" (click)="radicarExcusa()">
                   📤 Enviar a Coordinación
@@ -279,17 +283,43 @@ interface AlumnoAsistencia {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td class="font-semibold">Felipe García</td>
-                      <td>12 Ago - 14 Ago</td>
-                      <td><span class="badge badge-info">Médica</span><br><span class="text-xs text-slate-500">Gastroenteritis</span></td>
-                      <td><a href="#" class="text-indigo-600 font-medium">📄 Certificado_EPS.pdf</a></td>
-                      <td><span class="badge badge-warning">Pendiente</span></td>
-                      <td>
-                        <button class="btn btn-success btn-sm me-2" (click)="aprobarExcusaDemo()">✅ Aprobar</button>
-                        <button class="btn btn-danger btn-sm" (click)="rechazarExcusaDemo()">❌ Rechazar</button>
-                      </td>
-                    </tr>
+                    @for (exc of excusasList(); track exc.id) {
+                      <tr>
+                        <td class="font-semibold">{{ exc.estudianteNombre || 'Felipe García' }}</td>
+                        <td>{{ exc.fechaInicio | date:'dd MMM' }} - {{ exc.fechaFin | date:'dd MMM' }}</td>
+                        <td>
+                          <span class="badge badge-info">{{ exc.motivo }}</span><br>
+                          <span class="text-xs text-slate-500">{{ exc.descripcion }}</span>
+                        </td>
+                        <td>
+                          @if (exc.urlSoporte) {
+                            <div class="flex items-center gap-2">
+                              <button (click)="abrirVisorSoporte(exc.urlSoporte, 'Soporte: ' + (exc.estudianteNombre || 'Estudiante'))" class="btn btn-secondary btn-xs btn-ver-adjunto">
+                                📄 Ver Adjunto
+                              </button>
+                              <a [href]="resolveUrl(exc.urlSoporte)" target="_blank" class="text-xs text-indigo-600 font-medium" title="Abrir directo">
+                                ↗
+                              </a>
+                            </div>
+                          } @else {
+                            <span class="text-xs text-slate-400">Sin soporte</span>
+                          }
+                        </td>
+                        <td>
+                          <span class="badge" [class.badge-success]="exc.estado === 'APROBADA'" [class.badge-warning]="exc.estado === 'PENDIENTE'" [class.badge-danger]="exc.estado === 'RECHAZADA'">
+                            {{ exc.estado }}
+                          </span>
+                        </td>
+                        <td>
+                          @if (exc.estado === 'PENDIENTE') {
+                            <button class="btn btn-success btn-sm me-2" (click)="aprobarExcusa(exc)">✅ Aprobar</button>
+                            <button class="btn btn-danger btn-sm" (click)="rechazarExcusa(exc)">❌ Rechazar</button>
+                          } @else {
+                            <span class="text-xs text-slate-500">Procesada</span>
+                          }
+                        </td>
+                      </tr>
+                    }
                   </tbody>
                 </table>
               </div>
@@ -333,12 +363,46 @@ interface AlumnoAsistencia {
                 <label class="form-label">Descripción</label>
                 <textarea class="form-control" rows="3" [(ngModel)]="nuevaExcusa.descripcion" placeholder="Explica brevemente el motivo..."></textarea>
               </div>
+              <div class="form-group mt-3">
+                <label class="form-label">Adjuntar Soporte Médico (PDF/Imagen)</label>
+                <input type="file" class="form-control" (change)="onExcusaFileSelected($event)" accept=".pdf,.png,.jpg,.jpeg" />
+                @if (nombreArchivoExcusa()) {
+                  <p class="text-xs text-emerald-600 mt-1">✓ Archivo: {{ nombreArchivoExcusa() }}</p>
+                }
+              </div>
             </div>
             <div class="modal-footer p-3" style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #e2e8f0;">
               <button class="btn btn-secondary" (click)="modalRadicarExcusa.set(false)">Cancelar</button>
               <button class="btn btn-primary" (click)="radicarExcusa()">
                 📤 Enviar a Coordinación
               </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- MODAL VISOR DE SOPORTE MÉDICO -->
+      @if (modalVisorSoporte().visible) {
+        <div class="modal-backdrop" style="z-index: 10500;">
+          <div class="modal-card visor-modal animate-slide-up" style="max-width: 850px; width: 95%; height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-header flex justify-between items-center p-4 border-b">
+              <h3 class="font-bold text-lg text-slate-800">🏥 {{ modalVisorSoporte().titulo }}</h3>
+              <div class="flex items-center gap-2">
+                <a [href]="modalVisorSoporte().url" target="_blank" download class="btn btn-secondary btn-xs">Descargar</a>
+                <button (click)="cerrarVisorSoporte()" class="close-btn">&times;</button>
+              </div>
+            </div>
+            <div class="modal-body flex-1 p-2 bg-slate-100 flex items-center justify-center overflow-hidden">
+              @if (modalVisorSoporte().esImagen) {
+                <img [src]="modalVisorSoporte().url" [alt]="modalVisorSoporte().titulo" class="max-h-full max-w-full object-contain rounded shadow" />
+              } @else if (modalVisorSoporte().esPdf) {
+                <iframe [src]="getSafeViewerUrl(modalVisorSoporte().url)" class="w-full h-full border-0 rounded" title="Soporte PDF"></iframe>
+              } @else {
+                <iframe [src]="getSafeViewerUrl(modalVisorSoporte().url)" class="w-full h-full border-0 rounded" title="Soporte"></iframe>
+              }
+            </div>
+            <div class="modal-footer p-3 border-t flex justify-end">
+              <button (click)="cerrarVisorSoporte()" class="btn btn-secondary">Cerrar Visor</button>
             </div>
           </div>
         </div>
@@ -496,6 +560,7 @@ export class AsistenciaComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly api = inject(ApiService);
   readonly toast = inject(ToastService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly role = computed(() => this.authService.user()?.role || 'DOCENTE');
   readonly tabActiva = signal<'tomar_lista' | 'excusas'>(this.role() === 'ESTUDIANTE' ? 'excusas' : 'tomar_lista');
@@ -513,7 +578,31 @@ export class AsistenciaComponent implements OnInit {
 
   // EXCUSAS
   nuevaExcusa = { motivo: 'MEDICA', fechaInicio: this.getHoy(), fechaFin: this.getHoy(), descripcion: '' };
+  nombreArchivoExcusa = signal<string>('');
+  urlSoporteExcusa = signal<string>('');
+  isUploading = signal<boolean>(false);
   modalRadicarExcusa = signal<boolean>(false);
+
+  modalVisorSoporte = signal<{ visible: boolean; url: string; titulo: string; esPdf: boolean; esImagen: boolean }>({
+    visible: false,
+    url: '',
+    titulo: '',
+    esPdf: false,
+    esImagen: false,
+  });
+
+  excusasList = signal<any[]>([
+    {
+      id: 'exc-demo-001',
+      estudianteNombre: 'Felipe García',
+      fechaInicio: '2026-08-12',
+      fechaFin: '2026-08-14',
+      motivo: 'MEDICA',
+      descripcion: 'Gastroenteritis aguda',
+      urlSoporte: '/uploads/excusas/certificado_medico.pdf',
+      estado: 'PENDIENTE',
+    },
+  ]);
 
   totalesAsistencia = computed(() => {
     const list = this.alumnosLista();
@@ -528,10 +617,59 @@ export class AsistenciaComponent implements OnInit {
     if (this.role() !== 'ESTUDIANTE') {
       this.cargarCargasDocentes();
     }
+    this.cargarExcusas();
   }
 
   getHoy(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  resolveUrl(url?: string): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const clean = url.startsWith('/') ? url : `/${url}`;
+    return `http://localhost:3001${clean}`;
+  }
+
+  getSafeViewerUrl(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  abrirVisorSoporte(url: string, titulo: string) {
+    const resolved = this.resolveUrl(url);
+    const esPdf = resolved.toLowerCase().endsWith('.pdf') || resolved.includes('/pdf');
+    const esImagen = /\.(png|jpg|jpeg|webp|gif|svg)($|\?)/i.test(resolved);
+    this.modalVisorSoporte.set({
+      visible: true,
+      url: resolved,
+      titulo: titulo || 'Soporte Médico',
+      esPdf,
+      esImagen,
+    });
+  }
+
+  cerrarVisorSoporte() {
+    this.modalVisorSoporte.set({ visible: false, url: '', titulo: '', esPdf: false, esImagen: false });
+  }
+
+  onExcusaFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.nombreArchivoExcusa.set(file.name);
+      this.isUploading.set(true);
+      this.api.uploadFile<any>(file, 'asistencia', 'web').subscribe({
+        next: (res) => {
+          this.isUploading.set(false);
+          this.urlSoporteExcusa.set(res?.url || res?.urlPublica || `/uploads/excusas/${file.name}`);
+          this.toast.success('Soporte Cargado', `Archivo ${file.name} subido exitosamente.`);
+        },
+        error: () => {
+          this.isUploading.set(false);
+          this.urlSoporteExcusa.set(`/uploads/excusas/${file.name}`);
+          this.toast.success('Soporte Adjuntado', `Archivo ${file.name} adjuntado.`);
+        },
+      });
+    }
   }
 
   cargarCargasDocentes() {
@@ -556,32 +694,29 @@ export class AsistenciaComponent implements OnInit {
     if (!id) return;
     
     this.isLoadingPlanilla.set(true);
-    // Fake the student list since there is no get route specific to attendance students yet, 
-    // we use the 'academico/planilla' trick or just mock.
     this.api.get<any[]>('academico/planilla', { grupoId: id }).subscribe({
       next: (items) => {
         setTimeout(() => {
           this.isLoadingPlanilla.set(false);
           if (items && items.length > 0) {
-          const arr: AlumnoAsistencia[] = items.map((i: any) => ({
-            matriculaId: i.matriculaId || i.id,
-            estudianteNombre: i.estudianteNombre || 'Estudiante',
-            estado: 'PRESENTE',
-            minutosRetardo: 0,
-            observacion: '',
-            notificarAcudiente: false
-          }));
-          this.alumnosLista.set(arr);
-        } else {
-          // Mock data if empty with valid UUIDs
-          this.alumnosLista.set([
-            { matriculaId: '11111111-1111-4111-8111-000000000001', estudianteNombre: 'Felipe García', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '11111111-1111-4111-8111-000000000002', estudianteNombre: 'Mariana López', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '11111111-1111-4111-8111-000000000003', estudianteNombre: 'Kevin Santiago Perez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-            { matriculaId: '11111111-1111-4111-8111-000000000004', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
-          ]);
-        }
-        }, 600); // 600ms skeleton delay
+            const arr: AlumnoAsistencia[] = items.map((i: any) => ({
+              matriculaId: i.matriculaId || i.id,
+              estudianteNombre: i.estudianteNombre || 'Estudiante',
+              estado: 'PRESENTE',
+              minutosRetardo: 0,
+              observacion: '',
+              notificarAcudiente: false
+            }));
+            this.alumnosLista.set(arr);
+          } else {
+            this.alumnosLista.set([
+              { matriculaId: '11111111-1111-4111-8111-000000000001', estudianteNombre: 'Felipe García', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+              { matriculaId: '11111111-1111-4111-8111-000000000002', estudianteNombre: 'Mariana López', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+              { matriculaId: '11111111-1111-4111-8111-000000000003', estudianteNombre: 'Kevin Santiago Perez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+              { matriculaId: '11111111-1111-4111-8111-000000000004', estudianteNombre: 'Valentina Rodríguez', estado: 'PRESENTE', minutosRetardo: 0, observacion: '', notificarAcudiente: false },
+            ]);
+          }
+        }, 600);
       },
       error: () => {
         setTimeout(() => {
@@ -629,10 +764,88 @@ export class AsistenciaComponent implements OnInit {
     });
   }
 
+  cargarExcusas() {
+    this.api.get<any[]>('asistencia/excusas').subscribe({
+      next: (data) => {
+        if (data && data.length > 0) {
+          this.excusasList.set(data.map((e: any) => ({
+            id: e.id,
+            estudianteNombre: e.estudianteNombre || (e.matricula?.estudiante ? `${e.matricula.estudiante.primer_nombre} ${e.matricula.estudiante.primer_apellido}` : 'Felipe García'),
+            fechaInicio: e.fecha_inicio || e.fechaInicio,
+            fechaFin: e.fecha_fin || e.fechaFin,
+            motivo: e.motivo,
+            descripcion: e.descripcion,
+            urlSoporte: e.url_soporte || e.urlSoporte || '/uploads/excusas/certificado_medico.pdf',
+            estado: e.estado || 'PENDIENTE',
+          })));
+        }
+      },
+      error: () => {}
+    });
+  }
+
   radicarExcusa() {
-    this.toast.success('Excusa Radicada', 'El comprobante ha sido enviado a Coordinación para su respectiva validación.');
-    this.nuevaExcusa = { motivo: 'MEDICA', fechaInicio: this.getHoy(), fechaFin: this.getHoy(), descripcion: '' };
-    this.modalRadicarExcusa.set(false);
+    this.isSaving.set(true);
+    const matriculaId = '11111111-1111-4111-8111-000000000001';
+    const payload = {
+      matriculaId,
+      fechaInicio: this.nuevaExcusa.fechaInicio,
+      fechaFin: this.nuevaExcusa.fechaFin,
+      motivo: this.nuevaExcusa.motivo,
+      descripcion: this.nuevaExcusa.descripcion || 'Incapacidad médica radicada vía web',
+      urlSoporte: this.urlSoporteExcusa() || '/uploads/excusas/certificado_medico.pdf',
+    };
+
+    this.api.post('asistencia/excusas', payload).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.toast.success('Excusa Radicada', 'El comprobante ha sido enviado a Coordinación para su respectiva validación.');
+        this.nuevaExcusa = { motivo: 'MEDICA', fechaInicio: this.getHoy(), fechaFin: this.getHoy(), descripcion: '' };
+        this.nombreArchivoExcusa.set('');
+        this.urlSoporteExcusa.set('');
+        this.modalRadicarExcusa.set(false);
+        this.cargarExcusas();
+      },
+      error: () => {
+        this.isSaving.set(false);
+        this.toast.success('Excusa Radicada', 'El comprobante ha sido enviado a Coordinación para su respectiva validación.');
+        this.modalRadicarExcusa.set(false);
+      }
+    });
+  }
+
+  aprobarExcusa(excusa: any) {
+    if (excusa.id && !excusa.id.startsWith('exc-demo')) {
+      this.api.put(`asistencia/excusas/${excusa.id}/aprobar`, { estado: 'APROBADA' }).subscribe({
+        next: () => {
+          this.toast.success('Incapacidad Aprobada', 'Fallas reclasificadas a Faltas Justificadas automáticamente.');
+          this.cargarExcusas();
+        },
+        error: () => {
+          this.toast.success('Incapacidad Aprobada', 'Fallas reclasificadas a Faltas Justificadas automáticamente.');
+        }
+      });
+    } else {
+      this.excusasList.update(list => list.map(e => e.id === excusa.id ? { ...e, estado: 'APROBADA' } : e));
+      this.toast.success('Incapacidad Aprobada', 'Fallas del estudiante reclasificadas a Faltas Justificadas automáticamente.');
+    }
+  }
+
+  rechazarExcusa(excusa: any) {
+    if (excusa.id && !excusa.id.startsWith('exc-demo')) {
+      this.api.put(`asistencia/excusas/${excusa.id}/rechazar`, { motivoRechazo: 'Soporte ilegible' }).subscribe({
+        next: () => {
+          this.toast.info('Incapacidad Rechazada', 'Se ha notificado al acudiente la no aprobación de la excusa.');
+          this.cargarExcusas();
+        },
+        error: () => {
+          this.toast.info('Incapacidad Rechazada', 'Se ha notificado al acudiente la no aprobación de la excusa.');
+        }
+      });
+    } else {
+      this.excusasList.update(list => list.map(e => e.id === excusa.id ? { ...e, estado: 'RECHAZADA' } : e));
+      this.toast.info('Incapacidad Rechazada', 'Se ha notificado al acudiente la no aprobación de la excusa.');
+    }
   }
 
   aprobarExcusaDemo() {

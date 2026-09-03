@@ -139,13 +139,13 @@ export class AuthService {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
 
-    const idGenerado = crypto?.randomUUID ? crypto.randomUUID() : 'col-' + Date.now();
+    const idGenerado = nuevoColegio.id || (crypto?.randomUUID ? crypto.randomUUID() : 'col-' + Date.now());
 
     const colegioCreado: Colegio = {
       id: idGenerado,
       nombre: nuevoColegio.nombre || 'Nueva Institución Educativa',
       razonSocial: nuevoColegio.razonSocial || nuevoColegio.nombre,
-      slug: slugGenerado,
+      slug: nuevoColegio.slug || slugGenerado,
       nit: nuevoColegio.nit || '900.000.000-1',
       codigoDane: nuevoColegio.codigoDane || '111001' + Math.floor(100000 + Math.random() * 900000),
       ciudad: nuevoColegio.ciudad || 'Bogotá D.C.',

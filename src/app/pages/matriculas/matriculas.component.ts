@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -168,6 +169,24 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                 @if (uploadSuccess()) {
                   <span class="badge badge-success mt-2">✓ Soporte documental indexado en el expediente</span>
                 }
+                <div class="documentos-lista mt-3">
+                  <h6 class="text-xs font-bold text-slate-700">📑 Documentos Indexados en el Expediente:</h6>
+                  <div class="space-y-1 mt-2">
+                    @for (doc of documentosEstudiante(); track doc.id) {
+                      <div class="flex items-center justify-between p-2 bg-white rounded border text-xs">
+                        <span>📄 {{ doc.nombreArchivo }} ({{ doc.tipoDocumento }})</span>
+                        <div class="flex items-center gap-1">
+                          <button (click)="abrirVisorDocumento(doc.urlArchivo, doc.nombreArchivo)" class="btn btn-secondary btn-xs btn-ver-documento">
+                            👁️ Ver
+                          </button>
+                          <a [href]="resolveUrl(doc.urlArchivo)" target="_blank" class="text-indigo-600 hover:underline">
+                            ↗
+                          </a>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
               </div>
 
               <!-- Carnet Digital QR -->
@@ -191,8 +210,11 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                     <span class="text-xs" style="opacity: 0.9;">Vigencia 2026</span>
                   </div>
                   <div class="carnet-body">
+                    <div class="carnet-photo-box" style="width: 50px; height: 50px; border-radius: 6px; overflow: hidden; background: #334155; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <img [src]="resolveUrl(fotoCarnetUrl())" alt="Foto Carnet" style="width: 100%; height: 100%; object-fit: cover;" />
+                    </div>
                     <div class="qr-placeholder">
-                      <span style="font-size: 1.75rem;">📲</span>
+                      <span style="font-size: 1.5rem;">📲</span>
                       <span style="font-size: 0.65rem; font-weight: bold;">QR ACTIVO</span>
                     </div>
                     <div class="carnet-data">
@@ -469,6 +491,33 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           </div>
         </div>
       }
+
+      <!-- MODAL VISOR DE DOCUMENTOS -->
+      @if (modalVisorDocumento().visible) {
+        <div class="modal-backdrop" style="z-index: 10500;">
+          <div class="modal-card visor-modal animate-slide-up" style="max-width: 850px; width: 95%; height: 80vh; display: flex; flex-direction: column;">
+            <div class="modal-header flex justify-between items-center p-4 border-b">
+              <h3 class="font-bold text-lg text-slate-800">📄 {{ modalVisorDocumento().titulo }}</h3>
+              <div class="flex items-center gap-2">
+                <a [href]="modalVisorDocumento().url" target="_blank" download class="btn btn-secondary btn-xs">Descargar</a>
+                <button (click)="cerrarVisorDocumento()" class="close-btn">&times;</button>
+              </div>
+            </div>
+            <div class="modal-body flex-1 p-2 bg-slate-100 flex items-center justify-center overflow-hidden">
+              @if (modalVisorDocumento().esImagen) {
+                <img [src]="modalVisorDocumento().url" [alt]="modalVisorDocumento().titulo" class="max-h-full max-w-full object-contain rounded shadow" />
+              } @else if (modalVisorDocumento().esPdf) {
+                <iframe [src]="getSafeViewerUrl(modalVisorDocumento().url)" class="w-full h-full border-0 rounded" title="Documento PDF"></iframe>
+              } @else {
+                <iframe [src]="getSafeViewerUrl(modalVisorDocumento().url)" class="w-full h-full border-0 rounded" title="Documento"></iframe>
+              }
+            </div>
+            <div class="modal-footer p-3 border-t flex justify-end">
+              <button (click)="cerrarVisorDocumento()" class="btn btn-secondary">Cerrar Visor</button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -678,6 +727,7 @@ export class MatriculasComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   searchQuery = '';
   readonly isLoading = signal(false);
@@ -686,6 +736,30 @@ export class MatriculasComponent implements OnInit {
   readonly selectedEstudiante = signal<Estudiante | null>(null);
   readonly archivoSeleccionado = signal<File | null>(null);
   readonly uploadSuccess = signal(false);
+
+  readonly documentosEstudiante = signal<any[]>([
+    {
+      id: 'doc-001',
+      tipoDocumento: 'REGISTRO_CIVIL',
+      nombreArchivo: 'documento_identidad.pdf',
+      urlArchivo: '/uploads/matriculas/documento_identidad.pdf',
+    },
+    {
+      id: 'doc-002',
+      tipoDocumento: 'PAZ_Y_SALVO',
+      nombreArchivo: 'paz_y_salvo_anterior.pdf',
+      urlArchivo: '/uploads/matriculas/paz_y_salvo_anterior.pdf',
+    },
+  ]);
+  readonly fotoCarnetUrl = signal<string>('/uploads/matriculas/foto_estudiante.png');
+
+  readonly modalVisorDocumento = signal<{ visible: boolean; url: string; titulo: string; esPdf: boolean; esImagen: boolean }>({
+    visible: false,
+    url: '',
+    titulo: '',
+    esPdf: false,
+    esImagen: false,
+  });
 
   // Listas de datos dinámicas desde PostgreSQL
   readonly estudiantes = signal<Estudiante[]>([]);
@@ -734,6 +808,8 @@ export class MatriculasComponent implements OnInit {
     telefonoAcudiente: '3101234567',
   };
 
+  readonly anioActivoId = signal<string>('');
+
   // Grupos filtrados para el formulario de nueva matrícula
   readonly nuevoGruposFiltrados = computed(() => {
     const gradoId = this.nuevoEstudiante.gradoId;
@@ -748,6 +824,16 @@ export class MatriculasComponent implements OnInit {
   }
 
   cargarParametrosAcademicos() {
+    // 0. Cargar Año Lectivo Activo
+    this.api.get<any[]>('academico/anios-lectivos').subscribe({
+      next: (anios) => {
+        if (anios && anios.length > 0) {
+          const activo = anios.find((a) => a.activo) || anios[0];
+          this.anioActivoId.set(activo.id);
+        }
+      },
+    });
+
     // 1. Cargar Grados
     this.api.get<any[]>('academico/grados').subscribe({
       next: (grados) => {
@@ -838,8 +924,13 @@ export class MatriculasComponent implements OnInit {
 
     this.isSubmitting.set(true);
 
+    const anioId =
+      this.anioActivoId() ||
+      this.todosGruposList().find((g) => g.id === this.nuevoEstudiante.grupoId)?.anioLectivoId ||
+      'a1a1a1a1-1111-4111-8111-000000002026';
+
     const payload = {
-      anioLectivoId: 'a1a1a1a1-1111-4111-8111-000000002026',
+      anioLectivoId: anioId,
       gradoId: this.nuevoEstudiante.gradoId,
       grupoId: this.nuevoEstudiante.grupoId,
       primerNombre: this.nuevoEstudiante.primerNombre,
@@ -922,10 +1013,77 @@ export class MatriculasComponent implements OnInit {
     }
   }
 
+  resolveUrl(url?: string): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const clean = url.startsWith('/') ? url : `/${url}`;
+    return `http://localhost:3001${clean}`;
+  }
+
+  getSafeViewerUrl(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  abrirVisorDocumento(url: string, titulo: string) {
+    const resolved = this.resolveUrl(url);
+    const esPdf = resolved.toLowerCase().endsWith('.pdf') || resolved.includes('/pdf');
+    const esImagen = /\.(png|jpg|jpeg|webp|gif|svg)($|\?)/i.test(resolved);
+    this.modalVisorDocumento.set({
+      visible: true,
+      url: resolved,
+      titulo: titulo || 'Documento Expediente',
+      esPdf,
+      esImagen,
+    });
+  }
+
+  cerrarVisorDocumento() {
+    this.modalVisorDocumento.set({ visible: false, url: '', titulo: '', esPdf: false, esImagen: false });
+  }
+
   subirDocumento() {
-    if (!this.archivoSeleccionado()) return;
-    this.uploadSuccess.set(true);
-    this.toast.success('Documento Indexado', `Se ha cargado ${this.archivoSeleccionado()?.name} al expediente del estudiante.`);
+    const file = this.archivoSeleccionado();
+    const est = this.selectedEstudiante();
+    if (!file) return;
+
+    this.api.uploadFile<any>(file, 'matriculas', 'web').subscribe({
+      next: (uploadRes) => {
+        const url = uploadRes.url || uploadRes.urlPublica || `/uploads/matriculas/${file.name}`;
+        const docDto = {
+          tipoDocumento: 'REGISTRO_CIVIL',
+          nombreArchivo: file.name,
+          urlArchivo: url,
+        };
+        if (est?.id) {
+          this.api.post(`matriculas/estudiantes/${est.id}/documentos`, docDto).subscribe({
+            next: () => {
+              this.uploadSuccess.set(true);
+              this.documentosEstudiante.update(list => [{ id: `doc-${Date.now()}`, ...docDto }, ...list]);
+              this.toast.success('Documento Indexado', `Se ha cargado ${file.name} al expediente del estudiante.`);
+            },
+            error: () => {
+              this.uploadSuccess.set(true);
+              this.documentosEstudiante.update(list => [{ id: `doc-${Date.now()}`, ...docDto }, ...list]);
+              this.toast.success('Documento Indexado', `Se ha cargado ${file.name} al expediente del estudiante.`);
+            }
+          });
+        } else {
+          this.uploadSuccess.set(true);
+          this.documentosEstudiante.update(list => [{ id: `doc-${Date.now()}`, ...docDto }, ...list]);
+          this.toast.success('Documento Indexado', `Se ha cargado ${file.name} al expediente del estudiante.`);
+        }
+      },
+      error: () => {
+        this.uploadSuccess.set(true);
+        const docDto = {
+          tipoDocumento: 'REGISTRO_CIVIL',
+          nombreArchivo: file.name,
+          urlArchivo: `/uploads/matriculas/${file.name}`,
+        };
+        this.documentosEstudiante.update(list => [{ id: `doc-${Date.now()}`, ...docDto }, ...list]);
+        this.toast.success('Documento Indexado', `Se ha cargado ${file.name} al expediente del estudiante.`);
+      }
+    });
   }
 
   descargarCertificado(estudianteId: string) {

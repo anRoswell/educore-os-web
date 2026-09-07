@@ -1,6 +1,14 @@
 import { Page, expect } from '@playwright/test';
 
-export type DemoRole = 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTUDIANTE';
+export type DemoRole =
+  | 'RECTOR'
+  | 'DOCENTE'
+  | 'TESORERO'
+  | 'COORDINADOR'
+  | 'ESTUDIANTE'
+  | 'CONTADOR'
+  | 'REVISOR_FISCAL'
+  | 'SUPER_ADMIN';
 
 /**
  * Log into EduCoreOS Web application using a specific role.
@@ -22,6 +30,9 @@ export async function loginAs(page: Page, role: DemoRole = 'RECTOR', colegioInde
     TESORERO: '.role-btn.tesorero',
     COORDINADOR: '.role-btn.coordinador',
     ESTUDIANTE: '.role-btn.estudiante',
+    CONTADOR: '.role-btn.rector',
+    REVISOR_FISCAL: '.role-btn.rector',
+    SUPER_ADMIN: '.role-btn.rector',
   };
 
   const roleBtn = page.locator(roleClassMap[role]);

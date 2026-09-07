@@ -1,3 +1,13 @@
+/**
+ * ==============================================================================
+ * AUTO-GENERATED FILE FROM POSTGRESQL (public.parametros)
+ * Generated at: 2026-09-04T16:55:34.967Z
+ * Generator: npm run sync:enums
+ * SINGLE SOURCE OF TRUTH: PostgreSQL Database (colegio_id IS NULL)
+ * ==============================================================================
+ */
+
+// 1. Roles y Permisos (BD: ROLES_SISTEMA)
 export enum RoleCodigo {
   SUPERADMIN = 'SUPERADMIN',
   RECTOR = 'RECTOR',
@@ -6,12 +16,13 @@ export enum RoleCodigo {
   ESTUDIANTE = 'ESTUDIANTE',
   ACUDIENTE = 'ACUDIENTE',
   SECRETARIA = 'SECRETARIA',
-  PSICORIENTADOR = 'PSICORIENTADOR',
   CONTADOR = 'CONTADOR',
+  PSICORIENTADOR = 'PSICORIENTADOR',
   BIBLIOTECARIO = 'BIBLIOTECARIO',
   SERVICIOS_GENERALES = 'SERVICIOS_GENERALES',
 }
 
+// 2. Estado General
 export enum EstadoGeneral {
   ACTIVO = 'ACTIVO',
   INACTIVO = 'INACTIVO',
@@ -20,21 +31,65 @@ export enum EstadoGeneral {
   ELIMINADO = 'ELIMINADO',
 }
 
+// 3. Identificación (BD: DOCUMENTOS_IDENTIDAD)
 export enum TipoDocumento {
   CC = 'CC',
   TI = 'TI',
-  CE = 'CE',
   RC = 'RC',
+  CE = 'CE',
   PEP = 'PEP',
   PPT = 'PPT',
   PASAPORTE = 'PASAPORTE',
 }
 
+export enum Genero {
+  MASCULINO = 'MASCULINO',
+  FEMENINO = 'FEMENINO',
+  OTRO = 'OTRO',
+}
+
+// 4. Académico (BD: ESCALA_DECRETO_1290 & DIMENSIONES_EVALUACION)
 export enum DesempenoDecreto1290 {
   SUPERIOR = 'SUPERIOR',
   ALTO = 'ALTO',
   BASICO = 'BASICO',
   BAJO = 'BAJO',
+}
+
+export enum EstadoPeriodo {
+  PENDIENTE = 'PENDIENTE',
+  ABIERTO = 'ABIERTO',
+  ACTIVO = 'ACTIVO',
+  EN_CALIFICACION = 'EN_CALIFICACION',
+  CERRADO = 'CERRADO',
+}
+
+export enum DimensionActividad {
+  COGNITIVO = 'COGNITIVO',
+  PROCEDIMENTAL = 'PROCEDIMENTAL',
+  ACTITUDINAL = 'ACTITUDINAL',
+}
+
+export enum TipoActividad {
+  EVALUACION = 'EVALUACION',
+  TALLER = 'TALLER',
+  PROYECTO = 'PROYECTO',
+  EXPOSICION = 'EXPOSICION',
+  QUIZ = 'QUIZ',
+  OTRO = 'OTRO',
+}
+
+export enum EstadoAnioLectivo {
+  PLANIFICACION = 'PLANIFICACION',
+  EN_CURSO = 'EN_CURSO',
+  CERRADO = 'CERRADO',
+}
+
+// 5. Matrículas (BD: TIPOS_MATRICULA & ESTADOS_MATRICULA)
+export enum TipoMatricula {
+  NUEVA = 'NUEVA',
+  RENOVACION = 'RENOVACION',
+  TRANSFERENCIA = 'TRANSFERENCIA',
 }
 
 export enum EstadoMatricula {
@@ -45,35 +100,198 @@ export enum EstadoMatricula {
   ANULADO = 'ANULADO',
 }
 
-export enum EstadoCuentaCobro {
+export enum EstadoSolicitudAdmision {
   PENDIENTE = 'PENDIENTE',
+  EN_REVISION = 'EN_REVISION',
+  APROBADA = 'APROBADA',
+  RECHAZADA = 'RECHAZADA',
+  MATRICULADA = 'MATRICULADA',
+}
+
+export enum TipoDocumentoEstudiante {
+  RC = 'RC',
+  TI = 'TI',
+  CC = 'CC',
+  CE = 'CE',
+  PASAPORTE = 'PASAPORTE',
+  PEP = 'PEP',
+  PPT = 'PPT',
+  VISA = 'VISA',
+  OTRO = 'OTRO',
+}
+
+// 6. Tesorería (BD: ESTADOS_CUENTA, ESTADOS_PAGO, MEDIOS_PAGO, ESTADOS_ACUERDO)
+export enum EstadoCuentaCobro {
+  AL_DIA = 'AL_DIA',
   PAGADO = 'PAGADO',
-  PARCIAL = 'PARCIAL',
-  VENCIDO = 'VENCIDO',
+  PAGADO_PARCIAL = 'PAGADO_PARCIAL',
+  POR_VENCER = 'POR_VENCER',
+  EN_MORA = 'EN_MORA',
+  ANULADO = 'ANULADO',
+}
+
+export enum EstadoPagoRecaudo {
+  APROBADO = 'APROBADO',
+  PENDIENTE = 'PENDIENTE',
+  RECHAZADO = 'RECHAZADO',
   ANULADO = 'ANULADO',
 }
 
 export enum MedioPago {
-  PSE = 'PSE',
-  TARJETA_CREDITO = 'TARJETA_CREDITO',
-  TARJETA_DEBITO = 'TARJETA_DEBITO',
   EFECTIVO = 'EFECTIVO',
-  TRANSFERENCIA_BANCARIA = 'TRANSFERENCIA_BANCARIA',
-  CONSIGNACION = 'CONSIGNACION',
+  TRANSFERENCIA_BANCOLOMBIA = 'TRANSFERENCIA_BANCOLOMBIA',
+  NEQUI_QR = 'NEQUI_QR',
+  TARJETA_CREDITO = 'TARJETA_CREDITO',
+  CHEQUE = 'CHEQUE',
+  PSE = 'PSE',
+  WOMPI = 'WOMPI',
+  CRUCE_ANTICIPO = 'CRUCE_ANTICIPO',
 }
 
+export enum EstadoAcuerdoPago {
+  ACTIVO = 'ACTIVO',
+  CUMPLIDO = 'CUMPLIDO',
+  INCUMPLIDO = 'INCUMPLIDO',
+  ANULADO = 'ANULADO',
+}
+
+export enum TipoBeca {
+  NINGUNA = 'NINGUNA',
+  EXCELENCIA = 'EXCELENCIA',
+  HERMANOS = 'HERMANOS',
+  DOCENTE = 'DOCENTE',
+  CONVENIO = 'CONVENIO',
+  SOLIDARIA = 'SOLIDARIA',
+  TOTAL = 'TOTAL',
+  PARCIAL = 'PARCIAL',
+  EMPLEADO = 'EMPLEADO',
+  OTRA = 'OTRA',
+}
+
+export enum VigenciaBeca {
+  ANUAL = 'ANUAL',
+  SEMESTRAL = 'SEMESTRAL',
+  PERIODO = 'PERIODO',
+  SEMESTRE_1 = 'SEMESTRE_1',
+  SEMESTRE_2 = 'SEMESTRE_2',
+  BIMESTRE_1 = 'BIMESTRE_1',
+  BIMESTRE_2 = 'BIMESTRE_2',
+  BIMESTRE_3 = 'BIMESTRE_3',
+  BIMESTRE_4 = 'BIMESTRE_4',
+  BIMESTRE_5 = 'BIMESTRE_5',
+  BIMESTRAL = 'BIMESTRAL',
+  MES_ESPECIFICO = 'MES_ESPECIFICO',
+  TEMPORAL = 'TEMPORAL',
+}
+
+export enum EstadoBeca {
+  ACTIVA = 'ACTIVA',
+  SUSPENDIDA = 'SUSPENDIDA',
+  REVOCADA = 'REVOCADA',
+  EXPIRADA = 'EXPIRADA',
+}
+
+export enum CuentaContablePuc {
+  CUENTA_1305_CLIENTES = '1305',
+  CUENTA_4160_EDUCACION = '4160',
+  CUENTA_1105_CAJA = '1105',
+  CUENTA_1110_BANCOS = '1110',
+  DESCUENTOS_PENSIONES = '417505',
+}
+
+export enum MesEscolar {
+  ENERO = 1,
+  FEBRERO = 2,
+  MARZO = 3,
+  ABRIL = 4,
+  MAYO = 5,
+  JUNIO = 6,
+  JULIO = 7,
+  AGOSTO = 8,
+  SEPTIEMBRE = 9,
+  OCTUBRE = 10,
+  NOVIEMBRE = 11,
+  DICIEMBRE = 12,
+}
+
+// BD: PORCENTAJES_BECA
+export enum PorcentajeBeca {
+  NINGUNA = 'NINGUNA',
+  CONVENIO = 'CONVENIO',
+  HERMANOS = 'HERMANOS',
+  VEINTICINCO = 'VEINTICINCO',
+  DOCENTE = 'DOCENTE',
+  CINCUENTA = 'CINCUENTA',
+  EXCELENCIA = 'EXCELENCIA',
+  SETENTA_Y_CINCO = 'SETENTA_Y_CINCO',
+  SOLIDARIA = 'SOLIDARIA',
+  CIEN = 'CIEN',
+}
+
+// BD: CUOTAS_PERIODO
+export enum CuotasPeriodo {
+  MES_ESPECIFICO = 'MES_ESPECIFICO',
+  BIMESTRE = 'BIMESTRE',
+  SEMESTRE = 'SEMESTRE',
+  DIEZ_MESES = 'DIEZ_MESES',
+  ANUAL = 'ANUAL',
+  ONCE_MESES = 'ONCE_MESES',
+}
+
+export {
+  PorcentajeBeca as ClavePorcentajeBeca,
+  CuotasPeriodo as ClaveCuotasPeriodo,
+};
+
+// BD: CONFIGURACION_FINANCIERA
+export enum ClaveParametroFinanciero {
+  ANIO_LECTIVO_DEFECTO = 'ANIO_LECTIVO_DEFECTO',
+  TARIFA_BASE_PENSION = 'TARIFA_BASE_PENSION',
+  DIA_LIMITE_PAGO_DEFECTO = 'DIA_LIMITE_PAGO_DEFECTO',
+  DIA_PAGO_ACUERDO_DEFECTO = 'DIA_PAGO_ACUERDO_DEFECTO',
+  CUOTAS_ACUERDO_DEFECTO = 'CUOTAS_ACUERDO_DEFECTO',
+  VALOR_DEFAULT_ACUERDO = 'VALOR_DEFAULT_ACUERDO',
+  MORA_PORCENTAJE_DEFAULT = 'MORA_PORCENTAJE_DEFAULT',
+  DIAS_GRACIA_DEFAULT = 'DIAS_GRACIA_DEFAULT',
+}
+
+export interface ConfiguracionFinanciera {
+  anioLectivoDefecto: number;
+  tarifaBasePension: number;
+  diaLimitePagoDefecto: number;
+  diaPagoAcuerdoDefecto: number;
+  cuotasAcuerdoDefecto: number;
+  valorDefaultAcuerdo: number;
+  moraPorcentajeDefault: number;
+  diasGraciaDefault: number;
+}
+
+// 7. Convivencia (BD: TIPOS_FALTA_LEY_1620)
 export enum TipoFaltaLey1620 {
   TIPO_I = 'TIPO_I',
   TIPO_II = 'TIPO_II',
   TIPO_III = 'TIPO_III',
 }
 
+export enum EstadoCasoConvivencia {
+  ABIERTO = 'ABIERTO',
+  EN_SEGUIMIENTO = 'EN_SEGUIMIENTO',
+  CERRADO = 'CERRADO',
+  EN_DESCARGOS = 'EN_DESCARGOS',
+  REMITIDO_COMITE = 'REMITIDO_COMITE',
+}
+
+// 8. Gestión Documental
 export enum CategoriaFlujo {
   ACADEMICO = 'ACADEMICO',
   FINANCIERO = 'FINANCIERO',
   DISCIPLINARIO = 'DISCIPLINARIO',
   ADMINISTRATIVO = 'ADMINISTRATIVO',
   RECURSOS_HUMANOS = 'RECURSOS_HUMANOS',
+  LEGAL = 'LEGAL',
+  CONVIVENCIA = 'CONVIVENCIA',
+  JURIDICO_REGULATORIO = 'JURIDICO_REGULATORIO',
+  GENERAL = 'GENERAL',
 }
 
 export enum TipoAccionEtapa {
@@ -82,39 +300,373 @@ export enum TipoAccionEtapa {
   FIRMA_DIGITAL_OTP = 'FIRMA_DIGITAL_OTP',
   CARGA_DOCUMENTO = 'CARGA_DOCUMENTO',
   VALIDACION_SECRETARIA = 'VALIDACION_SECRETARIA',
+  REVISION = 'REVISION',
+  APROBACION_FIRMA = 'APROBACION_FIRMA',
 }
 
-export enum TipoFirma {
-  TRAZO_DIGITAL = 'TRAZO_DIGITAL',
-  CERTIFICADO_DIGITAL = 'CERTIFICADO_DIGITAL',
-  OTP_SMS = 'OTP_SMS',
-  OTP_EMAIL = 'OTP_EMAIL',
-  BIOMETRICA = 'BIOMETRICA',
+export enum EstadoFlujo {
+  ACTIVO = 'ACTIVO',
+  INACTIVO = 'INACTIVO',
+  BORRADOR = 'BORRADOR',
 }
 
 export enum EstadoInstanciaFlujo {
-  INICIADO = 'INICIADO',
-  EN_TRAMITE = 'EN_TRAMITE',
-  APROBADO_FINAL = 'APROBADO_FINAL',
+  EN_PROCESO = 'EN_PROCESO',
+  PENDIENTE_APROBACION = 'PENDIENTE_APROBACION',
+  APROBADO = 'APROBADO',
   RECHAZADO = 'RECHAZADO',
+  COMPLETADO = 'COMPLETADO',
+  CANCELADO = 'CANCELADO',
+}
+
+export enum TipoDocumentoPlantilla {
+  CERTIFICADO_ESTUDIO = 'CERTIFICADO_ESTUDIO',
+  CONSTANCIA_MATRICULA = 'CONSTANCIA_MATRICULA',
+  PAZ_Y_SALVO = 'PAZ_Y_SALVO',
+  CIRCULAR_PADRES = 'CIRCULAR_PADRES',
+  RESOLUCION_RECTORAL = 'RESOLUCION_RECTORAL',
+  ACTA_CONVIVENCIA = 'ACTA_CONVIVENCIA',
+  ACTA_GRADO = 'ACTA_GRADO',
+  CARNET_ESTUDIANTIL = 'CARNET_ESTUDIANTIL',
+  BOLETIN_FINAL = 'BOLETIN_FINAL',
+}
+
+export enum EstadoDocumento {
+  BORRADOR = 'BORRADOR',
+  EMITIDO = 'EMITIDO',
+  FIRMADO = 'FIRMADO',
   ANULADO = 'ANULADO',
 }
 
-export enum TipoImportacion {
-  COLEGIOS = 'COLEGIOS',
-  ESTUDIANTES = 'ESTUDIANTES',
+// 9. Habeas Data
+export enum TipoHabeasData {
+  ACTUALIZACION = 'ACTUALIZACION',
+  RECTIFICACION = 'RECTIFICACION',
+  SUPRESION = 'SUPRESION',
+  REVOCATORIA = 'REVOCATORIA',
+  CONSULTA = 'CONSULTA',
+}
+
+export enum CanalRecepcionHabeasData {
+  PORTAL_WEB = 'PORTAL_WEB',
+  VENTANILLA_FISICA = 'VENTANILLA_FISICA',
+  CORREO_ELECTRONICO = 'CORREO_ELECTRONICO',
+}
+
+export enum EstadoSolicitudHabeasData {
+  RADICADA = 'RADICADA',
+  EN_TRAMITE = 'EN_TRAMITE',
+  RESPONDIDA = 'RESPONDIDA',
+  PRORROGADA = 'PRORROGADA',
+  ARCHIVADA = 'ARCHIVADA',
+}
+
+// 10. Gobierno Escolar
+export enum TipoEleccion {
+  PERSONERO = 'PERSONERO',
+  CONTRALOR = 'CONTRALOR',
+  CABILDANTE = 'CABILDANTE',
+  REPRESENTANTE_DOCENTE = 'REPRESENTANTE_DOCENTE',
+  REPRESENTANTE_PADRES = 'REPRESENTANTE_PADRES',
+}
+
+export enum EstadoJornadaElectoral {
+  PROGRAMADA = 'PROGRAMADA',
+  ABIERTA = 'ABIERTA',
+  CERRADA = 'CERRADA',
+  ESCRUTADA = 'ESCRUTADA',
+}
+
+export enum EstadoCandidato {
+  POSTULADO = 'POSTULADO',
+  INSCRITO = 'INSCRITO',
+  RECHAZADO = 'RECHAZADO',
+  ELECTO = 'ELECTO',
+}
+
+// 11. Cuestionarios / Evaluaciones LMS
+export enum TipoPregunta {
+  OPCION_MULTIPLE_UNICA = 'OPCION_MULTIPLE_UNICA',
+  OPCION_MULTIPLE_MULTIPLE = 'OPCION_MULTIPLE_MULTIPLE',
+  VERDADERO_FALSO = 'VERDADERO_FALSO',
+  RESPUESTA_CORTA = 'RESPUESTA_CORTA',
+  DESARROLLO = 'DESARROLLO',
+  EMPAREJAMIENTO = 'EMPAREJAMIENTO',
+}
+
+export enum EstadoCuestionario {
+  BORRADOR = 'BORRADOR',
+  PUBLICADO = 'PUBLICADO',
+  ARCHIVADO = 'ARCHIVADO',
+}
+
+export enum EstadoIntentoLms {
+  INICIADO = 'INICIADO',
+  ENVIADO = 'ENVIADO',
+  CALIFICADO = 'CALIFICADO',
+  ANULADO = 'ANULADO',
+}
+
+// 12. Bienestar Escolar
+export enum EstadoCasoBienestar {
+  ABIERTO = 'ABIERTO',
+  EN_SEGUIMIENTO = 'EN_SEGUIMIENTO',
+  CERRADO = 'CERRADO',
+  REMITIDO = 'REMITIDO',
+}
+
+export enum TipoInclusion {
+  DISCAPACIDAD_COGNITIVA = 'DISCAPACIDAD_COGNITIVA',
+  DISCAPACIDAD_FISICA = 'DISCAPACIDAD_FISICA',
+  DISCAPACIDAD_AUDITIVA = 'DISCAPACIDAD_AUDITIVA',
+  DISCAPACIDAD_VISUAL = 'DISCAPACIDAD_VISUAL',
+  TRASTORNO_APRENDIZAJE = 'TRASTORNO_APRENDIZAJE',
+  TALENTO_EXCEPCIONAL = 'TALENTO_EXCEPCIONAL',
+  OTRO = 'OTRO',
+}
+
+export enum EstadoSeguimientoInclusion {
+  INICIADO = 'INICIADO',
+  EN_PROCESO = 'EN_PROCESO',
+  CUMPLIDO = 'CUMPLIDO',
+  SUSPENDIDO = 'SUSPENDIDO',
+}
+
+// 13. Comunicaciones Institucionales
+export enum TipoComunicado {
+  CIRCULAR = 'CIRCULAR',
+  BOLETIN_INFORMATIVO = 'BOLETIN_INFORMATIVO',
+  CITACION = 'CITACION',
+  URGENTE = 'URGENTE',
+}
+
+export enum CanalComunicado {
+  WEB = 'WEB',
+  EMAIL = 'EMAIL',
+  PUSH = 'PUSH',
+  SMS = 'SMS',
+}
+
+export enum EstadoComunicado {
+  BORRADOR = 'BORRADOR',
+  ENVIADO = 'ENVIADO',
+  CANCELADO = 'CANCELADO',
+}
+
+export enum TipoNotificacion {
+  ACADEMICA = 'ACADEMICA',
+  FINANCIERA = 'FINANCIERA',
+  CONVIVENCIA = 'CONVIVENCIA',
+  ADMINISTRATIVA = 'ADMINISTRATIVA',
+}
+
+export enum PrioridadNotificacion {
+  BAJA = 'BAJA',
+  MEDIA = 'MEDIA',
+  ALTA = 'ALTA',
+  URGENTE = 'URGENTE',
+}
+
+// 14. Mesa de Ayuda
+export enum TipoIncidencia {
+  TECNICA = 'TECNICA',
+  PEDAGOGICA = 'PEDAGOGICA',
+  ADMINISTRATIVA = 'ADMINISTRATIVA',
+  INFRAESTRUCTURA = 'INFRAESTRUCTURA',
+}
+
+export enum SeveridadIncidencia {
+  BAJA = 'BAJA',
+  MEDIA = 'MEDIA',
+  ALTA = 'ALTA',
+  CRITICA = 'CRITICA',
+}
+
+export enum EstadoIncidencia {
+  ABIERTA = 'ABIERTA',
+  EN_PROCESO = 'EN_PROCESO',
+  RESUELTA = 'RESUELTA',
+  CERRADA = 'CERRADA',
+}
+
+// 15. Auditoría
+export enum TipoEventoAuditoria {
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  CREACION = 'CREACION',
+  MODIFICACION = 'MODIFICACION',
+  ELIMINACION = 'ELIMINACION',
+  EXPORTACION = 'EXPORTACION',
+}
+
+export enum NivelSeveridadAuditoria {
+  INFO = 'INFO',
+  WARNING = 'WARNING',
+  ERROR = 'ERROR',
+  CRITICO = 'CRITICO',
+}
+
+export enum ModuloAuditoria {
+  AUTH = 'AUTH',
   MATRICULAS = 'MATRICULAS',
-  DOCENTES = 'DOCENTES',
-  CALIFICACIONES = 'CALIFICACIONES',
-  NOTAS_1290 = 'NOTAS_1290',
-  CARTERA_PENSIONES = 'CARTERA_PENSIONES',
+  ACADEMICO = 'ACADEMICO',
   TESORERIA = 'TESORERIA',
+  CONVIVENCIA = 'CONVIVENCIA',
   USUARIOS = 'USUARIOS',
 }
 
+// 16. LMS
+export enum EstadoEntregaLms {
+  BORRADOR = 'BORRADOR',
+  PENDIENTE = 'PENDIENTE',
+  ENTREGADO = 'ENTREGADO',
+  CALIFICADO = 'CALIFICADO',
+  DEVUELTO = 'DEVUELTO',
+  NO_ENTREGADO = 'NO_ENTREGADO',
+  VENCIDO = 'VENCIDO',
+  SIN_ENTREGAR_VENCIDO = 'SIN_ENTREGAR_VENCIDO',
+}
+
+// 17. Recursos Humanos
+export enum TipoContrato {
+  TERMINO_FIJO = 'TERMINO_FIJO',
+  TERMINO_INDEFINIDO = 'TERMINO_INDEFINIDO',
+  PRESTACION_SERVICIOS = 'PRESTACION_SERVICIOS',
+  OBRA_LABOR = 'OBRA_LABOR',
+}
+
+export enum EstadoContrato {
+  ACTIVO = 'ACTIVO',
+  SUSPENDIDO = 'SUSPENDIDO',
+  LIQUIDADO = 'LIQUIDADO',
+  TERMINADO = 'TERMINADO',
+}
+
+// 18. Tenants / Colegios
 export enum PlanColegio {
   BASICO = 'BASICO',
   ESTANDAR = 'ESTANDAR',
   PREMIUM = 'PREMIUM',
   ENTERPRISE = 'ENTERPRISE',
+}
+
+export enum EstadoColegio {
+  TRIAL = 'TRIAL',
+  ACTIVO = 'ACTIVO',
+  SUSPENDIDO = 'SUSPENDIDO',
+  INACTIVO = 'INACTIVO',
+}
+
+export enum JornadaCodigo {
+  MANANA = 'MANANA',
+  TARDE = 'TARDE',
+  NOCHE = 'NOCHE',
+  UNICA = 'UNICA',
+  COMPLETA = 'COMPLETA',
+  SABATINA = 'SABATINA',
+}
+
+// 19. Transporte y Restaurante
+export enum TipoServicioAlimentacion {
+  DESAYUNO = 'DESAYUNO',
+  ALMUERZO = 'ALMUERZO',
+  REFRIGERIO_MANANA = 'REFRIGERIO_MANANA',
+  REFRIGERIO_TARDE = 'REFRIGERIO_TARDE',
+}
+
+export enum EstadoServicioAlimentacion {
+  ACTIVO = 'ACTIVO',
+  SUSPENDIDO = 'SUSPENDIDO',
+  CANCELADO = 'CANCELADO',
+}
+
+export enum TipoPaseRuta {
+  COMPLETO = 'COMPLETO',
+  SOLO_MANANA = 'SOLO_MANANA',
+  SOLO_TARDE = 'SOLO_TARDE',
+}
+
+// 20. Inclusión PIAR
+export enum CategoriaDiscapacidadPiar {
+  AUTISMO_TEA = 'AUTISMO_TEA',
+  TDAH = 'TDAH',
+  DISCAPACIDAD_INTELECTUAL = 'DISCAPACIDAD_INTELECTUAL',
+  DISCAPACIDAD_VISUAL = 'DISCAPACIDAD_VISUAL',
+  DISCAPACIDAD_AUDITIVA = 'DISCAPACIDAD_AUDITIVA',
+  DISCAPACIDAD_FISICA = 'DISCAPACIDAD_FISICA',
+  SORDOCEGUERA = 'SORDOCEGUERA',
+  TRASTORNO_APRENDIZAJE = 'TRASTORNO_APRENDIZAJE',
+  TALENTO_EXCEPCIONAL = 'TALENTO_EXCEPCIONAL',
+  OTRO = 'OTRO',
+}
+
+export enum EstadoPiarCaracterizacion {
+  ACTIVO = 'ACTIVO',
+  EN_SEGUIMIENTO = 'EN_SEGUIMIENTO',
+  CERRADO = 'CERRADO',
+}
+
+// UI Status enum para Tesorería
+export enum EstadoCuenta {
+  AL_DIA = 'AL_DIA',
+  PAGADO = 'PAGADO',
+  PAGADO_PARCIAL = 'PAGADO_PARCIAL',
+  POR_VENCER = 'POR_VENCER',
+  EN_MORA = 'EN_MORA',
+  ANULADO = 'ANULADO',
+}
+
+// Aliases de compatibilidad para componentes legacy
+export { EstadoInstanciaFlujo as EstadoInstanciaDocumental };
+export { EstadoAcuerdoPago as EstadoAcuerdo };
+export { EstadoPagoRecaudo as EstadoPago };
+
+export enum FiltroGeneral {
+  TODOS = 'TODOS',
+}
+export const FILTRO_TODOS = FiltroGeneral.TODOS;
+
+// 21. Grupos Canónicos de Parámetros en BD (public.parametros)
+export enum GrupoParametro {
+  ALERTAS_ACADEMICAS = 'ALERTAS_ACADEMICAS',
+  CONFIGURACION_FINANCIERA = 'CONFIGURACION_FINANCIERA',
+  CUENTAS_CONTABLES_PUC = 'CUENTAS_CONTABLES_PUC',
+  CUOTAS_PERIODO = 'CUOTAS_PERIODO',
+  DIMENSIONES_EVALUACION = 'DIMENSIONES_EVALUACION',
+  DOCUMENTOS_IDENTIDAD = 'DOCUMENTOS_IDENTIDAD',
+  ESCALA_DECRETO_1290 = 'ESCALA_DECRETO_1290',
+  ESTADOS_ACUERDO = 'ESTADOS_ACUERDO',
+  ESTADOS_CUENTA = 'ESTADOS_CUENTA',
+  ESTADOS_MATRICULA = 'ESTADOS_MATRICULA',
+  ESTADOS_PAGO = 'ESTADOS_PAGO',
+  MEDIOS_PAGO = 'MEDIOS_PAGO',
+  MESES_ACADEMICOS = 'MESES_ACADEMICOS',
+  MESES_ESCOLARES = 'MESES_ESCOLARES',
+  PERIODOS_ESTANDAR = 'PERIODOS_ESTANDAR',
+  PORCENTAJES_BECA = 'PORCENTAJES_BECA',
+  ROLES_SISTEMA = 'ROLES_SISTEMA',
+  TIPOS_FALTA_LEY_1620 = 'TIPOS_FALTA_LEY_1620',
+  TIPOS_MATRICULA = 'TIPOS_MATRICULA',
+}
+export const GRUPOS_PARAMETROS = GrupoParametro;
+
+// 22. Días de la semana para alertas y barridos automáticos
+export enum DiaSemanaNotificacion {
+  LUNES = 'LUNES',
+  MARTES = 'MARTES',
+  MIERCOLES = 'MIERCOLES',
+  JUEVES = 'JUEVES',
+  VIERNES = 'VIERNES',
+  SABADO = 'SABADO',
+  DOMINGO = 'DOMINGO',
+}
+
+// 23. Claves de configuración de Alertas Académicas
+export enum ClaveParametroAlertaAcademica {
+  DIAS_NOTIFICACION = 'DIAS_NOTIFICACION',
+  BARRIDO_ACTIVO = 'BARRIDO_ACTIVO',
+  HORA_ENVIO = 'HORA_ENVIO',
+  NOTA_CORTE_APROBACION = 'NOTA_CORTE_APROBACION',
+  MINIMO_MATERIAS_PERDIDAS = 'MINIMO_MATERIAS_PERDIDAS',
+  CANALES_NOTIFICACION = 'CANALES_NOTIFICACION',
 }

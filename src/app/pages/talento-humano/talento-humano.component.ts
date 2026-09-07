@@ -142,38 +142,46 @@ export interface LiquidacionNominaItem {
       </div>
 
       <!-- TABS DE NAVEGACIÓN -->
-      <div class="tabs-nav">
+      <div class="tabs-nav" data-testid="talento-tabs-nav">
         <button
+          type="button"
           class="tab-btn"
           [class.active]="activeTab() === 'colaboradores'"
-          (click)="activeTab.set('colaboradores')"
+          (click)="setTab('colaboradores')"
+          data-testid="tab-colaboradores"
         >
           <span>👥 Planta Docente & Colaboradores</span>
           <span class="tab-badge">{{ colaboradores().length }}</span>
         </button>
 
         <button
+          type="button"
           class="tab-btn"
           [class.active]="activeTab() === 'contratos'"
-          (click)="activeTab.set('contratos')"
+          (click)="setTab('contratos')"
+          data-testid="tab-contratos"
         >
           <span>📑 Contratos Laborales</span>
           <span class="tab-badge">{{ contratos().length }}</span>
         </button>
 
         <button
+          type="button"
           class="tab-btn"
           [class.active]="activeTab() === 'nomina'"
-          (click)="activeTab.set('nomina')"
+          (click)="setTab('nomina')"
+          data-testid="tab-nomina"
         >
           <span>💵 Liquidación de Nómina</span>
           <span class="tab-badge">{{ nominas().length }}</span>
         </button>
 
         <button
+          type="button"
           class="tab-btn"
           [class.active]="activeTab() === 'dian'"
-          (click)="activeTab.set('dian')"
+          (click)="setTab('dian')"
+          data-testid="tab-dian"
         >
           <span>🏛️ Nómina Electrónica & DIAN</span>
         </button>
@@ -645,46 +653,125 @@ export interface LiquidacionNominaItem {
               <h3>📄 Desprendible Oficial de Pago (Colilla)</h3>
               <button (click)="modalVerColilla.set(false)" class="close-btn">&times;</button>
             </div>
-            <div class="modal-body" *ngIf="colillaSeleccionada()">
-              <div class="colilla-header card mb-3">
-                <div class="flex-between">
-                  <div>
-                    <h4 class="font-bold text-slate-800">{{ getNombreNominaColaborador(colillaSeleccionada()!) }}</h4>
-                    <span class="text-xs text-slate-500">Periodo: {{ colillaSeleccionada()!.mes }}/{{ colillaSeleccionada()!.anio }}</span>
+            @if (colillaSeleccionada(); as colilla) {
+              <div class="modal-body">
+                <div class="colilla-header card mb-3">
+                  <div class="flex-between">
+                    <div>
+                      <h4 class="font-bold text-slate-800">{{ getNombreNominaColaborador(colilla) }}</h4>
+                      <span class="text-xs text-slate-500">Periodo: {{ colilla.mes }}/{{ colilla.anio }}</span>
+                    </div>
+                    <span class="badge badge-purple">{{ colilla.estado }}</span>
                   </div>
-                  <span class="badge badge-purple">{{ colillaSeleccionada()!.estado }}</span>
+                </div>
+
+                <div class="colilla-breakdown card">
+                  <table class="w-full text-sm">
+                    <tbody>
+                      <tr class="border-b">
+                        <td class="py-2 text-slate-600">Salario Básico:</td>
+                        <td class="py-2 text-right font-mono font-semibold">\${{ colilla.salarioBasico | number:'1.0-0' }}</td>
+                      </tr>
+                      <tr class="border-b">
+                        <td class="py-2 text-emerald-600">(+) Auxilio de Transporte:</td>
+                        <td class="py-2 text-right font-mono font-semibold text-emerald-600">+\${{ colilla.auxilioTransporte | number:'1.0-0' }}</td>
+                      </tr>
+                      <tr class="border-b">
+                        <td class="py-2 text-rose-600">(-) Deducción Salud (4%):</td>
+                        <td class="py-2 text-right font-mono font-semibold text-rose-600">-\${{ colilla.deduccionSalud | number:'1.0-0' }}</td>
+                      </tr>
+                      <tr class="border-b">
+                        <td class="py-2 text-rose-600">(-) Deducción Pensión (4%):</td>
+                        <td class="py-2 text-right font-mono font-semibold text-rose-600">-\${{ colilla.deduccionPension | number:'1.0-0' }}</td>
+                      </tr>
+                      <tr class="border-t-2 font-bold text-base">
+                        <td class="py-3 text-slate-900">Total Neto a Pagar:</td>
+                        <td class="py-3 text-right font-mono text-indigo-700">\${{ colilla.netoAPagar | number:'1.0-0' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
-
-              <div class="colilla-breakdown card">
-                <table class="w-full text-sm">
-                  <tbody>
-                    <tr class="border-b">
-                      <td class="py-2 text-slate-600">Salario Básico:</td>
-                      <td class="py-2 text-right font-mono font-semibold">\${{ colillaSeleccionada()!.salarioBasico | number:'1.0-0' }}</td>
-                    </tr>
-                    <tr class="border-b">
-                      <td class="py-2 text-emerald-600">(+) Auxilio de Transporte:</td>
-                      <td class="py-2 text-right font-mono font-semibold text-emerald-600">+\${{ colillaSeleccionada()!.auxilioTransporte | number:'1.0-0' }}</td>
-                    </tr>
-                    <tr class="border-b">
-                      <td class="py-2 text-rose-600">(-) Deducción Salud (4%):</td>
-                      <td class="py-2 text-right font-mono font-semibold text-rose-600">-\${{ colillaSeleccionada()!.deduccionSalud | number:'1.0-0' }}</td>
-                    </tr>
-                    <tr class="border-b">
-                      <td class="py-2 text-rose-600">(-) Deducción Pensión (4%):</td>
-                      <td class="py-2 text-right font-mono font-semibold text-rose-600">-\${{ colillaSeleccionada()!.deduccionPension | number:'1.0-0' }}</td>
-                    </tr>
-                    <tr class="border-t-2 font-bold text-base">
-                      <td class="py-3 text-slate-900">Total Neto a Pagar:</td>
-                      <td class="py-3 text-right font-mono text-indigo-700">\${{ colillaSeleccionada()!.netoAPagar | number:'1.0-0' }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            }
             <div class="modal-footer">
               <button (click)="modalVerColilla.set(false)" class="btn btn-primary">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 5. MODAL VER CONTRATO -->
+      @if (modalVerContrato()) {
+        <div class="modal-backdrop animate-fade-in" data-testid="modal-ver-contrato">
+          <div class="modal-card" style="max-width: 700px;">
+            <div class="modal-header">
+              <div class="flex items-center gap-2">
+                <span style="font-size: 1.25rem;">📑</span>
+                <h3>Minuta de Contrato Individual de Trabajo</h3>
+              </div>
+              <button (click)="modalVerContrato.set(false)" class="close-btn">&times;</button>
+            </div>
+            @if (contratoSeleccionado(); as ctr) {
+              <div class="modal-body">
+                <!-- Header Card -->
+                <div class="card mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 10px;">
+                  <div class="flex-between">
+                    <div>
+                      <span class="text-xs font-bold text-indigo-600 font-mono">{{ ctr.numeroContrato }}</span>
+                      <h4 class="font-bold text-slate-900 text-base" style="margin: 0.2rem 0;">{{ getNombreContratoColaborador(ctr) }}</h4>
+                      <span class="text-xs text-slate-500">
+                        {{ ctr.colaborador ? formatCargo(ctr.colaborador.cargo) : 'Docente Titular' }} &bull; {{ ctr.colaborador?.escalafonDocente || 'Docente Escalafonado' }}
+                      </span>
+                    </div>
+                    <span class="status-pill status-activo">{{ ctr.estado }}</span>
+                  </div>
+                </div>
+
+                <!-- Detalle Clave en Grid -->
+                <div class="form-grid mb-3">
+                  <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem;">
+                    <span class="text-xs text-slate-500 font-semibold" style="display: block;">Vigencia del Contrato:</span>
+                    <span class="font-semibold text-slate-800 text-sm">
+                      {{ ctr.fechaInicio | date:'dd/MM/yyyy' }} &rarr; {{ ctr.fechaFin ? (ctr.fechaFin | date:'dd/MM/yyyy') : 'Término Indefinido' }}
+                    </span>
+                  </div>
+
+                  <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem;">
+                    <span class="text-xs text-slate-500 font-semibold" style="display: block;">Asignación Salarial Mensual:</span>
+                    <span class="font-bold text-indigo-700 font-mono text-base">
+                      \${{ ctr.salarioPactado | number:'1.0-0' }} COP
+                    </span>
+                  </div>
+
+                  <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem;">
+                    <span class="text-xs text-slate-500 font-semibold" style="display: block;">Tipo de Vinculación:</span>
+                    <span class="font-semibold text-slate-800 text-sm">
+                      {{ ctr.colaborador?.tipoVinculacion || 'TÉRMINO FIJO (AÑO LECTIVO)' }}
+                    </span>
+                  </div>
+
+                  <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem;">
+                    <span class="text-xs text-slate-500 font-semibold" style="display: block;">Dispersión Bancaria:</span>
+                    <span class="font-mono text-xs text-slate-800">
+                      {{ ctr.colaborador?.bancoNombre || 'Bancolombia' }} &bull; {{ ctr.colaborador?.numeroCuentaBanco || '102-948576-33' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Cláusulas Estatutarias -->
+                <div class="card" style="background: #f1f5f9; border-radius: 8px; padding: 0.85rem; font-size: 0.78rem; color: #334155; line-height: 1.5;">
+                  <h5 class="font-bold text-slate-800" style="margin: 0 0 0.4rem 0;">Cláusulas del Contrato Docente (C.S.T. Art. 101 y Concordantes):</h5>
+                  <p style="margin: 0 0 0.35rem 0;"><strong>PRIMERA. Objeto:</strong> El TRABAJADOR prestará sus servicios como Docente conforme al PEI y la legislación educativa.</p>
+                  <p style="margin: 0 0 0.35rem 0;"><strong>SEGUNDA. Remuneración:</strong> El EMPLEADOR pagará la asignación básica mensual pactada con las deducciones estatutarias (Salud 4%, Pensión 4%).</p>
+                  <p style="margin: 0;"><strong>TERCERA. Afiliación:</strong> El EMPLEADOR garantiza la afiliación oportuna a Seguridad Social Integral (EPS, AFP, ARL) y Caja de Compensación.</p>
+                </div>
+              </div>
+            }
+            <div class="modal-footer">
+              <button (click)="descargarContratoPdf(contratoSeleccionado()!)" class="btn btn-emerald">
+                📄 Descargar Contrato en PDF
+              </button>
+              <button (click)="modalVerContrato.set(false)" class="btn btn-secondary">Cerrar</button>
             </div>
           </div>
         </div>
@@ -806,47 +893,63 @@ export interface LiquidacionNominaItem {
     /* TABS */
     .tabs-nav {
       display: flex;
+      align-items: center;
       gap: 0.5rem;
       border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 2px;
+      padding: 0 0.25rem 0.5rem 0.25rem;
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
     }
 
     .tab-btn {
-      padding: 0.65rem 1rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #64748b;
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -4px;
-      cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
+      padding: 0.65rem 1.15rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #64748b;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      white-space: nowrap;
       transition: all 0.2s ease;
+      user-select: none;
     }
 
-    .tab-btn:hover {
+    .tab-btn:hover:not(:disabled) {
       color: #6366f1;
+      background-color: #f8fafc;
     }
 
     .tab-btn.active {
       color: #6366f1;
-      border-bottom-color: #6366f1;
+      background-color: rgba(99, 102, 241, 0.08);
+      border-bottom: 3px solid #6366f1;
+      font-weight: 700;
     }
 
     .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 0.45rem;
       background: #e2e8f0;
       color: #334155;
       font-size: 0.7rem;
-      padding: 0.1rem 0.4rem;
+      font-weight: 700;
       border-radius: 999px;
+      line-height: 1;
+      transition: all 0.2s ease;
     }
 
     .tab-btn.active .tab-badge {
-      background: rgba(99, 102, 241, 0.15);
-      color: #6366f1;
+      background: #6366f1;
+      color: #ffffff;
     }
 
     /* FILTERS */
@@ -1225,6 +1328,8 @@ export class TalentoHumanoComponent implements OnInit {
   // Modales
   readonly modalNuevoColaborador = signal<boolean>(false);
   readonly modalNuevoContrato = signal<boolean>(false);
+  readonly modalVerContrato = signal<boolean>(false);
+  readonly contratoSeleccionado = signal<ContratoItem | null>(null);
   readonly modalLiquidarNomina = signal<boolean>(false);
   readonly modalVerColilla = signal<boolean>(false);
   readonly colillaSeleccionada = signal<LiquidacionNominaItem | null>(null);
@@ -1402,7 +1507,7 @@ export class TalentoHumanoComponent implements OnInit {
   }
 
   verFichaColaborador(col: ColaboradorItem) {
-    this.toast.info(`Ficha de ${this.getNombreCompleto(col)} (${formatCargo(col.cargo)})`);
+    this.toast.info(`Ficha de ${this.getNombreCompleto(col)} (${this.formatCargo(col.cargo)})`);
   }
 
   verColillasColaborador(col: ColaboradorItem) {
@@ -1456,12 +1561,16 @@ export class TalentoHumanoComponent implements OnInit {
     return 'Docente Asignado';
   }
 
+  setTab(tab: 'colaboradores' | 'contratos' | 'nomina' | 'dian') {
+    this.activeTab.set(tab);
+  }
+
   formatCargo(cargo: string): string {
-    return formatCargo(cargo);
+    return getFormattedCargo(cargo);
   }
 }
 
-function formatCargo(cargo: string): string {
+function getFormattedCargo(cargo: string): string {
   switch (cargo) {
     case 'DOCENTE_TITULAR': return 'Docente Titular';
     case 'DOCENTE_CATEDRA': return 'Docente Cátedra';

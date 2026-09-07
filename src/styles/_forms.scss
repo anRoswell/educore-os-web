@@ -14,6 +14,14 @@
   margin-bottom: var(--spacing-4);
 }
 
+.form-group-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-right: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+}
+
 .form-label {
   display: block;
   font-size: var(--text-sm);
@@ -26,6 +34,13 @@
     content: ' *';
     color: var(--danger);
   }
+}
+
+.form-label-sm {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .form-help {
@@ -49,7 +64,8 @@
 
 .form-control,
 .form-select,
-.input-custom {
+.input-custom,
+.input-base {
   width: 100%;
   height: 42px;
   min-height: 42px;
@@ -118,7 +134,8 @@
 
 select.form-control,
 select.form-select,
-select.input-custom {
+select.input-custom,
+select.input-base {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -147,7 +164,8 @@ select.input-custom {
    ───────────────────────────────────────────────────────────────────── */
 
 textarea.form-control,
-textarea.input-custom {
+textarea.input-custom,
+textarea.input-base {
   height: auto;
   min-height: calc(var(--input-height) * 2);
   resize: vertical;
@@ -160,7 +178,8 @@ textarea.input-custom {
 
 .form-control-sm,
 .form-select-sm,
-.select-sm {
+.select-sm,
+.input-sm {
   height: 38px;
   min-height: 38px;
   padding: 0.4rem 0.75rem;
@@ -168,7 +187,8 @@ textarea.input-custom {
   border-radius: var(--radius-sm);
 
   &[type="select"],
-  &.form-select {
+  &.form-select,
+  &.input-base {
     background-position: right 0.65rem center;
     padding-right: 2.2rem;
   }

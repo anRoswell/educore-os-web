@@ -1,6 +1,8 @@
 # EduCoreOSWeb
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.3.
+> 📘 **Documentación General del Proyecto:** Consulte la arquitectura global, guía de SSOT y parámetros en el [README General de EduCoreOS](../README.md).
+>
+> 🔄 **Sincronización de Enums desde BD:** Ejecute `npm run sync:enums` para regenerar los enums tipados de catálogos sin tocar código a mano.
 
 ## Development server
 

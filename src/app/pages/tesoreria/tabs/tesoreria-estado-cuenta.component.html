@@ -176,12 +176,12 @@
             </div>
             <div class="tuition-timeline-grid mt-2">
               @for (mes of planMensualEstudiante; track mes.mes) {
-                <div class="month-tuition-card" [class.paid]="mes.estado === 'PAGADO'" [class.partial]="mes.estado === 'PAGADO_PARCIAL'" [class.due]="mes.estado === EstadoCuenta.POR_VENCER" [class.late]="mes.estado === EstadoCuenta.EN_MORA">
+                <div class="month-tuition-card" [class.paid]="mes.estado === EstadoCuenta.PAGADO || mes.estado === EstadoCuenta.AL_DIA" [class.partial]="mes.estado === EstadoCuenta.PAGADO_PARCIAL" [class.due]="mes.estado === EstadoCuenta.POR_VENCER" [class.late]="mes.estado === EstadoCuenta.EN_MORA">
                   <div class="month-header">
                     <span class="month-name">{{ mes.mes }}</span>
-                    @if (mes.estado === 'PAGADO') {
+                    @if (mes.estado === EstadoCuenta.PAGADO || mes.estado === EstadoCuenta.AL_DIA) {
                       <span class="badge badge-status badge-success">✓ Pagado</span>
-                    } @else if (mes.estado === 'PAGADO_PARCIAL') {
+                    } @else if (mes.estado === EstadoCuenta.PAGADO_PARCIAL) {
                       <span class="badge badge-status badge-warning" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">🟡 Abono Parcial</span>
                     } @else if (mes.estado === EstadoCuenta.EN_MORA) {
                       <span class="badge badge-status badge-danger">En Mora</span>
@@ -190,7 +190,7 @@
                     }
                   </div>
                   <div class="month-body">
-                    @if (mes.estado === 'PAGADO_PARCIAL') {
+                    @if (mes.estado === EstadoCuenta.PAGADO_PARCIAL) {
                       <span class="tuition-value" style="color: #d97706; font-size: 0.95rem;">Resta: \${{ mes.saldoPendiente | number }} COP</span>
                       <span class="text-xs" style="color: #059669; font-weight: 600; display: block;">✓ Total Abonado: \${{ mes.valorPagado | number }} COP</span>
                     } @else {
@@ -247,7 +247,7 @@
                     }
                   </div>
                   <div class="month-footer">
-                    @if (mes.estado !== 'PAGADO') {
+                    @if (mes.estado !== EstadoCuenta.PAGADO && mes.estado !== EstadoCuenta.AL_DIA) {
                       <div class="month-footer-actions">
                         <button (click)="pagarMesEstudiante.emit(mes)" class="btn btn-primary btn-xs w-full" title="Pagar por PSE / Wompi">
                           💳 Pagar PSE

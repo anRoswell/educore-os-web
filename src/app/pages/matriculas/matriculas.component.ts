@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ParametrosService, Parametro } from '../../core/services/parametros.service';
 import { Estudiante } from '../../core/models';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 
@@ -278,12 +279,9 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                     <app-help-badge term="SIMAT"></app-help-badge>
                   </label>
                   <select class="form-select" [(ngModel)]="nuevoEstudiante.tipoDocumento">
-                    <option value="TI">Tarjeta de Identidad (TI)</option>
-                    <option value="RC">Registro Civil (RC)</option>
-                    <option value="CC">Cédula de Ciudadanía (CC)</option>
-                    <option value="CE">Cédula de Extranjería (CE)</option>
-                    <option value="PPT">Permiso por Protección Temporal (PPT)</option>
-                    <option value="NES">Número Establecido por Secretaría (NES)</option>
+                    @for (doc of documentosIdentidadList(); track doc.codigo) {
+                      <option [value]="doc.codigo">{{ doc.nombre }} ({{ doc.codigo }})</option>
+                    }
                   </select>
                 </div>
                 <div class="form-group">
@@ -726,6 +724,7 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
 export class MatriculasComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
+  private readonly parametrosService = inject(ParametrosService);
   readonly authService = inject(AuthService);
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -765,6 +764,9 @@ export class MatriculasComponent implements OnInit {
   readonly estudiantes = signal<Estudiante[]>([]);
   readonly gradosList = signal<any[]>([]);
   readonly todosGruposList = signal<any[]>([]);
+  readonly documentosIdentidadList = signal<Parametro[]>([]);
+  readonly estadosMatriculaList = signal<Parametro[]>([]);
+  readonly tiposMatriculaList = signal<Parametro[]>([]);
 
   // Estados para CRUD Modales
   readonly modalNuevaMatricula = signal(false);
@@ -853,6 +855,31 @@ export class MatriculasComponent implements OnInit {
           if (primerGrupo) {
             this.nuevoEstudiante.grupoId = primerGrupo.id;
           }
+        }
+      },
+    });
+
+    // 3. Cargar Parámetros Genéricos de Matrículas y Documentos desde BD
+    this.parametrosService.obtenerDocumentosIdentidad().subscribe({
+      next: (docs) => {
+        if (docs && docs.length > 0) {
+          this.documentosIdentidadList.set(docs);
+        }
+      },
+    });
+
+    this.parametrosService.obtenerEstadosMatricula().subscribe({
+      next: (estados) => {
+        if (estados && estados.length > 0) {
+          this.estadosMatriculaList.set(estados);
+        }
+      },
+    });
+
+    this.parametrosService.obtenerTiposMatricula().subscribe({
+      next: (tipos) => {
+        if (tipos && tipos.length > 0) {
+          this.tiposMatriculaList.set(tipos);
         }
       },
     });

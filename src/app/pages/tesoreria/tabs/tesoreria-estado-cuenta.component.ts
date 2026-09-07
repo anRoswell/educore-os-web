@@ -69,7 +69,7 @@ export class TesoreriaEstadoCuentaComponent {
 
   getSiguienteMesPendiente(mesActual: any): any {
     return (this.planMensualEstudiante || []).find(
-      (m) => m.mesNum > mesActual.mesNum && m.estado !== 'PAGADO'
+      (m) => m.mesNum > mesActual.mesNum && m.estado !== EstadoCuenta.PAGADO && m.estado !== EstadoCuenta.AL_DIA
     );
   }
 

@@ -7,11 +7,13 @@ import { ToastService } from '../../core/services/toast.service';
 import { ModalManagerService } from '../../core/services/modal-manager.service';
 import { CalificacionLoteItem } from '../../core/models';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
+import { ParametrosService, Parametro } from '../../core/services/parametros.service';
+import { ModalBarridoMateriasPerdidasComponent } from './modales/modal-barrido-materias-perdidas.component';
 
 @Component({
   selector: 'app-academico',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalBarridoMateriasPerdidasComponent],
   template: `
     <div class="academico-container">
       <!-- Header -->
@@ -27,6 +29,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
             title="Ver guía de configuración paso a paso"
           >
             <span>{{ mostrarGuiaPasos() ? '🗺️ Ocultar Ruta Pedagógica' : '🗺️ Ver Ruta Pedagógica' }}</span>
+          </button>
+          <button
+            (click)="abrirModalBarrido()"
+            class="btn btn-warning"
+            style="font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"
+            title="Configurar días de la semana y ejecutar barrido de materias perdidas a padres de familia"
+          >
+            <span>🔔 Barrido Materias Perdidas</span>
           </button>
           <button (click)="guardarCalificaciones()" class="btn btn-primary" [disabled]="isSaving() || planilla().length === 0">
             <span>💾 {{ isSaving() ? 'Guardando...' : 'Guardar Planilla' }}</span>
@@ -1133,6 +1143,14 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
           </div>
         </div>
       }
+
+      <!-- MODAL BARRIDO DE MATERIAS PERDIDAS A PADRES -->
+      @if (modalBarrido()) {
+        <app-modal-barrido-materias-perdidas
+          (close)="cerrarModalBarrido()"
+          (sweepCompleted)="onBarridoCompletado($event)"
+        ></app-modal-barrido-materias-perdidas>
+      }
     </div>
   `,
   styles: [`
@@ -1515,6 +1533,7 @@ export class AcademicoComponent implements OnInit {
   private readonly toast = inject(ToastService);
   readonly authService = inject(AuthService);
   readonly modalManager = inject(ModalManagerService);
+  private readonly parametrosService = inject(ParametrosService);
 
   // Control de interfaz y Guía de Pasos (dinámica, oculta por defecto para vista despejada)
   readonly mostrarGuiaPasos = signal<boolean>(false);
@@ -1522,6 +1541,9 @@ export class AcademicoComponent implements OnInit {
   // Listas de datos para filtros
   readonly aniosLectivosList = signal<any[]>([]);
   readonly periodosList = signal<any[]>([]);
+  readonly periodosEstandarList = signal<Parametro[]>([]);
+  readonly escalaDecreto1290List = signal<Parametro[]>([]);
+  readonly dimensionesEvaluacionList = signal<Parametro[]>([]);
   readonly nivelesList = signal<any[]>([]);
   readonly areasList = signal<any[]>([]);
   readonly gradosList = signal<any[]>([]);
@@ -1555,6 +1577,7 @@ export class AcademicoComponent implements OnInit {
   readonly modalNuevaActividad = signal(false);
   readonly modalReglasSiee = signal(false);
   readonly modalCierreAno = signal(false);
+  readonly modalBarrido = signal(false);
   confirmarCierreAnoCheckbox = false;
   readonly isEjecutandoCierre = signal(false);
 
@@ -1711,6 +1734,32 @@ export class AcademicoComponent implements OnInit {
           this.periodosList.set(periodos);
           this.selectedPeriodoId.set(periodos[0].id);
           this.nuevoPeriodo.numero = periodos.length + 1;
+        }
+      },
+    });
+
+    // 5. Cargar Periodos Estándar Parametrizados en BD
+    this.parametrosService.obtenerPeriodosEstandar().subscribe({
+      next: (estandares) => {
+        if (estandares && estandares.length > 0) {
+          this.periodosEstandarList.set(estandares);
+        }
+      },
+    });
+
+    // 6. Cargar Escala Decreto 1290 y Dimensiones Parametrizadas en BD
+    this.parametrosService.obtenerEscalaDecreto1290().subscribe({
+      next: (escala) => {
+        if (escala && escala.length > 0) {
+          this.escalaDecreto1290List.set(escala);
+        }
+      },
+    });
+
+    this.parametrosService.obtenerDimensionesEvaluacion().subscribe({
+      next: (dimensiones) => {
+        if (dimensiones && dimensiones.length > 0) {
+          this.dimensionesEvaluacionList.set(dimensiones);
         }
       },
     });
@@ -2083,11 +2132,13 @@ export class AcademicoComponent implements OnInit {
   // --- CRUD: CREAR PERIODO ---
   abrirModalNuevoPeriodo() {
     const totalActual = this.periodosList().length || 0;
+    const estandarSugerido = this.periodosEstandarList()[totalActual];
+
     this.nuevoPeriodo = {
       anioLectivoId: this.aniosLectivosList()[0]?.id || 'a1a1a1a1-1111-4111-8111-000000002026',
       numero: totalActual + 1,
       nombre: `Periodo ${totalActual + 1}`,
-      pesoPorcentual: 25,
+      pesoPorcentual: estandarSugerido?.peso || (Number(estandarSugerido?.valor) || 25),
       fechaInicio: '2026-07-06',
       fechaFin: '2026-09-11',
       fechaLimiteDocentes: '2026-09-18',
@@ -2323,5 +2374,21 @@ export class AcademicoComponent implements OnInit {
     const periodoId = this.selectedPeriodoId() || 'b1b2c3d4-1111-4111-8111-000000000002';
     window.open(this.api.getPdfUrl(`boletin/${matriculaId}/periodo/${periodoId}`), '_blank');
     this.toast.info('Descargando Boletín', 'Generando boletín consolidado en formato PDF...');
+  }
+
+  // --- MODAL BARRIDO DE MATERIAS PERDIDAS ---
+  abrirModalBarrido() {
+    this.modalBarrido.set(true);
+  }
+
+  cerrarModalBarrido() {
+    this.modalBarrido.set(false);
+  }
+
+  onBarridoCompletado(res: any) {
+    this.toast.success(
+      'Barrido Completado',
+      `Se notificaron ${res?.totalNotificacionesDespachadas ?? 0} acudientes exitosamente.`
+    );
   }
 }

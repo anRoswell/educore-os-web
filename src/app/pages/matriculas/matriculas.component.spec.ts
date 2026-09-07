@@ -62,6 +62,7 @@ describe('MatriculasComponent (Lifecycle, Validations & OTP Signing)', () => {
     expect(component.estudiantes().length).toBe(1);
     expect(component.estudiantes()[0].codigoEstudiante).toBe('EST-2026-001');
     expect(component.gradosList().length).toBe(1);
+    expect(component.documentosIdentidadList().length).toBeGreaterThan(0);
     expect(getSpy).toHaveBeenCalled();
   });
 

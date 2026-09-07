@@ -69,3 +69,66 @@ export interface CalificacionLoteItem {
   desempeno: 'SUPERIOR' | 'ALTO' | 'BASICO' | 'BAJO';
   observaciones?: string;
 }
+
+export interface MateriaPerdidaEstudiante {
+  asignaturaId: string;
+  asignaturaNombre: string;
+  notaPromedio: number;
+  desempeno: string;
+  docenteNombre?: string;
+}
+
+export interface EstudianteBarridoAlerta {
+  estudianteId: string;
+  matriculaId: string;
+  estudianteNombre: string;
+  documento: string;
+  grupoId: string;
+  grupoNombre: string;
+  periodoId: string;
+  periodoNombre: string;
+  acudienteId?: string;
+  acudienteNombre: string;
+  acudienteTelefono?: string;
+  acudienteEmail?: string;
+  materiasPerdidas: MateriaPerdidaEstudiante[];
+}
+
+export interface ConfiguracionAlertasAcademicas {
+  diasNotificacion: string[];
+  barridoActivo: boolean;
+  horaEnvio: string;
+  notaCorteAprobacion: number;
+  minimoMateriasPerdidas: number;
+  canalesNotificacion: string[];
+  colegioId?: string | null;
+}
+
+export interface PrevisualizacionBarridoResponse {
+  colegioId: string;
+  configuracion: ConfiguracionAlertasAcademicas;
+  periodoId: string | null;
+  totalEstudiantesEnRiesgo: number;
+  totalAcudientesContactables: number;
+  estudiantes: EstudianteBarridoAlerta[];
+}
+
+export interface ResultadoBarridoEjecutado {
+  success: boolean;
+  fechaEjecucion: string;
+  totalEstudiantesAnalizados: number;
+  totalNotificacionesDespachadas: number;
+  mensaje: string;
+  detalles: Array<{
+    estudianteId: string;
+    estudianteNombre: string;
+    grupo: string;
+    acudiente: string;
+    email?: string;
+    telefono?: string;
+    materiasPerdidasCount: number;
+    materiasPerdidas: MateriaPerdidaEstudiante[];
+    notificado: boolean;
+  }>;
+}
+

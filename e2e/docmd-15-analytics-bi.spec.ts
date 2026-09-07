@@ -17,7 +17,9 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
   /**
    * SUITE 1: Carga Inicial, KPIs Directivos 360°, Acciones de Cabecera y Sniffer de Errores
    */
-  test('15.1 Carga inicial, KPIs directivos 360°, acciones de cabecera y verificación de cero errores JS', async ({ page }) => {
+  test('15.1 Carga inicial, KPIs directivos 360°, acciones de cabecera y verificación de cero errores JS', async ({
+    page,
+  }) => {
     const sniffer = attachStrictErrorSniffer(page);
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -47,7 +49,9 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
   /**
    * SUITE 2: Navegación por el 100% de Pestañas y Filtros Interactivos
    */
-  test('15.2 Navegación exhaustiva por las 4 pestañas de BI y aplicación de filtros', async ({ page }) => {
+  test('15.2 Navegación exhaustiva por las 4 pestañas de BI y aplicación de filtros', async ({
+    page,
+  }) => {
     const sniffer = attachStrictErrorSniffer(page);
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -59,12 +63,16 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
     // --- Tab 2: Rendimiento & Mapa de Calor ---
     await page.locator('.tabs-nav-bar .tab-btn:has-text("Mapa de Calor")').click();
     await page.waitForTimeout(200);
-    await expect(page.locator('.heatmap-card h3')).toContainText('Mapa de Calor: Rendimiento por Asignatura');
+    await expect(page.locator('.heatmap-card h3')).toContainText(
+      'Rendimiento Curricular & Mapa de Calor Detallado',
+    );
 
     // --- Tab 3: Pruebas Saber 11° ---
     await page.locator('.tabs-nav-bar .tab-btn:has-text("Pruebas Saber")').click();
     await page.waitForTimeout(200);
-    await expect(page.locator('.ai-analytics-card h3')).toContainText('Proyecciones Pruebas Saber 11°');
+    await expect(page.locator('.ai-analytics-card h3')).toContainText(
+      'Diagnóstico Integral Pruebas Saber 11° & ICFES',
+    );
 
     // --- Tab 4: Cartera & Recaudo BI ---
     await page.locator('.tabs-nav-bar .tab-btn:has-text("Cartera & Recaudo")').click();
@@ -76,7 +84,9 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
   /**
    * SUITE 3: Barrido de Acciones por Fila de Tabla (Row Action Sweep)
    */
-  test('15.3 Barrido exhaustivo de botones de acción en filas de datos de Mapa de Calor', async ({ page }) => {
+  test('15.3 Barrido exhaustivo de botones de acción en filas de datos de Mapa de Calor', async ({
+    page,
+  }) => {
     const sniffer = attachStrictErrorSniffer(page);
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -89,7 +99,10 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
         await btnDetalle.click();
         const modalDetalle = page.locator('.modal-backdrop');
         await expect(modalDetalle).toBeVisible();
-        await page.locator('.modal-backdrop button:has-text("Cerrar"), .modal-backdrop .close-btn').first().click();
+        await page
+          .locator('.modal-backdrop button:has-text("Cerrar"), .modal-backdrop .close-btn')
+          .first()
+          .click();
         await expect(modalDetalle).not.toBeVisible();
       }
     }
@@ -100,7 +113,9 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
   /**
    * SUITE 4: Ciclo de Vida de Modales (Apertura, Validación y Cierre)
    */
-  test('15.4 Ciclo de vida completo de los modales de Analytics BI (apertura, validación y cancelación)', async ({ page }) => {
+  test('15.4 Ciclo de vida completo de los modales de Analytics BI (apertura, validación y cancelación)', async ({
+    page,
+  }) => {
     const sniffer = attachStrictErrorSniffer(page);
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -123,7 +138,9 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
 
     const modalMetas = page.locator('.modal-backdrop');
     await expect(modalMetas).toBeVisible();
-    await expect(modalMetas.locator('h3')).toContainText('Simulación y Metas Institucionales Saber 11°');
+    await expect(modalMetas.locator('h3')).toContainText(
+      'Simulación y Metas Institucionales Saber 11°',
+    );
     await modalMetas.locator('button:has-text("Cancelar"), .close-btn').first().click();
     await expect(modalMetas).not.toBeVisible();
 
@@ -144,7 +161,9 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
   /**
    * SUITE 5: Verificación de Persistencia y Métricas Directas en PostgreSQL
    */
-  test('15.5 Consistencia analítica, simulación ejecutiva y verificación directa en PostgreSQL', async ({ page }) => {
+  test('15.5 Consistencia analítica, simulación ejecutiva y verificación directa en PostgreSQL', async ({
+    page,
+  }) => {
     const sniffer = attachStrictErrorSniffer(page);
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
@@ -153,20 +172,42 @@ test.describe('DocMD-15: Analytics & Business Intelligence BI Institucional (Exh
     await page.locator('button:has-text("Exportar Informe BI")').click();
     const modalExp = page.locator('.modal-backdrop');
     await expect(modalExp).toBeVisible();
+    const pdfDownloadPromise = page.waitForEvent('download');
     await modalExp.locator('button:has-text("Generar y Descargar Informe")').click();
+    const pdfDownload = await pdfDownloadPromise;
+    expect(pdfDownload.suggestedFilename()).toMatch(/^Informe_Ejecutivo_BI_Periodo_1\.pdf$/);
     await expect(modalExp).not.toBeVisible({ timeout: 6000 });
 
     const toast = page.locator('.toast-card, .toast-wrapper, .toast-success');
     await expect(toast.first()).toBeVisible({ timeout: 6000 });
 
+    // Verificar también la matriz consolidada Excel.
+    await page.locator('button:has-text("Exportar Informe BI")').click();
+    const modalExcel = page.locator('.modal-backdrop');
+    await modalExcel.locator('select').first().selectOption('EXCEL');
+    const excelDownloadPromise = page.waitForEvent('download');
+    await modalExcel.locator('button:has-text("Generar y Descargar Informe")').click();
+    const excelDownload = await excelDownloadPromise;
+    expect(excelDownload.suggestedFilename()).toMatch(/^Informe_Ejecutivo_BI_Periodo_1\.xlsx$/);
+    await expect(modalExcel).not.toBeVisible({ timeout: 6000 });
+
     // 2. Verificación de tablas en PostgreSQL
-    const califs = await queryDb('SELECT count(*) as total FROM aca_calificaciones WHERE colegio_id = $1', [tenantId]);
+    const califs = await queryDb(
+      'SELECT count(*) as total FROM aca_calificaciones WHERE colegio_id = $1',
+      [tenantId],
+    );
     expect(Number(califs[0].total)).toBeGreaterThan(0);
 
-    const matriculas = await queryDb('SELECT count(*) as total FROM mat_matriculas WHERE colegio_id = $1', [tenantId]);
+    const matriculas = await queryDb(
+      'SELECT count(*) as total FROM mat_matriculas WHERE colegio_id = $1',
+      [tenantId],
+    );
     expect(Number(matriculas[0].total)).toBeGreaterThan(0);
 
-    const usuarios = await queryDb('SELECT count(*) as total FROM colegio_usuarios WHERE colegio_id = $1', [tenantId]);
+    const usuarios = await queryDb(
+      'SELECT count(*) as total FROM colegio_usuarios WHERE colegio_id = $1',
+      [tenantId],
+    );
     expect(Number(usuarios[0].total)).toBeGreaterThan(0);
 
     sniffer.assertZeroErrors();

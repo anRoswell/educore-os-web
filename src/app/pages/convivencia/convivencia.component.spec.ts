@@ -149,7 +149,11 @@ describe('ConvivenciaComponent (Ley 1620, Descargos & Comité)', () => {
 
     component.guardarNuevaActa();
 
-    expect(postSpy).toHaveBeenCalledWith('convivencia/actas-comite', component.nuevaActaForm);
+    expect(postSpy).toHaveBeenCalledWith('convivencia/actas-comite', {
+      ...component.nuevaActaForm,
+      asistentes: ['Rector', 'Coordinador de Convivencia', 'Orientadora', 'Personero Estudiantil'],
+      casosTratados: [],
+    });
     expect(toastSpy).toHaveBeenCalledWith('¡Acta Registrada!', expect.stringContaining('ACTA-CCE-2026-02'));
     expect(component.modalNuevaActa()).toBe(false);
   });

@@ -83,10 +83,10 @@ export class ModalNuevoAcuerdoComponent implements OnInit {
   @Input() estudiantesMoraSelectOptions: SearchableOption[] = [];
   @Input() form = {
     estudianteId: '',
-    montoTotalAcordado: 900000,
-    numeroCuotas: 3,
-    diaPagoMensual: 15,
-    observaciones: 'Acuerdo de pago para refinanciación de cartera morosa.',
+    montoTotalAcordado: 0,
+    numeroCuotas: 1,
+    diaPagoMensual: 1,
+    observaciones: '',
   };
 
   @Output() close = new EventEmitter<void>();

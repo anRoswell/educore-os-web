@@ -1,5 +1,5 @@
-import { Component, EventEmitter, inject, Input, Output, ChangeDetectionStrategy, ChangeDetectorRef, signal } from '@angular/core';
-import { Parametro } from '../../../core/services/parametros.service';
+import { Component, EventEmitter, inject, Input, Output, ChangeDetectionStrategy, ChangeDetectorRef, signal, OnInit } from '@angular/core';
+import { Parametro, ParametrosService } from '../../../core/services/parametros.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
@@ -7,7 +7,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ModalManagerService } from '../../../core/services/modal-manager.service';
 import { SearchableSelectComponent, SearchableOption } from '../../../shared/components/searchable-select.component';
 import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.directive';
-import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
+import { CuentaCobroItem, EstadoCuenta, MedioPago, PagoManualForm } from '../models/tesoreria.models';
 
 @Component({
   selector: 'app-modal-pago-manual',
@@ -55,8 +55,8 @@ import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
                   <strong style="font-size: 0.95rem; color: #1e293b;">{{ cuentaSeleccionada.estudianteNombre }}</strong>
                   <span class="inv-badge">{{ cuentaSeleccionada.numeroFactura }}</span>
                 </div>
-                <span class="badge" [class.badge-warning]="cuentaSeleccionada.estado === 'POR_VENCER'" [class.badge-danger]="cuentaSeleccionada.estado === 'EN_MORA'" [class.badge-info]="cuentaSeleccionada.estado === 'PAGADO_PARCIAL'">
-                  {{ cuentaSeleccionada.estado === 'PAGADO_PARCIAL' ? '🟡 CON ABONO PARCIAL' : (cuentaSeleccionada.estado === 'EN_MORA' ? '🔴 EN MORA' : '🟠 POR VENCER') }}
+                <span class="badge" [class.badge-warning]="cuentaSeleccionada.estado === EstadoCuenta.POR_VENCER" [class.badge-danger]="cuentaSeleccionada.estado === EstadoCuenta.EN_MORA" [class.badge-info]="cuentaSeleccionada.estado === EstadoCuenta.PAGADO_PARCIAL">
+                  {{ cuentaSeleccionada.estado === EstadoCuenta.PAGADO_PARCIAL ? '🟡 CON ABONO PARCIAL' : (cuentaSeleccionada.estado === EstadoCuenta.EN_MORA ? '🔴 EN MORA' : '🟠 POR VENCER') }}
                 </span>
               </div>
               
@@ -242,20 +242,35 @@ import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
     }
   `]
 })
-export class ModalPagoManualComponent {
+export class ModalPagoManualComponent implements OnInit {
   Math = Math;
+  readonly EstadoCuenta = EstadoCuenta;
+  readonly MedioPago = MedioPago;
   private cdr = inject(ChangeDetectorRef);
   private api = inject(ApiService);
   private toast = inject(ToastService);
+  private parametrosService = inject(ParametrosService);
   readonly modalManager = inject(ModalManagerService);
 
   @Input() cuentasPendientes: CuentaCobroItem[] = [];
   @Input() mediosPagoList: any = [];
+
+  ngOnInit(): void {
+    const list = typeof this.mediosPagoList === 'function' ? this.mediosPagoList() : this.mediosPagoList;
+    if (!Array.isArray(list) || list.length === 0) {
+      this.parametrosService.obtenerPorGrupo('MEDIOS_PAGO').subscribe((res) => {
+        if (res && res.length > 0) {
+          this.mediosPagoList = res;
+          this.cdr.markForCheck();
+        }
+      });
+    }
+  }
   @Input() set initialData(data: any) {
     if (data) {
       this.form = {
         cuentaCobroId: data.cuentaCobroId || '',
-        medioPago: data.medioPago || 'EFECTIVO',
+        medioPago: data.medioPago || MedioPago.EFECTIVO,
         valorPagado: Number(data.valorPagado) || 0,
         referenciaTransaccion: data.referenciaTransaccion || '',
       };
@@ -269,9 +284,9 @@ export class ModalPagoManualComponent {
     }
   }
 
-  form = {
+  form: PagoManualForm = {
     cuentaCobroId: '',
-    medioPago: 'EFECTIVO',
+    medioPago: MedioPago.EFECTIVO,
     valorPagado: 0,
     referenciaTransaccion: '',
   };
@@ -283,13 +298,13 @@ export class ModalPagoManualComponent {
 
   get placeholderReferencia(): string {
     switch (this.form.medioPago) {
-      case 'EFECTIVO':
+      case MedioPago.EFECTIVO:
         return 'Auto-generado (ej: CAJA-EFEC-748291)';
-      case 'TRANSFERENCIA_BANCOLOMBIA':
+      case MedioPago.TRANSFERENCIA_BANCOLOMBIA:
         return 'Ej: VOUCHER-BC-9847291 (o auto-generado)';
-      case 'NEQUI_QR':
+      case MedioPago.NEQUI_QR:
         return 'Ej: M98472198 (o auto-generado)';
-      case 'TARJETA_CREDITO':
+      case MedioPago.TARJETA_CREDITO:
         return 'Ej: APROB-748291 (o auto-generado)';
       default:
         return 'Auto-generado por el sistema';
@@ -300,15 +315,15 @@ export class ModalPagoManualComponent {
     const sufijo = `${Math.floor(1000 + Math.random() * 9000)}`;
     const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     switch (medio) {
-      case 'EFECTIVO':
+      case MedioPago.EFECTIVO:
         return `CAJA-${fecha}-${sufijo}`;
-      case 'TRANSFERENCIA_BANCOLOMBIA':
+      case MedioPago.TRANSFERENCIA_BANCOLOMBIA:
         return `TRANSF-BC-${fecha}-${sufijo}`;
-      case 'NEQUI_QR':
+      case MedioPago.NEQUI_QR:
         return `NEQUI-QR-${fecha}-${sufijo}`;
-      case 'TARJETA_CREDITO':
+      case MedioPago.TARJETA_CREDITO:
         return `DATA-POS-${fecha}-${sufijo}`;
-      case 'CHEQUE':
+      case MedioPago.CHEQUE:
         return `CHEQ-GER-${fecha}-${sufijo}`;
       default:
         return `REC-VENT-${fecha}-${sufijo}`;
@@ -350,16 +365,7 @@ export class ModalPagoManualComponent {
   get opcionesMediosPago(): Parametro[] {
     const raw = this.mediosPagoList;
     const list = typeof raw === 'function' ? raw() : raw;
-    if (Array.isArray(list) && list.length > 0) {
-      return list;
-    }
-    return [
-      { id: '1', grupo: 'MEDIOS_PAGO', codigo: 'EFECTIVO', nombre: '💵 Efectivo en Ventanilla (Caja)', orden: 1, activo: true },
-      { id: '2', grupo: 'MEDIOS_PAGO', codigo: 'TRANSFERENCIA_BANCOLOMBIA', nombre: '🏦 Transferencia Bancolombia / PSE', orden: 2, activo: true },
-      { id: '3', grupo: 'MEDIOS_PAGO', codigo: 'NEQUI_QR', nombre: '📱 Nequi / Daviplata QR', orden: 3, activo: true },
-      { id: '4', grupo: 'MEDIOS_PAGO', codigo: 'TARJETA_CREDITO', nombre: '💳 Datáfono / Tarjeta Débito-Crédito', orden: 4, activo: true },
-      { id: '5', grupo: 'MEDIOS_PAGO', codigo: 'CHEQUE', nombre: '📑 Cheque de Gerencia', orden: 5, activo: true },
-    ];
+    return Array.isArray(list) ? list : [];
   }
 
   get opcionesCuentas(): SearchableOption[] {
@@ -382,7 +388,7 @@ export class ModalPagoManualComponent {
         label: `${c.estudianteNombre} — ${mesNombre} (${c.concepto})`,
         sublabel,
         badge: `Saldo: $${saldoReal.toLocaleString()}`,
-        badgeClass: c.estado === 'EN_MORA' ? 'badge-danger' : (c.estado === 'PAGADO_PARCIAL' ? 'badge-warning' : 'badge-primary'),
+        badgeClass: c.estado === EstadoCuenta.EN_MORA ? 'badge-danger' : (c.estado === EstadoCuenta.PAGADO_PARCIAL ? 'badge-warning' : 'badge-primary'),
         avatarText: c.estudianteNombre?.substring(0, 2)?.toUpperCase() || 'ES',
       };
     });

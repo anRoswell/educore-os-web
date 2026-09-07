@@ -1,38 +1,26 @@
-import { AsistenciaComponent } from './pages/asistencia/asistencia.component';
-import { FirmaMatriculaComponent } from './pages/public/firma-matricula.component';
-import { FirmaDisciplinariaComponent } from './pages/public/firma-disciplinaria.component';
 import { Routes } from '@angular/router';
-import { LoginComponent } from './pages/login/login.component';
 import { AdminLayoutComponent } from './layout/admin-layout.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { AcademicoComponent } from './pages/academico/academico.component';
-import { MatriculasComponent } from './pages/matriculas/matriculas.component';
-import { TesoreriaComponent } from './pages/tesoreria/tesoreria.component';
-import { EducoreAiComponent } from './pages/educore-ai/educore-ai.component';
-import { GobiernoEscolarComponent } from './pages/gobierno-escolar/gobierno-escolar.component';
-import { ImportadorComponent } from './pages/importador/importador.component';
-import { DocumentalComponent } from './pages/documental/documental.component';
-import { LmsComponent } from './pages/lms/lms.component';
-import { ConvivenciaComponent } from './pages/convivencia/convivencia.component';
-import { InclusionComponent } from './pages/inclusion/inclusion.component';
-import { HabeasDataComponent } from './pages/habeas-data/habeas-data.component';
-import { PorteriaComponent } from './pages/porteria/porteria.component';
-import { TalentoHumanoComponent } from './pages/talento-humano/talento-humano.component';
-import { TransporteRestauranteComponent } from './pages/transporte-restaurante/transporte-restaurante.component';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'public/firmar-acta',
-    component: FirmaDisciplinariaComponent,
+    loadComponent: () =>
+      import('./pages/public/firma-disciplinaria.component').then(
+        (m) => m.FirmaDisciplinariaComponent,
+      ),
   },
   {
     path: 'public/firmar-matricula',
-    component: FirmaMatriculaComponent,
+    loadComponent: () =>
+      import('./pages/public/firma-matricula.component').then(
+        (m) => m.FirmaMatriculaComponent,
+      ),
   },
   {
     path: 'login',
-    component: LoginComponent,
+    loadComponent: () =>
+      import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: '',
@@ -46,67 +34,120 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        component: DashboardComponent,
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard.component').then(
+            (m) => m.DashboardComponent,
+          ),
       },
       {
         path: 'academico',
-        component: AcademicoComponent,
+        loadComponent: () =>
+          import('./pages/academico/academico.component').then(
+            (m) => m.AcademicoComponent,
+          ),
       },
       {
         path: 'lms',
-        component: LmsComponent,
+        loadComponent: () =>
+          import('./pages/lms/lms.component').then((m) => m.LmsComponent),
       },
       {
         path: 'asistencia',
-        component: AsistenciaComponent,
+        loadComponent: () =>
+          import('./pages/asistencia/asistencia.component').then(
+            (m) => m.AsistenciaComponent,
+          ),
       },
       {
         path: 'matriculas',
-        component: MatriculasComponent,
+        loadComponent: () =>
+          import('./pages/matriculas/matriculas.component').then(
+            (m) => m.MatriculasComponent,
+          ),
       },
       {
         path: 'tesoreria',
-        component: TesoreriaComponent,
+        loadComponent: () =>
+          import('./pages/tesoreria/tesoreria.component').then(
+            (m) => m.TesoreriaComponent,
+          ),
+      },
+      {
+        path: 'contabilidad',
+        loadComponent: () =>
+          import('./pages/contabilidad/contabilidad.component').then(
+            (m) => m.ContabilidadComponent,
+          ),
       },
       {
         path: 'educore-ai',
-        component: EducoreAiComponent,
+        loadComponent: () =>
+          import('./pages/educore-ai/educore-ai.component').then(
+            (m) => m.EducoreAiComponent,
+          ),
       },
       {
         path: 'gobierno-escolar',
-        component: GobiernoEscolarComponent,
+        loadComponent: () =>
+          import('./pages/gobierno-escolar/gobierno-escolar.component').then(
+            (m) => m.GobiernoEscolarComponent,
+          ),
       },
       {
         path: 'convivencia',
-        component: ConvivenciaComponent,
+        loadComponent: () =>
+          import('./pages/convivencia/convivencia.component').then(
+            (m) => m.ConvivenciaComponent,
+          ),
       },
       {
         path: 'inclusion',
-        component: InclusionComponent,
+        loadComponent: () =>
+          import('./pages/inclusion/inclusion.component').then(
+            (m) => m.InclusionComponent,
+          ),
       },
       {
         path: 'habeas-data',
-        component: HabeasDataComponent,
+        loadComponent: () =>
+          import('./pages/habeas-data/habeas-data.component').then(
+            (m) => m.HabeasDataComponent,
+          ),
       },
       {
         path: 'comunicaciones',
-        loadComponent: () => import('./pages/comunicaciones/comunicaciones.component').then(m => m.ComunicacionesComponent),
+        loadComponent: () =>
+          import('./pages/comunicaciones/comunicaciones.component').then(
+            (m) => m.ComunicacionesComponent,
+          ),
       },
       {
         path: 'documental',
-        component: DocumentalComponent,
+        loadComponent: () =>
+          import('./pages/documental/documental.component').then(
+            (m) => m.DocumentalComponent,
+          ),
       },
       {
         path: 'importador',
-        component: ImportadorComponent,
+        loadComponent: () =>
+          import('./pages/importador/importador.component').then(
+            (m) => m.ImportadorComponent,
+          ),
       },
       {
         path: 'porteria',
-        component: PorteriaComponent,
+        loadComponent: () =>
+          import('./pages/porteria/porteria.component').then(
+            (m) => m.PorteriaComponent,
+          ),
       },
       {
         path: 'talento-humano',
-        component: TalentoHumanoComponent,
+        loadComponent: () =>
+          import('./pages/talento-humano/talento-humano.component').then(
+            (m) => m.TalentoHumanoComponent,
+          ),
       },
       {
         path: 'rrhh',
@@ -115,7 +156,10 @@ export const routes: Routes = [
       },
       {
         path: 'transporte-restaurante',
-        component: TransporteRestauranteComponent,
+        loadComponent: () =>
+          import(
+            './pages/transporte-restaurante/transporte-restaurante.component'
+          ).then((m) => m.TransporteRestauranteComponent),
       },
       {
         path: 'transporte',

@@ -42,7 +42,7 @@ import { PagoRecaudoItem, MedioPago, EstadoPago } from '../models/tesoreria.mode
                 <td><code class="text-xs">{{ pago.facturaReferencia }}</code></td>
                 <td>
                   <span class="badge" [class.badge-success]="pago.medioPago === MedioPago.PSE" [class.badge-info]="pago.medioPago !== MedioPago.PSE">
-                    {{ pago.medioPago }}
+                    {{ getNombreMedioPago(pago.medioPago) }}
                   </span>
                 </td>
                 <td>
@@ -88,4 +88,13 @@ export class TesoreriaRecaudosComponent {
   @Output() abrirModalPagoManual = new EventEmitter<void>();
   @Output() imprimirReciboIndividual = new EventEmitter<PagoRecaudoItem>();
   @Output() anularRecibo = new EventEmitter<PagoRecaudoItem>();
+
+  getNombreMedioPago(codigo: string): string {
+    const list = typeof this.mediosPagoList === 'function' ? (this.mediosPagoList as any)() : this.mediosPagoList;
+    if (Array.isArray(list)) {
+      const found = list.find((m: any) => m.codigo === codigo);
+      if (found?.nombre) return found.nombre;
+    }
+    return codigo;
+  }
 }

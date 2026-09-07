@@ -1,34 +1,44 @@
-export enum EstadoCuenta {
-  AL_DIA = 'AL_DIA',
-  PAGADO = 'PAGADO',
-  PAGADO_PARCIAL = 'PAGADO_PARCIAL',
-  POR_VENCER = 'POR_VENCER',
-  EN_MORA = 'EN_MORA',
-  ANULADO = 'ANULADO',
-}
+import {
+  EstadoCuentaCobro,
+  EstadoCuenta,
+  MedioPago,
+  EstadoAcuerdoPago,
+  EstadoAcuerdo,
+  EstadoPagoRecaudo,
+  EstadoPago,
+  TipoBeca,
+  VigenciaBeca,
+  EstadoBeca,
+  CuentaContablePuc,
+  MesEscolar,
+  PorcentajeBeca,
+  CuotasPeriodo,
+  ClaveParametroFinanciero,
+  FiltroGeneral,
+  FILTRO_TODOS,
+} from '../../../core/enums';
+import type { ConfiguracionFinanciera } from '../../../core/enums';
 
-export enum MedioPago {
-  PSE = 'PSE',
-  EFECTIVO = 'EFECTIVO',
-  TRANSFERENCIA_BANCOLOMBIA = 'TRANSFERENCIA_BANCOLOMBIA',
-  NEQUI_QR = 'NEQUI_QR',
-  TARJETA_CREDITO = 'TARJETA_CREDITO',
-  CHEQUE = 'CHEQUE',
-  CRUCE_ANTICIPO = 'CRUCE_ANTICIPO',
-}
-
-export enum EstadoAcuerdo {
-  ACTIVO = 'ACTIVO',
-  CUMPLIDO = 'CUMPLIDO',
-  INCUMPLIDO = 'INCUMPLIDO',
-}
-
-export enum EstadoPago {
-  APROBADO = 'APROBADO',
-  PENDIENTE = 'PENDIENTE',
-  RECHAZADO = 'RECHAZADO',
-  ANULADO = 'ANULADO',
-}
+export {
+  EstadoCuentaCobro,
+  EstadoCuenta,
+  MedioPago,
+  EstadoAcuerdoPago,
+  EstadoAcuerdo,
+  EstadoPagoRecaudo,
+  EstadoPago,
+  TipoBeca,
+  VigenciaBeca,
+  EstadoBeca,
+  CuentaContablePuc,
+  MesEscolar,
+  PorcentajeBeca,
+  CuotasPeriodo,
+  ClaveParametroFinanciero,
+  FiltroGeneral,
+  FILTRO_TODOS,
+};
+export type { ConfiguracionFinanciera };
 
 export interface CuentaCobroItem {
   id: string;
@@ -47,6 +57,8 @@ export interface CuentaCobroItem {
   fechaVencimiento: string;
   numeroFactura: string;
   descuento?: number;
+  dianEstado?: string;
+  cufe?: string;
 }
 
 export interface PagoRecaudoItem {
@@ -91,79 +103,7 @@ export interface EstudianteFinanciero {
   acudienteEmail: string;
 }
 
-export enum TipoBeca {
-  NINGUNA = 'NINGUNA',
-  EXCELENCIA = 'EXCELENCIA',
-  HERMANOS = 'HERMANOS',
-  DOCENTE = 'DOCENTE',
-  CONVENIO = 'CONVENIO',
-  SOLIDARIA = 'SOLIDARIA',
-  OTRA = 'OTRA',
-}
 
-export enum VigenciaBeca {
-  ANUAL = 'ANUAL',
-  SEMESTRE_1 = 'SEMESTRE_1',
-  SEMESTRE_2 = 'SEMESTRE_2',
-  BIMESTRE_1 = 'BIMESTRE_1',
-  BIMESTRE_2 = 'BIMESTRE_2',
-  BIMESTRE_3 = 'BIMESTRE_3',
-  BIMESTRE_4 = 'BIMESTRE_4',
-  BIMESTRE_5 = 'BIMESTRE_5',
-  BIMESTRAL = 'BIMESTRAL',
-  MES_ESPECIFICO = 'MES_ESPECIFICO',
-  TEMPORAL = 'TEMPORAL',
-}
-
-export enum EstadoBeca {
-  ACTIVA = 'ACTIVA',
-  REVOCADA = 'REVOCADA',
-  EXPIRADA = 'EXPIRADA',
-}
-
-export enum CuentaContablePuc {
-  DESCUENTOS_PENSIONES = '417505',
-}
-
-export enum MesEscolar {
-  ENERO = 1,
-  FEBRERO = 2,
-  MARZO = 3,
-  ABRIL = 4,
-  MAYO = 5,
-  JUNIO = 6,
-  JULIO = 7,
-  AGOSTO = 8,
-  SEPTIEMBRE = 9,
-  OCTUBRE = 10,
-  NOVIEMBRE = 11,
-  DICIEMBRE = 12,
-}
-
-export enum PorcentajeBeca {
-  NINGUNA = 0,
-  CONVENIO = 15,
-  HERMANOS = 20,
-  DOCENTE = 30,
-  EXCELENCIA = 50,
-  SOLIDARIA = 100,
-}
-
-export enum CuotasPeriodo {
-  MES_ESPECIFICO = 1,
-  BIMESTRE = 2,
-  SEMESTRE = 5,
-  ANUAL = 10,
-}
-
-export enum ConfiguracionFinanciera {
-  ANIO_LECTIVO_DEFECTO = 2026,
-  TARIFA_BASE_PENSION = 450000,
-  DIA_LIMITE_PAGO_DEFECTO = 10,
-  DIA_PAGO_ACUERDO_DEFECTO = 15,
-  CUOTAS_ACUERDO_DEFECTO = 3,
-  VALOR_DEFAULT_ACUERDO = 900000,
-}
 
 export interface BecaEstudiante {
   id?: string;
@@ -187,3 +127,9 @@ export interface BecaEstudiante {
   estado?: EstadoBeca | string;
 }
 
+export interface PagoManualForm {
+  cuentaCobroId: string;
+  medioPago: MedioPago;
+  valorPagado: number;
+  referenciaTransaccion: string;
+}

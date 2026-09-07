@@ -134,6 +134,14 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
               <span class="badge-mini" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">RRHH</span>
             </a>
           }
+          @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'SUPER_ADMIN' ||
+               authService.user()?.role === 'CONTADOR' || authService.user()?.role === 'REVISOR_FISCAL') {
+            <a routerLink="/contabilidad" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">🏛</span>
+              <span class="nav-text">Contabilidad NIIF</span>
+              <span class="badge-mini" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">NIIF</span>
+            </a>
+          }
 
           <!-- INNOVACIÓN & COMUNIDAD (No visible para Tesorería) -->
           @if (authService.user()?.role !== 'TESORERO') {

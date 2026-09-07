@@ -2,7 +2,7 @@ import { Component, input, output, ChangeDetectionStrategy, signal, computed } f
 import { Parametro } from '../../../core/services/parametros.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
+import { CuentaCobroItem, EstadoCuenta, FiltroGeneral } from '../models/tesoreria.models';
 
 @Component({
   selector: 'app-tesoreria-facturas',
@@ -39,7 +39,7 @@ import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
             style="width: 100%; height: 38px; font-size: 0.85rem;"
             [ngModel]="filtroEstado()" 
             (ngModelChange)="onFilterChange('estado', $event)">
-            <option value="TODOS">Todos los Estados</option>
+            <option [value]="FiltroGeneral.TODOS">Todos los Estados</option>
             @for (estado of estadosCuentaList(); track estado.codigo) {
               <option [value]="estado.codigo">{{ estado.nombre }}</option>
             }
@@ -56,7 +56,7 @@ import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
             style="width: 100%; height: 38px; font-size: 0.85rem;"
             [ngModel]="filtroMes()" 
             (ngModelChange)="onFilterChange('mes', $event)">
-            <option value="TODOS">Todos los Meses</option>
+            <option [value]="FiltroGeneral.TODOS">Todos los Meses</option>
             @for (mes of mesesList(); track mes.codigo) {
               <option [value]="mes.codigo">{{ mes.nombre }}</option>
             }
@@ -75,13 +75,14 @@ import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
               <th>Valor Total</th>
               <th>Vencimiento</th>
               <th>Semáforo</th>
+              <th>Estado DIAN</th>
               <th>Acciones Tesorería</th>
             </tr>
           </thead>
           <tbody>
             @if (cuentasPaginadas().length === 0) {
               <tr>
-                <td colspan="8" class="text-center p-4 text-slate-500">
+                <td colspan="9" class="text-center p-4 text-slate-500">
                   <span>No se encontraron facturas con los filtros seleccionados.</span>
                 </td>
               </tr>
@@ -111,9 +112,28 @@ import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
                   }
                 </td>
                 <td>
+                  @if (item.dianEstado === 'ACEPTADO') {
+                    <span class="badge badge-success" style="font-size: 0.65rem;" title="Validado por DIAN">🏛️ ACEPTADO</span>
+                  } @else if (item.dianEstado === 'ENVIADO') {
+                    <span class="badge badge-warning" style="font-size: 0.65rem;" title="Enviado a DIAN">🏛️ ENVIADO</span>
+                  } @else if (item.dianEstado === 'RECHAZADO') {
+                    <span class="badge badge-danger" style="font-size: 0.65rem;" title="Rechazado por DIAN">🏛️ RECHAZADO</span>
+                  } @else {
+                    <span class="badge" style="font-size: 0.65rem; background-color: #f1f5f9; color: #64748b;" title="Sin emitir a DIAN">SIN EMITIR</span>
+                  }
+                </td>
+                <td>
                   <div class="actions-group">
                     <button (click)="verFicha360.emit(item)" class="btn btn-secondary btn-sm" title="Ver Ficha Financiera 360° del Alumno">
                       🔍 Ficha
+                    </button>
+                    <button
+                      (click)="emitirDian.emit(item)"
+                      class="btn btn-secondary btn-sm"
+                      title="Emitir Factura Electrónica a DIAN"
+                      [attr.data-testid]="'btn-emitir-dian-' + item.id"
+                    >
+                      🏛️ DIAN
                     </button>
                     @if (item.estado !== EstadoCuenta.AL_DIA && item.estado !== EstadoCuenta.ANULADO) {
                       <button (click)="pagarWompi.emit(item)" class="btn btn-primary btn-sm" title="Pagar vía Pasarela Wompi / PSE / Nequi">
@@ -191,13 +211,14 @@ import { CuentaCobroItem, EstadoCuenta } from '../models/tesoreria.models';
 })
 export class TesoreriaFacturasComponent {
   readonly EstadoCuenta = EstadoCuenta;
+  readonly FiltroGeneral = FiltroGeneral;
   
   cuentasFiltradas = input<CuentaCobroItem[]>([]);
   estadosCuentaList = input<Parametro[]>([]);
   mesesList = input<Parametro[]>([]);
   filtroTexto = input('');
-  filtroEstado = input('TODOS');
-  filtroMes = input('TODOS');
+  filtroEstado = input<string>(FiltroGeneral.TODOS);
+  filtroMes = input<string>(FiltroGeneral.TODOS);
 
   filtrar = output<{ texto: string, estado: string, mes: string }>();
   verFicha360 = output<any>();
@@ -207,6 +228,7 @@ export class TesoreriaFacturasComponent {
   anularFactura = output<CuentaCobroItem>();
   verRecibo = output<CuentaCobroItem>();
   descargarPazYSalvo = output<string>();
+  emitirDian = output<CuentaCobroItem>();
 
   // Estado reactivo de paginación
   readonly paginaActual = signal(1);

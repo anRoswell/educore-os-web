@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ModalManagerService } from '../../../core/services/modal-manager.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { imprimirElementoHtml } from '../../../core/utils/print.utils';
+import { EstadoCuenta } from '../models/tesoreria.models';
 
 @Component({
   selector: 'app-modal-extracto-consolidado',
@@ -141,7 +142,7 @@ import { imprimirElementoHtml } from '../../../core/utils/print.utils';
               </thead>
               <tbody>
                 @for (item of planMensual; track item.mes) {
-                  <tr style="border-bottom: 1px solid #e2e8f0;" [style.background-color]="item.estado === 'PAGADO' ? '#f0fdf4' : (item.estado === 'EN_MORA' ? '#fef2f2' : '#ffffff')">
+                  <tr style="border-bottom: 1px solid #e2e8f0;" [style.background-color]="item.estado === EstadoCuenta.PAGADO || item.estado === EstadoCuenta.AL_DIA ? '#f0fdf4' : (item.estado === EstadoCuenta.EN_MORA ? '#fef2f2' : '#ffffff')">
                     <td style="padding: 0.5rem; border: 1px solid #e2e8f0;">
                       <strong>{{ item.mes }}</strong>
                     </td>
@@ -155,11 +156,11 @@ import { imprimirElementoHtml } from '../../../core/utils/print.utils';
                       \${{ item.valor | number }} COP
                     </td>
                     <td style="padding: 0.5rem; border: 1px solid #e2e8f0; text-align: center;">
-                      @if (item.estado === 'PAGADO') {
+                      @if (item.estado === EstadoCuenta.PAGADO || item.estado === EstadoCuenta.AL_DIA) {
                         <span style="display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; background: #dcfce7; color: #166534;">
                           PAGADO
                         </span>
-                      } @else if (item.estado === 'EN_MORA') {
+                      } @else if (item.estado === EstadoCuenta.EN_MORA) {
                         <span style="display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; background: #fee2e2; color: #991b1b;">
                           EN MORA
                         </span>
@@ -224,6 +225,7 @@ import { imprimirElementoHtml } from '../../../core/utils/print.utils';
   `
 })
 export class ModalExtractoConsolidadoComponent {
+  readonly EstadoCuenta = EstadoCuenta;
   readonly authService = inject(AuthService);
   readonly modalManager = inject(ModalManagerService);
   private readonly toast = inject(ToastService);
@@ -242,14 +244,14 @@ export class ModalExtractoConsolidadoComponent {
   }
 
   get totalCausado(): number {
-    if (!this.planMensual || this.planMensual.length === 0) return 4500000;
+    if (!this.planMensual || this.planMensual.length === 0) return 0;
     return this.planMensual.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
   }
 
   get totalPagado(): number {
     if (!this.planMensual || this.planMensual.length === 0) return 0;
     return this.planMensual
-      .filter((p) => p.estado === 'PAGADO')
+      .filter((p) => p.estado === EstadoCuenta.PAGADO || p.estado === EstadoCuenta.AL_DIA)
       .reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
   }
 

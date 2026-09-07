@@ -87,9 +87,9 @@ export class ModalNuevoCobroComponent {
   @Input() form: any = {
     estudianteNombre: '',
     estudianteId: '',
-    concepto: 'Pensión Mensual Escolar',
-    valorTotal: 450000,
-    fechaVencimiento: '2026-08-25',
+    concepto: '',
+    valorTotal: 0,
+    fechaVencimiento: '',
   };
 
   selectedEstudianteId = '';

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ModalManagerService } from '../../../core/services/modal-manager.service';
-import { CuentaCobroItem } from '../models/tesoreria.models';
+import { CuentaCobroItem, MedioPago } from '../models/tesoreria.models';
 
 @Component({
   selector: 'app-modal-checkout-wompi',
@@ -276,10 +276,10 @@ export class ModalCheckoutWompiComponent {
 
     const medioBackend =
       this.medioSeleccionado === 'PSE'
-        ? 'TRANSFERENCIA_BANCOLOMBIA'
+        ? MedioPago.TRANSFERENCIA_BANCOLOMBIA
         : this.medioSeleccionado === 'NEQUI'
-        ? 'NEQUI_QR'
-        : 'TARJETA_CREDITO';
+        ? MedioPago.NEQUI_QR
+        : MedioPago.TARJETA_CREDITO;
 
     const ref =
       this.medioSeleccionado === 'PSE'

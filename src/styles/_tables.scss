@@ -7,7 +7,8 @@
    TABLE CONTAINER
    ───────────────────────────────────────────────────────────────────── */
 
-.table-container {
+.table-container,
+.tabla-base {
   width: 100%;
   overflow-x: auto;
   border-radius: var(--radius-lg);
@@ -20,7 +21,8 @@
    DATA TABLE
    ───────────────────────────────────────────────────────────────────── */
 
-.data-table {
+.data-table,
+.tabla-datos {
   width: 100%;
   border-collapse: collapse;
   text-align: left;

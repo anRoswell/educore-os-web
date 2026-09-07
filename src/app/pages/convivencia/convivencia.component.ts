@@ -5,6 +5,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalManagerService } from '../../core/services/modal-manager.service';
+import { ParametrosService, Parametro } from '../../core/services/parametros.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 import { SearchableSelectComponent, SearchableOption } from '../../shared/components/searchable-select.component';
 import { imprimirElementoHtml } from '../../core/utils/print.utils';
@@ -184,9 +185,9 @@ export interface ActaComiteItem {
               <label class="filter-label">Tipo de Falta:</label>
               <select class="form-select" [(ngModel)]="filtroTipoFalta" (ngModelChange)="cargarCasos()">
                 <option value="TODOS">Todas las Tipificaciones</option>
-                <option value="TIPO_I">Tipo I (Leves / Esporádicas)</option>
-                <option value="TIPO_II">Tipo II (Bullying / Acoso)</option>
-                <option value="TIPO_III">Tipo III (Graves / Delitos)</option>
+                @for (tipo of tiposFaltaList(); track tipo.codigo) {
+                  <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
+                }
               </select>
             </div>
 
@@ -444,9 +445,9 @@ export interface ActaComiteItem {
                     <app-help-badge term="LEY_1620"></app-help-badge>
                   </div>
                   <select class="form-select" [(ngModel)]="nuevoCasoForm.tipoFalta">
-                    <option value="TIPO_I">🟢 TIPO I: Falta Leve / Conflicto en aula</option>
-                    <option value="TIPO_II">🟠 TIPO II: Acoso Escolar (Bullying) / Ciberacoso</option>
-                    <option value="TIPO_III">🔴 TIPO III: Falta Gravísima / Presunto Delito</option>
+                    @for (tipo of tiposFaltaList(); track tipo.codigo) {
+                      <option [value]="tipo.codigo">{{ tipo.nombre }}</option>
+                    }
                   </select>
                 </div>
 
@@ -1526,6 +1527,7 @@ export interface ActaComiteItem {
 export class ConvivenciaComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
+  private readonly parametrosService = inject(ParametrosService);
   readonly authService = inject(AuthService);
   readonly modalManager = inject(ModalManagerService);
 
@@ -1534,6 +1536,7 @@ export class ConvivenciaComponent implements OnInit {
   readonly actasList = signal<ActaComiteItem[]>([]);
   readonly estudiantesList = signal<any[]>([]);
   readonly metricas = signal<any>({});
+  readonly tiposFaltaList = signal<Parametro[]>([]);
 
   readonly estudiantesSelectOptions = computed<SearchableOption[]>(() => {
     return this.estudiantesList().map((e) => ({
@@ -1632,6 +1635,9 @@ export class ConvivenciaComponent implements OnInit {
     this.cargarActas();
     this.cargarMetricasSiuce();
     this.cargarEstudiantes();
+    this.parametrosService.obtenerTiposFaltaLey1620().subscribe({
+      next: (tipos) => this.tiposFaltaList.set(tipos),
+    });
   }
 
   cargarCasos() {

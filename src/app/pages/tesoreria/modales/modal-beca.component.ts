@@ -13,8 +13,8 @@ import {
   MesEscolar,
   PorcentajeBeca,
   CuotasPeriodo,
-  ConfiguracionFinanciera,
 } from '../models/tesoreria.models';
+import { ParametrosService } from '../../../core/services/parametros.service';
 
 @Component({
   selector: 'app-modal-beca',
@@ -67,11 +67,11 @@ import {
                 <label class="form-label">Tipo de Beneficio *</label>
                 <select class="form-select" [(ngModel)]="form.tipo" (ngModelChange)="actualizarPorcentaje($event)">
                   <option [value]="TipoBeca.NINGUNA">Sin Beca (Tarifa Plena 100%)</option>
-                  <option [value]="TipoBeca.EXCELENCIA">Beca Excelencia Académica ({{ PorcentajeBeca.EXCELENCIA }}%)</option>
-                  <option [value]="TipoBeca.HERMANOS">Beca Familiar / Hermanos ({{ PorcentajeBeca.HERMANOS }}%)</option>
-                  <option [value]="TipoBeca.DOCENTE">Hijo de Docente / Colab. ({{ PorcentajeBeca.DOCENTE }}%)</option>
-                  <option [value]="TipoBeca.CONVENIO">Convenio Institucional ({{ PorcentajeBeca.CONVENIO }}%)</option>
-                  <option [value]="TipoBeca.SOLIDARIA">Beca Solidaria Total ({{ PorcentajeBeca.SOLIDARIA }}%)</option>
+                  <option [value]="TipoBeca.EXCELENCIA">Beca Excelencia Académica ({{ porcentajesBecaMap()['EXCELENCIA'] || 50 }}%)</option>
+                  <option [value]="TipoBeca.HERMANOS">Beca Familiar / Hermanos ({{ porcentajesBecaMap()['HERMANOS'] || 20 }}%)</option>
+                  <option [value]="TipoBeca.DOCENTE">Hijo de Docente / Colab. ({{ porcentajesBecaMap()['DOCENTE'] || 30 }}%)</option>
+                  <option [value]="TipoBeca.CONVENIO">Convenio Institucional ({{ porcentajesBecaMap()['CONVENIO'] || 15 }}%)</option>
+                  <option [value]="TipoBeca.SOLIDARIA">Beca Solidaria Total ({{ porcentajesBecaMap()['SOLIDARIA'] || 100 }}%)</option>
                   <option [value]="TipoBeca.OTRA">Personalizada (% Manual)</option>
                 </select>
               </div>
@@ -82,8 +82,8 @@ import {
                 <div style="position: relative;">
                   <input
                     type="number"
-                    [min]="PorcentajeBeca.NINGUNA"
-                    [max]="PorcentajeBeca.SOLIDARIA"
+                    [min]="0"
+                    [max]="100"
                     class="form-control"
                     [(ngModel)]="form.porcentaje"
                     (ngModelChange)="onPorcentajeChange()"
@@ -99,7 +99,7 @@ import {
                 <div class="vigencia-grid-compact">
                   <label class="vigencia-chip" [class.selected]="form.vigencia === VigenciaBeca.ANUAL">
                     <input type="radio" name="vigencia" [(ngModel)]="form.vigencia" [value]="VigenciaBeca.ANUAL" (change)="onVigenciaChange(VigenciaBeca.ANUAL)" style="display: none;" />
-                    <span class="v-title">📅 Todo el Año ({{ CuotasPeriodo.ANUAL }} cuotas)</span>
+                    <span class="v-title">📅 Todo el Año ({{ cuotasPeriodoMap()['ANUAL'] || 10 }} cuotas)</span>
                   </label>
                   <label class="vigencia-chip" [class.selected]="form.vigencia === VigenciaBeca.SEMESTRE_1">
                     <input type="radio" name="vigencia" [(ngModel)]="form.vigencia" [value]="VigenciaBeca.SEMESTRE_1" (change)="onVigenciaChange(VigenciaBeca.SEMESTRE_1)" style="display: none;" />
@@ -111,11 +111,11 @@ import {
                   </label>
                   <label class="vigencia-chip" [class.selected]="form.vigencia === VigenciaBeca.BIMESTRAL">
                     <input type="radio" name="vigencia" [(ngModel)]="form.vigencia" [value]="VigenciaBeca.BIMESTRAL" (change)="onVigenciaChange(VigenciaBeca.BIMESTRAL)" style="display: none;" />
-                    <span class="v-title">📊 Por Bimestre ({{ CuotasPeriodo.BIMESTRE }} cuotas)</span>
+                    <span class="v-title">📊 Por Bimestre ({{ cuotasPeriodoMap()['BIMESTRE'] || 2 }} cuotas)</span>
                   </label>
                   <label class="vigencia-chip" [class.selected]="form.vigencia === VigenciaBeca.MES_ESPECIFICO" style="grid-column: span 2;">
                     <input type="radio" name="vigencia" [(ngModel)]="form.vigencia" [value]="VigenciaBeca.MES_ESPECIFICO" (change)="onVigenciaChange(VigenciaBeca.MES_ESPECIFICO)" style="display: none;" />
-                    <span class="v-title">🎯 Mes Específico ({{ CuotasPeriodo.MES_ESPECIFICO }} cuota única)</span>
+                    <span class="v-title">🎯 Mes Específico ({{ cuotasPeriodoMap()['MES_ESPECIFICO'] || 1 }} cuota única)</span>
                   </label>
                 </div>
 
@@ -507,27 +507,20 @@ export class ModalBecaComponent implements OnInit {
   readonly MesEscolar = MesEscolar;
   readonly PorcentajeBeca = PorcentajeBeca;
   readonly CuotasPeriodo = CuotasPeriodo;
-  readonly ConfiguracionFinanciera = ConfiguracionFinanciera;
+
+  private parametrosService = inject(ParametrosService);
 
   @Input() estudiante: any;
-  @Input() form: BecaEstudiante = {
-    tipo: TipoBeca.EXCELENCIA,
-    porcentaje: PorcentajeBeca.EXCELENCIA,
-    vigencia: VigenciaBeca.ANUAL,
-    mesInicio: MesEscolar.FEBRERO,
-    mesFin: MesEscolar.NOVIEMBRE,
-    numeroResolucion: 'Resolución Rectoral N° 045-2026',
-    archivoSoporteUrl: '',
-    archivoSoporteNombre: '',
-    observaciones: 'Aprobado mediante resolución de Rectoría / Consejo Directivo',
-    cuentaContablePuc: CuentaContablePuc.DESCUENTOS_PENSIONES,
-  };
+  @Input() form: BecaEstudiante = {} as BecaEstudiante;
 
   @Output() close = new EventEmitter<void>();
   @Output() success = new EventEmitter<any>();
 
-  readonly valorBaseMensual = ConfiguracionFinanciera.TARIFA_BASE_PENSION;
+  valorBaseMensual: number = 0;
   bimestreSeleccionado: VigenciaBeca = VigenciaBeca.BIMESTRE_2;
+
+  readonly porcentajesBecaMap = signal<Record<string, number>>({});
+  readonly cuotasPeriodoMap = signal<Record<string, number>>({});
   
   // Reactividad moderna basada en Signals (Angular 22)
   readonly isUploading = signal<boolean>(false);
@@ -535,10 +528,19 @@ export class ModalBecaComponent implements OnInit {
   readonly errorResolucion = signal<boolean>(false);
 
   ngOnInit() {
+    this.parametrosService.obtenerConfiguracionFinanciera().subscribe((cfg) => {
+      this.valorBaseMensual = cfg.tarifaBasePension;
+    });
+    this.parametrosService.obtenerMapaValores('PORCENTAJES_BECA').subscribe((m) => {
+      if (m && Object.keys(m).length > 0) this.porcentajesBecaMap.set(m);
+    });
+    this.parametrosService.obtenerMapaValores('CUOTAS_PERIODO').subscribe((m) => {
+      if (m && Object.keys(m).length > 0) this.cuotasPeriodoMap.set(m);
+    });
     if (!this.form) {
-      this.form = { tipo: TipoBeca.EXCELENCIA, porcentaje: PorcentajeBeca.EXCELENCIA };
+      this.form = { tipo: TipoBeca.EXCELENCIA, porcentaje: this.porcentajesBecaMap()['EXCELENCIA'] || 50 };
     }
-    if (this.form.porcentaje === undefined) this.form.porcentaje = PorcentajeBeca.EXCELENCIA;
+    if (this.form.porcentaje === undefined) this.form.porcentaje = this.porcentajesBecaMap()['EXCELENCIA'] || 50;
     if (!this.form.tipo) this.form.tipo = TipoBeca.EXCELENCIA;
     if (!this.form.vigencia) this.form.vigencia = VigenciaBeca.ANUAL;
     if (typeof this.form.vigencia === 'string' && this.form.vigencia.startsWith('BIMESTRE_')) {
@@ -551,7 +553,7 @@ export class ModalBecaComponent implements OnInit {
   }
 
   get valorDescuentoMensual(): number {
-    return Math.round(this.valorBaseMensual * ((this.form.porcentaje || PorcentajeBeca.NINGUNA) / 100));
+    return Math.round(this.valorBaseMensual * ((Number(this.form.porcentaje) || 0) / 100));
   }
 
   get nuevoValorMensual(): number {
@@ -559,10 +561,11 @@ export class ModalBecaComponent implements OnInit {
   }
 
   get numeroCuotasAfectadas(): number {
-    if (this.form.vigencia === VigenciaBeca.MES_ESPECIFICO) return CuotasPeriodo.MES_ESPECIFICO;
-    if (this.form.vigencia === VigenciaBeca.BIMESTRAL || (typeof this.form.vigencia === 'string' && this.form.vigencia.startsWith('BIMESTRE_'))) return CuotasPeriodo.BIMESTRE;
-    if (this.form.vigencia === VigenciaBeca.SEMESTRE_1 || this.form.vigencia === VigenciaBeca.SEMESTRE_2) return CuotasPeriodo.SEMESTRE;
-    return CuotasPeriodo.ANUAL;
+    const cMap = this.cuotasPeriodoMap();
+    if (this.form.vigencia === VigenciaBeca.MES_ESPECIFICO) return cMap['MES_ESPECIFICO'] || 1;
+    if (this.form.vigencia === VigenciaBeca.BIMESTRAL || (typeof this.form.vigencia === 'string' && this.form.vigencia.startsWith('BIMESTRE_'))) return cMap['BIMESTRE'] || 2;
+    if (this.form.vigencia === VigenciaBeca.SEMESTRE_1 || this.form.vigencia === VigenciaBeca.SEMESTRE_2) return cMap['SEMESTRE'] || 5;
+    return cMap['ANUAL'] || 10;
   }
 
   get totalAhorroPeriodo(): number {
@@ -611,30 +614,26 @@ export class ModalBecaComponent implements OnInit {
   }
 
   actualizarPorcentaje(tipo: TipoBeca | string) {
+    const pMap = this.porcentajesBecaMap();
     if (tipo === TipoBeca.NINGUNA) {
-      this.form.porcentaje = PorcentajeBeca.NINGUNA;
+      this.form.porcentaje = pMap['NINGUNA'] ?? 0;
       this.form.numeroResolucion = '';
     } else if (tipo === TipoBeca.EXCELENCIA) {
-      this.form.porcentaje = PorcentajeBeca.EXCELENCIA;
-      if (!this.form.numeroResolucion) this.form.numeroResolucion = 'Resolución Rectoral N° 045-2026';
+      this.form.porcentaje = pMap['EXCELENCIA'] ?? 50;
     } else if (tipo === TipoBeca.HERMANOS) {
-      this.form.porcentaje = PorcentajeBeca.HERMANOS;
-      if (!this.form.numeroResolucion) this.form.numeroResolucion = 'Acta de Consejo Directivo #12';
+      this.form.porcentaje = pMap['HERMANOS'] ?? 20;
     } else if (tipo === TipoBeca.DOCENTE) {
-      this.form.porcentaje = PorcentajeBeca.DOCENTE;
-      if (!this.form.numeroResolucion) this.form.numeroResolucion = 'Convenio Laboral Docente';
+      this.form.porcentaje = pMap['DOCENTE'] ?? 30;
     } else if (tipo === TipoBeca.CONVENIO) {
-      this.form.porcentaje = PorcentajeBeca.CONVENIO;
-      if (!this.form.numeroResolucion) this.form.numeroResolucion = 'Convenio Institucional';
+      this.form.porcentaje = pMap['CONVENIO'] ?? 15;
     } else if (tipo === TipoBeca.SOLIDARIA) {
-      this.form.porcentaje = PorcentajeBeca.SOLIDARIA;
-      if (!this.form.numeroResolucion) this.form.numeroResolucion = 'Beca Alcaldía / Fondo Solidario';
+      this.form.porcentaje = pMap['SOLIDARIA'] ?? 100;
     }
     this.cdr.detectChanges();
   }
 
   onPorcentajeChange() {
-    if (this.form.porcentaje === PorcentajeBeca.NINGUNA) {
+    if (!this.form.porcentaje || Number(this.form.porcentaje) === 0) {
       this.form.tipo = TipoBeca.NINGUNA;
     }
   }
@@ -686,7 +685,7 @@ export class ModalBecaComponent implements OnInit {
   }
 
   guardarBeca() {
-    if (this.form.porcentaje > PorcentajeBeca.NINGUNA && (!this.form.numeroResolucion || this.form.numeroResolucion.trim() === '')) {
+    if (Number(this.form.porcentaje) > 0 && (!this.form.numeroResolucion || this.form.numeroResolucion.trim() === '')) {
       this.errorResolucion.set(true);
       this.toast.warning('Resolución requerida', 'Debe ingresar el número de resolución o acta de soporte.');
       return;

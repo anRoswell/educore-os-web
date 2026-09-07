@@ -227,7 +227,7 @@ test.describe('DocMD-03: Tesorería & Cartera Educativa (Exhaustive UI & E2E Ver
       await btnPazSalvo.click();
       const modalPaz = page.locator('app-modal-paz-y-salvo .modal-card, app-modal-extracto-consolidado .modal-card');
       if (await modalPaz.first().isVisible()) {
-        await page.locator('button:has-text("Cerrar"), button:has-text("Cancelar"), .close-btn').first().click();
+        await modalPaz.first().locator('button:has-text("Cerrar"), button:has-text("Cancelar"), .close-btn').first().click();
       }
     }
 

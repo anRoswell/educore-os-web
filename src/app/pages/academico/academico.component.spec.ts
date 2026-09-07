@@ -125,7 +125,7 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
     component.guardarCalificaciones();
 
     expect(putSpy).toHaveBeenCalledWith('academico/calificaciones/lote', {
-      actividadId: 'a1b2c3d4-1111-4111-8111-000000000001',
+      actividadId: 'fa111111-1111-4111-8111-000000000001',
       periodoId: 'per-1',
       calificaciones: [
         { matriculaId: 'mat-001', nota: 4.5, observaciones: 'Muy buen trabajo' }

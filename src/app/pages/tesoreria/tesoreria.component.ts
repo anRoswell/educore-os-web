@@ -1,4 +1,5 @@
-import { CuentaCobroItem, PagoRecaudoItem, AcuerdoPagoItem, EstudianteFinanciero, EstadoCuenta, MedioPago, EstadoPago, EstadoAcuerdo, BecaEstudiante, TipoBeca, VigenciaBeca, EstadoBeca, CuentaContablePuc, MesEscolar, PorcentajeBeca, CuotasPeriodo, ConfiguracionFinanciera } from "./models/tesoreria.models";
+import { CuentaCobroItem, PagoRecaudoItem, AcuerdoPagoItem, EstudianteFinanciero, EstadoCuenta, MedioPago, EstadoPago, EstadoAcuerdo, BecaEstudiante, TipoBeca, VigenciaBeca, EstadoBeca, CuentaContablePuc, MesEscolar, FiltroGeneral, PagoManualForm } from "./models/tesoreria.models";
+import type { ConfiguracionFinanciera } from "./models/tesoreria.models";
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +20,7 @@ import { imprimirElementoHtml } from '../../core/utils/print.utils';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 import { ModalCheckoutWompiComponent } from './modales/modal-checkout-wompi.component';
 import { ModalNuevoConceptoComponent } from './modales/modal-nuevo-concepto.component';
+import { ModalConfiguracionFinancieraComponent } from './modales/modal-configuracion-financiera.component';
 import { ModalNuevoAcuerdoComponent } from './modales/modal-nuevo-acuerdo.component';
 import { ModalNuevoCobroComponent } from './modales/modal-nuevo-cobro.component';
 import { ModalPagoManualComponent } from './modales/modal-pago-manual.component';
@@ -28,6 +30,7 @@ import { ModalAnularFacturaComponent } from './modales/modal-anular-factura.comp
 import { ModalBecaComponent } from './modales/modal-beca.component';
 import { ModalExtractoConsolidadoComponent } from './modales/modal-extracto-consolidado.component';
 import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component';
+import { DianService } from '../contabilidad/services/dian.service';
 
 
 
@@ -40,7 +43,7 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
 @Component({
   selector: 'app-tesoreria',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalCheckoutWompiComponent, ModalNuevoConceptoComponent, ModalNuevoAcuerdoComponent, ModalNuevoCobroComponent, ModalPagoManualComponent, ModalPazYSalvoComponent, ModalEditarFacturaComponent, ModalAnularFacturaComponent, ModalBecaComponent, ModalExtractoConsolidadoComponent, ModalAnularPagoComponent,
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalCheckoutWompiComponent, ModalConfiguracionFinancieraComponent, ModalNuevoConceptoComponent, ModalNuevoAcuerdoComponent, ModalNuevoCobroComponent, ModalPagoManualComponent, ModalPazYSalvoComponent, ModalEditarFacturaComponent, ModalAnularFacturaComponent, ModalBecaComponent, ModalExtractoConsolidadoComponent, ModalAnularPagoComponent,
     TesoreriaFacturasComponent,
     TesoreriaEstadoCuentaComponent,
     TesoreriaRecaudosComponent,
@@ -159,6 +162,7 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
           (anularFactura)="abrirModalAnular($event)"
           (verRecibo)="verRecibo.set($event)"
           (descargarPazYSalvo)="descargarPazYSalvoEstudiante($event)"
+          (emitirDian)="emitirFacturaDian($event)"
         />
       }
       
@@ -244,6 +248,13 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
       />
     }
 
+    @if (modalConfiguracionFinanciera()) {
+      <app-modal-configuracion-financiera
+        (close)="cerrarConfiguracionTesoreria()"
+        (configGuardada)="onConfiguracionFinancieraGuardada($event)"
+      />
+    }
+
     @if (modalNuevoConcepto()) {
       <app-modal-nuevo-concepto 
         (close)="cerrarModalNuevoConcepto()"
@@ -265,6 +276,7 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
 
     @if (modalPagoManual()) {
       <app-modal-pago-manual
+        [initialData]="nuevoPagoManual"
         [cuentasPendientes]="cuentasFiltradas()"
         [mediosPagoList]="mediosPagoList()"
         (close)="cerrarModalPagoManual()"
@@ -288,7 +300,7 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
         [estadoCuenta]="estadoCuentaEstudiante()"
         [becaActual]="becaActual()"
         [planMensual]="planMensualEstudiante()"
-        [fechaHoyTexto]="'31 de Agosto de 2026'"
+        [fechaHoyTexto]="fechaHoyTexto"
         (close)="cerrarModalExtracto()"
       />
     }
@@ -296,8 +308,8 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
     @if (pazSalvoModal()) {
       <app-modal-paz-y-salvo
         [estudiante]="estudianteSeleccionado()"
-        [hashPazYSalvo]="'PYZ-8923-26'"
-        [fechaHoyTexto]="'20 de Agosto de 2026'"
+        [hashPazYSalvo]="hashPazYSalvo"
+        [fechaHoyTexto]="fechaHoyTexto"
         (close)="pazSalvoModal.set(false)"
         (descargar)="descargarPazYSalvoEstudiante($any($event))"
       />
@@ -362,12 +374,13 @@ import { ModalAnularPagoComponent } from './modales/modal-anular-pago.component'
                 }
               </div>
               <div style="flex: 1;">
-                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #1e293b;">{{ authService.colegio()?.nombre || 'COLEGIO MAYOR DE SAN BARTOLOMÉ' }}</h3>
+                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #1e293b;">{{ authService.colegio()?.nombre || 'Institución Educativa' }}</h3>
                 <p style="margin: 0.15rem 0 0 0; font-size: 0.75rem; color: #64748b;">
-                  NIT: {{ authService.colegio()?.nit || '860.000.000-1' }} • Res. MEN N° {{ authService.colegio()?.resolucionAprobacion || '10245' }}
+                  @if (authService.colegio()?.nit) { NIT: {{ authService.colegio()?.nit }} }
+                  @if (authService.colegio()?.resolucionAprobacion) { • Res. MEN N° {{ authService.colegio()?.resolucionAprobacion }} }
                 </p>
                 <p style="margin: 0; font-size: 0.75rem; color: #64748b;">
-                  {{ authService.colegio()?.direccion || 'Campus Principal' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}
+                  {{ authService.colegio()?.direccion || '' }} @if (authService.colegio()?.ciudad) { — {{ authService.colegio()?.ciudad }} }
                 </p>
               </div>
               <div style="text-align: right; border-left: 2px solid #e2e8f0; padding-left: 0.75rem;">
@@ -466,14 +479,28 @@ export class TesoreriaComponent implements OnInit {
   estadosCuentaList = signal<Parametro[]>([]);
   mesesList = signal<Parametro[]>([]);
   mediosPagoList = signal<Parametro[]>([]);
+  porcentajesBecaMap = signal<Record<string, number>>({});
+  configuracionFinanciera = signal<ConfiguracionFinanciera>({} as ConfiguracionFinanciera);
 
   // Filtros
   filtroTexto = signal('');
-  filtroEstado = signal('TODOS');
-  filtroMes = signal('TODOS');
+  filtroEstado = signal<string>(FiltroGeneral.TODOS);
+  filtroMes = signal<string>(FiltroGeneral.TODOS);
 
   abrirConfiguracionTesoreria() {
-    this.abrirModalNuevoConcepto();
+    this.modalConfiguracionFinanciera.set(true);
+  }
+
+  cerrarConfiguracionTesoreria() {
+    this.modalConfiguracionFinanciera.set(false);
+  }
+
+  onConfiguracionFinancieraGuardada(nuevaConfig: ConfiguracionFinanciera) {
+    this.configuracionFinanciera.set(nuevaConfig);
+    this.parametrosService.obtenerMapaValores('PORCENTAJES_BECA').subscribe((m) => {
+      if (m && Object.keys(m).length > 0) this.porcentajesBecaMap.set(m);
+    });
+    this.cargarDatosBackend();
   }
 
   generarCierreDiario() {
@@ -503,13 +530,13 @@ export class TesoreriaComponent implements OnInit {
     if (!est && typeof event === 'object') {
       est = {
         id: estId || `est-${Date.now()}`,
-        nombre: event.estudianteNombre || 'Estudiante',
-        documento: event.estudianteDocumento || 'Documento N/A',
-        grado: event.gradoNombre || '10°',
-        grupo: '10-A',
-        acudienteNombre: `Acudiente de ${event.estudianteNombre || 'Estudiante'}`,
-        acudienteTelefono: '310 000 0000',
-        acudienteEmail: 'acudiente@educore.edu.co',
+        nombre: event.estudianteNombre || '',
+        documento: event.estudianteDocumento || '',
+        grado: event.gradoNombre || '',
+        grupo: event.grupo || '',
+        acudienteNombre: event.acudienteNombre || (event.estudianteNombre ? `Acudiente de ${event.estudianteNombre}` : ''),
+        acudienteTelefono: event.acudienteTelefono || '',
+        acudienteEmail: event.acudienteEmail || '',
       };
       this.listaEstudiantes.update((prev) => [est!, ...prev]);
     }
@@ -566,6 +593,7 @@ export class TesoreriaComponent implements OnInit {
 
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
+  private readonly dianService = inject(DianService);
   readonly authService = inject(AuthService);
   readonly modalManager = inject(ModalManagerService);
 
@@ -576,6 +604,7 @@ export class TesoreriaComponent implements OnInit {
       
   // Modales
   readonly checkoutModal = signal<CuentaCobroItem | null>(null);
+  readonly modalConfiguracionFinanciera = signal(false);
   readonly modalNuevoConcepto = signal(false);
   readonly modalNuevoCobro = signal(false);
   readonly modalPagoManual = signal(false);
@@ -592,52 +621,27 @@ export class TesoreriaComponent implements OnInit {
 
   readonly conceptosList = signal<any[]>([]);
 
-  readonly becaActual = signal<BecaEstudiante>({
-    tipo: 'NINGUNA',
-    porcentaje: 0,
-    nombre: 'Tarifa Plena (100%)',
-    nombreBeneficio: 'Tarifa Plena (100%)',
-    vigencia: 'ANUAL',
-    mesInicio: 2,
-    mesFin: 11,
-    numeroResolucion: '',
-    archivoSoporteUrl: '',
-    archivoSoporteNombre: '',
-    cuentaContablePuc: '417505',
-  });
+  readonly becaActual = signal<BecaEstudiante>({} as BecaEstudiante);
 
-  becaForm = {
-    tipo: 'EXCELENCIA',
-    porcentaje: 50,
-    vigencia: 'ANUAL',
-    mesInicio: 2,
-    mesFin: 11,
-    numeroResolucion: 'Resolución Rectoral N° 045-2026',
-    archivoSoporteUrl: '',
-    archivoSoporteNombre: '',
-    observaciones: 'Aprobado mediante resolución de Rectoría / Consejo Directivo',
-    cuentaContablePuc: '417505',
-  };
+  becaForm: any = {};
 
   readonly fechaHoy = new Date().toLocaleDateString('es-CO');
   readonly fechaHoyTexto = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
-  readonly hashPazYSalvo = 'PYS-2026-B9F2A108C7E4';
+  readonly hashPazYSalvo = `PYS-${new Date().getFullYear()}-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
   nuevoCobro: any = {};
 
-
-
-  nuevoPagoManual = {
+  nuevoPagoManual: PagoManualForm = {
     cuentaCobroId: '',
-    medioPago: 'EFECTIVO' as MedioPago.PSE | 'EFECTIVO' | 'TRANSFERENCIA_BANCOLOMBIA' | 'NEQUI_QR' | 'TARJETA_CREDITO',
-    valorPagado: 450000,
+    medioPago: MedioPago.EFECTIVO,
+    valorPagado: 0,
     referenciaTransaccion: '',
   };
 
   nuevoAcuerdo = {
     estudianteId: '',
     montoTotalAcordado: 0,
-    numeroCuotas: 3,
-    diaPagoMensual: 15,
+    numeroCuotas: 1,
+    diaPagoMensual: 1,
     observaciones: '',
   };
 
@@ -691,7 +695,7 @@ export class TesoreriaComponent implements OnInit {
 
   readonly totalCajaEfectivo = computed(() => {
     return this.pagos()
-      .filter((p) => p.medioPago === 'EFECTIVO')
+      .filter((p) => p.medioPago === MedioPago.EFECTIVO)
       .reduce((acc, p) => acc + (p.valorPagado || 0), 0);
   });
 
@@ -717,8 +721,8 @@ export class TesoreriaComponent implements OnInit {
         (c.estudianteDocumento || '').toLowerCase().includes(texto) ||
         (c.concepto || '').toLowerCase().includes(texto);
 
-      const matchEstado = estado === 'TODOS' || c.estado === estado;
-      const matchMes = mes === 'TODOS' || (c.mes || '') === mes;
+      const matchEstado = estado === FiltroGeneral.TODOS || c.estado === estado;
+      const matchMes = mes === FiltroGeneral.TODOS || (c.mes || '') === mes;
 
       return matchText && matchEstado && matchMes;
     });
@@ -757,7 +761,7 @@ export class TesoreriaComponent implements OnInit {
     const cuentasEst = this.cuentas().filter((c) => this.esItemDelEstudiante(c.estudianteId, c.estudianteDocumento, c.estudianteNombre));
     const pagosEst = this.pagos().filter((p) => this.esItemDelEstudiante(p.estudianteId, undefined, p.estudianteNombre));
     const beca = this.becaActual();
-    const pctBeca = Number(beca?.porcentaje || PorcentajeBeca.NINGUNA);
+    const pctBeca = Number(beca?.porcentaje || 0);
     const mesInicioBeca = Number(beca?.mesInicio || MesEscolar.FEBRERO);
     const mesFinBeca = Number(beca?.mesFin || MesEscolar.NOVIEMBRE);
 
@@ -774,11 +778,17 @@ export class TesoreriaComponent implements OnInit {
       { num: MesEscolar.NOVIEMBRE, nombre: 'Noviembre' },
     ];
 
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const diaLimite = this.configuracionFinanciera()?.diaLimitePagoDefecto || 10;
+    const diaStr = diaLimite < 10 ? `0${diaLimite}` : `${diaLimite}`;
+
     return nombresMeses.map((m) => {
-      const estaEnVigencia = pctBeca > PorcentajeBeca.NINGUNA && m.num >= mesInicioBeca && m.num <= mesFinBeca;
+      const estaEnVigencia = pctBeca > 0 && m.num >= mesInicioBeca && m.num <= mesFinBeca;
+      const tarifaBase = this.configuracionFinanciera()?.tarifaBasePension || 0;
       const valorBaseMes = estaEnVigencia
-        ? Math.round(ConfiguracionFinanciera.TARIFA_BASE_PENSION * (1 - (pctBeca / 100)))
-        : ConfiguracionFinanciera.TARIFA_BASE_PENSION;
+        ? Math.round(tarifaBase * (1 - (pctBeca / 100)))
+        : tarifaBase;
+      const mesStr = m.num < 10 ? `0${m.num}` : `${m.num}`;
 
       // 1. Buscar si existe cuenta de cobro para este mes
       const cuentaMes = cuentasEst.find(
@@ -809,14 +819,14 @@ export class TesoreriaComponent implements OnInit {
             mes: m.nombre,
             mesNum: m.num,
             cuentaId: cuentaMes?.id || null,
-            numeroFactura: cuentaMes?.numeroFactura || pagosDelMes[0]?.facturaReferencia || `FACT-2026-0${m.num}-001`,
+            numeroFactura: cuentaMes?.numeroFactura || pagosDelMes[0]?.facturaReferencia || `FACT-${anio}-${mesStr}-001`,
             valor: valorObligacion,
             valorPagado: totalAbonado,
             saldoPendiente: 0,
             excedente: excedente > 0 ? excedente : 0,
-            estado: 'PAGADO',
-            vencimiento: cuentaMes?.fechaVencimiento || `10/${m.num < 10 ? '0' + m.num : m.num}/2026`,
-            recibo: ultimoRecibo || `REC-2026-0${m.num}42`,
+            estado: EstadoCuenta.PAGADO,
+            vencimiento: cuentaMes?.fechaVencimiento || `${diaStr}/${mesStr}/${anio}`,
+            recibo: ultimoRecibo || (pagosDelMes[0]?.numeroRecibo || null),
             pagos: pagosDelMes,
             abonosCount: pagosDelMes.length,
           };
@@ -826,13 +836,13 @@ export class TesoreriaComponent implements OnInit {
             mes: m.nombre,
             mesNum: m.num,
             cuentaId: cuentaMes?.id || null,
-            numeroFactura: cuentaMes?.numeroFactura || pagosDelMes[0]?.facturaReferencia || `FACT-2026-0${m.num}-001`,
+            numeroFactura: cuentaMes?.numeroFactura || pagosDelMes[0]?.facturaReferencia || `FACT-${anio}-${mesStr}-001`,
             valor: valorObligacion,
             valorPagado: totalAbonado,
             saldoPendiente: saldoRestante,
             excedente: 0,
-            estado: 'PAGADO_PARCIAL',
-            vencimiento: cuentaMes?.fechaVencimiento || `10/${m.num < 10 ? '0' + m.num : m.num}/2026`,
+            estado: EstadoCuenta.PAGADO_PARCIAL,
+            vencimiento: cuentaMes?.fechaVencimiento || `${diaStr}/${mesStr}/${anio}`,
             recibo: ultimoRecibo,
             pagos: pagosDelMes,
             abonosCount: pagosDelMes.length,
@@ -850,8 +860,8 @@ export class TesoreriaComponent implements OnInit {
           valor: valorObligacion,
           valorPagado: valorObligacion,
           saldoPendiente: 0,
-          estado: 'PAGADO',
-          vencimiento: cuentaMes.fechaVencimiento || `10/${m.num < 10 ? '0' + m.num : m.num}/2026`,
+          estado: EstadoCuenta.PAGADO,
+          vencimiento: cuentaMes.fechaVencimiento || `${diaStr}/${mesStr}/${anio}`,
           recibo: ultimoRecibo || `REC-${(cuentaMes.numeroFactura || '').replace('FACT-', '')}`,
           pagos: pagosDelMes,
           abonosCount: pagosDelMes.length,
@@ -868,7 +878,7 @@ export class TesoreriaComponent implements OnInit {
           valorPagado: 0,
           saldoPendiente: cuentaMes.valorTotal,
           estado: cuentaMes.estado,
-          vencimiento: cuentaMes.fechaVencimiento || `10/${m.num < 10 ? '0' + m.num : m.num}/2026`,
+          vencimiento: cuentaMes.fechaVencimiento || `${diaStr}/${mesStr}/${anio}`,
           recibo: null,
           pagos: [],
           abonosCount: 0,
@@ -880,12 +890,12 @@ export class TesoreriaComponent implements OnInit {
         mes: m.nombre,
         mesNum: m.num,
         cuentaId: null,
-        numeroFactura: `PROY-2026-${m.num < 10 ? '0' + m.num : m.num}`,
+        numeroFactura: `PROY-${anio}-${mesStr}`,
         valor: valorBaseMes,
         valorPagado: 0,
         saldoPendiente: valorBaseMes,
         estado: EstadoCuenta.POR_VENCER,
-        vencimiento: `10/${m.num < 10 ? '0' + m.num : m.num}/2026`,
+        vencimiento: `${diaStr}/${mesStr}/${anio}`,
         recibo: null,
         pagos: [],
         abonosCount: 0,
@@ -904,7 +914,7 @@ export class TesoreriaComponent implements OnInit {
     const total = facturas.length || 1;
     const porcentajeAlDia = Math.round((alDia / total) * 100);
 
-    const totalRecaudado = recaudos.reduce((acc, p) => acc + Number(p.valorPagado || 0), 0) + (alDia * 450000);
+    const totalRecaudado = recaudos.reduce((acc, p) => acc + Number(p.valorPagado || 0), 0) + (alDia * (this.configuracionFinanciera()?.tarifaBasePension || 0));
 
     return {
       alDia,
@@ -944,7 +954,7 @@ export class TesoreriaComponent implements OnInit {
 
     // 1. Evaluar las 10 mensualidades del año escolar
     plan.forEach((m) => {
-      if (m.estado === 'PAGADO') {
+      if (m.estado === EstadoCuenta.PAGADO || m.estado === EstadoCuenta.AL_DIA) {
         alDia++;
       } else {
         const saldoMes = Number(m.saldoPendiente !== undefined ? m.saldoPendiente : m.valor);
@@ -983,6 +993,10 @@ export class TesoreriaComponent implements OnInit {
     this.parametrosService.obtenerPorGrupo('ESTADOS_CUENTA').subscribe(res => this.estadosCuentaList.set(res));
     this.parametrosService.obtenerPorGrupo('MESES_ACADEMICOS').subscribe(res => this.mesesList.set(res));
     this.parametrosService.obtenerPorGrupo('MEDIOS_PAGO').subscribe(res => this.mediosPagoList.set(res));
+    this.parametrosService.obtenerConfiguracionFinanciera().subscribe(cfg => this.configuracionFinanciera.set(cfg));
+    this.parametrosService.obtenerMapaValores('PORCENTAJES_BECA').subscribe(m => {
+      if (m && Object.keys(m).length > 0) this.porcentajesBecaMap.set(m);
+    });
 
     this.cargarDatosBackend();
     this.cargarConceptos();
@@ -994,7 +1008,7 @@ export class TesoreriaComponent implements OnInit {
         if (data && data.length > 0) {
           this.conceptosList.set(data);
           this.nuevoCobro.concepto = data[0].nombre;
-          this.nuevoCobro.valorTotal = Number(data[0].valorSugerido) || 450000;
+          this.nuevoCobro.valorTotal = Number(data[0].valorSugerido) || (this.configuracionFinanciera()?.tarifaBasePension || 0);
         }
       },
     });
@@ -1109,12 +1123,13 @@ export class TesoreriaComponent implements OnInit {
   }
 
   private obtenerNombreBeca(tipo: TipoBeca | string, pct: number): string {
-    if (pct === PorcentajeBeca.NINGUNA || tipo === TipoBeca.NINGUNA) return 'Tarifa Plena (100%)';
-    if (tipo === TipoBeca.EXCELENCIA || pct === PorcentajeBeca.EXCELENCIA) return 'Excelencia Académica';
-    if (tipo === TipoBeca.HERMANOS || pct === PorcentajeBeca.HERMANOS) return 'Hermanos / Familiar';
-    if (tipo === TipoBeca.DOCENTE || pct === PorcentajeBeca.DOCENTE) return 'Hijo Docente';
-    if (tipo === TipoBeca.SOLIDARIA || pct === PorcentajeBeca.SOLIDARIA) return 'Solidaria Total';
-    if (tipo === TipoBeca.CONVENIO || pct === PorcentajeBeca.CONVENIO) return 'Convenio Institucional';
+    const pMap = this.porcentajesBecaMap();
+    if (pct === 0 || tipo === TipoBeca.NINGUNA) return 'Tarifa Plena (100%)';
+    if (tipo === TipoBeca.EXCELENCIA || pct === (pMap['EXCELENCIA'] || 50)) return 'Excelencia Académica';
+    if (tipo === TipoBeca.HERMANOS || pct === (pMap['HERMANOS'] || 20)) return 'Hermanos / Familiar';
+    if (tipo === TipoBeca.DOCENTE || pct === (pMap['DOCENTE'] || 30)) return 'Hijo Docente';
+    if (tipo === TipoBeca.SOLIDARIA || pct === (pMap['SOLIDARIA'] || 100)) return 'Solidaria Total';
+    if (tipo === TipoBeca.CONVENIO || pct === (pMap['CONVENIO'] || 15)) return 'Convenio Institucional';
     return `Especial ${pct}%`;
   }
 
@@ -1124,10 +1139,11 @@ export class TesoreriaComponent implements OnInit {
     if (conDescuento && Number(conDescuento.descuento) > 0) {
       const desc = Number(conDescuento.descuento);
       const total = Number(conDescuento.valorTotal);
-      const bruto = desc + total > 0 ? desc + total : ConfiguracionFinanciera.TARIFA_BASE_PENSION;
+      const bruto = desc + total > 0 ? desc + total : this.configuracionFinanciera().tarifaBasePension;
       const pct = Math.round((desc / bruto) * 100);
 
-      const tipoBeca = pct === PorcentajeBeca.EXCELENCIA ? TipoBeca.EXCELENCIA : (pct === PorcentajeBeca.HERMANOS ? TipoBeca.HERMANOS : (pct === PorcentajeBeca.DOCENTE ? TipoBeca.DOCENTE : (pct === PorcentajeBeca.SOLIDARIA ? TipoBeca.SOLIDARIA : TipoBeca.OTRA)));
+      const pMap = this.porcentajesBecaMap();
+      const tipoBeca = pct === (pMap['EXCELENCIA'] || 50) ? TipoBeca.EXCELENCIA : (pct === (pMap['HERMANOS'] || 20) ? TipoBeca.HERMANOS : (pct === (pMap['DOCENTE'] || 30) ? TipoBeca.DOCENTE : (pct === (pMap['SOLIDARIA'] || 100) ? TipoBeca.SOLIDARIA : TipoBeca.OTRA)));
       const nombreBeca = this.obtenerNombreBeca(tipoBeca, pct);
 
       this.becaActual.set({
@@ -1138,23 +1154,12 @@ export class TesoreriaComponent implements OnInit {
         vigencia: VigenciaBeca.ANUAL,
         mesInicio: MesEscolar.FEBRERO,
         mesFin: MesEscolar.NOVIEMBRE,
-        numeroResolucion: 'Resolución Rectoral Registrada',
+        numeroResolucion: '',
         cuentaContablePuc: CuentaContablePuc.DESCUENTOS_PENSIONES,
         estado: EstadoBeca.ACTIVA,
       });
     } else {
-      this.becaActual.set({
-        tipo: TipoBeca.NINGUNA,
-        porcentaje: PorcentajeBeca.NINGUNA,
-        nombre: 'Tarifa Plena',
-        nombreBeneficio: 'Tarifa Plena',
-        vigencia: VigenciaBeca.ANUAL,
-        mesInicio: MesEscolar.FEBRERO,
-        mesFin: MesEscolar.NOVIEMBRE,
-        numeroResolucion: '',
-        cuentaContablePuc: CuentaContablePuc.DESCUENTOS_PENSIONES,
-        estado: EstadoBeca.REVOCADA,
-      });
+      this.becaActual.set({} as BecaEstudiante);
     }
   }
 
@@ -1164,27 +1169,29 @@ export class TesoreriaComponent implements OnInit {
       next: (res) => {
         if (res && res.length > 0) {
           const matriculadosActuales = this.listaEstudiantes();
+          const anioDefecto = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
           const mapped: CuentaCobroItem[] = res.map((f: any) => {
             const fallbackEst = matriculadosActuales.length > 0 ? matriculadosActuales[0] : null;
             const rawNombre = (f.estudianteNombre || '').trim();
             const estNombre = (rawNombre && rawNombre !== 'Estudiante Sin Nombre' && rawNombre !== 'null null')
               ? rawNombre
-              : (fallbackEst?.nombre || 'Garcia Torres Mariana Lucía');
-            const estDoc = f.estudianteDocumento || fallbackEst?.documento || '1023456789';
+              : (fallbackEst?.nombre || '');
+            const estDoc = f.estudianteDocumento || fallbackEst?.documento || '';
+            const anio = f.anioCobro || anioDefecto;
 
             return {
               id: f.id,
               estudianteId: f.estudianteId || fallbackEst?.id || '',
               estudianteNombre: estNombre,
               estudianteDocumento: estDoc,
-              gradoNombre: f.gradoNombre || f.grado?.nombre || fallbackEst?.grado || 'Décimo (10°A)',
+              gradoNombre: f.gradoNombre || f.grado?.nombre || fallbackEst?.grado || '',
               concepto: f.conceptoNombre || f.concepto?.nombre || 'Cobro Escolar',
-              mes: f.mes || `${f.mesCobro ? 'Mes ' + f.mesCobro : 'Agosto'} ${f.anioCobro || 2026}`,
+              mes: f.mes || `${f.mesCobro ? 'Mes ' + f.mesCobro : ''} ${anio}`.trim(),
               mesCobro: f.mesCobro,
               valorTotal: Number(f.valorTotal || 0),
               descuento: Number(f.descuento || 0),
-              estado: f.estado === 'PAGADO' ? EstadoCuenta.AL_DIA : (f.estado === 'PAGADO_PARCIAL' ? EstadoCuenta.PAGADO_PARCIAL : (f.estado === 'VENCIDO' ? EstadoCuenta.EN_MORA : EstadoCuenta.POR_VENCER)),
-              fechaVencimiento: f.fechaLimitePago ? f.fechaLimitePago.split('T')[0] : '2026-08-10',
+              estado: (f.estado === EstadoCuenta.PAGADO || f.estado === EstadoCuenta.AL_DIA) ? EstadoCuenta.AL_DIA : (f.estado === EstadoCuenta.PAGADO_PARCIAL ? EstadoCuenta.PAGADO_PARCIAL : (f.estado === 'VENCIDO' || f.estado === EstadoCuenta.EN_MORA ? EstadoCuenta.EN_MORA : EstadoCuenta.POR_VENCER)),
+              fechaVencimiento: f.fechaLimitePago ? f.fechaLimitePago.split('T')[0] : '',
               numeroFactura: f.numeroFactura || `FACT-${f.id?.substring(0, 8) || '000'}`,
             };
           });
@@ -1208,11 +1215,11 @@ export class TesoreriaComponent implements OnInit {
             id: e.estudiante_id,
             nombre: `${e.primer_apellido} ${e.segundo_apellido || ''} ${e.primer_nombre} ${e.segundo_nombre || ''}`.replace(/\s+/g, ' ').trim(),
             documento: e.numero_documento,
-            grado: e.grado_nombre || '10°',
-            grupo: e.grupo_nombre || '10-A',
-            acudienteNombre: e.acudiente_nombre || `Acudiente de ${e.primer_nombre} ${e.primer_apellido}`,
-            acudienteTelefono: e.acudiente_telefono || '310 000 0000',
-            acudienteEmail: e.acudiente_email || 'contacto@educore.edu.co',
+            grado: e.grado_nombre || '',
+            grupo: e.grupo_nombre || '',
+            acudienteNombre: e.acudiente_nombre || (e.primer_nombre ? `Acudiente de ${e.primer_nombre} ${e.primer_apellido || ''}`.trim() : ''),
+            acudienteTelefono: e.acudiente_telefono || '',
+            acudienteEmail: e.acudiente_email || '',
           }));
           this.listaEstudiantes.set(mapped);
           
@@ -1240,7 +1247,7 @@ export class TesoreriaComponent implements OnInit {
             numeroRecibo: p.numeroRecibo,
             facturaReferencia: p.numeroFactura,
             estudianteId: p.estudianteId,
-            estudianteNombre: p.estudianteNombre || 'Garcia Torres Mariana Lucía',
+            estudianteNombre: p.estudianteNombre || '',
             conceptoNombre: p.conceptoNombre,
             medioPago: p.medioPago,
             valorPagado: Number(p.valorPagado),
@@ -1276,7 +1283,7 @@ export class TesoreriaComponent implements OnInit {
             numeroCuotas: a.numeroCuotas,
             montoPorCuota: Number(a.montoPorCuota),
             diaPagoMensual: a.diaPagoMensual,
-            fechaInicio: a.fechaInicio ? a.fechaInicio.split('T')[0] : '2026-08-15',
+            fechaInicio: a.fechaInicio ? a.fechaInicio.split('T')[0] : new Date().toISOString().split('T')[0],
             estado: a.estado,
             observaciones: a.observaciones,
           }));
@@ -1296,21 +1303,22 @@ export class TesoreriaComponent implements OnInit {
     this.api.get<any>(`tesoreria/estudiantes/${estudianteId}/estado-cuenta`).subscribe({
       next: (res) => {
         const cuentasLista = res?.cuentasCobro || res?.cuentasCobroDetalle;
+        const anioDefecto = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
         if (cuentasLista && cuentasLista.length > 0) {
           const nuevasCuentas = cuentasLista.map((c: any) => ({
             id: c.id,
             estudianteId: res.estudiante?.id || estudianteId,
-            estudianteNombre: res.estudiante?.nombre || (res.estudiante ? `${res.estudiante.primer_apellido || ''} ${res.estudiante.primer_nombre || ''}`.trim() : 'Estudiante'),
+            estudianteNombre: res.estudiante?.nombre || (res.estudiante ? `${res.estudiante.primer_apellido || ''} ${res.estudiante.primer_nombre || ''}`.trim() : ''),
             estudianteDocumento: res.estudiante?.documento || res.estudiante?.numero_documento || '',
-            gradoNombre: res.estudiante?.grado || '10° Grado',
+            gradoNombre: res.estudiante?.grado || res.estudiante?.grado_nombre || '',
             numeroFactura: c.numeroFactura || `FACT-${c.id?.substring(0, 8)}`,
             concepto: c.concepto?.nombre || 'Pensión Mensual Escolar',
-            mes: `Mes ${c.mesCobro || 8} 2026`,
+            mes: c.mesCobro ? `Mes ${c.mesCobro} ${c.anioCobro || anioDefecto}` : '',
             mesCobro: c.mesCobro,
             valorTotal: Number(c.valorTotal),
             descuento: Number(c.descuento || 0),
-            estado: c.estado === 'PAGADO' ? EstadoCuenta.AL_DIA : (c.estado === 'PAGADO_PARCIAL' ? EstadoCuenta.PAGADO_PARCIAL : (c.estado === 'VENCIDO' ? EstadoCuenta.EN_MORA : EstadoCuenta.POR_VENCER)),
-            fechaVencimiento: c.fechaLimitePago ? c.fechaLimitePago.split('T')[0] : '2026-08-10',
+            estado: (c.estado === EstadoCuenta.PAGADO || c.estado === EstadoCuenta.AL_DIA) ? EstadoCuenta.AL_DIA : (c.estado === EstadoCuenta.PAGADO_PARCIAL ? EstadoCuenta.PAGADO_PARCIAL : (c.estado === 'VENCIDO' || c.estado === EstadoCuenta.EN_MORA ? EstadoCuenta.EN_MORA : EstadoCuenta.POR_VENCER)),
+            fechaVencimiento: c.fechaLimitePago ? c.fechaLimitePago.split('T')[0] : '',
           }));
 
           // Unir evitando duplicados
@@ -1327,9 +1335,9 @@ export class TesoreriaComponent implements OnInit {
             numeroRecibo: p.numeroRecibo || p.numero_recibo,
             facturaReferencia: p.numeroFactura || p.numero_factura,
             estudianteId: res.estudiante?.id || estudianteId,
-            estudianteNombre: res.estudiante?.nombre || (res.estudiante ? `${res.estudiante.primer_apellido || ''} ${res.estudiante.primer_nombre || ''}`.trim() : 'Estudiante'),
+            estudianteNombre: res.estudiante?.nombre || (res.estudiante ? `${res.estudiante.primer_apellido || ''} ${res.estudiante.primer_nombre || ''}`.trim() : ''),
             conceptoNombre: p.conceptoNombre || p.concepto || 'Pensión Mensual Escolar',
-            medioPago: p.medioPago || p.medio_pago || 'EFECTIVO',
+            medioPago: p.medioPago || p.medio_pago || MedioPago.EFECTIVO,
             valorPagado: Number(p.valorPagado || p.valor_pagado),
             fechaPago: new Date(p.fechaPago || p.fecha_pago || Date.now()).toLocaleString('es-CO'),
             referenciaTransaccion: p.referenciaTransaccion || p.referencia_transaccion || '',
@@ -1377,7 +1385,7 @@ export class TesoreriaComponent implements OnInit {
     this.facturaParaPagar.set(null);
     this.nuevoPagoManual = {
       cuentaCobroId: '',
-      medioPago: 'EFECTIVO',
+      medioPago: MedioPago.EFECTIVO,
       valorPagado: 0,
       referenciaTransaccion: '',
     };
@@ -1390,7 +1398,7 @@ export class TesoreriaComponent implements OnInit {
     const saldo = cuenta.saldoPendiente !== undefined ? Number(cuenta.saldoPendiente) : Math.max(0, Number(cuenta.valorTotal || 0) - Number(cuenta.valorPagado || 0));
     this.nuevoPagoManual = {
       cuentaCobroId: cuenta.id,
-      medioPago: 'EFECTIVO',
+      medioPago: MedioPago.EFECTIVO,
       valorPagado: saldo > 0 ? saldo : Number(cuenta.valorTotal || 0),
       referenciaTransaccion: '',
     };
@@ -1427,7 +1435,7 @@ export class TesoreriaComponent implements OnInit {
 
     const nuevoRecibo: PagoRecaudoItem = {
       id: reciboApi?.id || `p-${Date.now()}`,
-      numeroRecibo: reciboApi?.numeroRecibo || `REC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      numeroRecibo: reciboApi?.numeroRecibo || `REC-${this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       facturaReferencia: cuenta.numeroFactura,
       estudianteId: cuenta.estudianteId || this.estudianteSeleccionado().id,
       estudianteNombre: cuenta.estudianteNombre || this.estudianteSeleccionado().nombre,
@@ -1471,9 +1479,9 @@ export class TesoreriaComponent implements OnInit {
 
     this.nuevoAcuerdo = {
       estudianteId: estudianteIdDefault,
-      montoTotalAcordado: (saldoPendiente && saldoPendiente > 0) ? saldoPendiente : ConfiguracionFinanciera.VALOR_DEFAULT_ACUERDO,
-      numeroCuotas: ConfiguracionFinanciera.CUOTAS_ACUERDO_DEFECTO,
-      diaPagoMensual: ConfiguracionFinanciera.DIA_PAGO_ACUERDO_DEFECTO,
+      montoTotalAcordado: (saldoPendiente && saldoPendiente > 0) ? saldoPendiente : (this.configuracionFinanciera()?.valorDefaultAcuerdo || 0),
+      numeroCuotas: this.configuracionFinanciera()?.cuotasAcuerdoDefecto || 1,
+      diaPagoMensual: this.configuracionFinanciera()?.diaPagoAcuerdoDefecto || 1,
       observaciones: est?.nombre ? `Acuerdo de pago para refinanciación del estudiante ${est.nombre}.` : 'Acuerdo de pago para refinanciación de cartera morosa.',
     };
     this.modalManager.open('nuevoAcuerdo');
@@ -1484,10 +1492,10 @@ export class TesoreriaComponent implements OnInit {
     const est = this.estudianteSeleccionado();
     this.nuevoAcuerdo = {
       estudianteId: est?.id || '',
-      montoTotalAcordado: this.estadoCuentaEstudiante().saldoPendienteTotal || ConfiguracionFinanciera.VALOR_DEFAULT_ACUERDO,
-      numeroCuotas: ConfiguracionFinanciera.CUOTAS_ACUERDO_DEFECTO,
-      diaPagoMensual: ConfiguracionFinanciera.DIA_PAGO_ACUERDO_DEFECTO,
-      observaciones: `Acuerdo firmado con acudiente ${est?.acudienteNombre || 'Acudiente'} para el estudiante ${est?.nombre || 'Estudiante'}.`,
+      montoTotalAcordado: this.estadoCuentaEstudiante().saldoPendienteTotal || (this.configuracionFinanciera()?.valorDefaultAcuerdo || 0),
+      numeroCuotas: this.configuracionFinanciera()?.cuotasAcuerdoDefecto || 1,
+      diaPagoMensual: this.configuracionFinanciera()?.diaPagoAcuerdoDefecto || 1,
+      observaciones: `Acuerdo firmado con acudiente ${est?.acudienteNombre || ''} para el estudiante ${est?.nombre || ''}.`.trim(),
     };
     this.modalManager.open('nuevoAcuerdo');
     this.modalNuevoAcuerdo.set(true);
@@ -1504,7 +1512,7 @@ export class TesoreriaComponent implements OnInit {
       id: `ac-${Date.now()}`,
       estudianteId: est.id,
       estudianteNombre: est.nombre,
-      gradoNombre: `${est.grado || 'Grado'} (${est.grupo || 'A'})`,
+      gradoNombre: `${est.grado || ''} ${est.grupo ? '(' + est.grupo + ')' : ''}`.trim(),
       montoTotalAcordado: dto.montoTotalAcordado,
       numeroCuotas: dto.numeroCuotas,
       montoPorCuota: cuota,
@@ -1635,33 +1643,49 @@ export class TesoreriaComponent implements OnInit {
   generarFacturacionMes() {
     this.isFacturando.set(true);
 
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const diaLimite = this.configuracionFinanciera()?.diaLimitePagoDefecto || 10;
+    const mesCobro = new Date().getMonth() + 1;
+    const mesStr = mesCobro < 10 ? `0${mesCobro}` : `${mesCobro}`;
+    const diaStr = diaLimite < 10 ? `0${diaLimite}` : `${diaLimite}`;
+    const concepto = this.conceptosList()[0];
+
     const dto = {
-      conceptoId: 'b9e4a3a1-1111-4111-8111-000000000001',
-      mesCobro: MesEscolar.AGOSTO,
-      anioCobro: ConfiguracionFinanciera.ANIO_LECTIVO_DEFECTO,
-      valorBruto: ConfiguracionFinanciera.TARIFA_BASE_PENSION,
-      fechaLimitePago: '2026-08-10',
+      conceptoId: concepto?.id || '',
+      mesCobro: mesCobro,
+      anioCobro: anio,
+      valorBruto: this.configuracionFinanciera()?.tarifaBasePension || 0,
+      fechaLimitePago: `${anio}-${mesStr}-${diaStr}`,
     };
 
     this.api.post('tesoreria/facturacion/masiva', dto).subscribe({
       next: () => {
         this.isFacturando.set(false);
-        this.toast.success('¡Facturación Masiva Emitida!', 'Se han generado las cuentas de cobro para 850 estudiantes matriculados.');
+        const count = this.listaEstudiantes().length;
+        this.toast.success('¡Facturación Masiva Emitida!', count > 0 ? `Se han generado las cuentas de cobro para los ${count} estudiantes matriculados.` : 'Se han generado las cuentas de cobro para los estudiantes matriculados.');
       },
       error: () => {
         this.isFacturando.set(false);
-        this.toast.success('¡Facturación Masiva Emitida!', 'Se han generado las cuentas de cobro para 850 estudiantes matriculados.');
+        const count = this.listaEstudiantes().length;
+        this.toast.success('¡Facturación Masiva Emitida!', count > 0 ? `Se han generado las cuentas de cobro para los ${count} estudiantes matriculados.` : 'Se han generado las cuentas de cobro para los estudiantes matriculados.');
       },
     });
   }
 
   // --- COBRO INDIVIDUAL ---
   abrirModalNuevoCobro() {
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const mes = new Date().getMonth() + 1;
+    const diaLimite = this.configuracionFinanciera()?.diaLimitePagoDefecto || 10;
+    const mesStr = mes < 10 ? `0${mes}` : `${mes}`;
+    const diaStr = diaLimite < 10 ? `0${diaLimite}` : `${diaLimite}`;
+    const concepto = this.conceptosList()[0];
+
     this.nuevoCobro = {
-      estudianteNombre: '',
-      concepto: 'Salida Pedagógica',
-      valorTotal: 120000,
-      fechaVencimiento: '2026-08-25',
+      estudianteNombre: this.estudianteSeleccionado()?.nombre || '',
+      concepto: concepto?.nombre || '',
+      valorTotal: concepto?.valorSugerido ? Number(concepto.valorSugerido) : (this.configuracionFinanciera()?.tarifaBasePension || 0),
+      fechaVencimiento: `${anio}-${mesStr}-${diaStr}`,
     };
     this.modalManager.open('nuevoCobro');
     this.modalNuevoCobro.set(true);
@@ -1673,15 +1697,19 @@ export class TesoreriaComponent implements OnInit {
   }
 
   onCobroEmitido(formData: any) {
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const mesNombre = new Date().toLocaleDateString('es-CO', { month: 'long' });
+    const mesCapitalizado = mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1);
+
     const item: CuentaCobroItem = {
-      id: `c${Date.now()}-1111-4111-8111-00000000000${this.cuentas().length + 1}`,
+      id: crypto.randomUUID(),
       estudianteId: this.estudianteSeleccionado().id,
-      numeroFactura: `FACT-2026-EXT-${Math.floor(100 + Math.random() * 900)}`,
+      numeroFactura: `FACT-${anio}-EXT-${Math.floor(100 + Math.random() * 900)}`,
       estudianteNombre: formData.estudianteNombre,
       estudianteDocumento: this.estudianteSeleccionado().documento,
       gradoNombre: this.estudianteSeleccionado().grado,
       concepto: formData.concepto,
-      mes: 'Agosto 2026',
+      mes: `${mesCapitalizado} ${anio}`,
       valorTotal: formData.valorTotal,
       estado: EstadoCuenta.POR_VENCER,
       fechaVencimiento: formData.fechaVencimiento,
@@ -1695,16 +1723,16 @@ export class TesoreriaComponent implements OnInit {
   abrirModalBeca() {
     const beca = this.becaActual();
     this.becaForm = {
-      tipo: beca.tipo || TipoBeca.EXCELENCIA,
-      porcentaje: beca.porcentaje ?? PorcentajeBeca.EXCELENCIA,
-      vigencia: beca.vigencia || VigenciaBeca.ANUAL,
-      mesInicio: beca.mesInicio || MesEscolar.FEBRERO,
-      mesFin: beca.mesFin || MesEscolar.NOVIEMBRE,
-      numeroResolucion: beca.numeroResolucion || 'Resolución Rectoral N° 045-2026',
-      archivoSoporteUrl: beca.archivoSoporteUrl || '',
-      archivoSoporteNombre: beca.archivoSoporteNombre || '',
-      observaciones: beca.observaciones || 'Aprobado mediante resolución de Rectoría / Consejo Directivo',
-      cuentaContablePuc: beca.cuentaContablePuc || CuentaContablePuc.DESCUENTOS_PENSIONES,
+      tipo: beca?.tipo || TipoBeca.NINGUNA,
+      porcentaje: beca?.porcentaje ?? (this.porcentajesBecaMap()['NINGUNA'] || 0),
+      vigencia: beca?.vigencia || VigenciaBeca.ANUAL,
+      mesInicio: beca?.mesInicio || MesEscolar.FEBRERO,
+      mesFin: beca?.mesFin || MesEscolar.NOVIEMBRE,
+      numeroResolucion: beca?.numeroResolucion || '',
+      archivoSoporteUrl: beca?.archivoSoporteUrl || '',
+      archivoSoporteNombre: beca?.archivoSoporteNombre || '',
+      observaciones: beca?.observaciones || '',
+      cuentaContablePuc: beca?.cuentaContablePuc || CuentaContablePuc.DESCUENTOS_PENSIONES,
     };
     this.modalManager.open('beca');
     this.modalBeca.set(true);
@@ -1715,28 +1743,29 @@ export class TesoreriaComponent implements OnInit {
     this.modalBeca.set(false);
   }
 
-  guardarBecaEstudiante(form: any) {
-    const pct = Number(form.porcentaje) || PorcentajeBeca.NINGUNA;
+  guardarBecaEstudiante(form: BecaEstudiante) {
     const est = this.estudianteSeleccionado();
-    
-    const nombreBeca = this.obtenerNombreBeca(form.tipo, pct);
+    if (!est) return;
 
-    const payload = {
-      estudianteId: est.id,
-      tipo: form.tipo || TipoBeca.OTRA,
-      nombreBeneficio: nombreBeca,
+    const pct = Number(form.porcentaje) || 0;
+    const tipo = form.tipo || TipoBeca.EXCELENCIA;
+    const nombreBeca = this.obtenerNombreBeca(tipo, pct);
+
+    const payload: BecaEstudiante = {
+      tipo,
       porcentaje: pct,
+      nombreBeneficio: nombreBeca,
       vigencia: form.vigencia || VigenciaBeca.ANUAL,
       mesInicio: form.mesInicio || MesEscolar.FEBRERO,
       mesFin: form.mesFin || MesEscolar.NOVIEMBRE,
-      numeroResolucion: form.numeroResolucion || (pct > PorcentajeBeca.NINGUNA ? 'Resolución Rectoral N° 045-2026' : ''),
+      numeroResolucion: form.numeroResolucion || '',
       archivoSoporteUrl: form.archivoSoporteUrl || '',
       archivoSoporteNombre: form.archivoSoporteNombre || '',
       observaciones: form.observaciones || '',
       cuentaContablePuc: form.cuentaContablePuc || CuentaContablePuc.DESCUENTOS_PENSIONES,
     };
 
-    const nuevaBeca: BecaEstudiante = {
+    const nuevaBeca = {
       ...payload,
       nombre: nombreBeca,
     };
@@ -1744,7 +1773,7 @@ export class TesoreriaComponent implements OnInit {
     // 1. Actualizar inmediatamente el Signal para que el widget cambie en tiempo real
     this.becaActual.set(nuevaBeca);
 
-    const valorBase = ConfiguracionFinanciera.TARIFA_BASE_PENSION;
+    const valorBase = this.configuracionFinanciera()?.tarifaBasePension || 0;
     const descuento = Math.round(valorBase * (pct / 100));
     const nuevoValor = valorBase - descuento;
 
@@ -1753,9 +1782,8 @@ export class TesoreriaComponent implements OnInit {
       list.map((c) => {
         if (this.esItemDelEstudiante(c.estudianteId, c.estudianteDocumento, c.estudianteNombre)) {
           const mes = c.mesCobro ?? 0;
-          const dentroDeVigencia = mes === 0 || (mes >= payload.mesInicio && mes <= payload.mesFin);
-
-          if (dentroDeVigencia && pct > PorcentajeBeca.NINGUNA) {
+          const dentroDeVigencia = mes >= (payload.mesInicio || 0) && mes <= (payload.mesFin || 12);
+          if (dentroDeVigencia && pct > 0) {
             if (c.estado !== EstadoCuenta.AL_DIA) {
               return { ...c, valorTotal: nuevoValor, descuento: descuento };
             } else {
@@ -1779,7 +1807,7 @@ export class TesoreriaComponent implements OnInit {
       next: () => {
         this.toast.success(
           '¡Beca y Soporte Legal Guardados!',
-          `Se ha asignado ${pct}% de beca (${nombreBeca}) con ${payload.numeroResolucion || 'Resolución'}. Imputación contable: PUC 417505.`
+          `Se ha asignado ${pct}% de beca (${nombreBeca}) ${payload.numeroResolucion ? 'con resolución ' + payload.numeroResolucion : ''}. Imputación contable: PUC ${payload.cuentaContablePuc || CuentaContablePuc.DESCUENTOS_PENSIONES}.`
         );
       },
       error: () => {
@@ -1826,7 +1854,7 @@ export class TesoreriaComponent implements OnInit {
     const tel = est.acudienteTelefono.replace(/\D/g, '');
     const saldo = this.estadoCuentaEstudiante().saldoPendienteTotal.toLocaleString();
     const texto = encodeURIComponent(
-      `Estimado(a) ${est.acudienteNombre}, cordial saludo del Colegio Mayor de San Bartolomé. Le recordamos que su acudido(a) ${est.nombre} presenta un saldo pendiente de \$${saldo} COP. Puede consultar su estado de cuenta o pagar en línea vía PSE en el portal institucional.`
+      `Estimado(a) ${est.acudienteNombre || 'Acudiente'}, cordial saludo. Le recordamos que su acudido(a) ${est.nombre || 'estudiante'} presenta un saldo pendiente de \$${saldo} COP. Puede consultar su estado de cuenta o pagar en línea vía PSE en el portal institucional.`
     );
     window.open(`https://wa.me/57${tel}?text=${texto}`, '_blank');
     this.toast.success('WhatsApp Abierto', `Plantilla de recordatorio de cobro preparada para ${est.acudienteNombre}.`);
@@ -1845,16 +1873,25 @@ export class TesoreriaComponent implements OnInit {
   }
 
   asignarCobroAEstudianteActual() {
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const mes = new Date().getMonth() + 1;
+    const diaLimite = this.configuracionFinanciera()?.diaLimitePagoDefecto || 10;
+    const mesStr = mes < 10 ? `0${mes}` : `${mes}`;
+    const diaStr = diaLimite < 10 ? `0${diaLimite}` : `${diaLimite}`;
+    const concepto = this.conceptosList()[0];
+
     this.nuevoCobro = {
       estudianteNombre: this.estudianteSeleccionado().nombre,
-      concepto: 'Derechos de Grado',
-      valorTotal: 280000,
-      fechaVencimiento: '2026-09-15',
+      concepto: concepto?.nombre || '',
+      valorTotal: concepto?.valorSugerido ? Number(concepto.valorSugerido) : (this.configuracionFinanciera()?.tarifaBasePension || 0),
+      fechaVencimiento: `${anio}-${mesStr}-${diaStr}`,
     };
     this.modalNuevoCobro.set(true);
   }
 
   abrirModalPagoDirectoMes(mes: any) {
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const mesNumStr = mes.mesNum < 10 ? '0' + mes.mesNum : `${mes.mesNum}`;
     const cuenta = this.cuentas().find(
       (c) => c.estudianteId === this.estudianteSeleccionado().id && (c.mesCobro === mes.mesNum || c.mes.includes(mes.mes)),
     );
@@ -1867,9 +1904,9 @@ export class TesoreriaComponent implements OnInit {
         estudianteNombre: this.estudianteSeleccionado().nombre,
         estudianteDocumento: this.estudianteSeleccionado().documento,
         gradoNombre: this.estudianteSeleccionado().grado,
-        numeroFactura: `FACT-2026-${mes.mesNum < 10 ? '0' + mes.mesNum : mes.mesNum}-001`,
+        numeroFactura: `FACT-${anio}-${mesNumStr}-001`,
         concepto: 'Pensión Mensual Escolar',
-        mes: `${mes.mes} 2026`,
+        mes: `${mes.mes} ${anio}`,
         mesCobro: mes.mesNum,
         valorTotal: mes.valor,
         estado: EstadoCuenta.POR_VENCER,
@@ -1881,6 +1918,8 @@ export class TesoreriaComponent implements OnInit {
   }
 
   abrirModalEditarMes(mes: any) {
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const mesNumStr = mes.mesNum < 10 ? '0' + mes.mesNum : `${mes.mesNum}`;
     const cuenta = this.cuentas().find(
       (c) => c.estudianteId === this.estudianteSeleccionado().id && (c.mesCobro === mes.mesNum || c.mes.includes(mes.mes)),
     );
@@ -1893,9 +1932,9 @@ export class TesoreriaComponent implements OnInit {
         estudianteNombre: this.estudianteSeleccionado().nombre,
         estudianteDocumento: this.estudianteSeleccionado().documento,
         gradoNombre: this.estudianteSeleccionado().grado,
-        numeroFactura: `FACT-2026-${mes.mesNum < 10 ? '0' + mes.mesNum : mes.mesNum}-001`,
+        numeroFactura: `FACT-${anio}-${mesNumStr}-001`,
         concepto: 'Pensión Mensual Escolar',
-        mes: `${mes.mes} 2026`,
+        mes: `${mes.mes} ${anio}`,
         mesCobro: mes.mesNum,
         valorTotal: mes.valor,
         estado: EstadoCuenta.POR_VENCER,
@@ -1907,6 +1946,8 @@ export class TesoreriaComponent implements OnInit {
   }
 
   verReciboMes(mes: any) {
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const mesNumStr = mes.mesNum ? (mes.mesNum < 10 ? `0${mes.mesNum}` : `${mes.mesNum}`) : '01';
     const pago = this.pagos().find(
       (p) => p.estudianteId === this.estudianteSeleccionado().id && (p.conceptoNombre.includes(mes.mes) || p.numeroRecibo === mes.recibo),
     );
@@ -1915,11 +1956,11 @@ export class TesoreriaComponent implements OnInit {
     } else {
       this.reciboParaVer.set({
         id: `p-${Date.now()}`,
-        numeroRecibo: mes.recibo || `REC-2026-0842`,
-        facturaReferencia: mes.numeroFactura || 'FACT-2026-08-001',
+        numeroRecibo: mes.recibo || `REC-${anio}-${mesNumStr}42`,
+        facturaReferencia: mes.numeroFactura || `FACT-${anio}-${mesNumStr}-001`,
         estudianteId: this.estudianteSeleccionado().id,
         estudianteNombre: this.estudianteSeleccionado().nombre,
-        conceptoNombre: `Pensión ${mes.mes} 2026`,
+        conceptoNombre: `Pensión ${mes.mes} ${anio}`,
         medioPago: MedioPago.PSE,
         valorPagado: mes.valor,
         fechaPago: new Date().toLocaleString('es-CO'),
@@ -1954,21 +1995,46 @@ export class TesoreriaComponent implements OnInit {
     this.toast.warning('¡Factura Anulada!', `La factura ${item.numeroFactura} ha sido anulada.`);
   }
 
+  // --- FACTURACIÓN ELECTRÓNICA DIAN ---
+  emitirFacturaDian(cuenta: CuentaCobroItem): void {
+    this.toast.info('Emisión DIAN', `Iniciando emisión DIAN para ${cuenta.numeroFactura}...`);
+    this.dianService.emitirFactura(cuenta.id, true).subscribe({
+      next: (res) => {
+        this.toast.success(
+          'Factura DIAN Emitida',
+          `Documento ${res.documento.prefijo}-${res.documento.numero} aceptado ante la DIAN.`
+        );
+        this.cuentas.update((list) =>
+          list.map((c) =>
+            c.id === cuenta.id
+              ? { ...c, dianEstado: res.documento.estadoDian, cufe: res.documento.cufeCude }
+              : c
+          )
+        );
+      },
+      error: (err) => {
+        this.toast.error('Error DIAN', err.error?.message || err.message || 'No se pudo emitir la factura ante la DIAN');
+      },
+    });
+  }
+
   // --- WOMPI CHECKOUT ---
   pagarWompi(item: CuentaCobroItem) {
     this.checkoutModal.set(item);
   }
 
   pagarMesEstudiante(mes: any) {
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const mesNumStr = mes.mesNum ? (mes.mesNum < 10 ? `0${mes.mesNum}` : `${mes.mesNum}`) : '00';
     const cuentaMock: CuentaCobroItem = {
-      id: `c-${mes.mes}`,
+      id: `c-${mes.mesNum || mes.mes}`,
       estudianteId: this.estudianteSeleccionado().id,
       estudianteNombre: this.estudianteSeleccionado().nombre,
       estudianteDocumento: this.estudianteSeleccionado().documento,
       gradoNombre: this.estudianteSeleccionado().grado,
-      numeroFactura: `FACT-2026-${mes.mes}`,
-      concepto: `Pensión ${mes.mes} 2026`,
-      mes: `${mes.mes} 2026`,
+      numeroFactura: mes.numeroFactura || `FACT-${anio}-${mesNumStr}-001`,
+      concepto: `Pensión ${mes.mes} ${anio}`,
+      mes: `${mes.mes} ${anio}`,
       valorTotal: mes.valor,
       estado: EstadoCuenta.POR_VENCER,
       fechaVencimiento: mes.vencimiento,
@@ -2005,7 +2071,7 @@ export class TesoreriaComponent implements OnInit {
     let destino = mesDestino;
     if (!destino) {
       destino = this.planMensualEstudiante().find(
-        (m) => m.mesNum > mesOrigen.mesNum && m.estado !== 'PAGADO',
+        (m) => m.mesNum > mesOrigen.mesNum && m.estado !== EstadoCuenta.PAGADO && m.estado !== EstadoCuenta.AL_DIA,
       );
     }
 
@@ -2014,14 +2080,16 @@ export class TesoreriaComponent implements OnInit {
       return;
     }
 
+    const anio = this.configuracionFinanciera()?.anioLectivoDefecto || new Date().getFullYear();
+    const destMesNumStr = destino.mesNum < 10 ? '0' + destino.mesNum : `${destino.mesNum}`;
     const valorACruzar = Math.min(mesOrigen.excedente, destino.saldoPendiente || destino.valor);
-    const numeroReciboCruce = `CRU-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const numeroReciboCruce = `CRU-${anio}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     // 1. Crear el comprobante oficial de cruce de anticipo para el mes destino
     const nuevoRecibo: PagoRecaudoItem = {
       id: `p-cru-${Date.now()}`,
       numeroRecibo: numeroReciboCruce,
-      facturaReferencia: destino.numeroFactura || `FACT-2026-${destino.mesNum < 10 ? '0' + destino.mesNum : destino.mesNum}-001`,
+      facturaReferencia: destino.numeroFactura || `FACT-${anio}-${destMesNumStr}-001`,
       estudianteId: est.id,
       estudianteNombre: est.nombre,
       conceptoNombre: `Cruce de Saldo a Favor (${mesOrigen.mes} ➔ ${destino.mes})`,
@@ -2076,9 +2144,9 @@ export class TesoreriaComponent implements OnInit {
           estudianteNombre: est.nombre,
           estudianteDocumento: est.documento,
           gradoNombre: est.grado,
-          numeroFactura: destino.numeroFactura || `FACT-2026-${destino.mesNum < 10 ? '0' + destino.mesNum : destino.mesNum}-001`,
+          numeroFactura: destino.numeroFactura || `FACT-${anio}-${destMesNumStr}-001`,
           concepto: 'Pensión Mensual Escolar',
-          mes: `${destino.mes} 2026`,
+          mes: `${destino.mes} ${anio}`,
           mesCobro: destino.mesNum,
           valorTotal: valorObligacion,
           valorPagado: nuevoAbonado,

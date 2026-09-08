@@ -63,7 +63,7 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
             <div class="flex items-center gap-2">
               <label class="text-xs font-semibold text-slate-600">Presupuesto:</label>
               <select
-                class="input-base text-xs font-semibold py-1.5 px-2.5 rounded-lg border-slate-300 min-w-[200px]"
+                class="input-base text-xs font-semibold py-1.5 px-2.5 rounded-lg border-slate-300 min-w-[240px]"
                 data-testid="select-presupuesto-activo"
                 [ngModel]="presupuestoSeleccionadoId()"
                 (ngModelChange)="onPresupuestoSeleccionado($event)"
@@ -71,9 +71,12 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
                 @if (presupuestos().length === 0) {
                   <option value="" disabled>No hay presupuestos para {{ anio() }}</option>
                 } @else {
+                  <option value="TODOS" class="font-bold text-indigo-900 bg-indigo-50/50">
+                    📊 Todos (Consolidado Institucional {{ anio() }})
+                  </option>
                   @for (p of presupuestos(); track p.id) {
                     <option [value]="p.id">
-                      {{ p.nombre }} ({{ p.centroCosto?.nombre || 'General' }})
+                      {{ p.nombre }} ({{ p.centroCosto?.nombre || 'General' }}) — $ {{ (p.totalPresupuestado || 0) | number:'1.0-0' }} [{{ p.estado }}] · #{{ p.id.slice(0, 6) }}
                     </option>
                   }
                 }
@@ -82,7 +85,16 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
 
             <!-- Badge de Estado Legal del Presupuesto (Decreto 1075 de 2015) -->
             @if (presupuestoActual()) {
-              @if (presupuestoActual()?.estado === 'BORRADOR') {
+              @if (presupuestoActual()?.id === 'TODOS') {
+                <span
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center gap-1.5 shadow-2xs"
+                  data-testid="badge-estado-presupuesto"
+                  title="Vista consolidada de todos los presupuestos de la vigencia institucional"
+                >
+                  <span>📊</span>
+                  <span>CONSOLIDADO ({{ presupuestos().length }} Presupuestos)</span>
+                </span>
+              } @else if (presupuestoActual()?.estado === 'BORRADOR') {
                 <span
                   class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5 shadow-2xs"
                   data-testid="badge-estado-presupuesto"
@@ -107,7 +119,19 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
           <!-- Botones de Acción Contextuales según Estado Normativo -->
           <div class="flex flex-wrap items-center gap-2">
             @if (presupuestoActual()) {
-              @if (presupuestoActual()?.estado === 'BORRADOR') {
+              @if (presupuestoActual()?.id === 'TODOS') {
+                <!-- Acciones en Modo Consolidado Institucional -->
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5 !bg-indigo-50 !text-indigo-800 hover:!bg-indigo-100 !border-indigo-200 font-medium"
+                  data-testid="btn-libro-modificaciones"
+                  (click)="modalLibroVisible.set(true)"
+                  title="Consultar Libro Histórico Consolidado de Modificaciones y Acuerdos de toda la institución"
+                >
+                  <span>📜</span>
+                  <span>Libro Modificaciones (Consolidado)</span>
+                </button>
+              } @else if (presupuestoActual()?.estado === 'BORRADOR') {
                 <!-- Acciones en Estado BORRADOR (Edición Libre y Adopción) -->
                 <button
                   type="button"
@@ -180,16 +204,18 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
                 </button>
               }
 
-              <button
-                type="button"
-                class="btn-secondary btn-sm inline-flex items-center gap-1.5"
-                data-testid="btn-nuevo-rubro"
-                (click)="abrirModalRubro()"
-                title="Agregar partida de ingreso o gasto al presupuesto activo"
-              >
-                <span>+</span>
-                <span>Agregar Rubro</span>
-              </button>
+              @if (presupuestoActual()?.id !== 'TODOS') {
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5"
+                  data-testid="btn-nuevo-rubro"
+                  (click)="abrirModalRubro()"
+                  title="Agregar partida de ingreso o gasto al presupuesto activo"
+                >
+                  <span>+</span>
+                  <span>Agregar Rubro</span>
+                </button>
+              }
             }
 
             <button
@@ -352,7 +378,16 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
                   @for (r of rubros(); track r.codigo) {
                     <tr class="hover:bg-slate-50/60 transition-colors">
                       <td class="py-2 px-3 font-mono font-semibold text-slate-800">{{ r.codigo }}</td>
-                      <td class="py-2 px-3 font-medium text-slate-700">{{ r.nombre }}</td>
+                      <td class="py-2 px-3 font-medium text-slate-700">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span>{{ r.nombre }}</span>
+                          @if (presupuestoActual()?.id === 'TODOS' && r.presupuestoNombre) {
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200" title="Presupuesto de origen">
+                              📁 {{ r.presupuestoNombre }}
+                            </span>
+                          }
+                        </div>
+                      </td>
                       <td class="py-2 px-3 text-center">
                         <span
                           class="badge-mini px-2 py-0.5 rounded font-semibold text-[10px]"
@@ -397,16 +432,20 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
                         </span>
                       </td>
                       <td class="py-2 px-3 text-center">
-                        <button
-                          type="button"
-                          class="btn-secondary btn-xs inline-flex items-center gap-1 text-[11px] py-1 px-2"
-                          data-testid="btn-adicion-fila"
-                          (click)="abrirModalAdicion(r.codigo)"
-                          title="Registrar adición extraordinaria a este rubro"
-                        >
-                          <span>⚡</span>
-                          <span>Adición</span>
-                        </button>
+                        @if (presupuestoActual()?.id === 'TODOS') {
+                          <span class="text-slate-300 font-mono text-xs" title="Para adicionar partidas, seleccione el presupuesto específico en la cabecera">—</span>
+                        } @else {
+                          <button
+                            type="button"
+                            class="btn-secondary btn-xs inline-flex items-center gap-1 text-[11px] py-1 px-2"
+                            data-testid="btn-adicion-fila"
+                            (click)="abrirModalAdicion(r.codigo)"
+                            title="Registrar adición extraordinaria a este rubro"
+                          >
+                            <span>⚡</span>
+                            <span>Adición</span>
+                          </button>
+                        }
                       </td>
                     </tr>
                   }
@@ -552,13 +591,53 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
   readonly presupuestoActual = computed(() => {
     const list = this.presupuestos();
     const id = this.presupuestoSeleccionadoId();
+    if (id === 'TODOS') {
+      return {
+        id: 'TODOS',
+        nombre: `Consolidado Institucional (${this.anio()})`,
+        estado: 'CONSOLIDADO',
+        anio: this.anio(),
+        centroCosto: { nombre: 'Todos los Centros de Costo' },
+        totalPresupuestado: list.reduce((acc, p) => acc + Number(p.totalPresupuestado || 0), 0),
+      };
+    }
     return list.find((p) => String(p.id) === String(id)) || null;
   });
 
   readonly rubros = computed<any[]>(() => {
     const ej = this.ejecucion();
+    const id = this.presupuestoSeleccionadoId();
     if (ej && ej.rubros && ej.rubros.length > 0) {
+      if (id === 'TODOS') {
+        return ej.rubros.map((r: any) => {
+          const matching = this.presupuestos().find((p) => p.rubros?.some((pr: any) => pr.codigo === r.codigo));
+          return {
+            ...r,
+            presupuestoNombre: r.presupuestoNombre || matching?.nombre || '',
+          };
+        });
+      }
       return ej.rubros;
+    }
+    if (id === 'TODOS') {
+      const list = this.presupuestos();
+      return list.flatMap((p: any) =>
+        (p.rubros || []).map((r: any) => ({
+          codigo: r.codigo,
+          nombre: r.nombre,
+          tipo: r.tipo,
+          presupuestado: Number(r.presupuestado || 0),
+          comprometido: Number(r.comprometido || 0),
+          causado: Number(r.causado || 0),
+          pagado: Number(r.pagado || 0),
+          porcentajeEjecucion:
+            r.presupuestado > 0 ? Math.round((Number(r.causado || 0) / Number(r.presupuestado)) * 100) : 0,
+          semaforo: 'VERDE',
+          presupuestoId: p.id,
+          presupuestoNombre: p.nombre,
+          centroCostoNombre: p.centroCosto?.nombre || 'General',
+        }))
+      );
     }
     const actual = this.presupuestoActual();
     if (actual && actual.rubros) {
@@ -625,12 +704,16 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
         this.presupuestos.set(list || []);
         if (list && list.length > 0) {
           let targetId: string;
-          if (targetSelectId && list.some((p: any) => String(p.id) === String(targetSelectId))) {
+          if (targetSelectId && (targetSelectId === 'TODOS' || list.some((p: any) => String(p.id) === String(targetSelectId)))) {
             targetId = targetSelectId;
           } else {
             const currentId = this.presupuestoSeleccionadoId();
-            const match = list.find((p: any) => String(p.id) === String(currentId));
-            targetId = match ? match.id : list[0].id;
+            if (currentId === 'TODOS') {
+              targetId = 'TODOS';
+            } else {
+              const match = list.find((p: any) => String(p.id) === String(currentId));
+              targetId = match ? match.id : list[0].id;
+            }
           }
           this.presupuestoSeleccionadoId.set(targetId);
           this.cargarEjecucion(targetId);

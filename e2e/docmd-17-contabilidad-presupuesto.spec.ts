@@ -415,4 +415,47 @@ test.describe('DocMD-17: Presupuesto Institucional — E2E Suite Exhaustiva', ()
 
     sniffer.assertZeroErrors();
   });
+
+  test('17.P.9 Selección de opción "Todos" (Consolidado Institucional) y diferenciación de presupuestos', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+    await page.goto('/contabilidad');
+    await page.waitForLoadState('networkidle');
+
+    await page.locator('[data-testid="tab-presupuesto"]').click();
+    await page.waitForTimeout(400);
+
+    const selector = page.locator('[data-testid="select-presupuesto-activo"]');
+    await expect(selector).toBeVisible();
+
+    // Validar que la opción TODOS esté presente en el selector
+    const opcionTodos = selector.locator('option[value="TODOS"]');
+    await expect(opcionTodos).toBeAttached();
+
+    // Seleccionar la opción TODOS
+    await selector.selectOption('TODOS');
+    await page.waitForTimeout(600);
+
+    // Validar badge de estado consolidado
+    const badgeEstado = page.locator('[data-testid="badge-estado-presupuesto"]');
+    await expect(badgeEstado).toBeVisible();
+    await expect(badgeEstado).toContainText('CONSOLIDADO');
+
+    // Validar KPIs consolidados
+    await expect(page.locator('[data-testid="kpi-total-presupuestado"]')).toBeVisible();
+    await expect(page.locator('[data-testid="kpi-total-causado"]')).toBeVisible();
+    await expect(page.locator('[data-testid="kpi-total-pagado"]')).toBeVisible();
+    await expect(page.locator('[data-testid="kpi-desviacion-global"]')).toBeVisible();
+
+    // Validar botón de Libro de Modificaciones (Consolidado)
+    const btnLibro = page.locator('[data-testid="btn-libro-modificaciones"]');
+    await expect(btnLibro).toBeVisible();
+    await btnLibro.click();
+
+    const modalLibro = page.locator('[data-testid="modal-libro-modificaciones"]');
+    await expect(modalLibro).toBeVisible();
+    await page.locator('[data-testid="btn-cerrar-libro"]').click();
+    await expect(modalLibro).not.toBeVisible();
+
+    sniffer.assertZeroErrors();
+  });
 });

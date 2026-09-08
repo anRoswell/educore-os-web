@@ -295,6 +295,26 @@ export class ContabilidadService {
     return this.http.post<any>(`${this.base}/presupuestos/${id}/adicion`, data);
   }
 
+  actualizarPresupuesto(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.base}/presupuestos/${id}`, data);
+  }
+
+  aprobarPresupuesto(id: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/presupuestos/${id}/aprobar`, data);
+  }
+
+  trasladoPresupuestal(id: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/presupuestos/${id}/traslado`, data);
+  }
+
+  reduccionPresupuestal(id: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/presupuestos/${id}/reduccion`, data);
+  }
+
+  getModificacionesPresupuesto(id: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/presupuestos/${id}/modificaciones`);
+  }
+
   // ─── Conciliación Bancaria Automática ─────────────────────────────────────
   importarExtractoBancario(data: any): Observable<any> {
     return this.http.post<any>(`${this.base}/conciliacion/importar`, data);

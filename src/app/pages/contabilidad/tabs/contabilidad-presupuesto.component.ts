@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContabilidadService } from '../services/contabilidad.service';
 import { ModalCrearPresupuestoComponent } from '../modals/modal-crear-presupuesto.component';
+import { ModalEditarPresupuestoComponent } from '../modals/modal-editar-presupuesto.component';
+import { ModalAprobarPresupuestoComponent } from '../modals/modal-aprobar-presupuesto.component';
+import { ModalTrasladoPresupuestalComponent } from '../modals/modal-traslado-presupuestal.component';
+import { ModalReduccionPresupuestalComponent } from '../modals/modal-reduccion-presupuestal.component';
+import { ModalLibroModificacionesComponent } from '../modals/modal-libro-modificaciones.component';
 import { ModalCrearRubroPresupuestalComponent } from '../modals/modal-crear-rubro.component';
 import { ModalAdicionPresupuestalComponent } from '../modals/modal-adicion-presupuestal.component';
 import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '../modals/modal-respuesta-presupuesto.component';
@@ -14,6 +19,11 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
     CommonModule,
     FormsModule,
     ModalCrearPresupuestoComponent,
+    ModalEditarPresupuestoComponent,
+    ModalAprobarPresupuestoComponent,
+    ModalTrasladoPresupuestalComponent,
+    ModalReduccionPresupuestalComponent,
+    ModalLibroModificacionesComponent,
     ModalCrearRubroPresupuestalComponent,
     ModalAdicionPresupuestalComponent,
     ModalRespuestaPresupuestoComponent,
@@ -22,9 +32,9 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
     <div class="space-y-4" data-testid="contabilidad-presupuesto-tab">
       <!-- Barra Superior de Parámetros y Acciones -->
       <div class="card p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <!-- Título y Filtros -->
-          <div class="flex flex-wrap items-center gap-4">
+          <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center gap-2">
               <span class="text-xl">📊</span>
               <div>
@@ -53,7 +63,7 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
             <div class="flex items-center gap-2">
               <label class="text-xs font-semibold text-slate-600">Presupuesto:</label>
               <select
-                class="input-base text-xs font-semibold py-1.5 px-2.5 rounded-lg border-slate-300 min-w-[220px]"
+                class="input-base text-xs font-semibold py-1.5 px-2.5 rounded-lg border-slate-300 min-w-[200px]"
                 data-testid="select-presupuesto-activo"
                 [ngModel]="presupuestoSeleccionadoId()"
                 (ngModelChange)="onPresupuestoSeleccionado($event)"
@@ -69,32 +79,118 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
                 }
               </select>
             </div>
+
+            <!-- Badge de Estado Legal del Presupuesto (Decreto 1075 de 2015) -->
+            @if (presupuestoActual()) {
+              @if (presupuestoActual()?.estado === 'BORRADOR') {
+                <span
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5 shadow-2xs"
+                  data-testid="badge-estado-presupuesto"
+                  title="Presupuesto en formulación. Edición libre de partidas antes de la adopción del Consejo Directivo."
+                >
+                  <span>📝</span>
+                  <span>BORRADOR (Formulación)</span>
+                </span>
+              } @else {
+                <span
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 shadow-2xs"
+                  data-testid="badge-estado-presupuesto"
+                  title="Presupuesto legalmente adoptado. Modificaciones solo mediante Acuerdo de Consejo Directivo."
+                >
+                  <span>🏛️</span>
+                  <span>APROBADO {{ presupuestoActual()?.numeroAcuerdo ? '— ' + presupuestoActual()?.numeroAcuerdo : '' }}</span>
+                </span>
+              }
+            }
           </div>
 
-          <!-- Botones de Acción -->
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="btn-secondary btn-sm inline-flex items-center gap-1.5"
-              data-testid="btn-nuevo-rubro"
-              (click)="abrirModalRubro()"
-              title="Agregar partida de ingreso o gasto al presupuesto activo"
-            >
-              <span>+</span>
-              <span>Agregar Rubro</span>
-            </button>
+          <!-- Botones de Acción Contextuales según Estado Normativo -->
+          <div class="flex flex-wrap items-center gap-2">
+            @if (presupuestoActual()) {
+              @if (presupuestoActual()?.estado === 'BORRADOR') {
+                <!-- Acciones en Estado BORRADOR (Edición Libre y Adopción) -->
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5 !text-amber-800 hover:!bg-amber-50 !border-amber-200"
+                  data-testid="btn-editar-presupuesto"
+                  (click)="modalEditarPresupuestoVisible.set(true)"
+                  title="Modificar denominación, justificación o centro de costo del proyecto de presupuesto"
+                >
+                  <span>✏️</span>
+                  <span>Editar Formulación</span>
+                </button>
 
-            <button
-              type="button"
-              class="btn-secondary btn-sm inline-flex items-center gap-1.5"
-              data-testid="btn-nueva-adicion"
-              (click)="abrirModalAdicion()"
-              [disabled]="!tieneRubros()"
-              title="Registrar adición presupuestal aprobada por Consejo"
-            >
-              <span>⚡</span>
-              <span>Adición Extraordinaria</span>
-            </button>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5 !bg-emerald-50 !text-emerald-800 hover:!bg-emerald-100 !border-emerald-300 font-semibold"
+                  data-testid="btn-aprobar-presupuesto"
+                  (click)="modalAprobarPresupuestoVisible.set(true)"
+                  title="Adoptar formalmente mediante Acuerdo de Consejo Directivo (Decreto 1075 de 2015)"
+                >
+                  <span>🏛️</span>
+                  <span>Aprobar Consejo Directivo</span>
+                </button>
+              } @else {
+                <!-- Acciones en Estado APROBADO (Modificaciones Formales según Ley Colombiana) -->
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5"
+                  data-testid="btn-traslado-presupuestal"
+                  (click)="modalTrasladoVisible.set(true)"
+                  [disabled]="rubros().length < 2"
+                  title="Traslado presupuestal (Créditos y Contracréditos autorizados por Consejo Directivo)"
+                >
+                  <span>🔄</span>
+                  <span>Traslado</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5"
+                  data-testid="btn-reduccion-presupuestal"
+                  (click)="modalReduccionVisible.set(true)"
+                  [disabled]="!tieneRubros()"
+                  title="Reducción de apropiación presupuestal autorizada por Consejo Directivo"
+                >
+                  <span>📉</span>
+                  <span>Reducción</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5"
+                  data-testid="btn-nueva-adicion"
+                  (click)="abrirModalAdicion()"
+                  [disabled]="!tieneRubros()"
+                  title="Adición presupuestal extraordinaria autorizada por Consejo Directivo"
+                >
+                  <span>⚡</span>
+                  <span>Adición</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5"
+                  data-testid="btn-libro-modificaciones"
+                  (click)="modalLibroVisible.set(true)"
+                  title="Consultar Libro Histórico de Modificaciones y Acuerdos de Consejo Directivo"
+                >
+                  <span>📜</span>
+                  <span>Libro Modificaciones</span>
+                </button>
+              }
+
+              <button
+                type="button"
+                class="btn-secondary btn-sm inline-flex items-center gap-1.5"
+                data-testid="btn-nuevo-rubro"
+                (click)="abrirModalRubro()"
+                title="Agregar partida de ingreso o gasto al presupuesto activo"
+              >
+                <span>+</span>
+                <span>Agregar Rubro</span>
+              </button>
+            }
 
             <button
               type="button"
@@ -328,6 +424,42 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
         (guardado)="onPresupuestoCreado($event)"
       ></app-modal-crear-presupuesto>
 
+      <app-modal-editar-presupuesto
+        [visible]="modalEditarPresupuestoVisible()"
+        [presupuesto]="presupuestoActual()"
+        (cerrar)="modalEditarPresupuestoVisible.set(false)"
+        (guardado)="onPresupuestoActualizado($event)"
+      ></app-modal-editar-presupuesto>
+
+      <app-modal-aprobar-presupuesto
+        [visible]="modalAprobarPresupuestoVisible()"
+        [presupuesto]="presupuestoActual()"
+        (cerrar)="modalAprobarPresupuestoVisible.set(false)"
+        (aprobado)="onPresupuestoAprobado($event)"
+      ></app-modal-aprobar-presupuesto>
+
+      <app-modal-traslado-presupuestal
+        [visible]="modalTrasladoVisible()"
+        [presupuestoId]="presupuestoSeleccionadoId()"
+        [rubros]="rubros()"
+        (cerrar)="modalTrasladoVisible.set(false)"
+        (guardado)="onTrasladoCreado($event)"
+      ></app-modal-traslado-presupuestal>
+
+      <app-modal-reduccion-presupuestal
+        [visible]="modalReduccionVisible()"
+        [presupuestoId]="presupuestoSeleccionadoId()"
+        [rubros]="rubros()"
+        (cerrar)="modalReduccionVisible.set(false)"
+        (guardado)="onReduccionCreada($event)"
+      ></app-modal-reduccion-presupuestal>
+
+      <app-modal-libro-modificaciones
+        [visible]="modalLibroVisible()"
+        [presupuesto]="presupuestoActual()"
+        (cerrar)="modalLibroVisible.set(false)"
+      ></app-modal-libro-modificaciones>
+
       <app-modal-crear-rubro
         [visible]="modalCrearRubroVisible()"
         [presupuestoId]="presupuestoSeleccionadoId()"
@@ -406,6 +538,11 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
 
   // Modales
   readonly modalCrearPresupuestoVisible = signal<boolean>(false);
+  readonly modalEditarPresupuestoVisible = signal<boolean>(false);
+  readonly modalAprobarPresupuestoVisible = signal<boolean>(false);
+  readonly modalTrasladoVisible = signal<boolean>(false);
+  readonly modalReduccionVisible = signal<boolean>(false);
+  readonly modalLibroVisible = signal<boolean>(false);
   readonly modalCrearRubroVisible = signal<boolean>(false);
   readonly modalAdicionVisible = signal<boolean>(false);
   readonly modalRespuestaVisible = signal<boolean>(false);
@@ -618,6 +755,92 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
         { etiqueta: 'Aprobación', valor: 'APROBADO POR CONSEJO DIRECTIVO' },
       ],
       mensaje: 'La adición presupuestal extraordinaria ha sido registrada y aplicada al techo presupuestal.',
+    });
+  }
+
+  onPresupuestoActualizado(res: any): void {
+    const id = this.presupuestoSeleccionadoId();
+    this.cargarPresupuestos(this.anio(), id);
+    this.alertaToast.set(`✅ Formulación de presupuesto "${res?.nombre || ''}" actualizada correctamente.`);
+    this.abrirModalRespuesta({
+      tipo: 'EDICION',
+      titulo: '¡Formulación de Presupuesto Actualizada!',
+      subtitulo: `${res?.nombre || 'Presupuesto'} (Vigencia ${res?.anio || this.anio()})`,
+      detalles: [
+        { etiqueta: 'Nombre Presupuesto', valor: res?.nombre || '' },
+        { etiqueta: 'Centro de Costo', valor: res?.centroCostoId || 'Institucional / General' },
+        { etiqueta: 'Estado', valor: 'BORRADOR (En formulación)' },
+        { etiqueta: 'Normativa', valor: 'Decreto 1075 de 2015' },
+      ],
+      mensaje: 'Los datos del proyecto de presupuesto fueron guardados en la base de datos institucional. Permanecerá editable hasta su adopción formal por el Consejo Directivo.',
+    });
+  }
+
+  onPresupuestoAprobado(res: any): void {
+    const id = this.presupuestoSeleccionadoId();
+    this.cargarPresupuestos(this.anio(), id);
+    this.alertaToast.set(`🏛️ Presupuesto "${res?.nombre || ''}" aprobado formalmente mediante Acuerdo "${res?.numeroAcuerdo || ''}".`);
+    this.abrirModalRespuesta({
+      tipo: 'APROBACION',
+      titulo: '¡Presupuesto Formalmente Adoptado!',
+      subtitulo: `${res?.nombre || ''} — Vigencia ${res?.anio || this.anio()}`,
+      detalles: [
+        { etiqueta: 'Acto Administrativo', valor: res?.numeroAcuerdo || 'Acuerdo de Consejo Directivo' },
+        { etiqueta: 'Fecha del Acuerdo', valor: res?.fechaAcuerdo ? String(res.fechaAcuerdo).split('T')[0] : 'Hoy' },
+        { etiqueta: 'Aprobado Por', valor: res?.aprobadoPor || 'Consejo Directivo' },
+        { etiqueta: 'Nuevo Estado', valor: 'APROBADO (Vinculante)' },
+      ],
+      mensaje: 'El presupuesto ha adquirido fuerza vinculante y formal ante el Consejo Directivo y los entes de control educativo. Toda modificación posterior deberá tramitarse como Adición, Traslado o Reducción.',
+    });
+  }
+
+  onTrasladoCreado(res: any): void {
+    const id = this.presupuestoSeleccionadoId();
+    if (id) {
+      this.cargarEjecucion(id);
+    }
+    const montoFormat = res?.monto
+      ? '$ ' + Number(res.monto).toLocaleString('es-CO', { minimumFractionDigits: 2 })
+      : '$ 0,00';
+
+    this.alertaToast.set(`🔄 Traslado presupuestal de ${montoFormat} efectuado con éxito.`);
+    this.abrirModalRespuesta({
+      tipo: 'TRASLADO',
+      titulo: '¡Traslado Presupuestal Ejecutado!',
+      subtitulo: `Crédito y Contracrédito — ${res?.modificacion?.numeroAcuerdo || 'Acuerdo de Consejo'}`,
+      detalles: [
+        { etiqueta: 'Rubro Cedente (Contracrédito)', valor: res?.modificacion?.rubroOrigenCodigo || 'Origen' },
+        { etiqueta: 'Rubro Beneficiario (Crédito)', valor: res?.modificacion?.rubroDestinoCodigo || 'Destino' },
+        { etiqueta: 'Monto Trasladado', valor: montoFormat },
+        { etiqueta: 'Acuerdo Consejo', valor: res?.modificacion?.numeroAcuerdo || 'N/A' },
+        { etiqueta: 'Impacto Presupuesto Total', valor: '$ 0,00 (Techo total inalterado)' },
+      ],
+      mensaje: 'El traslado presupuestal fue registrado conforme a la ley colombiana. Las apropiaciones de ambos rubros se han actualizado y el acto quedó asentado en el Libro de Modificaciones.',
+    });
+  }
+
+  onReduccionCreada(res: any): void {
+    const id = this.presupuestoSeleccionadoId();
+    if (id) {
+      this.cargarPresupuestos(this.anio(), id);
+      this.cargarEjecucion(id);
+    }
+    const montoFormat = res?.modificacion?.monto
+      ? '$ ' + Number(res.modificacion.monto).toLocaleString('es-CO', { minimumFractionDigits: 2 })
+      : '$ 0,00';
+
+    this.alertaToast.set(`📉 Reducción presupuestal de ${montoFormat} aplicada al rubro "${res?.rubro?.codigo || ''}".`);
+    this.abrirModalRespuesta({
+      tipo: 'REDUCCION',
+      titulo: '¡Reducción Presupuestal Aplicada!',
+      subtitulo: `Rubro ${res?.rubro?.codigo || ''} — ${res?.rubro?.nombre || ''}`,
+      detalles: [
+        { etiqueta: 'Rubro Afectado', valor: `${res?.rubro?.codigo || ''} - ${res?.rubro?.nombre || ''}` },
+        { etiqueta: 'Monto Reducido', valor: montoFormat },
+        { etiqueta: 'Nuevo Techo del Rubro', valor: '$ ' + Number(res?.rubro?.presupuestado || 0).toLocaleString('es-CO', { minimumFractionDigits: 2 }) },
+        { etiqueta: 'Acuerdo Consejo', valor: res?.modificacion?.numeroAcuerdo || 'N/A' },
+      ],
+      mensaje: 'La reducción de apropiación presupuestal fue legalmente procesada y el total del presupuesto anual ha sido actualizado.',
     });
   }
 }

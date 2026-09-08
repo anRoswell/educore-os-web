@@ -1,8 +1,18 @@
 import { Component, input, output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+export type TipoRespuestaPresupuesto =
+  | 'PRESUPUESTO'
+  | 'RUBRO'
+  | 'ADICION'
+  | 'INFO'
+  | 'TRASLADO'
+  | 'REDUCCION'
+  | 'APROBACION'
+  | 'EDICION';
+
 export interface RespuestaPresupuestoData {
-  tipo: 'PRESUPUESTO' | 'RUBRO' | 'ADICION' | 'INFO';
+  tipo: TipoRespuestaPresupuesto;
   titulo: string;
   subtitulo?: string;
   detalles: { etiqueta: string; valor: string }[];
@@ -29,7 +39,19 @@ export interface RespuestaPresupuestoData {
           <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 text-xl shadow-xs">
-                ✅
+                @if (data()?.tipo === 'APROBACION') {
+                  🏛️
+                } @else if (data()?.tipo === 'TRASLADO') {
+                  🔄
+                } @else if (data()?.tipo === 'REDUCCION') {
+                  📉
+                } @else if (data()?.tipo === 'EDICION') {
+                  ✏️
+                } @else if (data()?.tipo === 'ADICION') {
+                  ⚡
+                } @else {
+                  ✅
+                }
               </div>
               <div>
                 <h3 class="modal-title font-bold text-base text-slate-800 tracking-tight" data-testid="modal-respuesta-title">

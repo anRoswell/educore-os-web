@@ -6,8 +6,22 @@ import { ContabilidadMapeoComponent } from './tabs/contabilidad-mapeo.component'
 import { ContabilidadPeriodosComponent } from './tabs/contabilidad-periodos.component';
 import { ContabilidadReportesComponent } from './tabs/contabilidad-reportes.component';
 import { ContabilidadDianComponent } from './tabs/contabilidad-dian.component';
+import { ContabilidadDiferidosComponent } from './tabs/contabilidad-diferidos.component';
+import { ContabilidadNominaComponent } from './tabs/contabilidad-nomina.component';
+import { ContabilidadCajaMenorTabComponent } from './tabs/contabilidad-caja-menor.component';
+import { ContabilidadCertificadosProveedoresTabComponent } from './tabs/contabilidad-certificados-proveedores.component';
 
-export type TabActivo = 'puc' | 'comprobantes' | 'mapeo' | 'periodos' | 'reportes' | 'dian';
+export type TabActivo =
+  | 'puc'
+  | 'comprobantes'
+  | 'mapeo'
+  | 'periodos'
+  | 'reportes'
+  | 'dian'
+  | 'diferidos'
+  | 'nomina'
+  | 'caja-menor'
+  | 'certificados-prov';
 
 @Component({
   selector: 'app-contabilidad',
@@ -20,6 +34,10 @@ export type TabActivo = 'puc' | 'comprobantes' | 'mapeo' | 'periodos' | 'reporte
     ContabilidadPeriodosComponent,
     ContabilidadReportesComponent,
     ContabilidadDianComponent,
+    ContabilidadDiferidosComponent,
+    ContabilidadNominaComponent,
+    ContabilidadCajaMenorTabComponent,
+    ContabilidadCertificadosProveedoresTabComponent,
   ],
   template: `
     <div class="page-header" data-testid="contabilidad-page-header">
@@ -96,6 +114,42 @@ export type TabActivo = 'puc' | 'comprobantes' | 'mapeo' | 'periodos' | 'reporte
       >
         🏛️ DIAN & Docs Electrónicos
       </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'diferidos'"
+        (click)="setTab('diferidos')"
+        data-testid="tab-diferidos"
+      >
+        ⏳ Ingresos Diferidos NIIF 15
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'nomina'"
+        (click)="setTab('nomina')"
+        data-testid="tab-nomina"
+      >
+        👥 Nómina Contable NIC 19
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'caja-menor'"
+        (click)="setTab('caja-menor')"
+        data-testid="tab-caja-menor"
+      >
+        💼 Caja Menor Escolar
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'certificados-prov'"
+        (click)="setTab('certificados-prov')"
+        data-testid="tab-certificados-prov"
+      >
+        📜 Certificados Proveedores
+      </button>
     </div>
 
     <div class="tab-panel" data-testid="contabilidad-tab-panel">
@@ -116,6 +170,18 @@ export type TabActivo = 'puc' | 'comprobantes' | 'mapeo' | 'periodos' | 'reporte
       }
       @if (tab() === 'dian') {
         <app-contabilidad-dian />
+      }
+      @if (tab() === 'diferidos') {
+        <app-contabilidad-diferidos />
+      }
+      @if (tab() === 'nomina') {
+        <app-contabilidad-nomina />
+      }
+      @if (tab() === 'caja-menor') {
+        <app-contabilidad-caja-menor />
+      }
+      @if (tab() === 'certificados-prov') {
+        <app-contabilidad-certificados-proveedores />
       }
     </div>
   `,

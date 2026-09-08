@@ -27,6 +27,9 @@
 /* 5. Editor de texto enriquecido (Quill) */
 @use 'quill/dist/quill.snow.css';
 
+/* 6. Selector de fecha y hora moderno (Flatpickr) */
+@use 'styles/flatpickr';
+
 /* ==========================================================================
    COMPONENTES ESPECÍFICOS DE EDUCORE (Compatibilidad con código existente)
    ========================================================================== */

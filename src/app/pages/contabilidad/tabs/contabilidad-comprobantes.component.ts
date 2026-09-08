@@ -6,6 +6,7 @@ import { Asiento, TipoComprobante, EstadoAsiento } from '../models/contabilidad.
 import { ModalNuevoAsientoComponent } from '../modals/modal-nuevo-asiento.component';
 import { ModalDetalleAsientoComponent } from '../modals/modal-detalle-asiento.component';
 import { ModalAnularAsientoComponent } from '../modals/modal-anular-asiento.component';
+import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
 
 @Component({
   selector: 'app-contabilidad-comprobantes',
@@ -16,17 +17,20 @@ import { ModalAnularAsientoComponent } from '../modals/modal-anular-asiento.comp
     ModalNuevoAsientoComponent,
     ModalDetalleAsientoComponent,
     ModalAnularAsientoComponent,
+    FlatpickrDirective,
   ],
   template: `
     <div class="tab-content" data-testid="tab-content-comprobantes">
       <!-- Filtros y Barra de Acciones -->
-      <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <div class="flex items-end gap-3 mb-4 flex-wrap">
         <div class="form-group-inline">
           <label class="form-label-sm">Desde</label>
           <input
             class="input-base input-sm"
             data-testid="input-filtro-desde"
-            type="date"
+            type="text"
+            appFlatpickr
+            placeholder="dd/mm/aaaa"
             [ngModel]="filtroDesde()"
             (ngModelChange)="filtroDesde.set($event)"
           />
@@ -36,7 +40,10 @@ import { ModalAnularAsientoComponent } from '../modals/modal-anular-asiento.comp
           <input
             class="input-base input-sm"
             data-testid="input-filtro-hasta"
-            type="date"
+            type="text"
+            appFlatpickr
+            [minDate]="filtroDesde()"
+            placeholder="dd/mm/aaaa"
             [ngModel]="filtroHasta()"
             (ngModelChange)="filtroHasta.set($event)"
           />

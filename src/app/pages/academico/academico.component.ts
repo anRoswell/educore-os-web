@@ -9,11 +9,12 @@ import { CalificacionLoteItem } from '../../core/models';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 import { ParametrosService, Parametro } from '../../core/services/parametros.service';
 import { ModalBarridoMateriasPerdidasComponent } from './modales/modal-barrido-materias-perdidas.component';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
 
 @Component({
   selector: 'app-academico',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalBarridoMateriasPerdidasComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalBarridoMateriasPerdidasComponent, FlatpickrDirective],
   template: `
     <div class="academico-container">
       <!-- Header -->
@@ -446,16 +447,21 @@ import { ModalBarridoMateriasPerdidasComponent } from './modales/modal-barrido-m
                 <div class="form-group">
                   <label class="form-label">Fecha de Inicio *</label>
                   <input
-                    type="date"
+                    type="text"
+                    appFlatpickr
                     class="form-control"
+                    placeholder="dd/mm/aaaa"
                     [(ngModel)]="nuevoAnio.fechaInicio"
                   />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Fecha de Cierre *</label>
                   <input
-                    type="date"
+                    type="text"
+                    appFlatpickr
+                    [minDate]="nuevoAnio.fechaInicio"
                     class="form-control"
+                    placeholder="dd/mm/aaaa"
                     [(ngModel)]="nuevoAnio.fechaFin"
                   />
                 </div>
@@ -955,16 +961,21 @@ import { ModalBarridoMateriasPerdidasComponent } from './modales/modal-barrido-m
                 <div class="form-group">
                   <label class="form-label">Fecha de Inicio *</label>
                   <input
-                    type="date"
+                    type="text"
+                    appFlatpickr
                     class="form-control"
+                    placeholder="dd/mm/aaaa"
                     [(ngModel)]="nuevoPeriodo.fechaInicio"
                   />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Fecha de Fin *</label>
                   <input
-                    type="date"
+                    type="text"
+                    appFlatpickr
+                    [minDate]="nuevoPeriodo.fechaInicio"
                     class="form-control"
+                    placeholder="dd/mm/aaaa"
                     [(ngModel)]="nuevoPeriodo.fechaFin"
                   />
                 </div>
@@ -974,8 +985,12 @@ import { ModalBarridoMateriasPerdidasComponent } from './modales/modal-barrido-m
                 <div class="form-group">
                   <label class="form-label">Límite para Docentes</label>
                   <input
-                    type="date"
+                    type="text"
+                    appFlatpickr
+                    [minDate]="nuevoPeriodo.fechaInicio"
+                    [maxDate]="nuevoPeriodo.fechaFin"
                     class="form-control"
+                    placeholder="dd/mm/aaaa"
                     [(ngModel)]="nuevoPeriodo.fechaLimiteDocentes"
                   />
                 </div>
@@ -1080,7 +1095,7 @@ import { ModalBarridoMateriasPerdidasComponent } from './modales/modal-barrido-m
                 </div>
                 <div class="form-group">
                   <label class="form-label">Fecha Límite de Entrega</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevaActividad.fechaEntrega" />
+                  <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaActividad.fechaEntrega" placeholder="dd/mm/aaaa" />
                 </div>
               </div>
             </div>

@@ -335,3 +335,232 @@ export interface AsientoForm {
   concepto: string;
   lineas: AsientoLineaForm[];
 }
+
+// ─── Ingresos Diferidos NIIF 15 ───────────────────────────────────────────
+export interface AmortizacionCuotaModel {
+  id?: string;
+  mes: number;
+  anio: number;
+  monto: number;
+  estado: 'PENDIENTE' | 'AMORTIZADA' | 'REVERTIDA';
+  fechaAmortizacion?: string;
+  asientoId?: string;
+}
+
+export interface IngresoDiferidoModel {
+  id: string;
+  colegioId: string;
+  estudianteId?: string;
+  matriculaId?: string;
+  estudianteNombre?: string;
+  concepto: string;
+  valorTotal: number;
+  cuotasPactadas: number;
+  cuotasAmortizadas: number;
+  saldoPendiente: number;
+  anioLectivo: number;
+  estado: 'ACTIVO' | 'LIQUIDADO' | 'CANCELADO';
+  cuentaPasivoCodigo: string;
+  cuentaIngresoCodigo: string;
+  cuotas?: AmortizacionCuotaModel[];
+  createdAt?: string;
+}
+
+// ─── Nómina Contable NIC 19 ───────────────────────────────────────────────
+export interface NominaResumenModel {
+  mes: number;
+  anio: number;
+  totalDocentes: number;
+  totalDevengado: number;
+  totalSueldoBasico: number;
+  totalAuxilioTransporte: number;
+  totalBonificaciones: number;
+  totalDeduccionSalud: number;
+  totalDeduccionPension: number;
+  totalOtrasDeducciones: number;
+  totalNetoAPagar: number;
+  provisiones: {
+    cesantias: number;
+    interesesCesantias: number;
+    primaServicios: number;
+    vacaciones: number;
+    totalProvisiones: number;
+  };
+  asientoCausacionId?: string;
+  asientoProvisionesId?: string;
+  asientoDispersionId?: string;
+}
+
+// ─── Cierre Contable Periodo 13 & Apertura ────────────────────────────────
+export interface BalancePrevioCierreModel {
+  anio: number;
+  totalClase4Ingresos: number;
+  totalClase5Gastos: number;
+  totalClase6Costos: number;
+  excedenteNeto: number;
+  cuentaPatrimonialDestino: string;
+  balanceCuadrado: boolean;
+}
+
+export interface ResultadoCierreModel {
+  asientoCierId: string;
+  tipoComprobante: string;
+  consecutivo: number;
+  periodosCerrados: number;
+  saldoCuentas456: number;
+  trasladoExcedente: number;
+  cuentaExcedente: string;
+  estadoPeriodo: string;
+}
+
+export interface ResultadoAperturaModel {
+  asientoApeId: string;
+  tipoComprobante: string;
+  anio: number;
+  totalDebito: number;
+  totalCredito: number;
+  diferencia: number;
+  estado: string;
+}
+
+// ─── Caja Menor & Fondos Fijos Escolar ────────────────────────────────────
+export interface CajaMenorLegalizacionModel {
+  id: string;
+  colegioId: string;
+  cajaMenorId: string;
+  fechaGasto: string;
+  numeroRecibo: string;
+  terceroId?: string;
+  terceroNombre: string;
+  terceroNit: string;
+  concepto: string;
+  cuentaPucGasto: string;
+  valorBruto: number;
+  valorRetencion: number;
+  valorNeto: number;
+  estado: 'PENDIENTE' | 'REEMBOLSADO' | 'ANULADO';
+  asientoEgresoId?: string;
+  comprobanteEgresoNumero?: string;
+  createdAt?: string;
+}
+
+export interface CajaMenorModel {
+  id: string;
+  colegioId: string;
+  nombre: string;
+  responsableNombre: string;
+  responsableCargo?: string;
+  montoAutorizado: number;
+  saldoDisponible: number;
+  porcentajeDisponible?: number;
+  totalGastadoPendiente?: number;
+  alertaReposicion?: boolean;
+  cantidadGastosPendientes?: number;
+  cuentaPucCaja: string;
+  cuentaPucBancos: string;
+  umbralAlertaPorcentaje: number;
+  estado: 'ACTIVA' | 'EN_REPOSICION' | 'CERRADA';
+  legalizaciones?: CajaMenorLegalizacionModel[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CrearCajaMenorModel {
+  colegioId?: string;
+  nombre: string;
+  responsableNombre: string;
+  responsableCargo?: string;
+  montoAutorizado: number;
+  cuentaPucCaja?: string;
+  cuentaPucBancos?: string;
+  umbralAlertaPorcentaje?: number;
+}
+
+export interface RegistrarGastoCajaMenorModel {
+  colegioId?: string;
+  cajaMenorId?: string;
+  fechaGasto: string;
+  numeroRecibo: string;
+  terceroNombre: string;
+  terceroNit: string;
+  concepto: string;
+  cuentaPucGasto: string;
+  valorBruto: number;
+  valorRetencion?: number;
+  valorNeto?: number;
+}
+
+// ─── Certificados a Proveedores Art. 381 & Formulario 350 ─────────────────
+export interface ProveedorRetencionModel {
+  terceroId: string;
+  razonSocial: string;
+  numeroDocumento: string;
+  tipoDocumento: string;
+  email?: string;
+  telefono?: string;
+  ciudad?: string;
+  totalRetenido: number;
+  totalBaseGravable: number;
+  cantidadOperaciones: number;
+  tiposRetencion: string[];
+}
+
+export interface CertificadoProveedorDetalleModel {
+  cuentaCodigo: string;
+  cuentaNombre: string;
+  concepto: string;
+  baseGravable: number;
+  porcentajeTarifa: number;
+  montoRetenido: number;
+  tipoRetencion: 'RETEFUENTE' | 'RETEIVA' | 'RETEICA';
+}
+
+export interface CertificadoProveedorResumenModel {
+  colegioId: string;
+  colegioNombre: string;
+  colegioNit: string;
+  colegioDireccion?: string;
+  colegioCiudad?: string;
+  terceroId: string;
+  terceroNombre: string;
+  terceroNit: string;
+  terceroDireccion?: string;
+  terceroCiudad?: string;
+  terceroEmail?: string;
+  anioGravable: number;
+  fechaExpedicion: string;
+  ciudadExpedicion: string;
+  detalles: CertificadoProveedorDetalleModel[];
+  totalBaseGravable: number;
+  totalRetenido: number;
+  totalRetenidoLetras: string;
+  contadorNombre?: string;
+  contadorTP?: string;
+  codigoVerificacion?: string;
+}
+
+export interface RenglonFormulario350Model {
+  codigoRenglon: string;
+  concepto: string;
+  cuentasPuc: string[];
+  baseGravable: number;
+  retencion: number;
+}
+
+export interface Formulario350ResumenModel {
+  colegioId: string;
+  colegioNombre: string;
+  colegioNit: string;
+  anio: number;
+  mes: number;
+  periodoNombre: string;
+  renglonesRenta: RenglonFormulario350Model[];
+  renglonesIva: RenglonFormulario350Model[];
+  totalBasesRenta: number;
+  totalRetencionesRenta: number;
+  totalBasesIva: number;
+  totalRetencionesIva: number;
+  totalRetencionesPagar: number;
+  totalRetencionesLetras: string;
+  fechaGeneracion: string;
+}

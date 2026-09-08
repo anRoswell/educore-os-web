@@ -4,155 +4,295 @@ import { FormsModule } from '@angular/forms';
 import { DianService } from '../services/dian.service';
 import { DianConfigModel, AmbienteDian } from '../models/contabilidad.models';
 
+import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
+
 @Component({
   selector: 'app-modal-config-dian',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FlatpickrDirective],
+  styles: [`
+    .modal-dian-wide {
+      width: 95% !important;
+      max-width: 1140px !important;
+      max-height: 94vh !important;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem !important;
+      border-radius: 1rem;
+      background: #ffffff;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .modal-header-dian {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 0.625rem;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 0.75rem;
+    }
+    .modal-dian-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    @media (max-width: 920px) {
+      .modal-dian-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .modal-dian-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .dian-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.625rem;
+      padding: 0.75rem 0.875rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    }
+    .dian-card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid #e2e8f0;
+      margin: 0;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .form-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #475569;
+      margin: 0;
+    }
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .form-row-nit-dv {
+      display: grid;
+      grid-template-columns: 1fr 70px;
+      gap: 0.5rem;
+    }
+    .form-row-resolucion {
+      display: grid;
+      grid-template-columns: 1fr 90px;
+      gap: 0.5rem;
+    }
+    .cert-file-input {
+      padding-top: 0.2rem !important;
+      font-size: 0.7rem !important;
+      height: 2.1rem !important;
+    }
+    .modal-dian-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0.75rem;
+      margin-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .modal-dian-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  `],
   template: `
     @if (visible()) {
       <div class="modal-backdrop" data-testid="modal-config-dian-backdrop" (click)="cancelar()">
-        <div class="modal-box w-[760px] max-w-[95vw] max-h-[90vh] overflow-y-auto" data-testid="modal-config-dian" (click)="$event.stopPropagation()">
-          <div class="modal-header flex items-center justify-between pb-3 border-b">
+        <div class="modal-box modal-dian-wide" data-testid="modal-config-dian" (click)="$event.stopPropagation()">
+          <div class="modal-header-dian">
             <div>
-              <h3 class="modal-title font-bold text-lg text-slate-800" data-testid="modal-config-dian-title">
+              <h3 class="modal-title font-bold text-base text-slate-800" data-testid="modal-config-dian-title">
                 ⚙️ Configuración Facturación Electrónica DIAN
               </h3>
               <p class="text-xs text-slate-500">Parámetros UBL 2.1, rangos autorizados y credenciales de firma digital</p>
             </div>
-            <button type="button" class="btn-close text-slate-400 hover:text-slate-600" (click)="cancelar()" data-testid="btn-close-config-dian">✕</button>
+            <button type="button" class="btn-close text-slate-400 hover:text-slate-600 text-lg cursor-pointer" (click)="cancelar()" data-testid="btn-close-config-dian">✕</button>
           </div>
 
-          <div class="modal-body space-y-4 pt-3">
+          <div class="modal-body p-0">
             @if (mensajeExito()) {
-              <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded p-2.5 flex items-center gap-2" data-testid="alert-success-config-dian">
+              <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded p-2.5 flex items-center gap-2 mb-2" data-testid="alert-success-config-dian">
                 <span>✅</span> {{ mensajeExito() }}
               </div>
             }
 
             @if (errorMensaje()) {
-              <div class="bg-red-50 border border-red-200 text-red-700 text-xs rounded p-2.5" data-testid="alert-error-config-dian">
+              <div class="bg-red-50 border border-red-200 text-red-700 text-xs rounded p-2.5 mb-2" data-testid="alert-error-config-dian">
                 ⚠️ {{ errorMensaje() }}
               </div>
             }
 
-            <!-- Ambiente y Datos de la Institución -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">1. Identificación y Ambiente</h4>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Ambiente DIAN *</label>
-                  <select class="input-base text-xs" data-testid="select-ambiente-dian" [ngModel]="ambiente()" (ngModelChange)="ambiente.set($event)">
-                    <option value="HABILITACION">Habilitación / Pruebas</option>
-                    <option value="PRODUCCION">Producción Oficial</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">NIT Emisor *</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-nit-emisor" placeholder="900123456" [ngModel]="nitEmisor()" (ngModelChange)="nitEmisor.set($event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Dígito Verificación (DV) *</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-dv-emisor" placeholder="1" [ngModel]="dvEmisor()" (ngModelChange)="dvEmisor.set($event)" />
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Razón Social Institucional *</label>
-                <input type="text" class="input-base text-xs" data-testid="input-razon-social" placeholder="Colegio Campestre Los Álamos S.A.S." [ngModel]="razonSocial()" (ngModelChange)="razonSocial.set($event)" />
-              </div>
-            </div>
+            <div class="modal-dian-grid">
+              <!-- ─── COLUMNA IZQUIERDA: IDENTIFICACIÓN Y RESOLUCIÓN ──────── -->
+              <div class="modal-dian-col">
+                <!-- 1. Identificación y Ambiente -->
+                <div class="dian-card">
+                  <h4 class="dian-card-title">
+                    <span>🏛️</span> 1. Identificación y Ambiente
+                  </h4>
 
-            <!-- Resolución y Numeración -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">2. Resolución DIAN y Rangos de Factura</h4>
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">No. Resolución</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-resolucion-numero" placeholder="18760000001" [ngModel]="resolucion()" (ngModelChange)="resolucion.set($event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Prefijo Factura *</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-prefijo-factura" placeholder="FE" [ngModel]="prefijoFactura()" (ngModelChange)="prefijoFactura.set($event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Rango Desde *</label>
-                  <input type="number" class="input-base text-xs" data-testid="input-rango-desde" [ngModel]="rangoDesde()" (ngModelChange)="rangoDesde.set(+$event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Rango Hasta *</label>
-                  <input type="number" class="input-base text-xs" data-testid="input-rango-hasta" [ngModel]="rangoHasta()" (ngModelChange)="rangoHasta.set(+$event)" />
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Fecha Inicio Vigencia</label>
-                  <input type="date" class="input-base text-xs" data-testid="input-fecha-desde" [ngModel]="fechaDesde()" (ngModelChange)="fechaDesde.set($event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Fecha Fin Vigencia</label>
-                  <input type="date" class="input-base text-xs" data-testid="input-fecha-hasta" [ngModel]="fechaHasta()" (ngModelChange)="fechaHasta.set($event)" />
-                </div>
-              </div>
-            </div>
+                  <div class="form-group">
+                    <label class="form-label">Ambiente DIAN *</label>
+                    <select class="input-base text-xs" data-testid="select-ambiente-dian" [ngModel]="ambiente()" (ngModelChange)="ambiente.set($event)">
+                      <option value="HABILITACION">Habilitación / Pruebas</option>
+                      <option value="PRODUCCION">Producción Oficial</option>
+                    </select>
+                  </div>
 
-            <!-- Parámetros Técnicos y Certificado -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">3. Claves Técnicas y Certificado Digital</h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Clave Técnica DIAN</label>
-                  <input type="password" class="input-base text-xs" data-testid="input-clave-tecnica" placeholder="••••••••••••••••" [ngModel]="claveTecnica()" (ngModelChange)="claveTecnica.set($event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">PIN del Software</label>
-                  <input type="password" class="input-base text-xs" data-testid="input-pin-software" placeholder="12345" [ngModel]="pinSoftware()" (ngModelChange)="pinSoftware.set($event)" />
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">ID Software (UUID DIAN)</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-id-software" placeholder="430b3266-..." [ngModel]="idSoftware()" (ngModelChange)="idSoftware.set($event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">TestSetID (Ambiente Habilitación)</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-test-set-id" placeholder="e1e730dd-..." [ngModel]="testSetId()" (ngModelChange)="testSetId.set($event)" />
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Contraseña del Certificado (.p12/.pfx)</label>
-                  <input type="password" class="input-base text-xs" data-testid="input-password-cert" placeholder="Contraseña de exportación privada" [ngModel]="passwordCert()" (ngModelChange)="passwordCert.set($event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Cargar Archivo de Certificado (.p12/.pfx)</label>
-                  <input type="file" class="input-base text-xs" data-testid="file-certificado" (change)="onCertFileSelected($event)" accept=".p12,.pfx" />
-                  @if (tieneCertificadoActual()) {
-                    <span class="text-xs text-emerald-600 block mt-1 font-medium">✓ Certificado digital cargado y activo</span>
-                  }
-                </div>
-              </div>
-            </div>
+                  <div class="form-row-nit-dv">
+                    <div class="form-group">
+                      <label class="form-label">NIT Emisor *</label>
+                      <input type="text" class="input-base text-xs" data-testid="input-nit-emisor" placeholder="900123456" [ngModel]="nitEmisor()" (ngModelChange)="nitEmisor.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">DV *</label>
+                      <input type="text" class="input-base text-xs text-center font-bold" data-testid="input-dv-emisor" placeholder="1" [ngModel]="dvEmisor()" (ngModelChange)="dvEmisor.set($event)" />
+                    </div>
+                  </div>
 
-            <!-- Prefijos Notas y Documento Soporte -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">4. Notas Electrónicas y Documento Soporte</h4>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Prefijo Nota Crédito</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-prefijo-nc" placeholder="NC" [ngModel]="prefijoNc()" (ngModelChange)="prefijoNc.set($event)" />
+                  <div class="form-group">
+                    <label class="form-label">Razón Social Institucional *</label>
+                    <input type="text" class="input-base text-xs" data-testid="input-razon-social" placeholder="Colegio Campestre Los Álamos S.A.S." [ngModel]="razonSocial()" (ngModelChange)="razonSocial.set($event)" />
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Prefijo Nota Débito</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-prefijo-nd" placeholder="ND" [ngModel]="prefijoNd()" (ngModelChange)="prefijoNd.set($event)" />
+
+                <!-- 2. Resolución DIAN y Rangos de Factura -->
+                <div class="dian-card">
+                  <h4 class="dian-card-title">
+                    <span>📜</span> 2. Resolución DIAN y Rangos de Factura
+                  </h4>
+
+                  <div class="form-row-resolucion">
+                    <div class="form-group">
+                      <label class="form-label">No. Resolución</label>
+                      <input type="text" class="input-base text-xs" data-testid="input-resolucion-numero" placeholder="18760000001" [ngModel]="resolucion()" (ngModelChange)="resolucion.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Prefijo *</label>
+                      <input type="text" class="input-base text-xs font-semibold uppercase" data-testid="input-prefijo-factura" placeholder="FE" [ngModel]="prefijoFactura()" (ngModelChange)="prefijoFactura.set($event)" />
+                    </div>
+                  </div>
+
+                  <!-- Desde y Hasta comparten la misma fila (Rangos numéricos) -->
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">Rango Desde *</label>
+                      <input type="number" class="input-base text-xs" data-testid="input-rango-desde" [ngModel]="rangoDesde()" (ngModelChange)="rangoDesde.set(+$event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Rango Hasta *</label>
+                      <input type="number" class="input-base text-xs" data-testid="input-rango-hasta" [ngModel]="rangoHasta()" (ngModelChange)="rangoHasta.set(+$event)" />
+                    </div>
+                  </div>
+
+                  <!-- Desde y Hasta comparten la misma fila (Fechas de vigencia) -->
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">Fecha Inicio (Desde)</label>
+                      <input type="text" appFlatpickr class="input-base text-xs" data-testid="input-fecha-desde" placeholder="dd/mm/aaaa" [ngModel]="fechaDesde()" (ngModelChange)="fechaDesde.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Fecha Fin (Hasta)</label>
+                      <input type="text" appFlatpickr [minDate]="fechaDesde()" class="input-base text-xs" data-testid="input-fecha-hasta" placeholder="dd/mm/aaaa" [ngModel]="fechaHasta()" (ngModelChange)="fechaHasta.set($event)" />
+                    </div>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label text-xs font-semibold">Prefijo Doc. Soporte</label>
-                  <input type="text" class="input-base text-xs" data-testid="input-prefijo-ds" placeholder="DS" [ngModel]="prefijoDs()" (ngModelChange)="prefijoDs.set($event)" />
+              </div>
+
+              <!-- ─── COLUMNA DERECHA: TÉCNICA, CERTIFICADO Y PREFIJOS ────── -->
+              <div class="modal-dian-col">
+                <!-- 3. Claves Técnicas y Certificado Digital -->
+                <div class="dian-card">
+                  <h4 class="dian-card-title">
+                    <span>🔐</span> 3. Claves Técnicas y Certificado Digital
+                  </h4>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">Clave Técnica DIAN</label>
+                      <input type="password" class="input-base text-xs" data-testid="input-clave-tecnica" placeholder="••••••••••••••••" [ngModel]="claveTecnica()" (ngModelChange)="claveTecnica.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">PIN del Software</label>
+                      <input type="password" class="input-base text-xs" data-testid="input-pin-software" placeholder="12345" [ngModel]="pinSoftware()" (ngModelChange)="pinSoftware.set($event)" />
+                    </div>
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">ID Software (UUID DIAN)</label>
+                      <input type="text" class="input-base text-xs font-mono" data-testid="input-id-software" placeholder="430b3266-..." [ngModel]="idSoftware()" (ngModelChange)="idSoftware.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">TestSetID (Habilitación)</label>
+                      <input type="text" class="input-base text-xs font-mono" data-testid="input-test-set-id" placeholder="e1e730dd-..." [ngModel]="testSetId()" (ngModelChange)="testSetId.set($event)" />
+                    </div>
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-group">
+                      <label class="form-label">Contraseña Certificado</label>
+                      <input type="password" class="input-base text-xs" data-testid="input-password-cert" placeholder="Contraseña de exportación" [ngModel]="passwordCert()" (ngModelChange)="passwordCert.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Archivo (.p12/.pfx)</label>
+                      <input type="file" class="input-base text-xs cert-file-input" data-testid="file-certificado" (change)="onCertFileSelected($event)" accept=".p12,.pfx" />
+                      @if (tieneCertificadoActual()) {
+                        <span class="text-[11px] text-emerald-600 font-medium block mt-0.5">✓ Certificado cargado y activo</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. Notas Electrónicas y Documento Soporte -->
+                <div class="dian-card">
+                  <h4 class="dian-card-title">
+                    <span>📑</span> 4. Notas Electrónicas y Doc. Soporte
+                  </h4>
+
+                  <div class="form-row-3">
+                    <div class="form-group">
+                      <label class="form-label">Prefijo Nota Crédito</label>
+                      <input type="text" class="input-base text-xs font-semibold uppercase text-center" data-testid="input-prefijo-nc" placeholder="NC" [ngModel]="prefijoNc()" (ngModelChange)="prefijoNc.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Prefijo Nota Débito</label>
+                      <input type="text" class="input-base text-xs font-semibold uppercase text-center" data-testid="input-prefijo-nd" placeholder="ND" [ngModel]="prefijoNd()" (ngModelChange)="prefijoNd.set($event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Prefijo Doc. Soporte</label>
+                      <input type="text" class="input-base text-xs font-semibold uppercase text-center" data-testid="input-prefijo-ds" placeholder="DS" [ngModel]="prefijoDs()" (ngModelChange)="prefijoDs.set($event)" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="modal-actions flex items-center justify-between pt-4 border-t mt-4">
+          <div class="modal-dian-actions">
             <button
               type="button"
               class="btn btn-outline btn-sm"
@@ -167,10 +307,10 @@ import { DianConfigModel, AmbienteDian } from '../models/contabilidad.models';
               }
             </button>
 
-            <div class="flex items-center gap-2">
+            <div class="modal-dian-actions-right">
               <button
                 type="button"
-                class="btn-secondary"
+                class="btn btn-secondary btn-sm"
                 data-testid="btn-cancelar-config-dian"
                 (click)="cancelar()"
               >
@@ -178,7 +318,7 @@ import { DianConfigModel, AmbienteDian } from '../models/contabilidad.models';
               </button>
               <button
                 type="button"
-                class="btn-primary"
+                class="btn btn-primary btn-sm"
                 data-testid="btn-guardar-config-dian"
                 [disabled]="guardando()"
                 (click)="guardar()"

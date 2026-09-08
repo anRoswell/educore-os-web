@@ -9,6 +9,7 @@ import { ParametrosService, Parametro } from '../../core/services/parametros.ser
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 import { SearchableSelectComponent, SearchableOption } from '../../shared/components/searchable-select.component';
 import { imprimirElementoHtml } from '../../core/utils/print.utils';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
 
 export interface CasoConvivenciaItem {
   id: string;
@@ -48,7 +49,7 @@ export interface ActaComiteItem {
 @Component({
   selector: 'app-convivencia',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, SearchableSelectComponent, FlatpickrDirective],
   template: `
     <div class="convivencia-page animate-fade-in">
       <!-- HEADER PRINCIPAL -->
@@ -475,9 +476,11 @@ export interface ActaComiteItem {
                 <div class="form-group">
                   <label class="form-label">Fecha de los Hechos *</label>
                   <input
-                    type="date"
+                    type="text"
+                    appFlatpickr
                     class="form-control"
                     [(ngModel)]="nuevoCasoForm.fechaHechos"
+                    placeholder="dd/mm/aaaa"
                   />
                 </div>
 
@@ -646,7 +649,7 @@ export interface ActaComiteItem {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Fecha de Reunión *</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevaActaForm.fechaReunion" />
+                  <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaActaForm.fechaReunion" placeholder="dd/mm/aaaa" />
                 </div>
 
                 <div class="form-group" style="grid-column: span 2;">

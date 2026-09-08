@@ -53,10 +53,12 @@ export interface AsistenciaComedorItem {
   alertaAlergiaDisparada?: boolean;
 }
 
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
+
 @Component({
   selector: 'app-transporte-restaurante',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FlatpickrDirective],
   template: `
     <div class="transporte-page animate-fade-in">
       <!-- HEADER PRINCIPAL -->
@@ -525,7 +527,7 @@ export interface AsistenciaComedorItem {
               <div class="form-grid">
                 <div class="form-group">
                   <label class="form-label">Fecha del Servicio:</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevoMenu.fecha" />
+                  <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevoMenu.fecha" placeholder="dd/mm/aaaa" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Tipo de Servicio:</label>

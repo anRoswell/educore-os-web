@@ -5,6 +5,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalSolicitudArcoComponent } from '../../shared/components/modal-solicitud-arco.component';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
 
 export enum VistaDocumental {
   KANBAN = 'KANBAN',
@@ -169,7 +170,7 @@ export interface FirmaUsuarioItem {
 @Component({
   selector: 'app-documental',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalSolicitudArcoComponent],
+  imports: [CommonModule, FormsModule, ModalSolicitudArcoComponent, FlatpickrDirective],
   template: `
     <div class="doc-container animate-fadeIn">
       <!-- HEADER -->
@@ -565,8 +566,10 @@ export interface FirmaUsuarioItem {
 
                       @if (isFieldType(fld, 'FECHA', 'DATE')) {
                         <input
-                          type="date"
+                          type="text"
+                          appFlatpickr
                           class="input-custom"
+                          placeholder="dd/mm/aaaa"
                           [(ngModel)]="formData()[fld.campo]"
                         />
                       }

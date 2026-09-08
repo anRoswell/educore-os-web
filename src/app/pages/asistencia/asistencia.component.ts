@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
 
 interface AlumnoAsistencia {
   matriculaId: string;
@@ -18,7 +19,7 @@ interface AlumnoAsistencia {
 @Component({
   selector: 'app-asistencia',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FlatpickrDirective],
   template: `
     <div class="asistencia-container">
       <div class="page-header">
@@ -224,11 +225,11 @@ interface AlumnoAsistencia {
                 <div class="grid-cols-2 mt-3">
                   <div class="form-group">
                     <label class="form-label">Fecha Inicio</label>
-                    <input type="date" class="form-control" [(ngModel)]="nuevaExcusa.fechaInicio" />
+                    <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaExcusa.fechaInicio" placeholder="dd/mm/aaaa" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">Fecha Fin</label>
-                    <input type="date" class="form-control" [(ngModel)]="nuevaExcusa.fechaFin" />
+                    <input type="text" appFlatpickr [minDate]="nuevaExcusa.fechaInicio" class="form-control" [(ngModel)]="nuevaExcusa.fechaFin" placeholder="dd/mm/aaaa" />
                   </div>
                 </div>
                 <div class="form-group mt-3">
@@ -352,11 +353,11 @@ interface AlumnoAsistencia {
               <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                   <label class="form-label">Fecha Inicio</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevaExcusa.fechaInicio" />
+                  <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaExcusa.fechaInicio" placeholder="dd/mm/aaaa" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Fecha Fin</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevaExcusa.fechaFin" />
+                  <input type="text" appFlatpickr [minDate]="nuevaExcusa.fechaInicio" class="form-control" [(ngModel)]="nuevaExcusa.fechaFin" placeholder="dd/mm/aaaa" />
                 </div>
               </div>
               <div class="form-group mt-3">

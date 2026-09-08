@@ -16,10 +16,11 @@
 
 .form-group-inline {
   display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  margin-right: var(--spacing-3);
-  margin-bottom: var(--spacing-2);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-right: var(--spacing-2);
+  margin-bottom: var(--spacing-1);
 }
 
 .form-label {
@@ -37,10 +38,13 @@
 }
 
 .form-label-sm {
+  display: block;
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
   color: var(--text-secondary);
   white-space: nowrap;
+  line-height: 1.25;
+  margin-bottom: 2px;
 }
 
 .form-help {
@@ -201,6 +205,17 @@ textarea.input-base {
   padding: 0.75rem 1rem;
   font-size: var(--text-base);
   border-radius: var(--radius-lg);
+}
+
+/* Select / Input para selección de Año Fiscal / Lectivo (4 dígitos) */
+.w-year,
+.w-select-year,
+.select-year,
+.input-year {
+  width: 120px !important;
+  min-width: 110px !important;
+  font-weight: 600;
+  text-align: center;
 }
 
 /* ─────────────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
 import { imprimirElementoHtml } from '../../core/utils/print.utils';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
 
 interface CandidatoTarjeton {
   id: string;
@@ -30,7 +31,7 @@ interface JornadaInfo {
 @Component({
   selector: 'app-gobierno-escolar',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, FlatpickrDirective],
   template: `
     <div class="gobierno-page-container">
       <!-- Header -->
@@ -444,11 +445,11 @@ interface JornadaInfo {
               <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
                   <label class="form-label">Fecha Apertura *</label>
-                  <input type="datetime-local" class="form-control" [(ngModel)]="nuevaJornada.fechaApertura" />
+                  <input type="text" appFlatpickr [enableTime]="true" class="form-control" [(ngModel)]="nuevaJornada.fechaApertura" placeholder="dd/mm/aaaa --:--" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Fecha Cierre *</label>
-                  <input type="datetime-local" class="form-control" [(ngModel)]="nuevaJornada.fechaCierre" />
+                  <input type="text" appFlatpickr [enableTime]="true" [minDate]="nuevaJornada.fechaApertura" class="form-control" [(ngModel)]="nuevaJornada.fechaCierre" placeholder="dd/mm/aaaa --:--" />
                 </div>
               </div>
 

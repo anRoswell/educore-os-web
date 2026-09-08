@@ -10,10 +10,18 @@ import { Asiento, TipoComprobante, EstadoAsiento } from '../models/contabilidad.
     @if (visible() && asiento()) {
       <div class="modal-backdrop" data-testid="modal-detalle-asiento-backdrop" (click)="cerrar()">
         <div class="modal-box w-[750px]" data-testid="modal-detalle-asiento" (click)="$event.stopPropagation()">
-          <div class="modal-header flex items-center justify-between pb-3 border-b">
-            <h3 class="modal-title font-bold text-lg text-gray-800" data-testid="modal-detalle-asiento-title">
-              Comprobante {{ asiento()!.tipoComprobante }}-{{ asiento()!.consecutivo | number:'6.0-0' }}
-            </h3>
+          <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-lg shadow-xs">
+                📑
+              </div>
+              <div>
+                <h3 class="modal-title font-bold text-lg text-slate-800 tracking-tight" data-testid="modal-detalle-asiento-title">
+                  Comprobante {{ asiento()!.tipoComprobante }}-{{ asiento()!.consecutivo | number:'6.0-0' }}
+                </h3>
+                <span class="text-xs text-slate-400 block">Detalle de movimientos y partida doble</span>
+              </div>
+            </div>
             <span [class]="badgeEstadoClass(asiento()!.estado)" data-testid="badge-detalle-estado">
               {{ asiento()!.estado }}
             </span>

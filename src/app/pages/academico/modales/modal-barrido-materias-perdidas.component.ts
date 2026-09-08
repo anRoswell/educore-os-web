@@ -21,10 +21,12 @@ export interface DiaOpcion {
   icono: string;
 }
 
+import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
+
 @Component({
   selector: 'app-modal-barrido-materias-perdidas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FlatpickrDirective],
   template: `
     <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('barridoMateriasPerdidas') || 1200">
       <div class="modal-card card card-glass" style="max-width: 1050px; width: 96vw; max-height: 92vh; display: flex; flex-direction: column;">
@@ -223,10 +225,16 @@ export interface DiaOpcion {
                       ⏰ Hora Programada de Envío
                     </label>
                     <input
-                      type="time"
+                      type="text"
+                      appFlatpickr
+                      [enableTime]="true"
+                      [noCalendar]="true"
+                      [time24hr]="true"
+                      dateFormat="H:i"
                       class="form-control"
                       style="font-size: 0.95rem; font-weight: 600;"
                       [(ngModel)]="formConfig.horaEnvio"
+                      placeholder="hh:mm"
                     />
                     <small class="text-muted" style="display: block; margin-top: 0.35rem; font-size: 0.75rem;">
                       Hora militar en la que se despacharán las notificaciones en los días programados.

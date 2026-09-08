@@ -4,21 +4,40 @@ import { FormsModule } from '@angular/forms';
 import { ContabilidadService } from '../services/contabilidad.service';
 import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '../models/contabilidad.models';
 
+import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
+
 @Component({
   selector: 'app-modal-nuevo-asiento',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FlatpickrDirective],
   template: `
     @if (visible()) {
       <div class="modal-backdrop" data-testid="modal-nuevo-asiento-backdrop" (click)="cancelar()">
         <div class="modal-box w-[820px]" data-testid="modal-nuevo-asiento" (click)="$event.stopPropagation()">
-          <div class="modal-header flex items-center justify-between pb-3 border-b">
-            <h3 class="modal-title font-bold text-lg text-gray-800" data-testid="modal-nuevo-asiento-title">
-              Nuevo Comprobante Manual
-            </h3>
-            <span class="badge-mini" [class.badge-green]="isBalanced()" [class.badge-red]="!isBalanced()" data-testid="badge-balance-asiento">
-              {{ isBalanced() ? 'Partida Doble Balanceada' : 'Descuadrado' }}
-            </span>
+          <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-lg shadow-xs">
+                📄
+              </div>
+              <div>
+                <h3 class="modal-title font-bold text-lg text-slate-800 tracking-tight" data-testid="modal-nuevo-asiento-title">
+                  Nuevo Comprobante Manual
+                </h3>
+                <span class="text-xs text-slate-400 block">Motor de partida doble NIIF para Pymes</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="badge-mini" [class.badge-green]="isBalanced()" [class.badge-red]="!isBalanced()" data-testid="badge-balance-asiento">
+                {{ isBalanced() ? 'Partida Doble Balanceada' : 'Descuadrado' }}
+              </span>
+              <button
+                type="button"
+                class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-base transition-colors"
+                (click)="cancelar()"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           <div class="modal-body space-y-4 pt-3">
@@ -29,10 +48,10 @@ import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '
             }
 
             <div class="grid grid-cols-3 gap-3">
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Tipo *</label>
+              <div class="form-group flex flex-col items-start gap-1">
+                <label class="form-label text-xs font-semibold text-slate-700">Tipo *</label>
                 <select
-                  class="input-base"
+                  class="input-base w-full text-xs"
                   data-testid="input-nuevo-asiento-tipo"
                   [ngModel]="tipoComprobante()"
                   (ngModelChange)="tipoComprobante.set($event)"
@@ -47,21 +66,23 @@ import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '
                 </select>
               </div>
 
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Fecha *</label>
+              <div class="form-group flex flex-col items-start gap-1">
+                <label class="form-label text-xs font-semibold text-slate-700">Fecha *</label>
                 <input
-                  class="input-base"
-                  type="date"
+                  class="input-base w-full text-xs"
+                  type="text"
+                  appFlatpickr
+                  placeholder="dd/mm/aaaa"
                   data-testid="input-nuevo-asiento-fecha"
                   [ngModel]="fechaContable()"
                   (ngModelChange)="fechaContable.set($event)"
                 />
               </div>
 
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Concepto</label>
+              <div class="form-group flex flex-col items-start gap-1">
+                <label class="form-label text-xs font-semibold text-slate-700">Concepto</label>
                 <input
-                  class="input-base"
+                  class="input-base w-full text-xs"
                   data-testid="input-nuevo-asiento-concepto"
                   [ngModel]="concepto()"
                   (ngModelChange)="concepto.set($event)"
@@ -76,7 +97,7 @@ import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '
                 <table class="tabla-datos w-full text-xs">
                   <thead class="bg-gray-50 border-b sticky top-0">
                     <tr>
-                      <th class="w-40 text-left py-2 px-3">Código PUC</th>
+                      <th class="w-56 text-left py-2 px-3">Código PUC</th>
                       <th class="text-left py-2 px-3">Descripción</th>
                       <th class="w-32 text-right py-2 px-3">Débito</th>
                       <th class="w-32 text-right py-2 px-3">Crédito</th>
@@ -129,7 +150,7 @@ import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '
                         <td class="p-2 text-center">
                           <button
                             type="button"
-                            class="btn-icon text-red-500 hover:text-red-700 text-xs"
+                            class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center font-semibold text-xs transition-colors mx-auto"
                             [attr.data-testid]="'btn-eliminar-linea-' + i"
                             (click)="quitarLinea(i)"
                             title="Eliminar fila"
@@ -148,11 +169,12 @@ import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '
             <div class="flex items-center justify-between pt-1">
               <button
                 type="button"
-                class="btn-secondary btn-sm"
+                class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
                 data-testid="btn-agregar-linea-asiento"
                 (click)="agregarLinea()"
               >
-                + Agregar Línea
+                <span>➕</span>
+                <span>Agregar Línea</span>
               </button>
               <div class="text-xs font-mono space-x-4 flex items-center">
                 <span>Débito: <strong>{{ totalDebito() | number:'1.2-2' }}</strong></span>
@@ -170,10 +192,10 @@ import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '
             </div>
           </div>
 
-          <div class="modal-actions flex justify-end gap-2 pt-4 border-t mt-4">
+          <div class="modal-footer flex items-center justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
             <button
               type="button"
-              class="btn-secondary"
+              class="btn btn-secondary btn-sm font-medium"
               data-testid="btn-cancelar-nuevo-asiento"
               (click)="cancelar()"
             >
@@ -181,12 +203,18 @@ import { Asiento, AsientoLineaForm, TipoComprobante, PucCuenta, Tercero } from '
             </button>
             <button
               type="button"
-              class="btn-primary"
+              class="btn btn-primary btn-sm flex items-center gap-2 font-semibold shadow-sm"
               data-testid="btn-guardar-nuevo-asiento"
               [disabled]="!puedeGuardar() || guardando()"
               (click)="guardar()"
             >
-              {{ guardando() ? 'Guardando...' : 'Registrar Asiento' }}
+              @if (guardando()) {
+                <span class="animate-spin text-xs">⏳</span>
+                <span>Registrando...</span>
+              } @else {
+                <span>💾</span>
+                <span>Registrar Asiento</span>
+              }
             </button>
           </div>
         </div>

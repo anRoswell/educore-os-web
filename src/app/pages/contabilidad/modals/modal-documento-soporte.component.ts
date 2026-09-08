@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, input, output, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, input, output, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DianService } from '../services/dian.service';
@@ -13,14 +13,26 @@ import { DocumentoElectronicoModel, Tercero } from '../models/contabilidad.model
     @if (visible()) {
       <div class="modal-backdrop" data-testid="modal-ds-dian-backdrop" (click)="cancelar()">
         <div class="modal-box w-[580px]" data-testid="modal-ds-dian" (click)="$event.stopPropagation()">
-          <div class="modal-header flex items-center justify-between pb-3 border-b">
-            <div>
-              <h3 class="modal-title font-bold text-lg text-indigo-700" data-testid="modal-ds-dian-title">
-                📋 Emitir Documento Soporte Electrónico (Tipo 05)
-              </h3>
-              <p class="text-xs text-slate-500">Adquisiciones y servicios prestados por sujetos no obligados a facturar (Res. 000167)</p>
+          <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-lg shadow-xs">
+                📋
+              </div>
+              <div>
+                <h3 class="modal-title font-bold text-lg text-slate-800 tracking-tight" data-testid="modal-ds-dian-title">
+                  Emitir Documento Soporte Electrónico (Tipo 05)
+                </h3>
+                <span class="text-xs text-slate-400 block">Adquisiciones y servicios prestados por no obligados a facturar (Res. 000167)</span>
+              </div>
             </div>
-            <button type="button" class="btn-close text-slate-400 hover:text-slate-600" (click)="cancelar()" data-testid="btn-close-ds-dian">✕</button>
+            <button
+              type="button"
+              class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-base transition-colors"
+              (click)="cancelar()"
+              data-testid="btn-close-ds-dian"
+            >
+              ✕
+            </button>
           </div>
 
           <div class="modal-body space-y-4 pt-3">
@@ -30,10 +42,10 @@ import { DocumentoElectronicoModel, Tercero } from '../models/contabilidad.model
               </div>
             }
 
-            <div class="form-group">
-              <label class="form-label text-xs font-semibold">Tercero / Proveedor (Persona Natural) *</label>
+            <div class="form-group flex flex-col items-start gap-1">
+              <label class="form-label text-xs font-semibold text-slate-700">Tercero / Proveedor (Persona Natural) *</label>
               <select
-                class="input-base text-xs"
+                class="input-base w-full text-xs"
                 data-testid="select-tercero-ds"
                 [ngModel]="terceroId()"
                 (ngModelChange)="terceroId.set($event)"
@@ -47,10 +59,10 @@ import { DocumentoElectronicoModel, Tercero } from '../models/contabilidad.model
               </select>
             </div>
 
-            <div class="form-group">
-              <label class="form-label text-xs font-semibold">Concepto del Bien o Servicio *</label>
+            <div class="form-group flex flex-col items-start gap-1">
+              <label class="form-label text-xs font-semibold text-slate-700">Concepto del Bien o Servicio *</label>
               <textarea
-                class="input-base h-20 text-xs"
+                class="input-base w-full h-20 text-xs"
                 data-testid="textarea-concepto-ds"
                 [ngModel]="concepto()"
                 (ngModelChange)="concepto.set($event)"
@@ -59,11 +71,11 @@ import { DocumentoElectronicoModel, Tercero } from '../models/contabilidad.model
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Subtotal Bruto (COP) *</label>
+              <div class="form-group flex flex-col items-start gap-1">
+                <label class="form-label text-xs font-semibold text-slate-700">Subtotal Bruto (COP) *</label>
                 <input
                   type="number"
-                  class="input-base text-xs"
+                  class="input-base w-full text-xs font-mono font-semibold"
                   data-testid="input-subtotal-ds"
                   [ngModel]="subtotal()"
                   (ngModelChange)="subtotal.set(+$event)"
@@ -71,11 +83,11 @@ import { DocumentoElectronicoModel, Tercero } from '../models/contabilidad.model
                 />
               </div>
 
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Retenciones Aplicadas (COP)</label>
+              <div class="form-group flex flex-col items-start gap-1">
+                <label class="form-label text-xs font-semibold text-slate-700">Retenciones Aplicadas (COP)</label>
                 <input
                   type="number"
-                  class="input-base text-xs"
+                  class="input-base w-full text-xs font-mono font-semibold"
                   data-testid="input-retenciones-ds"
                   [ngModel]="retenciones()"
                   (ngModelChange)="retenciones.set(+$event)"
@@ -92,10 +104,10 @@ import { DocumentoElectronicoModel, Tercero } from '../models/contabilidad.model
             </div>
           </div>
 
-          <div class="modal-actions flex justify-end gap-2 pt-4 border-t mt-4">
+          <div class="modal-footer flex items-center justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
             <button
               type="button"
-              class="btn-secondary"
+              class="btn btn-secondary btn-sm font-medium"
               data-testid="btn-cancelar-ds-dian"
               (click)="cancelar()"
             >
@@ -103,15 +115,17 @@ import { DocumentoElectronicoModel, Tercero } from '../models/contabilidad.model
             </button>
             <button
               type="button"
-              class="btn-primary"
+              class="btn btn-primary btn-sm flex items-center gap-2 font-semibold shadow-sm"
               data-testid="btn-confirmar-ds-dian"
               [disabled]="enviando()"
               (click)="emitir()"
             >
               @if (enviando()) {
-                Generando y Transmitiendo...
+                <span class="animate-spin text-xs">⏳</span>
+                <span>Generando y Transmitiendo...</span>
               } @else {
-                📤 Emitir Documento Soporte
+                <span>📤</span>
+                <span>Emitir Documento Soporte</span>
               }
             </button>
           </div>
@@ -142,6 +156,15 @@ export class ModalDocumentoSoporteComponent implements OnInit {
 
   readonly enviando = signal(false);
   readonly errorMensaje = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      if (this.visible()) {
+        this.cargarTerceros();
+        this.errorMensaje.set(null);
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.cargarTerceros();

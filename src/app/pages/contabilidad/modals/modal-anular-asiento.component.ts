@@ -12,10 +12,18 @@ import { Asiento } from '../models/contabilidad.models';
     @if (visible() && asiento()) {
       <div class="modal-backdrop" data-testid="modal-anular-asiento-backdrop" (click)="cancelar()">
         <div class="modal-box w-[500px]" data-testid="modal-anular-asiento" (click)="$event.stopPropagation()">
-          <div class="modal-header flex items-center justify-between pb-3 border-b">
-            <h3 class="modal-title font-bold text-lg text-red-600" data-testid="modal-anular-asiento-title">
-              Anular Comprobante
-            </h3>
+          <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 text-lg shadow-xs">
+                ⚠️
+              </div>
+              <div>
+                <h3 class="modal-title font-bold text-lg text-rose-600 tracking-tight" data-testid="modal-anular-asiento-title">
+                  Anular Comprobante
+                </h3>
+                <span class="text-xs text-slate-400 block">Reversión auditada de movimientos contables</span>
+              </div>
+            </div>
             <span class="badge-mini badge-red">Acción Auditada</span>
           </div>
 

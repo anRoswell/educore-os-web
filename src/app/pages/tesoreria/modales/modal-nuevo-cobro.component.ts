@@ -5,11 +5,12 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ModalManagerService } from '../../../core/services/modal-manager.service';
 import { SearchableSelectComponent, SearchableOption } from '../../../shared/components/searchable-select.component';
 import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.directive';
+import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
 
 @Component({
   selector: 'app-modal-nuevo-cobro',
   standalone: true,
-  imports: [CommonModule, FormsModule, SearchableSelectComponent, CurrencyMaskDirective],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent, CurrencyMaskDirective, FlatpickrDirective],
   template: `
     <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoCobro')">
       <div class="modal-card card card-glass" style="max-width: 820px;">
@@ -62,7 +63,7 @@ import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.
 
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Fecha Límite de Pago *</label>
-              <input type="date" class="form-control" [(ngModel)]="form.fechaVencimiento" />
+              <input type="text" appFlatpickr class="form-control" [(ngModel)]="form.fechaVencimiento" placeholder="dd/mm/aaaa" />
             </div>
           </div>
         </div>

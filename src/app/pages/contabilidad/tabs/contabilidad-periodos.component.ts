@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ContabilidadService } from '../services/contabilidad.service';
 import { PeriodoContable, EstadoPeriodo } from '../models/contabilidad.models';
 import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.component';
+import { ModalCierreAnualComponent } from '../modals/modal-cierre-anual.component';
 
 @Component({
   selector: 'app-contabilidad-periodos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalCerrarPeriodoComponent],
+  imports: [CommonModule, FormsModule, ModalCerrarPeriodoComponent, ModalCierreAnualComponent],
   template: `
     <div class="tab-content" data-testid="tab-content-periodos">
       <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
@@ -20,11 +21,11 @@ import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.comp
             Controle la apertura, bloqueo y cierre de los meses contables del colegio.
           </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-end gap-2.5 flex-wrap">
           <div class="form-group-inline">
             <label class="form-label-sm">Año Fiscal</label>
             <select
-              class="input-base input-sm"
+              class="input-base input-sm w-select-year"
               data-testid="select-anio-periodos"
               [ngModel]="anioSeleccionado()"
               (ngModelChange)="onAnioChange($event)"
@@ -41,6 +42,15 @@ import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.comp
             (click)="abrirModalNuevoPeriodo()"
           >
             + Abrir Nuevo Periodo
+          </button>
+          <button
+            type="button"
+            class="btn-secondary btn-sm flex items-center gap-1 text-purple-800 bg-purple-50 border-purple-200 hover:bg-purple-100"
+            data-testid="btn-cierre-periodo13"
+            (click)="modalCierreAnual.set(true)"
+          >
+            <span>🏛️</span>
+            <span>Cierre Fiscal Periodo 13</span>
           </button>
         </div>
       </div>
@@ -149,15 +159,33 @@ import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.comp
       <!-- Modal: Abrir Nuevo Periodo -->
       @if (modalNuevo()) {
         <div class="modal-backdrop" data-testid="modal-abrir-periodo-backdrop" (click)="cerrarModales()">
-          <div class="modal-box w-[420px]" data-testid="modal-abrir-periodo" (click)="$event.stopPropagation()">
-            <h3 class="modal-title font-bold text-lg text-gray-800" data-testid="modal-abrir-periodo-title">
-              Abrir Nuevo Periodo Contable
-            </h3>
-            <div class="modal-body space-y-3 pt-3">
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Año Fiscal *</label>
+          <div class="modal-box w-[460px]" data-testid="modal-abrir-periodo" (click)="$event.stopPropagation()">
+            <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-lg shadow-xs">
+                  📅
+                </div>
+                <div>
+                  <h3 class="modal-title font-bold text-lg text-slate-800 tracking-tight" data-testid="modal-abrir-periodo-title">
+                    Abrir Nuevo Periodo Contable
+                  </h3>
+                  <span class="text-xs text-slate-400 block">Habilita el registro de transacciones contables para el mes</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-base transition-colors"
+                (click)="cerrarModales()"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div class="modal-body space-y-4 pt-3">
+              <div class="form-group flex flex-col items-start gap-1">
+                <label class="form-label text-xs font-semibold text-slate-700">Año Fiscal *</label>
                 <input
-                  class="input-base"
+                  class="input-base w-full text-xs"
                   data-testid="input-anio-periodo"
                   type="number"
                   [(ngModel)]="formNuevo.anio"
@@ -165,10 +193,10 @@ import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.comp
                   [max]="2099"
                 />
               </div>
-              <div class="form-group">
-                <label class="form-label text-xs font-semibold">Mes *</label>
+              <div class="form-group flex flex-col items-start gap-1">
+                <label class="form-label text-xs font-semibold text-slate-700">Mes *</label>
                 <select
-                  class="input-base"
+                  class="input-base w-full text-xs"
                   data-testid="select-mes-periodo"
                   [(ngModel)]="formNuevo.mes"
                 >
@@ -177,14 +205,16 @@ import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.comp
                   }
                 </select>
               </div>
-              <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-xs text-yellow-700">
-                ⚠ Asegúrese de que el periodo anterior esté correctamente cerrado antes de abrir uno nuevo.
+              <div class="bg-amber-50 border border-amber-200 rounded p-3 text-xs text-amber-800 flex items-start gap-2">
+                <span class="text-sm">⚠️</span>
+                <span>Asegúrese de que el periodo anterior esté correctamente cerrado antes de abrir uno nuevo.</span>
               </div>
             </div>
-            <div class="modal-actions flex justify-end gap-2 pt-4 border-t mt-4">
+
+            <div class="modal-footer flex items-center justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
               <button
                 type="button"
-                class="btn-secondary"
+                class="btn btn-secondary btn-sm font-medium"
                 data-testid="btn-cancelar-abrir-periodo"
                 (click)="cerrarModales()"
               >
@@ -192,12 +222,18 @@ import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.comp
               </button>
               <button
                 type="button"
-                class="btn-primary"
+                class="btn btn-primary btn-sm flex items-center gap-2 font-semibold shadow-sm"
                 data-testid="btn-guardar-abrir-periodo"
                 [disabled]="procesando()"
                 (click)="guardarNuevoPeriodo()"
               >
-                {{ procesando() ? 'Abriendo...' : 'Abrir Periodo' }}
+                @if (procesando()) {
+                  <span class="animate-spin text-xs">⏳</span>
+                  <span>Abriendo...</span>
+                } @else {
+                  <span>📅</span>
+                  <span>Abrir Periodo</span>
+                }
               </button>
             </div>
           </div>
@@ -211,6 +247,14 @@ import { ModalCerrarPeriodoComponent } from '../modals/modal-cerrar-periodo.comp
         (closeModal)="modalCierre.set(false)"
         (cerrado)="onPeriodoCerrado($event)"
       />
+
+      <!-- Modal: Cierre Anual Periodo 13 y Apertura Fiscal -->
+      <app-modal-cierre-anual
+        [visible]="modalCierreAnual()"
+        [anio]="anioSeleccionado()"
+        (closeModal)="modalCierreAnual.set(false)"
+        (cierreCompletado)="onCierreAnualCompletado()"
+      />
     </div>
   `,
 })
@@ -221,6 +265,7 @@ export class ContabilidadPeriodosComponent implements OnInit {
   readonly procesando = signal<boolean>(false);
   readonly modalNuevo = signal<boolean>(false);
   readonly modalCierre = signal<boolean>(false);
+  readonly modalCierreAnual = signal<boolean>(false);
   readonly periodos = signal<PeriodoContable[]>([]);
   readonly periodoSeleccionado = signal<PeriodoContable | null>(null);
   readonly anioSeleccionado = signal<number>(new Date().getFullYear());
@@ -301,6 +346,10 @@ export class ContabilidadPeriodosComponent implements OnInit {
   }
 
   onPeriodoCerrado(_cerrado: PeriodoContable): void {
+    this.cargar();
+  }
+
+  onCierreAnualCompletado(): void {
     this.cargar();
   }
 

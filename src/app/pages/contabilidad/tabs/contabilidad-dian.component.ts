@@ -22,17 +22,136 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
     ModalNotaCreditoDianComponent,
     ModalDocumentoSoporteComponent,
   ],
+  styles: [`
+    .dian-header-banner {
+      background: #ffffff;
+      padding: 1.25rem 1.5rem;
+      border-radius: 14px;
+      border: 1.5px solid #e2e8f0;
+      border-left: 5px solid #4f46e5;
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.06), 0 2px 6px -2px rgba(0, 0, 0, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .dian-header-main {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+    .dian-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #eef2ff;
+      border: 1.5px solid #c7d2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+    .dian-texts-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .dian-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      flex-wrap: wrap;
+    }
+    .dian-title-text {
+      font-size: 1.125rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+      line-height: 1.25;
+    }
+    .dian-subtitle-text {
+      font-size: 0.775rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.3;
+    }
+    .dian-actions-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      flex-wrap: wrap;
+    }
+
+    /* KPI Cards Grid & Widgets Estilo NIIF 15 */
+    .dian-kpis-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 1024px) {
+      .dian-kpis-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .dian-kpis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kpi-widget-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.875rem 1rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+      border-color: #cbd5e1;
+    }
+    .kpi-widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+    }
+    .kpi-widget-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .kpi-widget-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      line-height: 1.2;
+    }
+    .kpi-widget-footer {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 0.35rem;
+    }
+  `],
   template: `
     <div class="tab-content space-y-4" data-testid="tab-content-dian">
       <!-- Status Banner & Config Bar -->
-      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4" data-testid="dian-status-banner">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-bold bg-indigo-50 border border-indigo-100 text-indigo-700">
-            🏛️
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="font-bold text-slate-800 text-base" data-testid="dian-header-title">
+      <div class="dian-header-banner" data-testid="dian-status-banner">
+        <div class="dian-header-main">
+          <div class="dian-icon-wrap">🏛️</div>
+          <div class="dian-texts-wrap">
+            <div class="dian-title-row">
+              <h3 class="dian-title-text" data-testid="dian-header-title">
                 Facturación Electrónica DIAN & Documentos Electrónicos
               </h3>
               @if (configurado()) {
@@ -52,7 +171,7 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
                 </span>
               }
             </div>
-            <p class="text-xs text-slate-500 mt-0.5">
+            <p class="dian-subtitle-text">
               @if (configurado()) {
                 <span>NIT: <strong>{{ configDian()?.nitEmisor }}-{{ configDian()?.dvEmisor }}</strong> ({{ configDian()?.razonSocialEmisor }}) | Prefijo: <strong>{{ configDian()?.prefijoFactura }}</strong> | Rango: {{ configDian()?.rangoDesde }} - {{ configDian()?.rangoHasta }}</span>
               } @else {
@@ -62,23 +181,24 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="dian-actions-wrap flex items-center gap-2.5">
           <button
             type="button"
-            class="btn-secondary btn-sm flex items-center gap-1.5"
+            class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
             data-testid="btn-abrir-config-dian"
             (click)="abrirModalConfig()"
           >
-            ⚙️ Configurar DIAN
+            <span>⚙️</span>
+            <span>Configurar DIAN</span>
           </button>
           <button
             type="button"
-            class="btn-primary btn-sm flex items-center gap-1.5"
+            class="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold shadow-sm"
             data-testid="btn-nuevo-doc-soporte"
-            [disabled]="!configurado()"
             (click)="abrirModalDs()"
           >
-            📋 Nuevo Doc. Soporte
+            <span>📋</span>
+            <span>Nuevo Doc. Soporte</span>
           </button>
         </div>
       </div>
@@ -97,34 +217,61 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
         </div>
       }
 
-      <!-- KPI Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="dian-kpi-cards">
-        <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
-          <div class="text-xs text-slate-500 font-medium">Total Documentos</div>
-          <div class="text-xl font-bold text-slate-800 mt-1" data-testid="kpi-total-documentos">{{ totalEmitidos() }}</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">Emitidos en el sistema</div>
+      <!-- KPI Summary Cards (Grid de 4 Columnas estilo NIIF 15) -->
+      <div class="dian-kpis-grid" data-testid="dian-kpi-cards">
+        <!-- KPI 1: Total Documentos -->
+        <div class="kpi-widget-card" data-testid="kpi-total-documentos-card">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title">Total Documentos</span>
+            <span class="text-sm">📑</span>
+          </div>
+          <div class="kpi-widget-value text-slate-800" data-testid="kpi-total-documentos">
+            {{ totalEmitidos() }}
+          </div>
+          <div class="kpi-widget-footer">Emitidos en el sistema</div>
         </div>
-        <div class="bg-white border border-emerald-100 rounded-xl p-3 shadow-sm bg-gradient-to-br from-emerald-50/40 to-white">
-          <div class="text-xs text-emerald-700 font-medium">Aceptados DIAN</div>
-          <div class="text-xl font-bold text-emerald-700 mt-1" data-testid="kpi-total-aceptados">{{ totalAceptados() }}</div>
-          <div class="text-[10px] text-emerald-600 mt-0.5">Validados con éxito</div>
+
+        <!-- KPI 2: Aceptados DIAN -->
+        <div class="kpi-widget-card" style="border-color: #d1fae5; background: linear-gradient(135deg, rgba(209, 250, 229, 0.25) 0%, #ffffff 100%);">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title" style="color: #047857;">Aceptados DIAN</span>
+            <span class="text-sm">✅</span>
+          </div>
+          <div class="kpi-widget-value" style="color: #047857;" data-testid="kpi-total-aceptados">
+            {{ totalAceptados() }}
+          </div>
+          <div class="kpi-widget-footer" style="color: #059669;">Validados con éxito</div>
         </div>
-        <div class="bg-white border border-amber-100 rounded-xl p-3 shadow-sm bg-gradient-to-br from-amber-50/40 to-white">
-          <div class="text-xs text-amber-700 font-medium">En Proceso / Pendientes</div>
-          <div class="text-xl font-bold text-amber-700 mt-1" data-testid="kpi-total-pendientes">{{ totalPendientes() }}</div>
-          <div class="text-[10px] text-amber-600 mt-0.5">En transmisión o cola</div>
+
+        <!-- KPI 3: En Proceso / Pendientes -->
+        <div class="kpi-widget-card" style="border-color: #fef3c7; background: linear-gradient(135deg, rgba(254, 243, 199, 0.25) 0%, #ffffff 100%);">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title" style="color: #b45309;">En Proceso / Pendientes</span>
+            <span class="text-sm">⏳</span>
+          </div>
+          <div class="kpi-widget-value" style="color: #b45309;" data-testid="kpi-total-pendientes">
+            {{ totalPendientes() }}
+          </div>
+          <div class="kpi-widget-footer" style="color: #d97706;">En transmisión o cola</div>
         </div>
-        <div class="bg-white border border-red-100 rounded-xl p-3 shadow-sm bg-gradient-to-br from-red-50/40 to-white">
-          <div class="text-xs text-red-700 font-medium">Rechazados / Errores</div>
-          <div class="text-xl font-bold text-red-700 mt-1" data-testid="kpi-total-rechazados">{{ totalRechazados() }}</div>
-          <div class="text-[10px] text-red-600 mt-0.5">Requieren corrección</div>
+
+        <!-- KPI 4: Rechazados / Errores -->
+        <div class="kpi-widget-card" style="border-color: #fee2e2; background: linear-gradient(135deg, rgba(254, 226, 226, 0.25) 0%, #ffffff 100%);">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title" style="color: #be123c;">Rechazados / Errores</span>
+            <span class="text-sm">⚠️</span>
+          </div>
+          <div class="kpi-widget-value" style="color: #be123c;" data-testid="kpi-total-rechazados">
+            {{ totalRechazados() }}
+          </div>
+          <div class="kpi-widget-footer" style="color: #e11d48;">Requieren corrección</div>
         </div>
       </div>
 
       <!-- Filters Bar -->
-      <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-wrap items-center gap-3" data-testid="dian-filters-bar">
-        <div class="form-group-inline">
-          <label class="form-label-sm font-semibold">Tipo Documento</label>
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm flex flex-wrap items-end gap-3.5" data-testid="dian-filters-bar">
+        <div class="form-group-inline flex flex-col gap-1">
+          <label class="text-xs font-bold text-slate-700">Tipo Documento</label>
           <select
             class="input-base input-sm text-xs"
             data-testid="select-filtro-tipo-dian"
@@ -139,8 +286,8 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           </select>
         </div>
 
-        <div class="form-group-inline">
-          <label class="form-label-sm font-semibold">Estado DIAN</label>
+        <div class="form-group-inline flex flex-col gap-1">
+          <label class="text-xs font-bold text-slate-700">Estado DIAN</label>
           <select
             class="input-base input-sm text-xs"
             data-testid="select-filtro-estado-dian"
@@ -156,8 +303,8 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           </select>
         </div>
 
-        <div class="form-group-inline flex-1 min-w-[200px]">
-          <label class="form-label-sm font-semibold">Búsqueda</label>
+        <div class="form-group-inline flex-1 min-w-[220px] flex flex-col gap-1">
+          <label class="text-xs font-bold text-slate-700">Búsqueda</label>
           <input
             type="text"
             class="input-base input-sm text-xs w-full"
@@ -169,22 +316,24 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           />
         </div>
 
-        <div class="flex items-center gap-2 pt-4">
+        <div class="flex items-center gap-2">
           <button
             type="button"
-            class="btn-secondary btn-sm"
+            class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
             data-testid="btn-buscar-dian"
             (click)="buscar()"
           >
-            🔍 Buscar
+            <span>🔍</span>
+            <span>Buscar</span>
           </button>
           <button
             type="button"
-            class="btn-secondary btn-sm"
+            class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
             data-testid="btn-limpiar-filtros-dian"
             (click)="limpiarFiltros()"
           >
-            ✕ Limpiar
+            <span>✕</span>
+            <span>Limpiar</span>
           </button>
         </div>
       </div>

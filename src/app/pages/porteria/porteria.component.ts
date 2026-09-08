@@ -5,6 +5,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
 
 export interface MinutaVisitanteItem {
   id: string;
@@ -64,7 +65,7 @@ export interface VehiculoIngresoItem {
 @Component({
   selector: 'app-porteria',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, FlatpickrDirective],
   template: `
     <div class="porteria-page-container animate-fade-in">
       <!-- HEADER -->
@@ -653,11 +654,11 @@ export interface VehiculoIngresoItem {
               <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div class="form-group">
                   <label class="form-label">Fecha de Salida *</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevaSalidaForm.fechaSalida" />
+                  <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaSalidaForm.fechaSalida" placeholder="dd/mm/aaaa" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Hora Estimada *</label>
-                  <input type="time" class="form-control" [(ngModel)]="nuevaSalidaForm.horaSalidaEstimada" />
+                  <input type="text" appFlatpickr [enableTime]="true" [noCalendar]="true" [time24hr]="true" dateFormat="H:i" class="form-control" [(ngModel)]="nuevaSalidaForm.horaSalidaEstimada" placeholder="hh:mm" />
                 </div>
               </div>
 

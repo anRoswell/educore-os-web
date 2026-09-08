@@ -8,6 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { LmsCuestionarioCreadorComponent } from './lms-cuestionario-creador/lms-cuestionario-creador';
 import { LmsCuestionarioTomaComponent } from './lms-cuestionario-toma/lms-cuestionario-toma';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
 
 
 export interface TareaLmsItem {
@@ -56,7 +57,7 @@ export interface EntregaLmsItem {
 @Component({
   selector: 'app-lms',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, LmsCuestionarioCreadorComponent, LmsCuestionarioTomaComponent],
+  imports: [CommonModule, FormsModule, QuillModule, LmsCuestionarioCreadorComponent, LmsCuestionarioTomaComponent, FlatpickrDirective],
   template: `
     <div class="lms-container">
 
@@ -904,9 +905,12 @@ export interface EntregaLmsItem {
                 <div class="form-group">
                   <label class="form-label">Fecha y Hora Límite de Entrega <span class="text-danger">*</span></label>
                   <input 
-                    type="datetime-local" 
+                    type="text" 
+                    appFlatpickr
+                    [enableTime]="true"
                     class="form-control" 
-                    [(ngModel)]="nuevaTareaForm.fechaLimite" />
+                    [(ngModel)]="nuevaTareaForm.fechaLimite"
+                    placeholder="dd/mm/aaaa --:--" />
                 </div>
 
                 <div class="form-group">

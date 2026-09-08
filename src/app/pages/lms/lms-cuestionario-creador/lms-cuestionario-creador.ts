@@ -2,11 +2,12 @@ import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
 
 @Component({
   selector: 'app-lms-cuestionario-creador',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FlatpickrDirective],
   templateUrl: './lms-cuestionario-creador.html',
   styleUrls: ['./lms-cuestionario-creador.scss']
 })

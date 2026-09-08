@@ -5,6 +5,9 @@ import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { HelpBadgeComponent } from '../../shared/components/help-badge.component';
+import { CurrencyMaskDirective } from '../../shared/directives/currency-mask.directive';
+import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
+import { QuillModule } from 'ngx-quill';
 
 export interface ColaboradorItem {
   id: string;
@@ -39,6 +42,7 @@ export interface ContratoItem {
   fechaFin?: string;
   salarioPactado: number;
   urlContratoPdf?: string;
+  clausulas?: string;
   estado: string;
   colaborador?: ColaboradorItem;
 }
@@ -65,7 +69,7 @@ export interface LiquidacionNominaItem {
 @Component({
   selector: 'app-talento-humano',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CurrencyMaskDirective, FlatpickrDirective, QuillModule],
   template: `
     <div class="talento-page animate-fade-in">
       <!-- HEADER PRINCIPAL -->
@@ -75,7 +79,14 @@ export interface LiquidacionNominaItem {
             <span>👔 CÓDIGO SUSTANTIVO DEL TRABAJO & DIAN</span>
             <span class="badge-tag">GESTIÓN DEL TALENTO HUMANO</span>
           </div>
-          <h1>Talento Humano & Nómina Docente</h1>
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0 0.25rem 0;">
+            <div class="header-icon-box" style="width: 44px; height: 44px; font-size: 1.5rem;">
+              👥
+            </div>
+            <div>
+              <h1 style="margin: 0;">Talento Humano & Nómina Docente</h1>
+            </div>
+          </div>
           <p class="subtitle">
             Administración integral de la planta docente: escalafón, contratos laborales, liquidación mensual con deducciones de ley (Salud 4%, Pensión 4%) y emisión de colillas.
           </p>
@@ -321,19 +332,54 @@ export interface LiquidacionNominaItem {
       <!-- TAB 2: CONTRATOS LABORALES                       -->
       <!-- ================================================= -->
       @if (activeTab() === 'contratos') {
-        <div class="tab-content animate-fade-in">
+        <div class="tab-content animate-fade-in" data-testid="tab-content-contratos">
+          <!-- Toolbar y Filtros de Contratos -->
+          <div class="card mb-3 p-3">
+            <div class="flex-between flex-wrap gap-3">
+              <div style="flex: 1; min-width: 260px; max-width: 450px;">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="🔍 Buscar por No. de Contrato o Colaborador..."
+                  [(ngModel)]="filtroContratoTexto"
+                  data-testid="input-filtro-contrato"
+                />
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <select
+                  class="form-select"
+                  style="width: auto; min-width: 170px;"
+                  [(ngModel)]="filtroContratoEstado"
+                  data-testid="select-filtro-estado-contrato"
+                >
+                  <option value="TODOS">Todos los Estados</option>
+                  <option value="VIGENTE">VIGENTE</option>
+                  <option value="TERMINADO">TERMINADO</option>
+                  <option value="SUSPENDIDO">SUSPENDIDO</option>
+                </select>
+                <button
+                  (click)="abrirModalNuevoContrato()"
+                  class="btn btn-primary"
+                  data-testid="btn-nuevo-contrato-toolbar"
+                >
+                  <span>📝 Radicar Nuevo Contrato</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="table-container card">
-            @if (contratos().length === 0) {
-              <div class="empty-state">
+            @if (contratosFiltrados().length === 0) {
+              <div class="empty-state" data-testid="empty-contratos">
                 <span class="empty-icon">📑</span>
                 <h3>No hay contratos laborales registrados</h3>
-                <p>Radique contratos con asignación salarial y términos de vigencia.</p>
-                <button (click)="abrirModalNuevoContrato()" class="btn btn-primary mt-3">
+                <p>Radique contratos con asignación salarial y términos de vigencia o ajuste sus criterios de búsqueda.</p>
+                <button (click)="abrirModalNuevoContrato()" class="btn btn-primary mt-3" data-testid="btn-nuevo-contrato-empty">
                   Crear Nuevo Contrato
                 </button>
               </div>
             } @else {
-              <table class="data-table">
+              <table class="data-table" data-testid="tabla-contratos">
                 <thead>
                   <tr>
                     <th>Número de Contrato</th>
@@ -346,8 +392,8 @@ export interface LiquidacionNominaItem {
                   </tr>
                 </thead>
                 <tbody>
-                  @for (ctr of contratos(); track ctr.id) {
-                    <tr>
+                  @for (ctr of contratosFiltrados(); track ctr.id) {
+                    <tr [attr.data-testid]="'row-contrato-' + ctr.id">
                       <td class="font-mono font-bold text-indigo-600">
                         {{ ctr.numeroContrato }}
                       </td>
@@ -360,15 +406,49 @@ export interface LiquidacionNominaItem {
                         \${{ ctr.salarioPactado | number:'1.0-0' }}
                       </td>
                       <td>
-                        <span class="status-pill status-activo">{{ ctr.estado }}</span>
+                        <span
+                          class="status-pill"
+                          [class.status-activo]="ctr.estado === 'VIGENTE'"
+                          [class.status-inactivo]="ctr.estado === 'TERMINADO'"
+                          [class.status-pendiente]="ctr.estado === 'SUSPENDIDO'"
+                        >
+                          {{ ctr.estado }}
+                        </span>
                       </td>
                       <td style="text-align: right;">
                         <div class="actions-group">
-                          <button (click)="verDetalleContrato(ctr)" class="btn-icon" title="Ver Detalle de Contrato">
+                          <button
+                            (click)="verDetalleContrato(ctr)"
+                            class="btn-icon"
+                            title="Ver Detalle y Minuta del Contrato"
+                            [attr.data-testid]="'btn-ver-contrato-' + ctr.id"
+                          >
                             👁️
                           </button>
-                          <button (click)="descargarContratoPdf(ctr)" class="btn-icon btn-pdf" title="Descargar Contrato PDF">
+                          <button
+                            (click)="descargarContratoPdf(ctr)"
+                            class="btn-icon btn-pdf"
+                            title="Descargar Contrato PDF"
+                            [attr.data-testid]="'btn-pdf-contrato-' + ctr.id"
+                          >
                             📄 PDF
+                          </button>
+                          <button
+                            (click)="abrirModalEditarContrato(ctr)"
+                            class="btn-icon"
+                            title="Editar Términos del Contrato"
+                            [attr.data-testid]="'btn-editar-contrato-' + ctr.id"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            (click)="confirmarTerminarContrato(ctr)"
+                            class="btn-icon btn-danger"
+                            [disabled]="ctr.estado === 'TERMINADO'"
+                            title="Terminar / Inactivar Contrato"
+                            [attr.data-testid]="'btn-terminar-contrato-' + ctr.id"
+                          >
+                            🛑
                           </button>
                         </div>
                       </td>
@@ -381,6 +461,7 @@ export interface LiquidacionNominaItem {
         </div>
       }
 
+
       <!-- ================================================= -->
       <!-- TAB 3: LIQUIDACIÓN DE NÓMINA                     -->
       <!-- ================================================= -->
@@ -388,9 +469,12 @@ export interface LiquidacionNominaItem {
         <div class="tab-content animate-fade-in">
           <div class="section-intro card mb-4">
             <div class="flex-between">
-              <div>
-                <h3>💵 Libro de Liquidaciones de Nómina Legal</h3>
-                <p class="text-sm">Cálculos automáticos con deducciones estatutarias: Salud (4%), Pensión (4%) y Auxilio de Transporte legal vigente.</p>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="header-icon-box" style="background: #f0fdf4; border-color: #bbf7d0;">💵</div>
+                <div>
+                  <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a;">Libro de Liquidaciones de Nómina Legal</h3>
+                  <p class="text-sm" style="margin: 0.2rem 0 0 0;">Cálculos automáticos con deducciones estatutarias: Salud (4%), Pensión (4%) y Auxilio de Transporte legal vigente.</p>
+                </div>
               </div>
               <button (click)="abrirModalLiquidarNomina()" class="btn btn-primary">
                 ⚡ Ejecutar Liquidación del Mes
@@ -461,8 +545,10 @@ export interface LiquidacionNominaItem {
         <div class="tab-content animate-fade-in">
           <div class="dian-grid">
             <div class="dian-box card">
-              <span class="dian-icon">🏛️</span>
-              <h4>Transmisión DIAN Nómina Electrónica</h4>
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <div class="header-icon-box" style="width: 36px; height: 36px; font-size: 1.25rem;">🏛️</div>
+                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">Transmisión DIAN Nómina Electrónica</h4>
+              </div>
               <p>Generación de archivos XML con firma digital XAdES-BES y código CUNE conforme a la Resolución 000013 de la DIAN.</p>
               <div class="dian-status">
                 <span class="status-dot"></span>
@@ -471,8 +557,10 @@ export interface LiquidacionNominaItem {
             </div>
 
             <div class="dian-box card">
-              <span class="dian-icon">🔐</span>
-              <h4>Certificado Digital Institucional</h4>
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <div class="header-icon-box" style="width: 36px; height: 36px; font-size: 1.25rem;">🔐</div>
+                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">Certificado Digital Institucional</h4>
+              </div>
               <p>Certificado PKI SHA-256 cargado y válido para el año fiscal 2026 emitido por entidad de certificación digital abierta.</p>
               <div class="dian-status">
                 <span class="status-dot"></span>
@@ -492,7 +580,13 @@ export interface LiquidacionNominaItem {
         <div class="modal-backdrop animate-fade-in">
           <div class="modal-card">
             <div class="modal-header">
-              <h3>👔 Registrar Perfil de Colaborador</h3>
+              <div class="modal-title-wrap">
+                <div class="header-icon-box">👔</div>
+                <div>
+                  <h3>Registrar Perfil de Colaborador</h3>
+                  <p class="modal-subtitle">Vinculación laboral de personal docente y administrativo en planta institucional</p>
+                </div>
+              </div>
               <button (click)="modalNuevoColaborador.set(false)" class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
@@ -524,8 +618,15 @@ export interface LiquidacionNominaItem {
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Salario Base Mensual ($):</label>
-                  <input type="number" class="form-control" [(ngModel)]="nuevoColab.salarioBase" placeholder="3800000" />
+                  <label class="form-label">Salario Base Mensual (COP):</label>
+                  <input
+                    type="text"
+                    appCurrencyMask
+                    class="form-control"
+                    [(ngModel)]="nuevoColab.salarioBase"
+                    data-testid="input-nuevo-colab-salario"
+                    placeholder="$ 3.800.000"
+                  />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Entidad Bancaria:</label>
@@ -544,7 +645,13 @@ export interface LiquidacionNominaItem {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Fecha de Ingreso:</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevoColab.fechaIngreso" />
+                  <input
+                    type="text"
+                    appFlatpickr
+                    class="form-control"
+                    [(ngModel)]="nuevoColab.fechaIngreso"
+                    placeholder="dd/mm/aaaa"
+                  />
                 </div>
               </div>
             </div>
@@ -558,15 +665,21 @@ export interface LiquidacionNominaItem {
 
       <!-- 2. MODAL NUEVO CONTRATO -->
       @if (modalNuevoContrato()) {
-        <div class="modal-backdrop animate-fade-in">
-          <div class="modal-card">
+        <div class="modal-backdrop animate-fade-in" data-testid="modal-nuevo-contrato">
+          <div class="modal-card modal-card-xl">
             <div class="modal-header">
-              <h3>📑 Radicar Contrato Laboral</h3>
+              <div class="modal-title-wrap">
+                <div class="header-icon-box">📑</div>
+                <div>
+                  <h3>Radicar Contrato Laboral Docente</h3>
+                  <p class="modal-subtitle">Registro formal C.S.T. con estipulaciones y cláusulas editables</p>
+                </div>
+              </div>
               <button (click)="modalNuevoContrato.set(false)" class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
-              <div class="form-grid">
-                <div class="form-group full-width">
+              <div class="contract-form-grid">
+                <div class="form-group col-span-2">
                   <label class="form-label">Colaborador:</label>
                   <select class="form-select" [(ngModel)]="nuevoContrato.colaboradorId">
                     <option value="">Seleccione un colaborador...</option>
@@ -575,27 +688,77 @@ export interface LiquidacionNominaItem {
                     }
                   </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group col-span-1">
                   <label class="form-label">Número de Contrato:</label>
                   <input type="text" class="form-control" [(ngModel)]="nuevoContrato.numeroContrato" placeholder="CTR-DOC-2026-001" />
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Salario Pactado ($):</label>
-                  <input type="number" class="form-control" [(ngModel)]="nuevoContrato.salarioPactado" placeholder="3800000" />
+                <div class="form-group col-span-1">
+                  <label class="form-label">Salario Mensual Pactado (COP):</label>
+                  <input
+                    type="text"
+                    appCurrencyMask
+                    class="form-control"
+                    [(ngModel)]="nuevoContrato.salarioPactado"
+                    data-testid="input-nuevo-contrato-salario"
+                    placeholder="$ 3.800.000"
+                  />
                 </div>
-                <div class="form-group">
+                <div class="form-group col-span-2">
                   <label class="form-label">Fecha de Inicio:</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevoContrato.fechaInicio" />
+                  <input
+                    type="text"
+                    appFlatpickr
+                    class="form-control"
+                    [(ngModel)]="nuevoContrato.fechaInicio"
+                    placeholder="dd/mm/aaaa"
+                  />
                 </div>
-                <div class="form-group">
+                <div class="form-group col-span-2">
                   <label class="form-label">Fecha de Finalización:</label>
-                  <input type="date" class="form-control" [(ngModel)]="nuevoContrato.fechaFin" />
+                  <input
+                    type="text"
+                    appFlatpickr
+                    [minDate]="nuevoContrato.fechaInicio"
+                    class="form-control"
+                    [(ngModel)]="nuevoContrato.fechaFin"
+                    placeholder="dd/mm/aaaa"
+                  />
+                </div>
+
+                <!-- SECCIÓN WYSIWYG PARA ESTIPULACIONES Y CLÁUSULAS -->
+                <div class="form-group col-span-4" style="margin-top: 0.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                    <div style="display: flex; align-items: center; gap: 0.55rem;">
+                      <div class="section-icon-box">📜</div>
+                      <label class="form-label" style="font-weight: 700; color: #1e3a8a; margin: 0; font-size: 0.88rem;">
+                        II. ESTIPULACIONES Y CLÁUSULAS CONTRACTUALES GENERALES (C.S.T.)
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="restablecerClausulasDefault()"
+                      class="btn btn-sm btn-secondary"
+                      style="font-size: 0.72rem; padding: 0.25rem 0.6rem;"
+                      title="Restablecer cláusulas estándar de ley"
+                    >
+                      🔄 Cargar Cláusulas Estándar
+                    </button>
+                  </div>
+                  <p style="font-size: 0.75rem; color: #64748b; margin: 0 0 0.5rem 0;">
+                    Editor enriquecido (WYSIWYG): ajuste o redacte las estipulaciones particulares, funciones pedagógicas o cláusulas de ley que se imprimirán en la Minuta Oficial en PDF.
+                  </p>
+                  <quill-editor
+                    [(ngModel)]="nuevoContrato.clausulas"
+                    data-testid="editor-clausulas-contrato"
+                    placeholder="Redacte o ajuste las cláusulas y estipulaciones contractuales..."
+                    [styles]="{ height: '340px', backgroundColor: '#ffffff' }"
+                  ></quill-editor>
                 </div>
               </div>
             </div>
             <div class="modal-footer">
               <button (click)="modalNuevoContrato.set(false)" class="btn btn-secondary">Cancelar</button>
-              <button (click)="guardarNuevoContrato()" class="btn btn-primary">Guardar Contrato</button>
+              <button (click)="guardarNuevoContrato()" class="btn btn-primary shadow-glow">Guardar Contrato</button>
             </div>
           </div>
         </div>
@@ -606,7 +769,13 @@ export interface LiquidacionNominaItem {
         <div class="modal-backdrop animate-fade-in">
           <div class="modal-card">
             <div class="modal-header">
-              <h3>⚡ Liquidación Masiva de Nómina Mensual</h3>
+              <div class="modal-title-wrap">
+                <div class="header-icon-box" style="background: #fef3c7; border-color: #fde68a;">⚡</div>
+                <div>
+                  <h3>Liquidación Masiva de Nómina Mensual</h3>
+                  <p class="modal-subtitle">Cálculo de deducciones de ley (Salud 4%, Pensión 4%) y auxilio de transporte</p>
+                </div>
+              </div>
               <button (click)="modalLiquidarNomina.set(false)" class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
@@ -650,7 +819,13 @@ export interface LiquidacionNominaItem {
         <div class="modal-backdrop animate-fade-in">
           <div class="modal-card" style="max-width: 650px;">
             <div class="modal-header">
-              <h3>📄 Desprendible Oficial de Pago (Colilla)</h3>
+              <div class="modal-title-wrap">
+                <div class="header-icon-box">📄</div>
+                <div>
+                  <h3>Desprendible Oficial de Pago (Colilla)</h3>
+                  <p class="modal-subtitle">Comprobante individual de liquidación salarial con deducciones de ley</p>
+                </div>
+              </div>
               <button (click)="modalVerColilla.set(false)" class="close-btn">&times;</button>
             </div>
             @if (colillaSeleccionada(); as colilla) {
@@ -705,9 +880,12 @@ export interface LiquidacionNominaItem {
         <div class="modal-backdrop animate-fade-in" data-testid="modal-ver-contrato">
           <div class="modal-card" style="max-width: 700px;">
             <div class="modal-header">
-              <div class="flex items-center gap-2">
-                <span style="font-size: 1.25rem;">📑</span>
-                <h3>Minuta de Contrato Individual de Trabajo</h3>
+              <div class="modal-title-wrap">
+                <div class="header-icon-box">📑</div>
+                <div>
+                  <h3>Minuta de Contrato Individual de Trabajo</h3>
+                  <p class="modal-subtitle">Especificaciones particulares, asignación salarial y estipulaciones de ley</p>
+                </div>
               </div>
               <button (click)="modalVerContrato.set(false)" class="close-btn">&times;</button>
             </div>
@@ -758,26 +936,211 @@ export interface LiquidacionNominaItem {
                   </div>
                 </div>
 
-                <!-- Cláusulas Estatutarias -->
-                <div class="card" style="background: #f1f5f9; border-radius: 8px; padding: 0.85rem; font-size: 0.78rem; color: #334155; line-height: 1.5;">
-                  <h5 class="font-bold text-slate-800" style="margin: 0 0 0.4rem 0;">Cláusulas del Contrato Docente (C.S.T. Art. 101 y Concordantes):</h5>
-                  <p style="margin: 0 0 0.35rem 0;"><strong>PRIMERA. Objeto:</strong> El TRABAJADOR prestará sus servicios como Docente conforme al PEI y la legislación educativa.</p>
-                  <p style="margin: 0 0 0.35rem 0;"><strong>SEGUNDA. Remuneración:</strong> El EMPLEADOR pagará la asignación básica mensual pactada con las deducciones estatutarias (Salud 4%, Pensión 4%).</p>
-                  <p style="margin: 0;"><strong>TERCERA. Afiliación:</strong> El EMPLEADOR garantiza la afiliación oportuna a Seguridad Social Integral (EPS, AFP, ARL) y Caja de Compensación.</p>
+                <!-- Cláusulas Estatutarias / Estipulaciones del Contrato -->
+                <div class="card" style="background: #f1f5f9; border-radius: 8px; padding: 0.85rem; font-size: 0.78rem; color: #334155; line-height: 1.5; max-height: 220px; overflow-y: auto;">
+                  <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.4rem;">
+                    <div class="section-icon-box">📜</div>
+                    <h5 class="font-bold text-slate-800" style="margin: 0; font-size: 0.85rem;">
+                      II. Estipulaciones y Cláusulas Contractuales (C.S.T.):
+                    </h5>
+                  </div>
+                  @if (ctr.clausulas) {
+                    <div [innerHTML]="ctr.clausulas" style="font-size: 0.78rem;"></div>
+                  } @else {
+                    <p style="margin: 0 0 0.35rem 0;"><strong>PRIMERA. Objeto:</strong> El TRABAJADOR prestará sus servicios como Docente conforme al PEI y la legislación educativa.</p>
+                    <p style="margin: 0 0 0.35rem 0;"><strong>SEGUNDA. Remuneración:</strong> El EMPLEADOR pagará la asignación básica mensual pactada con las deducciones estatutarias (Salud 4%, Pensión 4%).</p>
+                    <p style="margin: 0;"><strong>TERCERA. Afiliación:</strong> El EMPLEADOR garantiza la afiliación oportuna a Seguridad Social Integral (EPS, AFP, ARL) y Caja de Compensación.</p>
+                  }
                 </div>
               </div>
             }
             <div class="modal-footer">
-              <button (click)="descargarContratoPdf(contratoSeleccionado()!)" class="btn btn-emerald">
+              <button
+                (click)="descargarContratoPdf(contratoSeleccionado()!)"
+                class="btn btn-emerald"
+                data-testid="btn-descargar-pdf-modal"
+              >
                 📄 Descargar Contrato en PDF
               </button>
-              <button (click)="modalVerContrato.set(false)" class="btn btn-secondary">Cerrar</button>
+              <button
+                (click)="modalVerContrato.set(false)"
+                class="btn btn-secondary"
+                data-testid="btn-cerrar-ver-modal"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 6. MODAL EDITAR CONTRATO -->
+      @if (modalEditarContrato()) {
+        <div class="modal-backdrop animate-fade-in" data-testid="modal-editar-contrato">
+          <div class="modal-card modal-card-xl">
+            <div class="modal-header">
+              <div class="modal-title-wrap">
+                <div class="header-icon-box">✏️</div>
+                <div>
+                  <h3>Modificar Términos de Contrato</h3>
+                  <p class="modal-subtitle">Actualización de remuneración, vigencia y estipulaciones contractuales</p>
+                </div>
+              </div>
+              <button (click)="modalEditarContrato.set(false)" class="close-btn">&times;</button>
+            </div>
+            @if (contratoEnEdicion(); as ctr) {
+              <div class="modal-body">
+                <div class="card mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.85rem; border-radius: 8px;">
+                  <span class="font-mono text-xs font-bold text-indigo-600">{{ ctr.numeroContrato }}</span>
+                  <h4 class="font-bold text-slate-800 text-sm" style="margin: 0.2rem 0;">{{ getNombreContratoColaborador(ctr) }}</h4>
+                  <span class="text-xs text-slate-500">{{ ctr.colaborador ? formatCargo(ctr.colaborador.cargo) : 'Docente Titular' }}</span>
+                </div>
+                <div class="contract-form-grid">
+                  <div class="form-group col-span-1">
+                    <label class="form-label">Salario Mensual Pactado (COP):</label>
+                    <input
+                      type="text"
+                      appCurrencyMask
+                      class="form-control"
+                      [(ngModel)]="formEditarContrato.salarioPactado"
+                      data-testid="input-editar-salario"
+                      placeholder="$ 3.800.000"
+                    />
+                  </div>
+                  <div class="form-group col-span-1">
+                    <label class="form-label">Estado del Contrato:</label>
+                    <select
+                      class="form-select"
+                      [(ngModel)]="formEditarContrato.estado"
+                      data-testid="select-editar-estado"
+                    >
+                      <option value="VIGENTE">VIGENTE</option>
+                      <option value="SUSPENDIDO">SUSPENDIDO</option>
+                      <option value="TERMINADO">TERMINADO</option>
+                    </select>
+                  </div>
+                  <div class="form-group col-span-1">
+                    <label class="form-label">Fecha de Inicio:</label>
+                    <input
+                      type="text"
+                      appFlatpickr
+                      class="form-control"
+                      [(ngModel)]="formEditarContrato.fechaInicio"
+                      data-testid="input-editar-fecha-inicio"
+                      placeholder="dd/mm/aaaa"
+                    />
+                  </div>
+                  <div class="form-group col-span-1">
+                    <label class="form-label">Fecha de Finalización (opcional):</label>
+                    <input
+                      type="text"
+                      appFlatpickr
+                      [minDate]="formEditarContrato.fechaInicio"
+                      class="form-control"
+                      [(ngModel)]="formEditarContrato.fechaFin"
+                      data-testid="input-editar-fecha-fin"
+                      placeholder="dd/mm/aaaa"
+                    />
+                  </div>
+
+                  <!-- SECCIÓN WYSIWYG PARA ESTIPULACIONES Y CLÁUSULAS EN EDICIÓN -->
+                  <div class="form-group col-span-4" style="margin-top: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                      <div style="display: flex; align-items: center; gap: 0.55rem;">
+                        <div class="section-icon-box">📜</div>
+                        <label class="form-label" style="font-weight: 700; color: #1e3a8a; margin: 0; font-size: 0.88rem;">
+                          II. ESTIPULACIONES Y CLÁUSULAS CONTRACTUALES GENERALES (C.S.T.)
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        (click)="restablecerClausulasEdicionDefault()"
+                        class="btn btn-sm btn-secondary"
+                        style="font-size: 0.72rem; padding: 0.25rem 0.6rem;"
+                        title="Restablecer cláusulas estándar de ley"
+                      >
+                        🔄 Cargar Cláusulas Estándar
+                      </button>
+                    </div>
+                    <p style="font-size: 0.75rem; color: #64748b; margin: 0 0 0.5rem 0;">
+                      Editor enriquecido (WYSIWYG): ajuste o redacte las estipulaciones particulares que se imprimirán en la Minuta Oficial en PDF.
+                    </p>
+                    <quill-editor
+                      [(ngModel)]="formEditarContrato.clausulas"
+                      data-testid="editor-clausulas-editar-contrato"
+                      placeholder="Redacte o ajuste las cláusulas y estipulaciones contractuales..."
+                      [styles]="{ height: '340px', backgroundColor: '#ffffff' }"
+                    ></quill-editor>
+                  </div>
+                </div>
+              </div>
+            }
+            <div class="modal-footer">
+              <button (click)="modalEditarContrato.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button
+                (click)="guardarEdicionContrato()"
+                class="btn btn-primary"
+                data-testid="btn-guardar-edicion-contrato"
+              >
+                Guardar Cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 7. MODAL TERMINAR CONTRATO -->
+      @if (modalTerminarContrato()) {
+        <div class="modal-backdrop animate-fade-in" data-testid="modal-terminar-contrato">
+          <div class="modal-card" style="max-width: 480px;">
+            <div class="modal-header">
+              <div class="modal-title-wrap">
+                <div class="header-icon-box" style="background: #fef2f2; border-color: #fecaca; color: #dc2626;">🛑</div>
+                <div>
+                  <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #b91c1c;">Terminar Contrato Laboral</h3>
+                  <p class="modal-subtitle">Cese de actividades o finalización de periodo lectivo</p>
+                </div>
+              </div>
+              <button (click)="modalTerminarContrato.set(false)" class="close-btn">&times;</button>
+            </div>
+            @if (contratoATerminar(); as ctr) {
+              <div class="modal-body">
+                <p class="text-sm text-slate-700 mb-3">
+                  ¿Está seguro de terminar el contrato laboral <strong class="font-mono text-indigo-700">{{ ctr.numeroContrato }}</strong> correspondiente a <strong>{{ getNombreContratoColaborador(ctr) }}</strong>?
+                </p>
+                <div class="card p-3 mb-3" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">
+                  <span class="text-xs text-red-700">
+                    El estado del contrato cambiará a <strong>TERMINADO</strong>.
+                  </span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label text-xs">Motivo de Finalización:</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="motivoTerminacion"
+                    placeholder="Vencimiento de términos pactados"
+                    data-testid="input-motivo-terminacion"
+                  />
+                </div>
+              </div>
+            }
+            <div class="modal-footer">
+              <button (click)="modalTerminarContrato.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button
+                (click)="ejecutarTerminarContrato()"
+                class="btn btn-danger"
+                data-testid="btn-confirmar-terminar-contrato"
+              >
+                Confirmar Terminación
+              </button>
             </div>
           </div>
         </div>
       }
     </div>
   `,
+
   styles: [`
     .talento-page {
       display: flex;
@@ -1144,6 +1507,42 @@ export interface LiquidacionNominaItem {
       border-color: rgba(239, 68, 68, 0.25);
     }
 
+    .btn-icon.btn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-icon.btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+      color: #ffffff;
+    }
+
+    .btn-icon:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+      border: 1px solid #b91c1c;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .status-pendiente {
+      background: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+    }
+
     /* DIAN */
     .dian-grid {
       display: grid;
@@ -1247,6 +1646,45 @@ export interface LiquidacionNominaItem {
       align-items: center;
     }
 
+    .modal-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #eef2ff;
+      border: 1px solid #e0e7ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .modal-subtitle {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin: 0.15rem 0 0 0;
+    }
+
+    .section-icon-box {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
     .modal-header h3 {
       font-size: 1.15rem;
       font-weight: 800;
@@ -1275,6 +1713,42 @@ export interface LiquidacionNominaItem {
       justify-content: flex-end;
       gap: 0.75rem;
       background: #f8fafc;
+    }
+
+    .modal-card-xl {
+      max-width: 1140px !important;
+      width: 95% !important;
+      max-height: 94vh;
+    }
+
+    .modal-card-xl .modal-body {
+      max-height: 82vh;
+    }
+
+    .contract-form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .col-span-1 { grid-column: span 1; }
+    .col-span-2 { grid-column: span 2; }
+    .col-span-4 { grid-column: span 4; }
+
+    @media (max-width: 860px) {
+      .contract-form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .col-span-1 { grid-column: span 1; }
+      .col-span-2 { grid-column: span 2; }
+      .col-span-4 { grid-column: span 2; }
+    }
+
+    @media (max-width: 560px) {
+      .contract-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .col-span-1, .col-span-2, .col-span-4 { grid-column: span 1; }
     }
 
     .form-grid {
@@ -1352,12 +1826,24 @@ export class TalentoHumanoComponent implements OnInit {
     fechaIngreso: '2026-01-15'
   };
 
+  readonly CLAUSULAS_DEFAULT_TEMPLATE = `<p><strong>CLÁUSULA PRIMERA. OBJETO CONTRACTUAL:</strong> El EMPLEADOR contrata los servicios personales del TRABAJADOR para desempeñarse en el cargo asignado, comprometiéndose a cumplir con las actividades pedagógicas, curriculares, formativas y evaluativas conforme al Proyecto Educativo Institucional (PEI) y las directrices de Rectoría.</p>
+<p><strong>CLÁUSULA SEGUNDA. OBLIGACIONES ESPECIALES DEL DOCENTE:</strong> El TRABAJADOR se compromete especialmente a: a) Planear, orientar y evaluar los procesos formativos y de aula según el Sistema Institucional de Evaluación de Estudiantes (SIEE - Decreto 1290 de 2009); b) Cumplir estrictamente el horario, jornadas pedagógicas y calendario escolar fijado por la Institución; c) Registrar de manera continua, oportuna y fidedigna calificaciones y asistencias en la plataforma EduCoreOS; d) Participar con diligencia en claustros, consejos académicos, comisiones de evaluación y proyectos transversales; e) Atender respetuosamente a padres de familia y acudientes en los horarios asignados; f) Custodiar adecuadamente los recursos educativos, herramientas didácticas y tecnológicas institucionales; g) Promover ambientes de sana convivencia escolar y aplicar la Ruta de Atención Integral (Ley 1620 de 2013).</p>
+<p><strong>CLÁUSULA TERCERA. REMUNERACIÓN Y FORMA DE PAGO:</strong> El EMPLEADOR pagará al TRABAJADOR como contraprestación mensual directa por sus servicios la suma estipulada en las especificaciones particulares, mediante transferencia o consignación bancaria mensual en la cuenta registrada. De dicha suma el EMPLEADOR efectuará las deducciones legales obligatorias para los aportes a Seguridad Social Integral (Salud 4% y Pensión 4%, conforme a la Ley 100 de 1993) y demás retenciones tributarias o judiciales procedentes.</p>
+<p><strong>CLÁUSULA CUARTA. SEGURIDAD SOCIAL INTEGRAL & PRESTACIONES:</strong> El EMPLEADOR garantizará la oportuna afiliación del TRABAJADOR al Sistema de Seguridad Social en Salud (EPS), Pensiones (AFP), Riesgos Laborales (ARL en nivel docente) y Caja de Compensación Familiar. Asimismo, liquidará y pagará las prestaciones sociales de ley (Cesantías, Intereses a las Cesantías, Prima de Servicios y Vacaciones reglamentarias del personal docente conforme a los Artículos 196 y subsiguientes del C.S.T.).</p>
+<p><strong>CLÁUSULA QUINTA. JORNADA LABORAL Y LUGAR DE TRABAJO:</strong> El TRABAJADOR ejecutará sus labores en las sedes e instalaciones del EMPLEADOR, dentro de la jornada institucional ordinaria señalada en el Reglamento Interno de Trabajo y los horarios pedagógicos asignados por la Coordinación Académica.</p>
+<p><strong>CLÁUSULA SEXTA. PERÍODO DE PRUEBA:</strong> Las partes acuerdan fijar como período de prueba el término de dos (2) meses (sin exceder la quinta parte del término pactado), según el Art. 78 del Código Sustantivo del Trabajo. Durante este lapso cualquiera de las partes podrá dar por terminado el contrato en cualquier momento, sin previo aviso y sin que cause pago de indemnización alguna.</p>
+<p><strong>CLÁUSULA SÉPTIMA. DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL:</strong> Los planes de estudio, proyectos pedagógicos transversales, módulos didácticos, guías de trabajo y herramientas curriculares producidas por el TRABAJADOR en desarrollo y ejecución del presente contrato pertenecen patrimonialmente a la Institución Educativa conforme a la Ley 23 de 1982 y el Art. 28 de la Ley 1450 de 2011, respetando los derechos morales de autor.</p>
+<p><strong>CLÁUSULA OCTAVA. CONFIDENCIALIDAD Y PROTECCIÓN DE DATOS (LEY 1581 DE 2012):</strong> El TRABAJADOR se compromete formalmente a salvaguardar bajo estricta reserva profesional toda la información personal, sensible, médica y académica de los estudiantes menores de edad, directivos y padres de familia a la que tenga acceso, en estricto acatamiento del Régimen General de Protección de Datos Personales (Ley 1581 de 2012 / SIC) y las políticas institucionales de Habeas Data.</p>
+<p><strong>CLÁUSULA NOVENA. TERMINACIÓN DEL CONTRATO Y JUSTAS CAUSAS:</strong> El presente contrato terminará: a) Por la expiración del plazo pactado, mediando aviso escrito con una antelación no inferior a treinta (30) días calendario; b) Por mutuo consentimiento; c) Por las justas causas contempladas en el Artículo 62 del Código Sustantivo del Trabajo; d) Por falta gravísima calificada en el Manual de Convivencia Escolar o el Reglamento Interno de Trabajo.</p>
+<p><strong>CLÁUSULA DÉCIMA. DOMICILIO Y MÉRITO EJECUTIVO:</strong> Para todos los efectos legales, procesales y de jurisdicción laboral ordinaria, las partes señalan como domicilio contractual la sede de la Institución Educativa. El presente contrato presta mérito ejecutivo para la exigibilidad de las obligaciones pecuniarias en él contenidas.</p>`;
+
   nuevoContrato = {
     colaboradorId: '',
     numeroContrato: '',
     fechaInicio: '2026-01-15',
     fechaFin: '2026-11-30',
-    salarioPactado: 3800000
+    salarioPactado: 3800000,
+    clausulas: ''
   };
 
   paramsLiquidacion = {
@@ -1402,6 +1888,44 @@ export class TalentoHumanoComponent implements OnInit {
 
     if (this.filtroEstado !== 'TODOS') {
       list = list.filter(c => c.estado === this.filtroEstado);
+    }
+
+    return list;
+  });
+
+  // Modales y filtros adicionales de Contratos Laborales
+  readonly modalEditarContrato = signal<boolean>(false);
+  readonly modalTerminarContrato = signal<boolean>(false);
+  readonly contratoEnEdicion = signal<ContratoItem | null>(null);
+  readonly contratoATerminar = signal<ContratoItem | null>(null);
+
+  filtroContratoTexto = '';
+  filtroContratoEstado = 'TODOS';
+  motivoTerminacion = 'Vencimiento de términos pactados (año lectivo)';
+
+  formEditarContrato = {
+    salarioPactado: 3800000,
+    fechaInicio: '',
+    fechaFin: '',
+    estado: 'VIGENTE',
+    clausulas: ''
+  };
+
+  // Contratos filtrados
+  readonly contratosFiltrados = computed(() => {
+    let list = this.contratos();
+    const query = this.filtroContratoTexto.toLowerCase().trim();
+
+    if (query) {
+      list = list.filter(c => {
+        const num = (c.numeroContrato || '').toLowerCase();
+        const doc = this.getNombreContratoColaborador(c).toLowerCase();
+        return num.includes(query) || doc.includes(query);
+      });
+    }
+
+    if (this.filtroContratoEstado !== 'TODOS') {
+      list = list.filter(c => c.estado === this.filtroContratoEstado);
     }
 
     return list;
@@ -1462,10 +1986,23 @@ export class TalentoHumanoComponent implements OnInit {
     });
   }
 
+  restablecerClausulasDefault() {
+    this.nuevoContrato.clausulas = this.CLAUSULAS_DEFAULT_TEMPLATE;
+    this.toast.info('Cláusulas estándar de ley cargadas en el editor');
+  }
+
+  restablecerClausulasEdicionDefault() {
+    this.formEditarContrato.clausulas = this.CLAUSULAS_DEFAULT_TEMPLATE;
+    this.toast.info('Cláusulas estándar de ley cargadas en el editor');
+  }
+
   abrirModalNuevoContrato() {
     this.nuevoContrato.numeroContrato = `CTR-DOC-2026-${Date.now().toString().slice(-4)}`;
     if (this.colaboradores().length > 0) {
       this.nuevoContrato.colaboradorId = this.colaboradores()[0].id;
+    }
+    if (!this.nuevoContrato.clausulas) {
+      this.nuevoContrato.clausulas = this.CLAUSULAS_DEFAULT_TEMPLATE;
     }
     this.modalNuevoContrato.set(true);
   }
@@ -1473,6 +2010,9 @@ export class TalentoHumanoComponent implements OnInit {
   abrirModalNuevoContratoPara(col: ColaboradorItem) {
     this.nuevoContrato.colaboradorId = col.id;
     this.nuevoContrato.numeroContrato = `CTR-DOC-2026-${Date.now().toString().slice(-4)}`;
+    if (!this.nuevoContrato.clausulas) {
+      this.nuevoContrato.clausulas = this.CLAUSULAS_DEFAULT_TEMPLATE;
+    }
     this.modalNuevoContrato.set(true);
   }
 
@@ -1515,11 +2055,68 @@ export class TalentoHumanoComponent implements OnInit {
   }
 
   verDetalleContrato(ctr: ContratoItem) {
-    this.toast.info(`Contrato ${ctr.numeroContrato} - Estado: ${ctr.estado}`);
+    this.contratoSeleccionado.set(ctr);
+    this.modalVerContrato.set(true);
   }
 
   descargarContratoPdf(ctr: ContratoItem) {
+    if (ctr.urlContratoPdf && !ctr.urlContratoPdf.includes('storage.educoreos.com')) {
+      window.open(ctr.urlContratoPdf, '_blank');
+    } else {
+      const url = this.api.getPdfUrl(`contrato-laboral/${ctr.id}`);
+      window.open(url, '_blank');
+    }
     this.toast.success(`Descargando Contrato ${ctr.numeroContrato} en PDF`);
+  }
+
+  abrirModalEditarContrato(ctr: ContratoItem) {
+    this.contratoEnEdicion.set(ctr);
+    this.formEditarContrato = {
+      salarioPactado: Number(ctr.salarioPactado),
+      fechaInicio: ctr.fechaInicio,
+      fechaFin: ctr.fechaFin || '',
+      estado: ctr.estado,
+      clausulas: ctr.clausulas || this.CLAUSULAS_DEFAULT_TEMPLATE
+    };
+    this.modalEditarContrato.set(true);
+  }
+
+  guardarEdicionContrato() {
+    const ctr = this.contratoEnEdicion();
+    if (!ctr) return;
+    this.api.put<ContratoItem>(`rrhh/contratos/${ctr.id}`, this.formEditarContrato).subscribe({
+      next: () => {
+        this.toast.success(`Contrato ${ctr.numeroContrato} actualizado exitosamente`);
+        this.modalEditarContrato.set(false);
+        this.contratoEnEdicion.set(null);
+        this.cargarContratos();
+      },
+      error: (err) => this.toast.error(err?.error?.message || 'Error al actualizar contrato')
+    });
+  }
+
+  confirmarTerminarContrato(ctr: ContratoItem) {
+    if (ctr.estado === 'TERMINADO') {
+      this.toast.info('Este contrato ya se encuentra finalizado/terminado.');
+      return;
+    }
+    this.contratoATerminar.set(ctr);
+    this.motivoTerminacion = 'Vencimiento de términos pactados (año lectivo)';
+    this.modalTerminarContrato.set(true);
+  }
+
+  ejecutarTerminarContrato() {
+    const ctr = this.contratoATerminar();
+    if (!ctr) return;
+    this.api.delete(`rrhh/contratos/${ctr.id}`).subscribe({
+      next: () => {
+        this.toast.success(`Contrato ${ctr.numeroContrato} terminado exitosamente`);
+        this.modalTerminarContrato.set(false);
+        this.contratoATerminar.set(null);
+        this.cargarContratos();
+      },
+      error: (err) => this.toast.error(err?.error?.message || 'Error al terminar contrato')
+    });
   }
 
   verColilla(nom: LiquidacionNominaItem) {

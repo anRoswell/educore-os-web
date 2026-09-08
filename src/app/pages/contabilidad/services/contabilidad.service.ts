@@ -14,6 +14,19 @@ import {
   LibroDiarioItem,
   LibroMayorCuenta,
   AuxiliarTerceroReporte,
+  IngresoDiferidoModel,
+  AmortizacionCuotaModel,
+  NominaResumenModel,
+  BalancePrevioCierreModel,
+  ResultadoCierreModel,
+  ResultadoAperturaModel,
+  CajaMenorModel,
+  CajaMenorLegalizacionModel,
+  CrearCajaMenorModel,
+  RegistrarGastoCajaMenorModel,
+  ProveedorRetencionModel,
+  CertificadoProveedorResumenModel,
+  Formulario350ResumenModel,
 } from '../models/contabilidad.models';
 
 @Injectable({ providedIn: 'root' })
@@ -225,5 +238,237 @@ export class ContabilidadService {
     }
     const url = `${this.base}/reportes/${tipo}/pdf?${httpParams.toString()}`;
     window.open(url, '_blank');
+  }
+
+  // ─── Certificados Tributarios Escolares (Art. 387 E.T.) ─────────────────
+  getCertificadoTributario(estudianteId: string, anio: number): Observable<any> {
+    const params = new HttpParams().set('estudianteId', estudianteId).set('anio', String(anio));
+    return this.http.get<any>(`${this.base}/certificados/anual`, { params });
+  }
+
+  descargarCertificadoPdf(estudianteId: string, anio: number): void {
+    const url = `${this.base}/certificados/descargar-pdf?estudianteId=${estudianteId}&anio=${anio}`;
+    window.open(url, '_blank');
+  }
+
+  // ─── Medios Magnéticos e Información Exógena DIAN ────────────────────────
+  validarExogena(anio: number): Observable<any> {
+    const params = new HttpParams().set('anio', String(anio));
+    return this.http.get<any>(`${this.base}/exogena/validar`, { params });
+  }
+
+  getExogenaFormato(formato: string, anio: number): Observable<any> {
+    const params = new HttpParams().set('anio', String(anio));
+    return this.http.get<any>(`${this.base}/exogena/exportar/${formato}`, { params });
+  }
+
+  descargarExogenaExcel(formato: string, anio: number): void {
+    const url = `${this.base}/exogena/exportar/${formato}/excel?anio=${anio}`;
+    window.open(url, '_blank');
+  }
+
+  descargarExogenaXml(formato: string, anio: number): void {
+    const url = `${this.base}/exogena/exportar/${formato}/xml?anio=${anio}`;
+    window.open(url, '_blank');
+  }
+
+  // ─── Control Presupuestal Escolar ─────────────────────────────────────────
+  getPresupuestos(anio?: number): Observable<any[]> {
+    let params = new HttpParams();
+    if (anio) params = params.set('anio', String(anio));
+    return this.http.get<any[]>(`${this.base}/presupuestos`, { params });
+  }
+
+  getPresupuestoEjecucion(id: string): Observable<any> {
+    return this.http.get<any>(`${this.base}/presupuestos/${id}/ejecucion`);
+  }
+
+  crearPresupuesto(data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/presupuestos`, data);
+  }
+
+  agregarRubroPresupuesto(id: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/presupuestos/${id}/rubros`, data);
+  }
+
+  adicionPresupuestal(id: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/presupuestos/${id}/adicion`, data);
+  }
+
+  // ─── Conciliación Bancaria Automática ─────────────────────────────────────
+  importarExtractoBancario(data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/conciliacion/importar`, data);
+  }
+
+  autoMatchConciliacion(data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/conciliacion/auto-match`, data);
+  }
+
+  conciliarLineaManual(data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/conciliacion/manual`, data);
+  }
+
+  getInformeConciliacion(extractoId?: string): Observable<any> {
+    let params = new HttpParams();
+    if (extractoId) params = params.set('extractoId', extractoId);
+    return this.http.get<any>(`${this.base}/conciliacion/informe`, { params });
+  }
+
+  getExtractosBancarios(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/conciliacion/extractos`);
+  }
+
+  getLineasExtracto(id: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/conciliacion/extractos/${id}/lineas`);
+  }
+
+  // ─── Ingresos Diferidos NIIF 15 ───────────────────────────────────────────
+  getIngresosDiferidos(anio?: number): Observable<IngresoDiferidoModel[]> {
+    let params = new HttpParams();
+    if (anio) params = params.set('anio', String(anio));
+    return this.http.get<any>(`${this.base}/ingresos-diferidos`, { params }).pipe(
+      map((res) => {
+        const rawList: any[] = Array.isArray(res)
+          ? res
+          : (res?.diferidos ?? res?.data ?? []);
+        return rawList.map((raw) => this.mapIngresoDiferido(raw));
+      }),
+    );
+  }
+
+  amortizarMesDiferidos(mes: number, anio: number): Observable<any> {
+    return this.http.post<any>(`${this.base}/ingresos-diferidos/amortizar-mes`, { mes, anio });
+  }
+
+  crearIngresoDiferido(data: Partial<IngresoDiferidoModel> & Record<string, any>): Observable<IngresoDiferidoModel> {
+    const payload = {
+      ...data,
+      numeroMeses: data.cuotasPactadas || data['numeroMeses'] || 10,
+      anio: data.anioLectivo || data['anio'] || new Date().getFullYear(),
+      cuentaPasivo: data.cuentaPasivoCodigo || data['cuentaPasivo'] || '270505',
+      cuentaIngreso: data.cuentaIngresoCodigo || data['cuentaIngreso'] || '416005',
+    };
+    return this.http.post<any>(`${this.base}/ingresos-diferidos`, payload).pipe(
+      map((res) => this.mapIngresoDiferido(res)),
+    );
+  }
+
+  private mapIngresoDiferido(raw: any): IngresoDiferidoModel {
+    const cuotasRaw = Array.isArray(raw?.cuotas) ? raw.cuotas : [];
+    const cuotas: AmortizacionCuotaModel[] = cuotasRaw.map((c: any) => ({
+      id: c.id,
+      mes: Number(c.mes),
+      anio: Number(c.anio),
+      monto: Number(c.valorCuota ?? c.monto ?? 0),
+      estado: (c.estado === 'AMORTIZADO' || c.estado === 'AMORTIZADA') ? 'AMORTIZADA' : (c.estado || 'PENDIENTE'),
+      fechaAmortizacion: c.fechaAmortizado ? String(c.fechaAmortizado).split('T')[0] : (c.fechaAmortizacion || undefined),
+      asientoId: c.asientoId || undefined,
+    }));
+
+    cuotas.sort((a, b) => a.mes - b.mes);
+
+    const cuotasAmortizadasCount = cuotas.filter((c) => c.estado === 'AMORTIZADA').length;
+    const cuotasPactadasCount = Number(raw?.numeroMeses ?? raw?.cuotasPactadas ?? (cuotas.length > 0 ? cuotas.length : 10));
+
+    return {
+      id: raw?.id || '',
+      colegioId: raw?.colegioId || '',
+      estudianteId: raw?.estudianteId || undefined,
+      matriculaId: raw?.matriculaId || raw?.contratoId || undefined,
+      estudianteNombre: raw?.estudianteNombre || (raw?.estudiante ? `${raw.estudiante.primerNombre || ''} ${raw.estudiante.primerApellido || ''}`.trim() : undefined) || 'Estudiante Institucional',
+      concepto: raw?.concepto || 'Diferido Matrícula Escolar NIIF 15',
+      valorTotal: Number(raw?.valorTotal ?? 0),
+      cuotasPactadas: cuotasPactadasCount,
+      cuotasAmortizadas: raw?.cuotasAmortizadas !== undefined ? Number(raw.cuotasAmortizadas) : cuotasAmortizadasCount,
+      saldoPendiente: Number(raw?.saldoPendiente ?? 0),
+      anioLectivo: Number(raw?.anio ?? raw?.anioLectivo ?? new Date().getFullYear()),
+      estado: raw?.estado === 'AMORTIZADO_TOTAL' ? 'LIQUIDADO' : (raw?.estado || 'ACTIVO'),
+      cuentaPasivoCodigo: raw?.cuentaPasivo || raw?.cuentaPasivoCodigo || '270505',
+      cuentaIngresoCodigo: raw?.cuentaIngreso || raw?.cuentaIngresoCodigo || '416005',
+      cuotas: cuotas.length > 0 ? cuotas : undefined,
+      createdAt: raw?.createdAt,
+    };
+  }
+
+  // ─── Nómina Contable NIC 19 ───────────────────────────────────────────────
+  getResumenNomina(mes: number, anio: number): Observable<NominaResumenModel> {
+    let params = new HttpParams().set('anio', String(anio));
+    return this.http.get<NominaResumenModel>(`${this.base}/nomina/resumen-periodo/${mes}`, { params });
+  }
+
+  causarNomina(mes: number, anio: number): Observable<any> {
+    return this.http.post<any>(`${this.base}/nomina/causar-periodo`, { mes, anio });
+  }
+
+  provisionarNomina(mes: number, anio: number): Observable<any> {
+    return this.http.post<any>(`${this.base}/nomina/provisiones`, { mes, anio });
+  }
+
+  dispersarNomina(mes: number, anio: number, bancoCuentaCodigo?: string): Observable<any> {
+    const cuenta = bancoCuentaCodigo || '111005';
+    return this.http.post<any>(`${this.base}/nomina/dispersar-pagos`, {
+      mes,
+      anio,
+      cuentaBancaria: cuenta,
+      bancoCuentaCodigo: cuenta,
+    });
+  }
+
+  // ─── Cierre Anual Periodo 13 & Apertura APE ───────────────────────────────
+  getBalancePrevioCierre(anio: number): Observable<BalancePrevioCierreModel> {
+    let params = new HttpParams().set('anio', String(anio));
+    return this.http.get<BalancePrevioCierreModel>(`${this.base}/cierre/balance-previo`, { params });
+  }
+
+  ejecutarCierreAnual(anio: number): Observable<ResultadoCierreModel> {
+    return this.http.post<ResultadoCierreModel>(`${this.base}/cierre/ejecutar`, { anio });
+  }
+
+  ejecutarAperturaAnual(anio: number): Observable<ResultadoAperturaModel> {
+    return this.http.post<ResultadoAperturaModel>(`${this.base}/cierre/apertura`, { anio });
+  }
+
+  // ─── Caja Menor & Fondos Fijos Escolar ────────────────────────────────────
+  getCajasMenores(): Observable<CajaMenorModel[]> {
+    return this.http.get<CajaMenorModel[]>(`${this.base}/caja-menor`);
+  }
+
+  getCajaMenorById(id: string): Observable<CajaMenorModel> {
+    return this.http.get<CajaMenorModel>(`${this.base}/caja-menor/${id}`);
+  }
+
+  crearCajaMenor(dto: CrearCajaMenorModel): Observable<CajaMenorModel> {
+    return this.http.post<CajaMenorModel>(`${this.base}/caja-menor`, dto);
+  }
+
+  registrarGastoCajaMenor(cajaId: string, dto: RegistrarGastoCajaMenorModel): Observable<any> {
+    return this.http.post<any>(`${this.base}/caja-menor/${cajaId}/gastos`, dto);
+  }
+
+  reembolsarCajaMenor(cajaId: string): Observable<any> {
+    return this.http.post<any>(`${this.base}/caja-menor/${cajaId}/reembolso`, {});
+  }
+
+  // ─── Certificados a Proveedores Art. 381 & Formulario 350 ─────────────────
+  getProveedoresRetenciones(anio: number): Observable<ProveedorRetencionModel[]> {
+    return this.http.get<ProveedorRetencionModel[]>(`${this.base}/certificados-proveedores/${anio}`);
+  }
+
+  getCertificadoProveedor(terceroId: string, anio: number): Observable<CertificadoProveedorResumenModel> {
+    return this.http.get<CertificadoProveedorResumenModel>(`${this.base}/certificados-proveedores/${anio}/detalle/${terceroId}`);
+  }
+
+  descargarPdfCertificadoProveedor(terceroId: string, anio: number): Observable<Blob> {
+    return this.http.get(`${this.base}/certificados-proveedores/${anio}/pdf/${terceroId}`, {
+      responseType: 'blob',
+    });
+  }
+
+  enviarEmailCertificadoProveedor(terceroId: string, anio: number): Observable<any> {
+    return this.http.post<any>(`${this.base}/certificados-proveedores/${anio}/enviar-email/${terceroId}`, {});
+  }
+
+  getFormulario350(anio: number, mes: number): Observable<Formulario350ResumenModel> {
+    return this.http.get<Formulario350ResumenModel>(`${this.base}/formulario-350/${anio}/${mes}`);
   }
 }

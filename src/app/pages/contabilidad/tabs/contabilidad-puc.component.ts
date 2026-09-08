@@ -8,6 +8,62 @@ import { PucCuenta } from '../models/contabilidad.models';
   selector: 'app-contabilidad-puc',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styles: [`
+    .puc-kpis-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 1024px) {
+      .puc-kpis-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .puc-kpis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .kpi-widget-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 0.875rem 1rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+    .kpi-widget-card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+      border-color: #cbd5e1;
+    }
+    .kpi-widget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+    }
+    .kpi-widget-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .kpi-widget-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      line-height: 1.2;
+    }
+    .kpi-widget-footer {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 0.35rem;
+    }
+  `],
   template: `
     <div class="tab-content" data-testid="tab-content-puc">
       <!-- Toolbar PUC: Buscador, Filtro por Clase y Acciones -->
@@ -69,23 +125,50 @@ import { PucCuenta } from '../models/contabilidad.models';
         </div>
       </div>
 
-      <!-- Indicadores resumen -->
-      <div class="grid grid-cols-4 gap-3 mb-4" data-testid="puc-kpis">
-        <div class="stat-card" data-testid="kpi-total-cuentas">
-          <span class="stat-label">Total Cuentas</span>
-          <span class="stat-value">{{ totalCuentas() }}</span>
+      <!-- Indicadores resumen estilo NIIF 15 -->
+      <div class="puc-kpis-grid" data-testid="puc-kpis">
+        <div class="kpi-widget-card" data-testid="kpi-total-cuentas">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title">Total Cuentas</span>
+            <span class="text-sm">📊</span>
+          </div>
+          <div class="kpi-widget-value text-slate-800">
+            {{ totalCuentas() }}
+          </div>
+          <div class="kpi-widget-footer">Catálogo contable institucional</div>
         </div>
-        <div class="stat-card" data-testid="kpi-auxiliares">
-          <span class="stat-label">Cuentas Auxiliares</span>
-          <span class="stat-value">{{ totalAuxiliares() }}</span>
+
+        <div class="kpi-widget-card" style="border-color: #e0e7ff; background: linear-gradient(135deg, rgba(224, 231, 255, 0.25) 0%, #ffffff 100%);" data-testid="kpi-auxiliares">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title" style="color: #4338ca;">Cuentas Auxiliares</span>
+            <span class="text-sm">📑</span>
+          </div>
+          <div class="kpi-widget-value" style="color: #4338ca;">
+            {{ totalAuxiliares() }}
+          </div>
+          <div class="kpi-widget-footer" style="color: #6366f1;">Imputables en comprobantes</div>
         </div>
-        <div class="stat-card" data-testid="kpi-activas">
-          <span class="stat-label">Activas</span>
-          <span class="stat-value text-green-600">{{ totalActivas() }}</span>
+
+        <div class="kpi-widget-card" style="border-color: #d1fae5; background: linear-gradient(135deg, rgba(209, 250, 229, 0.25) 0%, #ffffff 100%);" data-testid="kpi-activas">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title" style="color: #047857;">Cuentas Activas</span>
+            <span class="text-sm">✅</span>
+          </div>
+          <div class="kpi-widget-value" style="color: #047857;">
+            {{ totalActivas() }}
+          </div>
+          <div class="kpi-widget-footer" style="color: #059669;">Disponibles para operación</div>
         </div>
-        <div class="stat-card" data-testid="kpi-inactivas">
-          <span class="stat-label">Inactivas</span>
-          <span class="stat-value text-red-500">{{ totalInactivas() }}</span>
+
+        <div class="kpi-widget-card" style="border-color: #fef3c7; background: linear-gradient(135deg, rgba(254, 243, 199, 0.25) 0%, #ffffff 100%);" data-testid="kpi-inactivas">
+          <div class="kpi-widget-header">
+            <span class="kpi-widget-title" style="color: #b45309;">Cuentas Inactivas</span>
+            <span class="text-sm">⏸️</span>
+          </div>
+          <div class="kpi-widget-value" style="color: #b45309;">
+            {{ totalInactivas() }}
+          </div>
+          <div class="kpi-widget-footer" style="color: #d97706;">Bloqueadas para nuevos registros</div>
         </div>
       </div>
 

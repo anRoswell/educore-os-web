@@ -34,7 +34,9 @@
               "src/styles.scss"
             ],
             "allowedCommonJsDependencies": [
-              "quill-delta"
+              "quill-delta",
+              "flatpickr",
+              "flatpickr/dist/l10n/es.js"
             ]
           },
           "configurations": {

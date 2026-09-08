@@ -12,10 +12,18 @@ import { ConceptoMapping, PucCuenta } from '../models/contabilidad.models';
     @if (visible() && mapping()) {
       <div class="modal-backdrop" data-testid="modal-editar-mapeo-backdrop" (click)="cancelar()">
         <div class="modal-box w-[580px]" data-testid="modal-editar-mapeo" (click)="$event.stopPropagation()">
-          <div class="modal-header flex items-center justify-between pb-3 border-b">
-            <h3 class="modal-title font-bold text-lg text-gray-800" data-testid="modal-editar-mapeo-title">
-              Mapeo de Concepto Contable
-            </h3>
+          <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-lg shadow-xs">
+                🔄
+              </div>
+              <div>
+                <h3 class="modal-title font-bold text-lg text-slate-800 tracking-tight" data-testid="modal-editar-mapeo-title">
+                  Mapeo de Concepto Contable
+                </h3>
+                <span class="text-xs text-slate-400 block">Vinculación automática Tesorería → PUC NIIF</span>
+              </div>
+            </div>
             <span class="badge-mini badge-blue">{{ mapping()!.tipoConceptoCodigo }}</span>
           </div>
 

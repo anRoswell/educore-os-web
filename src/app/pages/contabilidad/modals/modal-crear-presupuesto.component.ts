@@ -199,6 +199,8 @@ export class ModalCrearPresupuestoComponent {
       next: (res) => {
         this.guardando.set(false);
         this.guardado.emit(res);
+        this.nombre.set('');
+        this.descripcion.set('');
         this.cerrarModal();
       },
       error: (err) => {

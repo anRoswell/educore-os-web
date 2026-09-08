@@ -66,10 +66,14 @@ test.describe('DocMD-17: Presupuesto Institucional — E2E Suite Exhaustiva', ()
 
     // Guardar
     await page.locator('[data-testid="btn-guardar-presupuesto"]').click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(600);
 
-    // Verificar que el modal se cierra y el presupuesto aparece seleccionado
-    await expect(modal).not.toBeVisible();
+    // Validar modal de respuesta institucional
+    const modalRespuesta = page.locator('[data-testid="modal-respuesta-presupuesto"]');
+    await expect(modalRespuesta).toBeVisible();
+    await expect(page.locator('[data-testid="modal-respuesta-title"]')).toContainText('Presupuesto Anual Creado Exitosamente');
+    await page.locator('[data-testid="btn-entendido-respuesta"]').click();
+    await expect(modalRespuesta).not.toBeVisible();
 
     // Validar en el selector de presupuesto
     const selector = page.locator('[data-testid="select-presupuesto-activo"]');
@@ -114,8 +118,13 @@ test.describe('DocMD-17: Presupuesto Institucional — E2E Suite Exhaustiva', ()
 
     // Guardar
     await page.locator('[data-testid="btn-guardar-rubro"]').click();
-    await page.waitForTimeout(1000);
-    await expect(modalRubro).not.toBeVisible();
+    await page.waitForTimeout(600);
+
+    const modalRespuestaRubro = page.locator('[data-testid="modal-respuesta-presupuesto"]');
+    await expect(modalRespuestaRubro).toBeVisible();
+    await expect(page.locator('[data-testid="modal-respuesta-title"]')).toContainText('Rubro Presupuestal Agregado');
+    await page.locator('[data-testid="btn-entendido-respuesta"]').click();
+    await expect(modalRespuestaRubro).not.toBeVisible();
 
     // Verificar tabla de rubros y KPIs
     await expect(page.locator('[data-testid="presupuesto-kpis"]')).toBeVisible();
@@ -149,8 +158,13 @@ test.describe('DocMD-17: Presupuesto Institucional — E2E Suite Exhaustiva', ()
       await page.locator('[data-testid="textarea-adicion-justificacion"]').fill('Aprobación adicional Acta 09');
 
       await page.locator('[data-testid="btn-guardar-adicion"]').click();
-      await page.waitForTimeout(1000);
-      await expect(modalAdicion).not.toBeVisible();
+      await page.waitForTimeout(600);
+
+      const modalRespuestaAdicion = page.locator('[data-testid="modal-respuesta-presupuesto"]');
+      await expect(modalRespuestaAdicion).toBeVisible();
+      await expect(page.locator('[data-testid="modal-respuesta-title"]')).toContainText('Adición Presupuestal Extraordinaria Aplicada');
+      await page.locator('[data-testid="btn-entendido-respuesta"]').click();
+      await expect(modalRespuestaAdicion).not.toBeVisible();
     }
 
     sniffer.assertZeroErrors();

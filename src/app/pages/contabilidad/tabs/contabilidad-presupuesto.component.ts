@@ -5,6 +5,7 @@ import { ContabilidadService } from '../services/contabilidad.service';
 import { ModalCrearPresupuestoComponent } from '../modals/modal-crear-presupuesto.component';
 import { ModalCrearRubroPresupuestalComponent } from '../modals/modal-crear-rubro.component';
 import { ModalAdicionPresupuestalComponent } from '../modals/modal-adicion-presupuestal.component';
+import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '../modals/modal-respuesta-presupuesto.component';
 
 @Component({
   selector: 'app-contabilidad-presupuesto',
@@ -15,6 +16,7 @@ import { ModalAdicionPresupuestalComponent } from '../modals/modal-adicion-presu
     ModalCrearPresupuestoComponent,
     ModalCrearRubroPresupuestalComponent,
     ModalAdicionPresupuestalComponent,
+    ModalRespuestaPresupuestoComponent,
   ],
   template: `
     <div class="space-y-4" data-testid="contabilidad-presupuesto-tab">
@@ -106,6 +108,17 @@ import { ModalAdicionPresupuestalComponent } from '../modals/modal-adicion-presu
           </div>
         </div>
       </div>
+
+      <!-- Alerta Toast de Éxito -->
+      @if (alertaToast()) {
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg p-3 flex items-center justify-between shadow-sm" data-testid="alert-toast-presupuesto">
+          <div class="flex items-center gap-2">
+            <span class="text-base">✅</span>
+            <span class="font-medium">{{ alertaToast() }}</span>
+          </div>
+          <button type="button" class="text-emerald-700 hover:text-emerald-900 font-bold px-1" (click)="alertaToast.set(null)">✕</button>
+        </div>
+      }
 
       <!-- Alerta de Error si ocurre -->
       @if (errorMensaje()) {
@@ -331,6 +344,12 @@ import { ModalAdicionPresupuestalComponent } from '../modals/modal-adicion-presu
         (cerrar)="modalAdicionVisible.set(false)"
         (guardado)="onAdicionCreada($event)"
       ></app-modal-adicion-presupuestal>
+
+      <app-modal-respuesta-presupuesto
+        [visible]="modalRespuestaVisible()"
+        [data]="respuestaData()"
+        (cerrar)="modalRespuestaVisible.set(false)"
+      ></app-modal-respuesta-presupuesto>
     </div>
   `,
   styles: [`
@@ -383,11 +402,14 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
   readonly ejecucion = signal<any | null>(null);
   readonly cargando = signal<boolean>(false);
   readonly errorMensaje = signal<string | null>(null);
+  readonly alertaToast = signal<string | null>(null);
 
   // Modales
   readonly modalCrearPresupuestoVisible = signal<boolean>(false);
   readonly modalCrearRubroVisible = signal<boolean>(false);
   readonly modalAdicionVisible = signal<boolean>(false);
+  readonly modalRespuestaVisible = signal<boolean>(false);
+  readonly respuestaData = signal<RespuestaPresupuestoData | null>(null);
   readonly rubroParaAdicion = signal<string>('');
 
   readonly presupuestoActual = computed(() => {
@@ -456,7 +478,7 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
     }
   }
 
-  cargarPresupuestos(anioFiltro?: number): void {
+  cargarPresupuestos(anioFiltro?: number, targetSelectId?: string): void {
     const year = anioFiltro || this.anio();
     this.cargando.set(true);
     this.errorMensaje.set(null);
@@ -465,9 +487,14 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
       next: (list) => {
         this.presupuestos.set(list || []);
         if (list && list.length > 0) {
-          const currentId = this.presupuestoSeleccionadoId();
-          const match = list.find((p: any) => String(p.id) === String(currentId));
-          const targetId = match ? match.id : list[0].id;
+          let targetId: string;
+          if (targetSelectId && list.some((p: any) => String(p.id) === String(targetSelectId))) {
+            targetId = targetSelectId;
+          } else {
+            const currentId = this.presupuestoSeleccionadoId();
+            const match = list.find((p: any) => String(p.id) === String(currentId));
+            targetId = match ? match.id : list[0].id;
+          }
           this.presupuestoSeleccionadoId.set(targetId);
           this.cargarEjecucion(targetId);
         } else {
@@ -498,6 +525,11 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
     });
   }
 
+  abrirModalRespuesta(data: RespuestaPresupuestoData): void {
+    this.respuestaData.set(data);
+    this.modalRespuestaVisible.set(true);
+  }
+
   abrirModalPresupuesto(): void {
     this.modalCrearPresupuestoVisible.set(true);
   }
@@ -520,18 +552,72 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
   }
 
   onPresupuestoCreado(nuevo: any): void {
-    this.cargarPresupuestos();
+    const anioCreado = Number(nuevo?.anio) || this.anio();
+    if (this.anio() !== anioCreado) {
+      this.anio.set(anioCreado);
+    }
+    const nuevoId = nuevo?.id || '';
+    this.cargarPresupuestos(anioCreado, nuevoId);
+
+    this.alertaToast.set(`✅ Presupuesto "${nuevo?.nombre || 'Nuevo Presupuesto'}" para la vigencia ${anioCreado} guardado exitosamente.`);
+    this.abrirModalRespuesta({
+      tipo: 'PRESUPUESTO',
+      titulo: '¡Presupuesto Anual Creado Exitosamente!',
+      subtitulo: `${nuevo?.nombre || 'Presupuesto'} — Vigencia ${anioCreado}`,
+      detalles: [
+        { etiqueta: 'Denominación', valor: nuevo?.nombre || 'Presupuesto General' },
+        { etiqueta: 'Vigencia Fiscal (Año)', valor: String(anioCreado) },
+        { etiqueta: 'Centro de Costo', valor: nuevo?.centroCosto?.nombre || 'Institucional / General' },
+        { etiqueta: 'Estado Inicial', valor: nuevo?.estado || 'APROBADO' },
+        { etiqueta: 'Total Presupuestado', valor: '$ 0,00' },
+      ],
+      mensaje: 'El presupuesto ha sido registrado y persistido en la base de datos institucional. La vigencia y el presupuesto activo se han sincronizado en pantalla.',
+    });
   }
 
   onRubroCreado(nuevoRubro: any): void {
     if (this.presupuestoSeleccionadoId()) {
       this.cargarEjecucion(this.presupuestoSeleccionadoId());
     }
+    const montoFormat = nuevoRubro?.presupuestado
+      ? '$ ' + Number(nuevoRubro.presupuestado).toLocaleString('es-CO', { minimumFractionDigits: 2 })
+      : '$ 0,00';
+
+    this.alertaToast.set(`✅ Rubro "${nuevoRubro?.codigo} - ${nuevoRubro?.nombre}" agregado correctamente.`);
+    this.abrirModalRespuesta({
+      tipo: 'RUBRO',
+      titulo: '¡Rubro Presupuestal Agregado!',
+      subtitulo: `${nuevoRubro?.codigo || ''} — ${nuevoRubro?.nombre || ''}`,
+      detalles: [
+        { etiqueta: 'Código de Partida', valor: nuevoRubro?.codigo || '' },
+        { etiqueta: 'Nombre del Rubro', valor: nuevoRubro?.nombre || '' },
+        { etiqueta: 'Tipo de Partida', valor: nuevoRubro?.tipo || 'INGRESO' },
+        { etiqueta: 'Cuenta PUC Enlazada', valor: nuevoRubro?.cuentaPucCodigo || 'Sin enlazar' },
+        { etiqueta: 'Monto Presupuestado', valor: montoFormat },
+      ],
+      mensaje: 'La partida presupuestal ha sido enlazada al presupuesto activo y guardada en base de datos.',
+    });
   }
 
   onAdicionCreada(res: any): void {
     if (this.presupuestoSeleccionadoId()) {
       this.cargarEjecucion(this.presupuestoSeleccionadoId());
     }
+    const montoFormat = res?.presupuestado
+      ? '$ ' + Number(res.presupuestado).toLocaleString('es-CO', { minimumFractionDigits: 2 })
+      : '$ 0,00';
+
+    this.alertaToast.set(`⚡ Adición extraordinaria aplicada al rubro "${res?.codigo}".`);
+    this.abrirModalRespuesta({
+      tipo: 'ADICION',
+      titulo: '¡Adición Presupuestal Extraordinaria Aplicada!',
+      subtitulo: `Rubro ${res?.codigo || ''} — ${res?.nombre || ''}`,
+      detalles: [
+        { etiqueta: 'Rubro Modificado', valor: `${res?.codigo || ''} - ${res?.nombre || ''}` },
+        { etiqueta: 'Nuevo Techo Presupuestado', valor: montoFormat },
+        { etiqueta: 'Aprobación', valor: 'APROBADO POR CONSEJO DIRECTIVO' },
+      ],
+      mensaje: 'La adición presupuestal extraordinaria ha sido registrada y aplicada al techo presupuestal.',
+    });
   }
 }

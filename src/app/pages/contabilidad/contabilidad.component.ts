@@ -10,6 +10,7 @@ import { ContabilidadDiferidosComponent } from './tabs/contabilidad-diferidos.co
 import { ContabilidadNominaComponent } from './tabs/contabilidad-nomina.component';
 import { ContabilidadCajaMenorTabComponent } from './tabs/contabilidad-caja-menor.component';
 import { ContabilidadCertificadosProveedoresTabComponent } from './tabs/contabilidad-certificados-proveedores.component';
+import { ContabilidadPresupuestoTabComponent } from './tabs/contabilidad-presupuesto.component';
 
 export type TabActivo =
   | 'puc'
@@ -21,7 +22,8 @@ export type TabActivo =
   | 'diferidos'
   | 'nomina'
   | 'caja-menor'
-  | 'certificados-prov';
+  | 'certificados-prov'
+  | 'presupuesto';
 
 @Component({
   selector: 'app-contabilidad',
@@ -38,6 +40,7 @@ export type TabActivo =
     ContabilidadNominaComponent,
     ContabilidadCajaMenorTabComponent,
     ContabilidadCertificadosProveedoresTabComponent,
+    ContabilidadPresupuestoTabComponent,
   ],
   template: `
     <div class="page-header" data-testid="contabilidad-page-header">
@@ -150,6 +153,15 @@ export type TabActivo =
       >
         📜 Certificados Proveedores
       </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'presupuesto'"
+        (click)="setTab('presupuesto')"
+        data-testid="tab-presupuesto"
+      >
+        📊 Presupuesto Institucional
+      </button>
     </div>
 
     <div class="tab-panel" data-testid="contabilidad-tab-panel">
@@ -182,6 +194,9 @@ export type TabActivo =
       }
       @if (tab() === 'certificados-prov') {
         <app-contabilidad-certificados-proveedores />
+      }
+      @if (tab() === 'presupuesto') {
+        <app-contabilidad-presupuesto />
       }
     </div>
   `,

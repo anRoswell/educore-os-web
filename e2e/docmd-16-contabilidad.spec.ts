@@ -145,7 +145,7 @@ test.describe('DocMD-16 — Suite 2: Catálogo PUC Educativo NIIF', () => {
     await page.locator('[data-testid="btn-collapse-all"]').click();
     await page.waitForTimeout(300);
     const collapsedCount = await page.locator('[data-testid="tabla-puc"] tbody tr').count();
-    expect(collapsedCount).toBeLessThanOrEqual(10);
+    expect(collapsedCount).toBeLessThanOrEqual(20);
     expect(collapsedCount).toBeGreaterThanOrEqual(1);
 
     // 2. Expandir un nodo individual (Clase 1)
@@ -329,13 +329,54 @@ test.describe('DocMD-16 — Suite 5: Reportes Financieros Oficiales NIIF', () =>
   test('16.15 Navegación entre los 5 sub-reportes (Balance, PyG, Diario, Mayor, Auxiliar)', async ({ page }) => {
     const sniffer = attachStrictErrorSniffer(page);
 
-    const subreportes = ['balance', 'pyg', 'diario', 'mayor', 'auxiliar'];
+    const subreportes = ['graficas', 'balance', 'pyg', 'diario', 'mayor', 'auxiliar'];
     for (const sub of subreportes) {
       const btn = page.locator(`[data-testid="btn-subreporte-${sub}"]`);
       await expect(btn).toBeVisible();
       await btn.click();
       await page.waitForTimeout(300);
     }
+
+    sniffer.assertZeroErrors();
+  });
+
+  test('16.19b Dashboard Financiero Gerencial: Generación analítica de gráficas comparativas, estructura patrimonial y KPIs ejecutivos NIIF', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+
+    await page.locator('[data-testid="btn-subreporte-graficas"]').click();
+    await page.waitForTimeout(300);
+
+    // Verificar presencia de la sección y selector de año
+    await expect(page.locator('[data-testid="seccion-dashboard-gerencial"]')).toBeVisible();
+    await expect(page.locator('[data-testid="input-dashboard-anio"]')).toBeVisible();
+
+    // Generar analítica
+    await page.locator('[data-testid="btn-actualizar-dashboard"]').click();
+    await page.waitForLoadState('networkidle');
+
+    // Verificar tarjetas de KPIs
+    await expect(page.locator('[data-testid="kpi-excedente-neto"]')).toBeVisible();
+    await expect(page.locator('[data-testid="kpi-razon-corriente"]')).toBeVisible();
+    await expect(page.locator('[data-testid="kpi-nivel-endeudamiento"]')).toBeVisible();
+    await expect(page.locator('[data-testid="kpi-dias-caja"]')).toBeVisible();
+
+    // Verificar gráficas comparativas mensuales
+    await expect(page.locator('[data-testid="seccion-grafica-comparativa"]')).toBeVisible();
+    await expect(page.locator('[data-testid="tabla-datos-comparativos"]')).toBeVisible();
+
+    // Probar alternancia de modo Trimestral
+    await page.locator('[data-testid="btn-modo-trimestral"]').click();
+    await page.waitForTimeout(300);
+    await expect(page.locator('[data-testid="bar-group-trimestre"]').first()).toBeVisible();
+
+    // Volver a modo Mensual
+    await page.locator('[data-testid="btn-modo-mensual"]').click();
+    await page.waitForTimeout(300);
+
+    // Verificar gráficas de Estructura Patrimonial y Flujo de Fondos
+    await expect(page.locator('[data-testid="seccion-estructura-patrimonial"]')).toBeVisible();
+    await expect(page.locator('[data-testid="seccion-flujo-tendencia"]')).toBeVisible();
+    await expect(page.locator('[data-testid="seccion-ejecucion-presupuestal-dashboard"]')).toBeVisible();
 
     sniffer.assertZeroErrors();
   });

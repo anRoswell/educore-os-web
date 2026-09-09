@@ -11,7 +11,7 @@ import { PeriodoContable } from '../models/contabilidad.models';
   template: `
     @if (visible() && periodo()) {
       <div class="modal-backdrop" data-testid="modal-cerrar-periodo-backdrop" (click)="cancelar()">
-        <div class="modal-box w-[520px]" data-testid="modal-cerrar-periodo" (click)="$event.stopPropagation()">
+        <div class="modal-box w-[520px] rounded-2xl shadow-xl border border-slate-100 p-6" data-testid="modal-cerrar-periodo" (click)="$event.stopPropagation()">
           <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 text-lg shadow-xs">
@@ -27,44 +27,48 @@ import { PeriodoContable } from '../models/contabilidad.models';
             <span class="badge-mini badge-red">Cierre Definitivo</span>
           </div>
 
-          <div class="modal-body space-y-4 pt-3">
+          <div class="modal-body space-y-4 pt-4">
             @if (errorMensaje()) {
-              <div class="bg-red-50 border border-red-200 text-red-700 text-xs rounded p-2">
+              <div class="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3">
                 {{ errorMensaje() }}
               </div>
             }
 
-            <p class="text-sm text-gray-700">
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
               ¿Desea cerrar definitivamente el periodo
-              <strong>{{ nombreMes(periodo()!.mes) }} {{ periodo()!.anio }}</strong>?
-            </p>
+              <strong class="text-slate-900 font-bold">{{ nombreMes(periodo()!.mes) }} {{ periodo()!.anio }}</strong>?
+            </div>
 
-            <div class="bg-red-50 border border-red-200 rounded p-3 text-xs text-red-700">
-              🚫 <strong>Acción irreversible.</strong> Una vez cerrado, no se podrán registrar ni anular asientos en este periodo.
+            <div class="bg-rose-50/80 border border-rose-200 rounded-xl p-3.5 text-xs text-rose-700 flex items-start gap-2.5">
+              <span class="text-base flex-shrink-0">🚫</span>
+              <span><strong>Acción irreversible.</strong> Una vez cerrado, no se podrán registrar, modificar ni anular comprobantes contables en este periodo.</span>
             </div>
 
             <!-- Checklist de Integridad Pre-Cierre -->
-            <div class="border rounded p-3 bg-gray-50 text-xs space-y-2">
-              <div class="font-semibold text-gray-700">Verificaciones de Auditoría NIIF:</div>
-              <div class="flex items-center gap-2 text-green-700">
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/60 text-xs space-y-2">
+              <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                <span>📋</span>
+                <span>Verificaciones de Auditoría NIIF:</span>
+              </div>
+              <div class="flex items-center gap-2 text-emerald-700 font-medium">
                 <span>✓</span> Partida doble balanceada en el 100% de los comprobantes del mes.
               </div>
-              <div class="flex items-center gap-2 text-green-700">
+              <div class="flex items-center gap-2 text-emerald-700 font-medium">
                 <span>✓</span> Cero comprobantes en estado DRAFT pendientes de asentar.
               </div>
-              <div class="flex items-center gap-2 text-green-700">
+              <div class="flex items-center gap-2 text-emerald-700 font-medium">
                 <span>✓</span> Integración con recaudos de Tesorería conciliada.
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label text-xs font-semibold">Observaciones del Cierre (Opcional)</label>
+            <div class="form-group flex flex-col items-start gap-1">
+              <label class="form-label text-xs font-semibold text-slate-700">Observaciones del Cierre (Opcional)</label>
               <textarea
-                class="input-base h-20 text-xs"
+                class="input-base h-20 text-xs w-full"
                 data-testid="textarea-observaciones-cierre"
                 [ngModel]="observaciones()"
                 (ngModelChange)="observaciones.set($event)"
-                placeholder="Notas de auditoría o conciliación..."
+                placeholder="Notas de auditoría, conciliación bancaria o justificación..."
               ></textarea>
             </div>
           </div>
@@ -72,7 +76,7 @@ import { PeriodoContable } from '../models/contabilidad.models';
           <div class="modal-footer flex items-center justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
             <button
               type="button"
-              class="btn btn-secondary btn-sm font-medium"
+              class="btn-secondary btn-sm font-medium"
               data-testid="btn-cancelar-cierre"
               (click)="cancelar()"
             >

@@ -138,7 +138,10 @@ import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.
                 <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 <span>Agregando...</span>
               } @else {
-                <span>✓ Agregar Rubro</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Agregar Rubro</span>
               }
             </button>
           </div>

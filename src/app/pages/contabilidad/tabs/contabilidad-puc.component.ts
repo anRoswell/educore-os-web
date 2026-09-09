@@ -67,37 +67,43 @@ import { PucCuenta } from '../models/contabilidad.models';
   template: `
     <div class="tab-content" data-testid="tab-content-puc">
       <!-- Toolbar PUC: Buscador, Filtro por Clase y Acciones -->
-      <div class="flex items-center justify-between mb-5 gap-3 flex-wrap" data-testid="puc-toolbar">
-        <div class="flex gap-3 items-center flex-wrap" style="margin-bottom: 0.25rem;">
-          <input
-            class="form-control form-control-sm"
-            style="width: 280px; min-width: 240px;"
-            data-testid="input-search-puc"
-            type="text"
-            placeholder="🔍 Buscar por código o nombre..."
-            [ngModel]="busqueda()"
-            (ngModelChange)="busqueda.set($event)"
-          />
-          <select
-            class="form-select form-select-sm"
-            style="width: 220px; min-width: 200px;"
-            data-testid="select-clase-puc"
-            [ngModel]="filtroClase()"
-            (ngModelChange)="filtroClase.set($event)"
-          >
-            <option value="">Todas las clases</option>
-            <option value="1">1 — Activos</option>
-            <option value="2">2 — Pasivos</option>
-            <option value="3">3 — Patrimonio</option>
-            <option value="4">4 — Ingresos</option>
-            <option value="5">5 — Gastos</option>
-            <option value="6">6 — Costos Producción</option>
-            <option value="7">7 — Costos Ventas</option>
-            <option value="8">8 — Cuentas de Orden DB</option>
-            <option value="9">9 — Cuentas de Orden CR</option>
-          </select>
+      <div class="flex items-end justify-between mb-5 gap-3 flex-wrap" data-testid="puc-toolbar">
+        <div class="flex gap-3 items-end flex-wrap">
+          <div class="form-group-inline mb-0">
+            <label class="form-label-sm">Buscar Cuenta</label>
+            <input
+              class="input-base input-sm"
+              style="width: 280px; min-width: 240px;"
+              data-testid="input-search-puc"
+              type="text"
+              placeholder="🔍 Buscar por código o nombre..."
+              [ngModel]="busqueda()"
+              (ngModelChange)="busqueda.set($event)"
+            />
+          </div>
+          <div class="form-group-inline mb-0">
+            <label class="form-label-sm">Clase PUC</label>
+            <select
+              class="input-base input-sm"
+              style="width: 220px; min-width: 200px;"
+              data-testid="select-clase-puc"
+              [ngModel]="filtroClase()"
+              (ngModelChange)="filtroClase.set($event)"
+            >
+              <option value="">Todas las clases</option>
+              <option value="1">1 — Activos</option>
+              <option value="2">2 — Pasivos</option>
+              <option value="3">3 — Patrimonio</option>
+              <option value="4">4 — Ingresos</option>
+              <option value="5">5 — Gastos</option>
+              <option value="6">6 — Costos Producción</option>
+              <option value="7">7 — Costos Ventas</option>
+              <option value="8">8 — Cuentas de Orden DB</option>
+              <option value="9">9 — Cuentas de Orden CR</option>
+            </select>
+          </div>
         </div>
-        <div class="flex gap-2 items-center" style="margin-bottom: 0.25rem;">
+        <div class="flex gap-2 items-center mb-1">
           <button
             type="button"
             class="btn-secondary btn-sm"
@@ -132,7 +138,7 @@ import { PucCuenta } from '../models/contabilidad.models';
             <span class="kpi-widget-title">Total Cuentas</span>
             <span class="text-sm">📊</span>
           </div>
-          <div class="kpi-widget-value text-slate-800">
+          <div class="kpi-widget-value stat-value text-slate-800">
             {{ totalCuentas() }}
           </div>
           <div class="kpi-widget-footer">Catálogo contable institucional</div>
@@ -143,7 +149,7 @@ import { PucCuenta } from '../models/contabilidad.models';
             <span class="kpi-widget-title" style="color: #4338ca;">Cuentas Auxiliares</span>
             <span class="text-sm">📑</span>
           </div>
-          <div class="kpi-widget-value" style="color: #4338ca;">
+          <div class="kpi-widget-value stat-value" style="color: #4338ca;">
             {{ totalAuxiliares() }}
           </div>
           <div class="kpi-widget-footer" style="color: #6366f1;">Imputables en comprobantes</div>
@@ -154,7 +160,7 @@ import { PucCuenta } from '../models/contabilidad.models';
             <span class="kpi-widget-title" style="color: #047857;">Cuentas Activas</span>
             <span class="text-sm">✅</span>
           </div>
-          <div class="kpi-widget-value" style="color: #047857;">
+          <div class="kpi-widget-value stat-value" style="color: #047857;">
             {{ totalActivas() }}
           </div>
           <div class="kpi-widget-footer" style="color: #059669;">Disponibles para operación</div>
@@ -165,7 +171,7 @@ import { PucCuenta } from '../models/contabilidad.models';
             <span class="kpi-widget-title" style="color: #b45309;">Cuentas Inactivas</span>
             <span class="text-sm">⏸️</span>
           </div>
-          <div class="kpi-widget-value" style="color: #b45309;">
+          <div class="kpi-widget-value stat-value" style="color: #b45309;">
             {{ totalInactivas() }}
           </div>
           <div class="kpi-widget-footer" style="color: #d97706;">Bloqueadas para nuevos registros</div>

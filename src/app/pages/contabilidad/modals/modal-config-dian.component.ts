@@ -372,29 +372,32 @@ export class ModalConfigDianComponent {
   readonly mensajeExito = signal<string | null>(null);
 
   constructor() {
-    effect(() => {
-      const cfg = this.configInicial();
-      if (cfg) {
-        this.ambiente.set(cfg.ambiente || 'HABILITACION');
-        this.nitEmisor.set(cfg.nitEmisor || '');
-        this.dvEmisor.set(cfg.dvEmisor || '');
-        this.razonSocial.set(cfg.razonSocialEmisor || '');
-        this.resolucion.set(cfg.resolucionDian || '');
-        this.prefijoFactura.set(cfg.prefijoFactura || 'FE');
-        this.rangoDesde.set(cfg.rangoDesde || 1);
-        this.rangoHasta.set(cfg.rangoHasta || 999999);
-        this.fechaDesde.set(cfg.fechaResolucionDesde || '');
-        this.fechaHasta.set(cfg.fechaResolucionHasta || '');
-        this.claveTecnica.set(cfg.claveTecnica || '');
-        this.pinSoftware.set(cfg.pinSoftware || '');
-        this.idSoftware.set(cfg.idSoftware || '');
-        this.testSetId.set(cfg.testSetId || '');
-        this.prefijoNc.set(cfg.prefijoNc || 'NC');
-        this.prefijoNd.set(cfg.prefijoNd || 'ND');
-        this.prefijoDs.set(cfg.prefijoDs || 'DS');
-        this.tieneCertificadoActual.set(!!cfg.certificadoDigitalBase64);
-      }
-    });
+    effect(
+      () => {
+        const cfg = this.configInicial();
+        if (cfg) {
+          this.ambiente.set(cfg.ambiente || 'HABILITACION');
+          this.nitEmisor.set(cfg.nitEmisor || '');
+          this.dvEmisor.set(cfg.dvEmisor || '');
+          this.razonSocial.set(cfg.razonSocialEmisor || '');
+          this.resolucion.set(cfg.resolucionDian || '');
+          this.prefijoFactura.set(cfg.prefijoFactura || 'FE');
+          this.rangoDesde.set(cfg.rangoDesde || 1);
+          this.rangoHasta.set(cfg.rangoHasta || 999999);
+          this.fechaDesde.set(cfg.fechaResolucionDesde || '');
+          this.fechaHasta.set(cfg.fechaResolucionHasta || '');
+          this.claveTecnica.set(cfg.claveTecnica || '');
+          this.pinSoftware.set(cfg.pinSoftware || '');
+          this.idSoftware.set(cfg.idSoftware || '');
+          this.testSetId.set(cfg.testSetId || '');
+          this.prefijoNc.set(cfg.prefijoNc || 'NC');
+          this.prefijoNd.set(cfg.prefijoNd || 'ND');
+          this.prefijoDs.set(cfg.prefijoDs || 'DS');
+          this.tieneCertificadoActual.set(!!cfg.certificadoDigitalBase64);
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   onCertFileSelected(event: any): void {

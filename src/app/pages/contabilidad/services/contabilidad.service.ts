@@ -27,6 +27,28 @@ import {
   ProveedorRetencionModel,
   CertificadoProveedorResumenModel,
   Formulario350ResumenModel,
+  MatrizDeterioroModel,
+  ResultadoAsientoDeterioroModel,
+  AutoMatchResultadoModel,
+  InformeConciliacionModel,
+  ExogenaValidacionModel,
+  ExogenaExportacionModel,
+  ActivoFijoModel,
+  CrearActivoFijoModel,
+  DepreciarMesModel,
+  ResultadoDepreciacionMesModel,
+  RegistrarDeterioroActivoModel,
+  ResumenPatrimonialActivosModel,
+  ActivoFijoDeterioroModel,
+  FlujoEfectivoModel,
+  NotasNiifModel,
+  DocumentoSoporteModel,
+  DocumentoSoporteNotaModel,
+  CrearDocumentoSoporteModel,
+  NominaElectronicaModel,
+  CrearNominaIndividualModel,
+  GenerarNominaMasivaModel,
+  ResultadoNominaMasivaModel,
 } from '../models/contabilidad.models';
 
 @Injectable({ providedIn: 'root' })
@@ -77,8 +99,8 @@ export class ContabilidadService {
   }
 
   // ─── Directorio de Terceros ──────────────────────────────────────────────
-  getTerceros(search?: string): Observable<Tercero[]> {
-    let params = new HttpParams();
+  getTerceros(search?: string, limit: number = 100): Observable<Tercero[]> {
+    let params = new HttpParams().set('limit', limit.toString());
     if (search) params = params.set('search', search);
     return this.http.get<any>(`${this.base}/terceros`, { params }).pipe(
       map((res) => (Array.isArray(res) ? res : res.data ?? [])),
@@ -188,6 +210,12 @@ export class ContabilidadService {
   }
 
   // ─── Reportes Financieros NIIF ──────────────────────────────────────────
+  getDashboardGerencial(anio?: number): Observable<any> {
+    let p = new HttpParams();
+    if (anio) p = p.set('anio', String(anio));
+    return this.http.get<any>(`${this.base}/reportes/dashboard-gerencial`, { params: p });
+  }
+
   getBalanceGeneral(fechaCorte: string): Observable<BalanceGeneral> {
     return this.http.get<BalanceGeneral>(`${this.base}/reportes/balance-general`, {
       params: new HttpParams().set('fechaCorte', fechaCorte),
@@ -218,26 +246,51 @@ export class ContabilidadService {
     return this.http.get<AuxiliarTerceroReporte>(`${this.base}/reportes/auxiliar-tercero`, { params: p });
   }
 
-  descargarReporteExcel(tipo: string, params: Record<string, string>): void {
+  descargarBlob(blob: Blob, nombreArchivo: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
+  descargarReporteExcel(tipo: string, params: Record<string, string>): Observable<Blob> {
     let httpParams = new HttpParams();
     for (const [k, v] of Object.entries(params)) {
       if (v) httpParams = httpParams.set(k, v);
     }
-    const url = `${this.base}/reportes/${tipo}/excel?${httpParams.toString()}`;
-    window.open(url, '_blank');
+    const obs = this.http.get(`${this.base}/reportes/${tipo}/excel`, {
+      params: httpParams,
+      responseType: 'blob',
+    });
+    obs.subscribe({
+      next: (blob) => this.descargarBlob(blob, `reporte_${tipo}.xlsx`),
+      error: (err) => console.error(`Error descargando Excel de ${tipo}:`, err),
+    });
+    return obs;
   }
 
-  descargarExcel(reporte: string, params: Record<string, string>): void {
-    this.descargarReporteExcel(reporte, params);
+  descargarExcel(reporte: string, params: Record<string, string>): Observable<Blob> {
+    return this.descargarReporteExcel(reporte, params);
   }
 
-  descargarReportePdf(tipo: string, params: Record<string, string>): void {
+  descargarReportePdf(tipo: string, params: Record<string, string>): Observable<Blob> {
     let httpParams = new HttpParams();
     for (const [k, v] of Object.entries(params)) {
       if (v) httpParams = httpParams.set(k, v);
     }
-    const url = `${this.base}/reportes/${tipo}/pdf?${httpParams.toString()}`;
-    window.open(url, '_blank');
+    const obs = this.http.get(`${this.base}/reportes/${tipo}/pdf`, {
+      params: httpParams,
+      responseType: 'blob',
+    });
+    obs.subscribe({
+      next: (blob) => this.descargarBlob(blob, `reporte_${tipo}.pdf`),
+      error: (err) => console.error(`Error descargando PDF de ${tipo}:`, err),
+    });
+    return obs;
   }
 
   // ─── Certificados Tributarios Escolares (Art. 387 E.T.) ─────────────────
@@ -246,9 +299,17 @@ export class ContabilidadService {
     return this.http.get<any>(`${this.base}/certificados/anual`, { params });
   }
 
-  descargarCertificadoPdf(estudianteId: string, anio: number): void {
-    const url = `${this.base}/certificados/descargar-pdf?estudianteId=${estudianteId}&anio=${anio}`;
-    window.open(url, '_blank');
+  descargarCertificadoPdf(estudianteId: string, anio: number): Observable<Blob> {
+    const params = new HttpParams().set('estudianteId', estudianteId).set('anio', String(anio));
+    const obs = this.http.get(`${this.base}/certificados/descargar-pdf`, {
+      params,
+      responseType: 'blob',
+    });
+    obs.subscribe({
+      next: (blob) => this.descargarBlob(blob, `Certificado_Tributario_${anio}_${estudianteId}.pdf`),
+      error: (err) => console.error('Error descargando certificado tributario:', err),
+    });
+    return obs;
   }
 
   // ─── Medios Magnéticos e Información Exógena DIAN ────────────────────────
@@ -262,14 +323,30 @@ export class ContabilidadService {
     return this.http.get<any>(`${this.base}/exogena/exportar/${formato}`, { params });
   }
 
-  descargarExogenaExcel(formato: string, anio: number): void {
-    const url = `${this.base}/exogena/exportar/${formato}/excel?anio=${anio}`;
-    window.open(url, '_blank');
+  descargarExogenaExcel(formato: string, anio: number): Observable<Blob> {
+    const params = new HttpParams().set('anio', String(anio));
+    const obs = this.http.get(`${this.base}/exogena/exportar/${formato}/excel`, {
+      params,
+      responseType: 'blob',
+    });
+    obs.subscribe({
+      next: (blob) => this.descargarBlob(blob, `Exogena_Formato_${formato}_${anio}.xlsx`),
+      error: (err) => console.error(`Error descargando Exógena Excel ${formato}:`, err),
+    });
+    return obs;
   }
 
-  descargarExogenaXml(formato: string, anio: number): void {
-    const url = `${this.base}/exogena/exportar/${formato}/xml?anio=${anio}`;
-    window.open(url, '_blank');
+  descargarExogenaXml(formato: string, anio: number): Observable<Blob> {
+    const params = new HttpParams().set('anio', String(anio));
+    const obs = this.http.get(`${this.base}/exogena/exportar/${formato}/xml`, {
+      params,
+      responseType: 'blob',
+    });
+    obs.subscribe({
+      next: (blob) => this.descargarBlob(blob, `Dian_Formato_${formato}_${anio}.xml`),
+      error: (err) => console.error(`Error descargando Exógena XML ${formato}:`, err),
+    });
+    return obs;
   }
 
   // ─── Control Presupuestal Escolar ─────────────────────────────────────────
@@ -279,8 +356,10 @@ export class ContabilidadService {
     return this.http.get<any[]>(`${this.base}/presupuestos`, { params });
   }
 
-  getPresupuestoEjecucion(id: string): Observable<any> {
-    return this.http.get<any>(`${this.base}/presupuestos/${id}/ejecucion`);
+  getPresupuestoEjecucion(id: string, anio?: number): Observable<any> {
+    let params = new HttpParams();
+    if (anio) params = params.set('anio', String(anio));
+    return this.http.get<any>(`${this.base}/presupuestos/${id}/ejecucion`, { params });
   }
 
   crearPresupuesto(data: any): Observable<any> {
@@ -491,4 +570,143 @@ export class ContabilidadService {
   getFormulario350(anio: number, mes: number): Observable<Formulario350ResumenModel> {
     return this.http.get<Formulario350ResumenModel>(`${this.base}/formulario-350/${anio}/${mes}`);
   }
+
+  // ─── Deterioro de Cartera NIIF 9 ───────────────────────────────────────────
+  getMatrizDeterioro(fechaCorte: string): Observable<MatrizDeterioroModel> {
+    const params = new HttpParams().set('fechaCorte', fechaCorte);
+    return this.http.get<MatrizDeterioroModel>(`${this.base}/deterioro/matriz`, { params });
+  }
+
+  generarAsientoDeterioro(dto: { fechaCorte: string; observacion?: string; colegioId?: string }): Observable<ResultadoAsientoDeterioroModel> {
+    return this.http.post<ResultadoAsientoDeterioroModel>(`${this.base}/deterioro/generar-asiento`, dto);
+  }
+
+  // ─── Activos Fijos & Desvalorización NIIF ──────────────────────────────────
+  getActivosFijos(categoria?: string): Observable<ActivoFijoModel[]> {
+    let params = new HttpParams();
+    if (categoria) params = params.set('categoria', categoria);
+    return this.http.get<ActivoFijoModel[]>(`${this.base}/activos-fijos`, { params });
+  }
+
+  getResumenPatrimonialActivos(): Observable<ResumenPatrimonialActivosModel> {
+    return this.http.get<ResumenPatrimonialActivosModel>(`${this.base}/activos-fijos/resumen-patrimonial`);
+  }
+
+  getActivoFijoPorId(id: string): Observable<ActivoFijoModel> {
+    return this.http.get<ActivoFijoModel>(`${this.base}/activos-fijos/${id}`);
+  }
+
+  crearActivoFijo(dto: CrearActivoFijoModel): Observable<ActivoFijoModel> {
+    return this.http.post<ActivoFijoModel>(`${this.base}/activos-fijos`, dto);
+  }
+
+  depreciarMesActivos(dto: DepreciarMesModel): Observable<ResultadoDepreciacionMesModel> {
+    return this.http.post<ResultadoDepreciacionMesModel>(`${this.base}/activos-fijos/depreciar-mes`, dto);
+  }
+
+  registrarDeterioroActivo(dto: RegistrarDeterioroActivoModel): Observable<ActivoFijoDeterioroModel> {
+    return this.http.post<ActivoFijoDeterioroModel>(`${this.base}/activos-fijos/registrar-deterioro`, dto);
+  }
+
+  darDeBajaActivo(id: string, motivo: string): Observable<ActivoFijoModel> {
+    return this.http.post<ActivoFijoModel>(`${this.base}/activos-fijos/${id}/baja`, { motivo });
+  }
+
+  // ─── Flujo de Efectivo NIC 7 & Notas NIIF ──────────────────────────────────
+  getFlujoEfectivo(fechaInicio: string, fechaFin: string): Observable<FlujoEfectivoModel> {
+    const params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+    return this.http.get<FlujoEfectivoModel>(`${this.base}/reportes/flujo-efectivo`, { params });
+  }
+
+  getNotasNiif(anio: number): Observable<NotasNiifModel> {
+    const params = new HttpParams().set('anio', anio.toString());
+    return this.http.get<NotasNiifModel>(`${this.base}/reportes/notas-niif`, { params });
+  }
+
+  descargarFlujoEfectivoPdf(fechaInicio: string, fechaFin: string): Observable<Blob> {
+    const params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+    return this.http.get(`${this.base}/reportes/flujo-efectivo/pdf`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  descargarFlujoEfectivoExcel(fechaInicio: string, fechaFin: string): Observable<Blob> {
+    const params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+    return this.http.get(`${this.base}/reportes/flujo-efectivo/excel`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  descargarNotasNiifPdf(anio: number): Observable<Blob> {
+    const params = new HttpParams().set('anio', anio.toString());
+    return this.http.get(`${this.base}/reportes/notas-niif/pdf`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  // ─── Documento Soporte Electrónico DIAN ──────────────────────────────────
+  listarDocumentosSoporte(filtros?: {
+    fechaInicio?: string;
+    fechaFin?: string;
+    estado?: string;
+    search?: string;
+  }): Observable<DocumentoSoporteModel[]> {
+    let params = new HttpParams();
+    if (filtros?.fechaInicio) params = params.set('fechaInicio', filtros.fechaInicio);
+    if (filtros?.fechaFin) params = params.set('fechaFin', filtros.fechaFin);
+    if (filtros?.estado) params = params.set('estado', filtros.estado);
+    if (filtros?.search) params = params.set('search', filtros.search);
+    return this.http.get<DocumentoSoporteModel[]>(`${this.base}/documento-soporte`, { params });
+  }
+
+  obtenerDocumentoSoportePorId(id: string): Observable<DocumentoSoporteModel> {
+    return this.http.get<DocumentoSoporteModel>(`${this.base}/documento-soporte/${id}`);
+  }
+
+  crearDocumentoSoporte(dto: CrearDocumentoSoporteModel): Observable<DocumentoSoporteModel> {
+    return this.http.post<DocumentoSoporteModel>(`${this.base}/documento-soporte`, dto);
+  }
+
+  anularDocumentoSoporte(id: string, motivo: string): Observable<DocumentoSoporteNotaModel> {
+    return this.http.post<DocumentoSoporteNotaModel>(`${this.base}/documento-soporte/${id}/anular`, { motivo });
+  }
+
+  // ─── Nómina Electrónica UBL DIAN ─────────────────────────────────────────
+  listarNominasElectronicas(filtros?: {
+    anio?: number;
+    mes?: number;
+    estado?: string;
+    search?: string;
+  }): Observable<NominaElectronicaModel[]> {
+    let params = new HttpParams();
+    if (filtros?.anio) params = params.set('anio', filtros.anio.toString());
+    if (filtros?.mes) params = params.set('mes', filtros.mes.toString());
+    if (filtros?.estado) params = params.set('estado', filtros.estado);
+    if (filtros?.search) params = params.set('search', filtros.search);
+    return this.http.get<NominaElectronicaModel[]>(`${this.base}/nomina-electronica`, { params });
+  }
+
+  obtenerNominaElectronicaPorId(id: string): Observable<NominaElectronicaModel> {
+    return this.http.get<NominaElectronicaModel>(`${this.base}/nomina-electronica/${id}`);
+  }
+
+  crearNominaIndividual(dto: CrearNominaIndividualModel): Observable<NominaElectronicaModel> {
+    return this.http.post<NominaElectronicaModel>(`${this.base}/nomina-electronica/individual`, dto);
+  }
+
+  generarNominaMasiva(dto: GenerarNominaMasivaModel): Observable<ResultadoNominaMasivaModel> {
+    return this.http.post<ResultadoNominaMasivaModel>(`${this.base}/nomina-electronica/masiva`, dto);
+  }
 }
+
+
+

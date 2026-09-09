@@ -386,13 +386,15 @@ test.describe('DocMD-17 — Suite 3: Barrido Exhaustivo de Acciones de Fila (Row
     }
 
     // 3. Botón Imprimir/PDF comprobante
+    const pdfPromise = page.waitForResponse(
+      (resp) => resp.url().includes('comprobante') && resp.url().includes('pdf') && resp.status() === 200,
+      { timeout: 10000 }
+    );
     const btnImprimir = primeraFila.locator('[data-testid^="btn-imprimir-"]');
     await expect(btnImprimir).toBeVisible();
     await btnImprimir.click();
-    await page.waitForTimeout(300);
-
-    const openedUrls: string[] = await page.evaluate(() => (window as any)._openedUrls || []);
-    expect(openedUrls.some((u) => u.includes('comprobante') && u.includes('pdf'))).toBeTruthy();
+    const pdfResp = await pdfPromise;
+    expect(pdfResp.status()).toBe(200);
 
     sniffer.assertZeroErrors();
   });
@@ -455,6 +457,13 @@ test.describe('DocMD-17 — Suite 3: Barrido Exhaustivo de Acciones de Fila (Row
     page,
   }) => {
     const sniffer = attachStrictErrorSniffer(page);
+    const downloadedUrls: string[] = [];
+    page.on('response', (res) => {
+      if (res.url().includes('/api/v1/contabilidad/reportes/') && res.status() === 200) {
+        downloadedUrls.push(res.url());
+      }
+    });
+
     await page.locator('[data-testid="tab-reportes"]').click();
     await page.waitForLoadState('networkidle');
 
@@ -464,6 +473,7 @@ test.describe('DocMD-17 — Suite 3: Barrido Exhaustivo de Acciones de Fila (Row
     await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="btn-exportar-excel-balance"]').click();
     await page.locator('[data-testid="btn-exportar-pdf-balance"]').click();
+    await page.waitForTimeout(400);
 
     // 2. Estado de Resultados (PyG) -> Generar, Excel y PDF
     await page.locator('[data-testid="btn-subreporte-pyg"]').click();
@@ -471,6 +481,7 @@ test.describe('DocMD-17 — Suite 3: Barrido Exhaustivo de Acciones de Fila (Row
     await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="btn-exportar-excel-pyg"]').click();
     await page.locator('[data-testid="btn-exportar-pdf-pyg"]').click();
+    await page.waitForTimeout(400);
 
     // 3. Libro Diario -> Generar, Excel y PDF
     await page.locator('[data-testid="btn-subreporte-diario"]').click();
@@ -478,6 +489,7 @@ test.describe('DocMD-17 — Suite 3: Barrido Exhaustivo de Acciones de Fila (Row
     await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="btn-exportar-excel-diario"]').click();
     await page.locator('[data-testid="btn-exportar-pdf-diario"]').click();
+    await page.waitForTimeout(400);
 
     // 4. Libro Mayor -> Generar, Excel y PDF
     await page.locator('[data-testid="btn-subreporte-mayor"]').click();
@@ -485,6 +497,7 @@ test.describe('DocMD-17 — Suite 3: Barrido Exhaustivo de Acciones de Fila (Row
     await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="btn-exportar-excel-mayor"]').click();
     await page.locator('[data-testid="btn-exportar-pdf-mayor"]').click();
+    await page.waitForTimeout(400);
 
     // 5. Auxiliar Tercero -> Generar, Excel y PDF
     await page.locator('[data-testid="btn-subreporte-auxiliar"]').click();
@@ -492,16 +505,15 @@ test.describe('DocMD-17 — Suite 3: Barrido Exhaustivo de Acciones de Fila (Row
     await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="btn-exportar-excel-auxiliar"]').click();
     await page.locator('[data-testid="btn-exportar-pdf-auxiliar"]').click();
+    await page.waitForTimeout(500);
 
-    await page.waitForTimeout(400);
-    const openedUrls: string[] = await page.evaluate(() => (window as any)._openedUrls || []);
-    expect(openedUrls.length).toBeGreaterThanOrEqual(10);
-    expect(openedUrls.some((u) => u.includes('balance') && u.includes('excel'))).toBeTruthy();
-    expect(openedUrls.some((u) => u.includes('balance') && u.includes('pdf'))).toBeTruthy();
-    expect(openedUrls.some((u) => u.includes('estado-resultados') || u.includes('pyg'))).toBeTruthy();
-    expect(openedUrls.some((u) => u.includes('libro-diario') || u.includes('diario'))).toBeTruthy();
-    expect(openedUrls.some((u) => u.includes('libro-mayor') || u.includes('mayor'))).toBeTruthy();
-    expect(openedUrls.some((u) => u.includes('auxiliar'))).toBeTruthy();
+    expect(downloadedUrls.length).toBeGreaterThanOrEqual(10);
+    expect(downloadedUrls.some((u) => u.includes('balance') && u.includes('excel'))).toBeTruthy();
+    expect(downloadedUrls.some((u) => u.includes('balance') && u.includes('pdf'))).toBeTruthy();
+    expect(downloadedUrls.some((u) => u.includes('estado-resultados') || u.includes('pyg'))).toBeTruthy();
+    expect(downloadedUrls.some((u) => u.includes('libro-diario') || u.includes('diario'))).toBeTruthy();
+    expect(downloadedUrls.some((u) => u.includes('libro-mayor') || u.includes('mayor'))).toBeTruthy();
+    expect(downloadedUrls.some((u) => u.includes('auxiliar'))).toBeTruthy();
 
     sniffer.assertZeroErrors();
   });

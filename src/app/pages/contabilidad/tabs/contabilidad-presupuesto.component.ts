@@ -30,27 +30,53 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
   ],
   template: `
     <div class="space-y-4" data-testid="contabilidad-presupuesto-tab">
-      <!-- Barra Superior de Parámetros y Acciones -->
+      <!-- Encabezado / Banner Superior con Botón 'Nuevo Presupuesto' a la Derecha -->
+      <div class="presupuesto-header-banner bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4" style="border-left: 5px solid #4f46e5;" data-testid="presupuesto-header-banner">
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xl text-indigo-600 shadow-2xs">
+            📊
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-bold text-slate-800 tracking-tight" data-testid="title-presupuesto">
+                Presupuesto Institucional
+              </h2>
+              <span class="badge-mini bg-indigo-50 text-indigo-700 border-indigo-200 font-semibold">
+                Decreto 1075 de 2015
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Planificación, techos de gasto y ejecución presupuestal en vivo por rubros y centros de costo.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 ml-auto">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold shadow-sm"
+            data-testid="btn-nuevo-presupuesto"
+            (click)="abrirModalPresupuesto()"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Nuevo Presupuesto</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra Superior de Parámetros y Acciones de Modificación -->
       <div class="card p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <!-- Título y Filtros -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">📊</span>
-              <div>
-                <h3 class="font-bold text-base text-slate-800 tracking-tight">Presupuesto Institucional</h3>
-                <p class="text-xs text-slate-500">Planificación, techos de gasto y ejecución presupuestal en vivo</p>
-              </div>
-            </div>
-
-            <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
-
+          <!-- Filtros de Vigencia y Presupuesto Activo -->
+          <div class="flex flex-wrap items-end gap-3 flex-1">
             <!-- Vigencia Fiscal -->
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-semibold text-slate-600">Vigencia:</label>
+            <div class="form-group-inline mb-0">
+              <label class="form-label-sm">Vigencia</label>
               <input
                 type="number"
-                class="input-base text-xs font-mono font-semibold w-24 py-1.5 px-2.5 rounded-lg border-slate-300"
+                class="input-base input-sm text-xs font-mono font-semibold w-24"
                 data-testid="input-presupuesto-filtro-anio"
                 [ngModel]="anio()"
                 (ngModelChange)="onAnioChange($event)"
@@ -60,10 +86,10 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
             </div>
 
             <!-- Selector de Presupuesto Activo -->
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-semibold text-slate-600">Presupuesto:</label>
+            <div class="form-group-inline mb-0 flex-1 min-w-[240px]">
+              <label class="form-label-sm">Presupuesto</label>
               <select
-                class="input-base text-xs font-semibold py-1.5 px-2.5 rounded-lg border-slate-300 min-w-[240px]"
+                class="input-base input-sm text-xs font-semibold w-full"
                 data-testid="select-presupuesto-activo"
                 [ngModel]="presupuestoSeleccionadoId()"
                 (ngModelChange)="onPresupuestoSeleccionado($event)"
@@ -85,34 +111,37 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
 
             <!-- Badge de Estado Legal del Presupuesto (Decreto 1075 de 2015) -->
             @if (presupuestoActual()) {
-              @if (presupuestoActual()?.id === 'TODOS') {
-                <span
-                  class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center gap-1.5 shadow-2xs"
-                  data-testid="badge-estado-presupuesto"
-                  title="Vista consolidada de todos los presupuestos de la vigencia institucional"
-                >
-                  <span>📊</span>
-                  <span>CONSOLIDADO ({{ presupuestos().length }} Presupuestos)</span>
-                </span>
-              } @else if (presupuestoActual()?.estado === 'BORRADOR') {
-                <span
-                  class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5 shadow-2xs"
-                  data-testid="badge-estado-presupuesto"
-                  title="Presupuesto en formulación. Edición libre de partidas antes de la adopción del Consejo Directivo."
-                >
-                  <span>📝</span>
-                  <span>BORRADOR (Formulación)</span>
-                </span>
-              } @else {
-                <span
-                  class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 shadow-2xs"
-                  data-testid="badge-estado-presupuesto"
-                  title="Presupuesto legalmente adoptado. Modificaciones solo mediante Acuerdo de Consejo Directivo."
-                >
-                  <span>🏛️</span>
-                  <span>APROBADO {{ presupuestoActual()?.numeroAcuerdo ? '— ' + presupuestoActual()?.numeroAcuerdo : '' }}</span>
-                </span>
-              }
+              <div class="form-group-inline mb-0">
+                <label class="form-label-sm">Estado</label>
+                @if (presupuestoActual()?.id === 'TODOS') {
+                  <span
+                    class="h-[38px] px-3 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
+                    data-testid="badge-estado-presupuesto"
+                    title="Vista consolidada de todos los presupuestos de la vigencia institucional"
+                  >
+                    <span>📊</span>
+                    <span>CONSOLIDADO ({{ presupuestos().length }} Presupuestos)</span>
+                  </span>
+                } @else if (presupuestoActual()?.estado === 'BORRADOR') {
+                  <span
+                    class="h-[38px] px-3 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
+                    data-testid="badge-estado-presupuesto"
+                    title="Presupuesto en formulación. Edición libre de partidas antes de la adopción del Consejo Directivo."
+                  >
+                    <span>📝</span>
+                    <span>BORRADOR (Formulación)</span>
+                  </span>
+                } @else {
+                  <span
+                    class="h-[38px] px-3 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
+                    data-testid="badge-estado-presupuesto"
+                    title="Presupuesto legalmente adoptado. Modificaciones solo mediante Acuerdo de Consejo Directivo."
+                  >
+                    <span>🏛️</span>
+                    <span>APROBADO {{ presupuestoActual()?.numeroAcuerdo ? '— ' + presupuestoActual()?.numeroAcuerdo : '' }}</span>
+                  </span>
+                }
+              </div>
             }
           </div>
 
@@ -212,21 +241,13 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
                   (click)="abrirModalRubro()"
                   title="Agregar partida de ingreso o gasto al presupuesto activo"
                 >
-                  <span>+</span>
+                  <svg class="w-4 h-4 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
                   <span>Agregar Rubro</span>
                 </button>
               }
             }
-
-            <button
-              type="button"
-              class="btn-primary btn-sm inline-flex items-center gap-1.5"
-              data-testid="btn-nuevo-presupuesto"
-              (click)="abrirModalPresupuesto()"
-            >
-              <span>+</span>
-              <span>Nuevo Presupuesto</span>
-            </button>
           </div>
         </div>
       </div>
@@ -268,11 +289,13 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
           </p>
           <button
             type="button"
-            class="btn-primary btn-sm inline-flex items-center gap-1.5"
+            class="btn-primary btn-sm inline-flex items-center gap-1.5 font-semibold shadow-sm"
             data-testid="btn-crear-primer-presupuesto"
             (click)="abrirModalPresupuesto()"
           >
-            <span>+</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
             <span>Crear Primer Presupuesto Anual</span>
           </button>
         </div>
@@ -304,15 +327,15 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
           </div>
 
           <!-- KPI 3: Pagado -->
-          <div class="kpi-widget-card" style="border-color: #d1fae5; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+          <div class="kpi-widget-card" style="border-color: #dcfce7; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
             <div class="kpi-widget-header">
-              <span class="kpi-widget-title" style="color: #065f46;">Total Pagado</span>
-              <span class="text-base">✅</span>
+              <span class="kpi-widget-title" style="color: #15803d;">Total Pagado</span>
+              <span class="text-base">💳</span>
             </div>
-            <div class="kpi-widget-value" style="color: #059669;" data-testid="kpi-total-pagado">
+            <div class="kpi-widget-value" style="color: #16a34a;" data-testid="kpi-total-pagado">
               $ {{ totales().totalPagado | number:'1.2-2' }}
             </div>
-            <div class="kpi-widget-footer" style="color: #10b981;">Desembolsos ejecutados</div>
+            <div class="kpi-widget-footer" style="color: #22c55e;">Giro bancario efectivo</div>
           </div>
 
           <!-- KPI 4: Desviación Global -->
@@ -345,15 +368,17 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
           </div>
 
           @if (rubros().length === 0) {
-            <div class="p-8 text-center bg-slate-50 rounded-lg border border-dashed border-slate-200" data-testid="empty-rubros">
-              <p class="text-xs text-slate-500 mb-2">Este presupuesto aún no tiene rubros asociados.</p>
+            <div class="py-8 px-6 text-center bg-slate-50/80 rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2.5" data-testid="empty-rubros">
+              <p class="text-xs text-slate-500 font-medium m-0">Este presupuesto aún no tiene rubros asociados.</p>
               <button
                 type="button"
-                class="btn-primary btn-sm inline-flex items-center gap-1"
+                class="btn btn-primary btn-sm inline-flex items-center gap-1.5 font-semibold shadow-sm mb-4"
                 (click)="abrirModalRubro()"
                 data-testid="btn-agregar-primer-rubro"
               >
-                <span>+</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
                 <span>Agregar Primer Rubro</span>
               </button>
             </div>
@@ -375,7 +400,7 @@ import { ModalRespuestaPresupuestoComponent, RespuestaPresupuestoData } from '..
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                  @for (r of rubros(); track r.codigo) {
+                  @for (r of rubros(); track (r.id || (r.presupuestoId ? r.presupuestoId + '-' + r.codigo : r.codigo) + '-' + $index)) {
                     <tr class="hover:bg-slate-50/60 transition-colors">
                       <td class="py-2 px-3 font-mono font-semibold text-slate-800">{{ r.codigo }}</td>
                       <td class="py-2 px-3 font-medium text-slate-700">
@@ -609,29 +634,36 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
     const id = this.presupuestoSeleccionadoId();
     if (ej && ej.rubros && ej.rubros.length > 0) {
       if (id === 'TODOS') {
-        return ej.rubros.map((r: any) => {
-          const matching = this.presupuestos().find((p) => p.rubros?.some((pr: any) => pr.codigo === r.codigo));
+        return ej.rubros.map((r: any, idx: number) => {
+          const matching = this.presupuestos().find((p) => p.id === r.presupuestoId || p.rubros?.some((pr: any) => pr.codigo === r.codigo || pr.id === r.id));
           return {
             ...r,
+            id: r.id || `rubro-todos-${r.codigo}-${idx}`,
+            tipo: r.tipo || (r.codigo?.startsWith('ING') ? 'INGRESO' : 'GASTO'),
             presupuestoNombre: r.presupuestoNombre || matching?.nombre || '',
           };
         });
       }
-      return ej.rubros;
+      return ej.rubros.map((r: any, idx: number) => ({
+        ...r,
+        id: r.id || `rubro-${r.codigo}-${idx}`,
+        tipo: r.tipo || (r.codigo?.startsWith('ING') ? 'INGRESO' : 'GASTO'),
+      }));
     }
     if (id === 'TODOS') {
       const list = this.presupuestos();
       return list.flatMap((p: any) =>
-        (p.rubros || []).map((r: any) => ({
+        (p.rubros || []).map((r: any, idx: number) => ({
+          id: r.id || `${p.id}-${r.codigo}-${idx}`,
           codigo: r.codigo,
           nombre: r.nombre,
-          tipo: r.tipo,
+          tipo: r.tipo || (r.codigo?.startsWith('ING') ? 'INGRESO' : 'GASTO'),
           presupuestado: Number(r.presupuestado || 0),
           comprometido: Number(r.comprometido || 0),
           causado: Number(r.causado || 0),
           pagado: Number(r.pagado || 0),
           porcentajeEjecucion:
-            r.presupuestado > 0 ? Math.round((Number(r.causado || 0) / Number(r.presupuestado)) * 100) : 0,
+            Number(r.presupuestado) > 0 ? Math.round((Number(r.causado || 0) / Number(r.presupuestado)) * 100) : 0,
           semaforo: 'VERDE',
           presupuestoId: p.id,
           presupuestoNombre: p.nombre,
@@ -641,15 +673,16 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
     }
     const actual = this.presupuestoActual();
     if (actual && actual.rubros) {
-      return actual.rubros.map((r: any) => ({
+      return actual.rubros.map((r: any, idx: number) => ({
+        id: r.id || `${r.codigo}-${idx}`,
         codigo: r.codigo,
         nombre: r.nombre,
-        tipo: r.tipo,
+        tipo: r.tipo || (r.codigo?.startsWith('ING') ? 'INGRESO' : 'GASTO'),
         presupuestado: Number(r.presupuestado || 0),
         comprometido: Number(r.comprometido || 0),
         causado: Number(r.causado || 0),
         pagado: Number(r.pagado || 0),
-        porcentajeEjecucion: r.presupuestado > 0 ? Math.round((Number(r.causado || 0) / Number(r.presupuestado)) * 100) : 0,
+        porcentajeEjecucion: Number(r.presupuestado) > 0 ? Math.round((Number(r.causado || 0) / Number(r.presupuestado)) * 100) : 0,
         semaforo: 'VERDE',
       }));
     }
@@ -732,7 +765,7 @@ export class ContabilidadPresupuestoTabComponent implements OnInit {
 
   cargarEjecucion(id: string): void {
     this.cargando.set(true);
-    this.contabilidadService.getPresupuestoEjecucion(id).subscribe({
+    this.contabilidadService.getPresupuestoEjecucion(id, this.anio()).subscribe({
       next: (data) => {
         this.ejecucion.set(data);
         this.cargando.set(false);

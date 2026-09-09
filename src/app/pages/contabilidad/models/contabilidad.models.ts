@@ -30,8 +30,10 @@ export interface PucCuenta {
 export interface Tercero {
   id: string;
   colegioId?: string;
-  tipoIdentificacion: TipoIdentificacion;
-  numeroIdentificacion: string;
+  tipoIdentificacion?: TipoIdentificacion;
+  tipoDocumento?: TipoIdentificacion | string;
+  numeroIdentificacion?: string;
+  numeroDocumento?: string;
   digitoVerificacion?: number;
   tipoPersona: TipoPersona;
   primerNombre?: string;
@@ -42,6 +44,8 @@ export interface Tercero {
   telefono?: string;
   activo: boolean;
 }
+
+export type TerceroModel = Tercero;
 
 export interface PeriodoContable {
   id: string;
@@ -169,6 +173,62 @@ export interface DianConfigModel {
   rangoHastaDs?: number;
 }
 
+export interface FacturaDirectaItemModel {
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  descuento?: number;
+  iva?: number;
+  porcentajeIva?: number;
+  subtotal?: number;
+  total?: number;
+  cuentaIngresoCodigo?: string;
+}
+
+export interface EmitirFacturaDirectaModel {
+  sendToDian?: boolean;
+  terceroId: string;
+  clienteNombre: string;
+  clienteNumeroDocumento: string;
+  clienteTipoDocumento?: string;
+  clienteEmail?: string;
+  clienteTelefono?: string;
+  clienteDireccion?: string;
+  items: FacturaDirectaItemModel[];
+  observaciones?: string;
+  medioPago?: string;
+  fechaVencimiento?: string;
+}
+
+export interface EmitirFacturasMasivasModel {
+  sendToDian?: boolean;
+  mes?: number;
+  anio?: number;
+  cuentasCobroIds?: string[];
+}
+
+export interface ResultadoFacturasMasivasModel {
+  success: boolean;
+  totalProcesadas: number;
+  exitosas: number;
+  fallidas: number;
+  detalles: {
+    cuentaCobroId: string;
+    estudianteNombre?: string;
+    documentoId?: string;
+    numero?: string;
+    cufe?: string;
+    estadoDian?: string;
+    error?: string;
+  }[];
+}
+
+export interface EnviarFacturaEmailModel {
+  emailDestino?: string;
+  asunto?: string;
+  mensaje?: string;
+}
+
 export interface DocumentoElectronicoModel {
   id: string;
   colegioId: string;
@@ -192,6 +252,8 @@ export interface DocumentoElectronicoModel {
   codigoRespuestaDian?: string;
   mensajeRespuestaDian?: string;
   trackIdDian?: string;
+  xmlFirmadoUbl?: string;
+  pdfUrl?: string;
   createdAt: string;
 }
 
@@ -563,4 +625,428 @@ export interface Formulario350ResumenModel {
   totalRetencionesPagar: number;
   totalRetencionesLetras: string;
   fechaGeneracion: string;
+}
+
+// ─── Deterioro de Cartera NIIF 9 ───────────────────────────────────────────
+export interface TramoDeterioroModel {
+  rango: string;
+  saldo: number;
+  porcentajeNIIF: number;
+  valorDeterioro: number;
+}
+
+export interface MatrizDeterioroModel {
+  fechaCorte: string;
+  totalCartera: number;
+  tramos: TramoDeterioroModel[];
+  totalDeterioroCalculado: number;
+  cuentaDebito: string;
+  cuentaCredito: string;
+}
+
+export interface ResultadoAsientoDeterioroModel {
+  asientoId: string;
+  tipoComprobante: string;
+  consecutivo: number;
+  concepto: string;
+  totalDebito: number;
+  totalCredito: number;
+  diferencia: number;
+  estado: string;
+  chkCuadrado: boolean;
+}
+
+// ─── Conciliación Bancaria ──────────────────────────────────────────────────
+export interface AutoMatchResultadoModel {
+  coincidenciasExactas: number;
+  partidasConciliadas: number;
+  partidasPendientes: number;
+  tasaExito: number;
+  diferenciaNeta: number;
+}
+
+export interface InformeConciliacionModel {
+  saldoExtracto: number;
+  menosChequesGiradosNoCobrados: number;
+  masConsignacionesEnTransito: number;
+  menosNotasDebitoNoContabilizadas: number;
+  saldoConciliadoLibros: number;
+  saldoLibrosContables: number;
+  diferencia: number;
+}
+
+// ─── Información Exógena DIAN ───────────────────────────────────────────────
+export interface ExogenaValidacionAlertaModel {
+  terceroId: string;
+  numeroDocumento: string;
+  nombreCompleto: string;
+  tipoAlerta: 'NIT_INVALIDO' | 'DIRECCION_FALTANTE' | 'CODIGO_DANE_INVALIDO';
+  descripcion: string;
+}
+
+export interface ExogenaValidacionModel {
+  valido: boolean;
+  totalTercerosAuditados: number;
+  alertasNits: number;
+  alertasDirecciones: number;
+  alertasCodigosDane: number;
+  detalles?: ExogenaValidacionAlertaModel[];
+}
+
+export interface ExogenaExportacionModel {
+  formato: string;
+  version: string;
+  anio: number;
+  registros: number;
+  totalPagos?: number;
+  totalRetenciones?: number;
+  totalIngresos?: number;
+  totalSaldos?: number;
+  columnas: string[];
+  datos: Record<string, any>[];
+}
+
+// ─── Activos Fijos, Depreciación y Desvalorización NIIF ──────────────────────
+export type CategoriaActivoFijo =
+  | 'EQUIPO_COMPUTO'
+  | 'VEHICULO_TRANSPORTE'
+  | 'MUEBLES_ENSERES'
+  | 'MAQUINARIA_EQUIPO'
+  | 'EDIFICACIONES'
+  | 'TERRENO'
+  | 'SOFTWARE_INTANGIBLE'
+  | 'OTROS';
+
+export type EstadoActivoFijo = 'ACTIVO' | 'TOTALMENTE_DEPRECIADO' | 'DESVALORIZADO' | 'DADO_DE_BAJA';
+
+export interface ActivoFijoDepreciacionModel {
+  id: string;
+  activoId: string;
+  periodoAnio: number;
+  periodoMes: number;
+  cuotaDepreciacion: number;
+  depreciacionAcumuladaResultante: number;
+  valorEnLibrosResultante: number;
+  asientoId?: string;
+  createdAt: string;
+}
+
+export interface ActivoFijoDeterioroModel {
+  id: string;
+  activoId: string;
+  fechaTest: string;
+  valorEnLibrosAnterior: number;
+  importeRecuperable: number;
+  perdidaDeterioro: number;
+  motivo: string;
+  asientoId?: string;
+  createdAt: string;
+}
+
+export interface ActivoFijoModel {
+  id: string;
+  colegioId: string;
+  placa: string;
+  nombre: string;
+  categoria: CategoriaActivoFijo;
+  fechaAdquisicion: string;
+  costoAdquisicion: number;
+  valorResidual: number;
+  vidaUtilMeses: number;
+  mesesDepreciados: number;
+  depreciacionAcumulada: number;
+  deterioroAcumulado: number;
+  valorEnLibros: number;
+  cuentaActivo: string;
+  cuentaGastoDepreciacion: string;
+  cuentaDepreciacionAcumulada: string;
+  cuentaGastoDeterioro: string;
+  cuentaDeterioroAcumulado: string;
+  centroCostoCodigo?: string;
+  ubicacionFisica?: string;
+  responsableNombre?: string;
+  estado: EstadoActivoFijo;
+  depreciaciones?: ActivoFijoDepreciacionModel[];
+  deterioros?: ActivoFijoDeterioroModel[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CrearActivoFijoModel {
+  placa: string;
+  nombre: string;
+  categoria: CategoriaActivoFijo;
+  fechaAdquisicion: string;
+  costoAdquisicion: number;
+  valorResidual?: number;
+  vidaUtilMeses?: number;
+  cuentaActivo?: string;
+  cuentaGastoDepreciacion?: string;
+  cuentaDepreciacionAcumulada?: string;
+  centroCostoCodigo?: string;
+  ubicacionFisica?: string;
+  responsableNombre?: string;
+}
+
+export interface DepreciarMesModel {
+  periodoAnio: number;
+  periodoMes: number;
+}
+
+export interface ResultadoDepreciacionMesModel {
+  totalActivosDepreciados: number;
+  totalDepreciacionMes: number;
+  asientoId?: string;
+  asientoConsecutivo?: number;
+}
+
+export interface RegistrarDeterioroActivoModel {
+  activoId: string;
+  fechaTest: string;
+  importeRecuperable: number;
+  motivo: string;
+}
+
+export interface ResumenPatrimonialActivosModel {
+  totalActivos: number;
+  costoHistoricoTotal: number;
+  depreciacionAcumuladaTotal: number;
+  deterioroAcumuladoTotal: number;
+  valorNetoEnLibros: number;
+  activosPorCategoria: Record<string, number>;
+}
+
+// Modelos para Flujo de Efectivo NIC 7 y Notas NIIF
+export interface FlujoEfectivoPartidaModel {
+  concepto: string;
+  valor: number;
+  tipo: 'SUMA' | 'RESTA' | 'SUBTOTAL';
+  nota?: string;
+}
+
+export interface FlujoEfectivoModel {
+  colegioId: string;
+  desde: string;
+  hasta: string;
+  excedenteNeto: number;
+  ajustesNoMonetarios: FlujoEfectivoPartidaModel[];
+  cambiosCapitalTrabajo: FlujoEfectivoPartidaModel[];
+  flujoNetoOperacion: number;
+  actividadesInversion: FlujoEfectivoPartidaModel[];
+  flujoNetoInversion: number;
+  actividadesFinanciacion: FlujoEfectivoPartidaModel[];
+  flujoNetoFinanciacion: number;
+  variacionNetaEfectivo: number;
+  saldoInicialEfectivo: number;
+  saldoFinalEfectivo: number;
+  conciliado: boolean;
+}
+
+export interface NotaNiifItemModel {
+  numero: number;
+  titulo: string;
+  normaReferencia: string;
+  contenido: string;
+  tablaDatos?: { columnas: string[]; filas: (string | number)[][] };
+}
+
+export interface NotasNiifModel {
+  colegioId: string;
+  anio: number;
+  fechaEmision: string;
+  institucion: {
+    nombre: string;
+    nit: string;
+    codigoDane?: string;
+    resolucionAprobacion?: string;
+    ciudad: string;
+    direccion?: string;
+  };
+  firmas?: {
+    rector: { nombre: string; cargo: string };
+    contador: { nombre: string; cargo: string; tarjetaProfesional?: string };
+    revisorFiscal?: { nombre: string; cargo: string; tarjetaProfesional?: string };
+  };
+  notas: NotaNiifItemModel[];
+}
+
+
+// ─── Documento Soporte Electrónico (No Obligados) DIAN ─────────────────────
+export type EstadoDianDocumentoSoporte = 'BORRADOR' | 'ENVIADO' | 'ACEPTADO' | 'RECHAZADO' | 'ANULADO';
+export type TipoNotaDocumentoSoporte = 'ANULACION' | 'AJUSTE';
+
+export interface ItemDocumentoSoporteModel {
+  id?: string;
+  documentoSoporteId?: string;
+  descripcion: string;
+  cantidad: number;
+  unidadMedida?: string;
+  precioUnitario: number;
+  totalLinea: number;
+  porcentajeIva?: number;
+  valorIva?: number;
+  porcentajeRetefuente?: number;
+  valorRetefuente?: number;
+  porcentajeReteica?: number;
+  valorReteica?: number;
+  cuentaGastoCodigo?: string;
+  centroCostoCodigo?: string;
+}
+
+export interface DocumentoSoporteNotaModel {
+  id: string;
+  colegioId: string;
+  documentoSoporteId: string;
+  tipoNota: TipoNotaDocumentoSoporte;
+  numeroNota: string;
+  prefijo: string;
+  consecutivo: number;
+  fechaEmision: string;
+  motivo: string;
+  cudsNota?: string;
+  cudsReferencia?: string;
+  estadoDian: string;
+  createdAt: string;
+}
+
+export interface DocumentoSoporteModel {
+  id: string;
+  colegioId: string;
+  terceroId: string;
+  numeroDocumento: string;
+  prefijo: string;
+  consecutivo: number;
+  fechaEmision: string;
+  fechaVencimiento: string;
+  medioPago: string;
+  metodoPago: string;
+  subtotal: number;
+  totalDescuentos: number;
+  totalIva: number;
+  totalRetefuente: number;
+  totalReteica: number;
+  totalReteiva: number;
+  totalPagar: number;
+  cuds?: string;
+  qrData?: string;
+  xmlUbl?: string;
+  estadoDian: EstadoDianDocumentoSoporte;
+  codigoRespuestaDian?: string;
+  mensajeDian?: string;
+  fechaTransmision?: string;
+  asientoId?: string;
+  notasAdicionales?: string;
+  tercero?: TerceroModel;
+  items?: ItemDocumentoSoporteModel[];
+  notas?: DocumentoSoporteNotaModel[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CrearDocumentoSoporteModel {
+  terceroId: string;
+  fechaEmision?: string;
+  fechaVencimiento?: string;
+  medioPago?: string;
+  metodoPago?: string;
+  items: {
+    descripcion: string;
+    cantidad?: number;
+    unidadMedida?: string;
+    precioUnitario: number;
+    porcentajeIva?: number;
+    porcentajeRetefuente?: number;
+    porcentajeReteica?: number;
+    cuentaGastoCodigo?: string;
+    centroCostoCodigo?: string;
+  }[];
+  notasAdicionales?: string;
+}
+
+// ─── Nómina Electrónica UBL DIAN ───────────────────────────────────────────
+export type TipoNominaElectronica = 'INDIVIDUAL' | 'AJUSTE_ELIMINAR' | 'AJUSTE_REEMPLAZAR';
+export type EstadoDianNomina = 'BORRADOR' | 'ENVIADO' | 'ACEPTADO' | 'RECHAZADO';
+
+export interface NominaDevengadoModel {
+  id?: string;
+  nominaElectronicaId?: string;
+  conceptoCodigo: string;
+  descripcion: string;
+  valor: number;
+}
+
+export interface NominaDeduccionModel {
+  id?: string;
+  nominaElectronicaId?: string;
+  conceptoCodigo: string;
+  descripcion: string;
+  porcentaje?: number;
+  valor: number;
+}
+
+export interface NominaElectronicaModel {
+  id: string;
+  colegioId: string;
+  terceroEmpleadoId: string;
+  colaboradorId?: string;
+  numeroNomina: string;
+  prefijo: string;
+  consecutivo: number;
+  periodoAnio: number;
+  periodoMes: number;
+  fechaInicioPago: string;
+  fechaFinPago: string;
+  tipoNomina: TipoNominaElectronica;
+  diasTrabajados: number;
+  sueldoBasico: number;
+  totalDevengado: number;
+  totalDeducciones: number;
+  totalComprobante: number;
+  cune?: string;
+  qrData?: string;
+  xmlUbl?: string;
+  estadoDian: EstadoDianNomina;
+  codigoRespuestaDian?: string;
+  mensajeDian?: string;
+  fechaTransmision?: string;
+  asientoId?: string;
+  terceroEmpleado?: TerceroModel;
+  devengados?: NominaDevengadoModel[];
+  deducciones?: NominaDeduccionModel[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CrearNominaIndividualModel {
+  terceroEmpleadoId: string;
+  colaboradorId?: string;
+  periodoAnio: number;
+  periodoMes: number;
+  fechaInicioPago?: string;
+  fechaFinPago?: string;
+  diasTrabajados?: number;
+  sueldoBasico: number;
+  devengados: {
+    conceptoCodigo: string;
+    descripcion: string;
+    valor: number;
+  }[];
+  deducciones: {
+    conceptoCodigo: string;
+    descripcion: string;
+    porcentaje?: number;
+    valor: number;
+  }[];
+}
+
+export interface GenerarNominaMasivaModel {
+  anio: number;
+  mes: number;
+}
+
+export interface ResultadoNominaMasivaModel {
+  procesados: number;
+  totalDevengados: number;
+  totalDeducciones: number;
+  nominas: NominaElectronicaModel[];
 }

@@ -11,6 +11,13 @@ import { ContabilidadNominaComponent } from './tabs/contabilidad-nomina.componen
 import { ContabilidadCajaMenorTabComponent } from './tabs/contabilidad-caja-menor.component';
 import { ContabilidadCertificadosProveedoresTabComponent } from './tabs/contabilidad-certificados-proveedores.component';
 import { ContabilidadPresupuestoTabComponent } from './tabs/contabilidad-presupuesto.component';
+import { ContabilidadDeterioroComponent } from './tabs/contabilidad-deterioro.component';
+import { ContabilidadConciliacionComponent } from './tabs/contabilidad-conciliacion.component';
+import { ContabilidadExogenaComponent } from './tabs/contabilidad-exogena.component';
+import { ContabilidadCierreComponent } from './tabs/contabilidad-cierre.component';
+import { ContabilidadActivosFijosComponent } from './tabs/contabilidad-activos-fijos.component';
+import { ContabilidadDocumentoSoporteComponent } from './tabs/contabilidad-documento-soporte.component';
+import { ContabilidadNominaElectronicaComponent } from './tabs/contabilidad-nomina-electronica.component';
 
 export type TabActivo =
   | 'puc'
@@ -19,11 +26,18 @@ export type TabActivo =
   | 'periodos'
   | 'reportes'
   | 'dian'
+  | 'documento-soporte'
+  | 'nomina-electronica'
   | 'diferidos'
   | 'nomina'
   | 'caja-menor'
   | 'certificados-prov'
-  | 'presupuesto';
+  | 'presupuesto'
+  | 'deterioro'
+  | 'conciliacion'
+  | 'exogena'
+  | 'cierre'
+  | 'activos-fijos';
 
 @Component({
   selector: 'app-contabilidad',
@@ -36,11 +50,18 @@ export type TabActivo =
     ContabilidadPeriodosComponent,
     ContabilidadReportesComponent,
     ContabilidadDianComponent,
+    ContabilidadDocumentoSoporteComponent,
+    ContabilidadNominaElectronicaComponent,
     ContabilidadDiferidosComponent,
     ContabilidadNominaComponent,
     ContabilidadCajaMenorTabComponent,
     ContabilidadCertificadosProveedoresTabComponent,
     ContabilidadPresupuestoTabComponent,
+    ContabilidadDeterioroComponent,
+    ContabilidadConciliacionComponent,
+    ContabilidadExogenaComponent,
+    ContabilidadCierreComponent,
+    ContabilidadActivosFijosComponent,
   ],
   template: `
     <div class="page-header" data-testid="contabilidad-page-header">
@@ -120,6 +141,24 @@ export type TabActivo =
       <button
         type="button"
         class="tab-btn"
+        [class.active]="tab() === 'documento-soporte'"
+        (click)="setTab('documento-soporte')"
+        data-testid="tab-documento-soporte"
+      >
+        📝 Documento Soporte DSE
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'nomina-electronica'"
+        (click)="setTab('nomina-electronica')"
+        data-testid="tab-nomina-electronica"
+      >
+        💼 Nómina Electrónica UBL
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
         [class.active]="tab() === 'diferidos'"
         (click)="setTab('diferidos')"
         data-testid="tab-diferidos"
@@ -162,6 +201,51 @@ export type TabActivo =
       >
         📊 Presupuesto Institucional
       </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'deterioro'"
+        (click)="setTab('deterioro')"
+        data-testid="tab-deterioro"
+      >
+        📉 Deterioro Cartera NIIF 9
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'conciliacion'"
+        (click)="setTab('conciliacion')"
+        data-testid="tab-conciliacion"
+      >
+        🏦 Conciliación Bancaria
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'exogena'"
+        (click)="setTab('exogena')"
+        data-testid="tab-exogena"
+      >
+        🏛️ Exógena DIAN
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'cierre'"
+        (click)="setTab('cierre')"
+        data-testid="tab-cierre"
+      >
+        🏛️ Cierre Anual (Periodo 13)
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="tab() === 'activos-fijos'"
+        (click)="setTab('activos-fijos')"
+        data-testid="tab-activos-fijos"
+      >
+        🏛️ Activos Fijos & NIC 16/36
+      </button>
     </div>
 
     <div class="tab-panel" data-testid="contabilidad-tab-panel">
@@ -183,6 +267,12 @@ export type TabActivo =
       @if (tab() === 'dian') {
         <app-contabilidad-dian />
       }
+      @if (tab() === 'documento-soporte') {
+        <app-contabilidad-documento-soporte />
+      }
+      @if (tab() === 'nomina-electronica') {
+        <app-contabilidad-nomina-electronica />
+      }
       @if (tab() === 'diferidos') {
         <app-contabilidad-diferidos />
       }
@@ -197,6 +287,21 @@ export type TabActivo =
       }
       @if (tab() === 'presupuesto') {
         <app-contabilidad-presupuesto />
+      }
+      @if (tab() === 'deterioro') {
+        <app-contabilidad-deterioro />
+      }
+      @if (tab() === 'conciliacion') {
+        <app-contabilidad-conciliacion />
+      }
+      @if (tab() === 'exogena') {
+        <app-contabilidad-exogena />
+      }
+      @if (tab() === 'cierre') {
+        <app-contabilidad-cierre />
+      }
+      @if (tab() === 'activos-fijos') {
+        <app-contabilidad-activos-fijos />
       }
     </div>
   `,

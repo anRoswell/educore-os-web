@@ -16,6 +16,63 @@ export type SubTabCertificados = 'proveedores' | 'formulario350';
   standalone: true,
   imports: [CommonModule, FormsModule, ModalDetalleCertificadoProveedorComponent],
   styles: [`
+    .cert-prov-header-banner {
+      background: #ffffff;
+      padding: 1.25rem 1.5rem;
+      border-radius: 14px;
+      border: 1.5px solid #e2e8f0;
+      border-left: 5px solid #4f46e5;
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.06), 0 2px 6px -2px rgba(0, 0, 0, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .cert-prov-header-main {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+    .cert-prov-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #eef2ff;
+      border: 1.5px solid #c7d2fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+    .cert-prov-texts-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .cert-prov-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      flex-wrap: wrap;
+    }
+    .cert-prov-title-text {
+      font-size: 1.125rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+      line-height: 1.25;
+    }
+    .cert-prov-subtitle-text {
+      font-size: 0.775rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.3;
+    }
+
     .f350-kpis-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -74,39 +131,43 @@ export type SubTabCertificados = 'proveedores' | 'formulario350';
   template: `
     <div class="certificados-prov-container space-y-4" data-testid="certificados-prov-tab-container">
       <!-- Encabezado de la Pestaña -->
-      <div class="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">📜</span>
-            <h2 class="text-lg font-bold text-gray-800" data-testid="title-certificados-proveedores">
-              Certificados Tributarios a Proveedores & Formulario 350 DIAN
-            </h2>
-            <span class="badge-mini badge-blue">Art. 381 E.T.</span>
+      <div class="cert-prov-header-banner" data-testid="certificados-prov-header-banner">
+        <div class="cert-prov-header-main">
+          <div class="cert-prov-icon-wrap">📜</div>
+          <div class="cert-prov-texts-wrap">
+            <div class="cert-prov-title-row">
+              <h3 class="cert-prov-title-text" data-testid="title-certificados-proveedores">
+                Certificados Tributarios a Proveedores & Formulario 350 DIAN
+              </h3>
+              <span class="badge-mini bg-blue-50 text-blue-700 border-blue-200 font-semibold">Art. 381 E.T.</span>
+            </div>
+            <p class="cert-prov-subtitle-text">
+              Emisión oficial de certificados anuales de retención en la fuente (Renta, IVA, ICA) y precálculo de la declaración mensual Formulario 350 DIAN.
+            </p>
           </div>
-          <p class="text-xs text-gray-500 mt-0.5">
-            Emisión oficial de certificados anuales de retención en la fuente (Renta, IVA, ICA) y precálculo de la declaración mensual Formulario 350 DIAN.
-          </p>
         </div>
 
-        <!-- Sub-tabs Nav -->
-        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border">
+        <!-- Sub-tabs Nav (Con indicación visual clara de selección activa) -->
+        <div class="subtabs-nav-container inline-flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner" data-testid="certificados-subtabs-nav">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-            [ngClass]="subTab() === 'proveedores' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'"
+            class="subtab-button px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
+            [ngClass]="subTab() === 'proveedores' ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-500/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 font-semibold'"
             (click)="subTab.set('proveedores')"
             data-testid="subtab-proveedores"
           >
-            📜 Certificados Proveedores (Art. 381)
+            <span>📜</span>
+            <span>Certificados Proveedores (Art. 381)</span>
           </button>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-            [ngClass]="subTab() === 'formulario350' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'"
+            class="subtab-button px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
+            [ngClass]="subTab() === 'formulario350' ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-500/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80 font-semibold'"
             (click)="subTab.set('formulario350')"
             data-testid="subtab-formulario350"
           >
-            🏛️ Formulario 350 DIAN
+            <span>🏛️</span>
+            <span>Formulario 350 DIAN</span>
           </button>
         </div>
       </div>
@@ -125,18 +186,14 @@ export type SubTabCertificados = 'proveedores' | 'formulario350';
       <!-- SUBTAB 1: CERTIFICADOS A PROVEEDORES ART. 381 E.T. -->
       @if (subTab() === 'proveedores') {
         <div class="space-y-4" data-testid="panel-subtab-proveedores">
-          <!-- Barra de Filtros con Labels Encima de Inputs y Padding Generoso -->
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm" style="padding: 1.25rem 1.5rem !important; border: 1.5px solid #e2e8f0; border-radius: 12px; margin-bottom: 1.25rem; display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem;">
-            <div style="display: flex; align-items: flex-end; gap: 1.25rem; flex: 1;">
+          <!-- Barra de Filtros con Labels Encima de Inputs -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-wrap items-end gap-3 flex-1">
               <!-- Filtro Año Gravable -->
-              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; min-width: 140px;">
-                <label style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 0.35rem;">
-                  <span>📅</span>
-                  <span>Año Gravable</span>
-                </label>
+              <div class="form-group-inline mb-0">
+                <label class="form-label-sm">Año Gravable</label>
                 <select
-                  class="form-select w-year"
-                  style="width: 100%; height: 40px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: 1.5px solid #cbd5e1; background-color: #ffffff;"
+                  class="input-base input-sm w-year"
                   data-testid="select-anio-cert-prov"
                   [ngModel]="anioSeleccionado()"
                   (ngModelChange)="cambiarAnio($event)"
@@ -148,28 +205,16 @@ export type SubTabCertificados = 'proveedores' | 'formulario350';
               </div>
 
               <!-- Buscador de Proveedores -->
-              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; flex: 1; max-width: 440px;">
-                <label style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 0.35rem;">
-                  <span>🔍</span>
-                  <span>Buscar Proveedor / NIT</span>
-                </label>
-                <div style="position: relative; width: 100%; display: flex; align-items: center;">
-                  <span style="position: absolute; left: 12px; pointer-events: none; color: #94a3b8; display: flex; align-items: center;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    class="form-control"
-                    style="width: 100%; height: 40px; padding-left: 36px; padding-right: 12px; font-size: 0.8125rem; border-radius: 8px; border: 1.5px solid #cbd5e1; background-color: #ffffff;"
-                    data-testid="input-buscar-proveedor"
-                    [ngModel]="busqueda()"
-                    (ngModelChange)="busqueda.set($event)"
-                    placeholder="Filtrar por razón social, nombre o NIT..."
-                  />
-                </div>
+              <div class="form-group-inline mb-0 flex-1 max-w-[440px]">
+                <label class="form-label-sm">Buscar Proveedor / NIT</label>
+                <input
+                  type="text"
+                  class="input-base input-sm w-full"
+                  data-testid="input-buscar-proveedor"
+                  [ngModel]="busqueda()"
+                  (ngModelChange)="busqueda.set($event)"
+                  placeholder="🔍 Filtrar por razón social, nombre o NIT..."
+                />
               </div>
             </div>
 
@@ -268,18 +313,14 @@ export type SubTabCertificados = 'proveedores' | 'formulario350';
       <!-- SUBTAB 2: BORRADOR FORMULARIO 350 DIAN -->
       @if (subTab() === 'formulario350') {
         <div class="space-y-4" data-testid="panel-subtab-formulario350">
-          <!-- Filtros de Periodo Formulario 350 con Labels Encima y Padding Generoso -->
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm" style="padding: 1.25rem 1.5rem !important; border: 1.5px solid #e2e8f0; border-radius: 12px; margin-bottom: 1.25rem; display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem;">
-            <div style="display: flex; align-items: flex-end; gap: 1.25rem; flex: 1;">
+          <!-- Filtros de Periodo Formulario 350 con Labels Encima -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-wrap items-end gap-3 flex-1">
               <!-- Año -->
-              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; min-width: 140px;">
-                <label style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 0.35rem;">
-                  <span>📅</span>
-                  <span>Año Gravable</span>
-                </label>
+              <div class="form-group-inline mb-0">
+                <label class="form-label-sm">Año Gravable</label>
                 <select
-                  class="form-select w-year"
-                  style="width: 100%; height: 40px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: 1.5px solid #cbd5e1; background-color: #ffffff;"
+                  class="input-base input-sm w-year"
                   data-testid="select-f350-anio"
                   [ngModel]="f350Anio()"
                   (ngModelChange)="cambiarPeriodoF350($event, f350Mes())"
@@ -290,14 +331,10 @@ export type SubTabCertificados = 'proveedores' | 'formulario350';
               </div>
 
               <!-- Mes Declarado -->
-              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; min-width: 180px;">
-                <label style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 0.35rem;">
-                  <span>🗓️</span>
-                  <span>Mes Declarado</span>
-                </label>
+              <div class="form-group-inline mb-0">
+                <label class="form-label-sm">Mes Declarado</label>
                 <select
-                  class="form-select"
-                  style="width: 100%; height: 40px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: 1.5px solid #cbd5e1; background-color: #ffffff;"
+                  class="input-base input-sm"
                   data-testid="select-f350-mes"
                   [ngModel]="f350Mes()"
                   (ngModelChange)="cambiarPeriodoF350(f350Anio(), $event)"

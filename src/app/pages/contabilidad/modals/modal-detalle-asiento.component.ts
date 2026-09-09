@@ -9,7 +9,7 @@ import { Asiento, TipoComprobante, EstadoAsiento } from '../models/contabilidad.
   template: `
     @if (visible() && asiento()) {
       <div class="modal-backdrop" data-testid="modal-detalle-asiento-backdrop" (click)="cerrar()">
-        <div class="modal-box w-[750px]" data-testid="modal-detalle-asiento" (click)="$event.stopPropagation()">
+        <div class="modal-box w-[750px] rounded-2xl shadow-xl border border-slate-100 p-6" data-testid="modal-detalle-asiento" (click)="$event.stopPropagation()">
           <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-lg shadow-xs">
@@ -27,31 +27,34 @@ import { Asiento, TipoComprobante, EstadoAsiento } from '../models/contabilidad.
             </span>
           </div>
 
-          <div class="modal-body space-y-4 pt-3">
+          <div class="modal-body space-y-4 pt-4">
             <!-- Metadatos de cabecera -->
-            <div class="grid grid-cols-3 gap-3 text-xs bg-gray-50 p-3 rounded border">
+            <div class="grid grid-cols-3 gap-3.5 text-xs bg-slate-50/80 p-4 rounded-xl border border-slate-200">
               <div>
-                <span class="text-gray-500 block">Fecha Contable:</span>
-                <strong class="text-gray-800 text-sm font-mono">{{ asiento()!.fechaContable }}</strong>
+                <span class="text-slate-500 block mb-0.5">Fecha Contable:</span>
+                <strong class="text-slate-800 text-sm font-mono">{{ asiento()!.fechaContable }}</strong>
               </div>
               <div>
-                <span class="text-gray-500 block">Tipo:</span>
+                <span class="text-slate-500 block mb-0.5">Tipo:</span>
                 <span [class]="badgeTipoClass(asiento()!.tipoComprobante)">{{ asiento()!.tipoComprobante }}</span>
               </div>
               <div>
-                <span class="text-gray-500 block">Módulo Origen:</span>
-                <span class="font-mono text-gray-700">{{ asiento()!.fuenteModulo || 'MANUAL' }}</span>
+                <span class="text-slate-500 block mb-0.5">Módulo Origen:</span>
+                <span class="font-mono text-slate-700 font-semibold">{{ asiento()!.fuenteModulo || 'MANUAL' }}</span>
               </div>
-              <div class="col-span-3">
-                <span class="text-gray-500 block">Concepto:</span>
-                <span class="text-gray-900 font-medium">{{ asiento()!.concepto || 'Sin descripción' }}</span>
+              <div class="col-span-3 border-t border-slate-200/60 pt-2 mt-1">
+                <span class="text-slate-500 block mb-0.5">Concepto:</span>
+                <span class="text-slate-900 font-medium leading-relaxed">{{ asiento()!.concepto || 'Sin descripción' }}</span>
               </div>
             </div>
 
             <!-- Banner de anulación si aplica -->
             @if (asiento()!.estado === 'VOID' || asiento()!.estado === 'ANULADO') {
-              <div class="bg-red-50 border border-red-200 rounded p-3 text-xs text-red-700" data-testid="banner-asiento-anulado">
-                <div class="font-bold mb-1">Comprobante Anulado</div>
+              <div class="bg-rose-50 border border-rose-200 rounded-xl p-3.5 text-xs text-rose-700 space-y-1" data-testid="banner-asiento-anulado">
+                <div class="font-bold mb-1 flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span>Comprobante Anulado</span>
+                </div>
                 @if (asiento()!.motivoAnulacion) {
                   <div><strong>Motivo:</strong> {{ asiento()!.motivoAnulacion }}</div>
                 }
@@ -65,45 +68,45 @@ import { Asiento, TipoComprobante, EstadoAsiento } from '../models/contabilidad.
             }
 
             <!-- Tabla de líneas -->
-            <div class="border rounded-md overflow-hidden">
+            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
               <table class="tabla-datos w-full text-xs" data-testid="tabla-lineas-detalle">
-                <thead class="bg-gray-50 border-b">
+                <thead class="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th class="w-28 text-left py-2 px-3">Cuenta</th>
-                    <th class="w-36 text-left py-2 px-3">Tercero</th>
-                    <th class="text-left py-2 px-3">Descripción</th>
-                    <th class="w-28 text-right py-2 px-3">Débito</th>
-                    <th class="w-28 text-right py-2 px-3">Crédito</th>
+                    <th class="w-28 text-left py-2.5 px-3.5 font-bold text-slate-600 uppercase text-[11px]">Cuenta</th>
+                    <th class="w-36 text-left py-2.5 px-3.5 font-bold text-slate-600 uppercase text-[11px]">Tercero</th>
+                    <th class="text-left py-2.5 px-3.5 font-bold text-slate-600 uppercase text-[11px]">Descripción</th>
+                    <th class="w-28 text-right py-2.5 px-3.5 font-bold text-slate-600 uppercase text-[11px]">Débito</th>
+                    <th class="w-28 text-right py-2.5 px-3.5 font-bold text-slate-600 uppercase text-[11px]">Crédito</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100">
                   @for (l of asiento()!.lineas; track $index) {
-                    <tr class="border-b hover:bg-gray-50/50">
-                      <td class="font-mono py-2 px-3">
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                      <td class="font-mono font-semibold py-2.5 px-3.5 text-slate-800">
                         {{ l.cuenta?.codigo || l.cuentaCodigo || l.cuentaPucId || '—' }}
                       </td>
-                      <td class="py-2 px-3 text-gray-600 truncate max-w-[140px]" [title]="l.tercero?.nombreCompleto || l.terceroNombre || ''">
+                      <td class="py-2.5 px-3.5 text-slate-600 truncate max-w-[140px]" [title]="l.tercero?.nombreCompleto || l.terceroNombre || ''">
                         {{ l.tercero?.nombreCompleto || l.terceroNombre || '—' }}
                       </td>
-                      <td class="py-2 px-3 text-gray-700 truncate max-w-[200px]" [title]="l.descripcion || ''">
+                      <td class="py-2.5 px-3.5 text-slate-700 truncate max-w-[200px]" [title]="l.descripcion || ''">
                         {{ l.descripcion || '—' }}
                       </td>
-                      <td class="text-right font-mono py-2 px-3">
+                      <td class="text-right font-mono py-2.5 px-3.5 font-semibold text-slate-800">
                         {{ l.debito | number:'1.2-2' }}
                       </td>
-                      <td class="text-right font-mono py-2 px-3">
+                      <td class="text-right font-mono py-2.5 px-3.5 font-semibold text-slate-800">
                         {{ l.credito | number:'1.2-2' }}
                       </td>
                     </tr>
                   }
                 </tbody>
-                <tfoot class="bg-gray-50 font-bold border-t">
+                <tfoot class="bg-slate-50 font-bold border-t border-slate-200">
                   <tr>
-                    <td colspan="3" class="text-right py-2 px-3 text-gray-700">TOTALES:</td>
-                    <td class="text-right font-mono py-2 px-3 text-blue-700">
+                    <td colspan="3" class="text-right py-2.5 px-3.5 text-slate-700">TOTALES:</td>
+                    <td class="text-right font-mono py-2.5 px-3.5 text-blue-700 font-bold">
                       {{ asiento()!.totalDebito | number:'1.2-2' }}
                     </td>
-                    <td class="text-right font-mono py-2 px-3 text-blue-700">
+                    <td class="text-right font-mono py-2.5 px-3.5 text-blue-700 font-bold">
                       {{ asiento()!.totalCredito | number:'1.2-2' }}
                     </td>
                   </tr>
@@ -112,10 +115,10 @@ import { Asiento, TipoComprobante, EstadoAsiento } from '../models/contabilidad.
             </div>
           </div>
 
-          <div class="modal-actions flex justify-end gap-2 pt-4 border-t mt-4">
+          <div class="modal-actions flex items-center justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
             <button
               type="button"
-              class="btn-secondary"
+              class="btn-secondary btn-sm font-medium"
               data-testid="btn-cerrar-detalle"
               (click)="cerrar()"
             >

@@ -5,12 +5,15 @@ import { DianService } from '../services/dian.service';
 import {
   DocumentoElectronicoModel,
   DianConfigModel,
-  TipoDocumentoElectronico,
-  EstadoDianDocumento,
+  ResultadoFacturasMasivasModel,
 } from '../models/contabilidad.models';
 import { ModalConfigDianComponent } from '../modals/modal-config-dian.component';
 import { ModalNotaCreditoDianComponent } from '../modals/modal-nota-credito-dian.component';
+import { ModalNotaDebitoDianComponent } from '../modals/modal-nota-debito-dian.component';
 import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soporte.component';
+import { ModalEmitirFacturaDirectaComponent } from '../modals/modal-emitir-factura-directa.component';
+import { ModalEmitirMasivaDianComponent } from '../modals/modal-emitir-masiva-dian.component';
+import { ModalDetalleFacturaDianComponent } from '../modals/modal-detalle-factura-dian.component';
 
 @Component({
   selector: 'app-contabilidad-dian',
@@ -20,7 +23,11 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
     FormsModule,
     ModalConfigDianComponent,
     ModalNotaCreditoDianComponent,
+    ModalNotaDebitoDianComponent,
     ModalDocumentoSoporteComponent,
+    ModalEmitirFacturaDirectaComponent,
+    ModalEmitirMasivaDianComponent,
+    ModalDetalleFacturaDianComponent,
   ],
   styles: [`
     .dian-header-banner {
@@ -181,7 +188,7 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           </div>
         </div>
 
-        <div class="dian-actions-wrap flex items-center gap-2.5">
+        <div class="dian-actions-wrap flex items-center gap-2">
           <button
             type="button"
             class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
@@ -193,12 +200,30 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           </button>
           <button
             type="button"
-            class="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold shadow-sm"
+            class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
+            data-testid="btn-emision-masiva-dian"
+            (click)="abrirModalMasiva()"
+          >
+            <span>⚡</span>
+            <span>Emisión Masiva</span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
             data-testid="btn-nuevo-doc-soporte"
             (click)="abrirModalDs()"
           >
             <span>📋</span>
             <span>Nuevo Doc. Soporte</span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm flex items-center gap-1.5 font-semibold shadow-sm"
+            data-testid="btn-nueva-factura-directa"
+            (click)="abrirModalFacturaDirecta()"
+          >
+            <span>➕</span>
+            <span>Nueva Factura</span>
           </button>
         </div>
       </div>
@@ -269,11 +294,11 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
       </div>
 
       <!-- Filters Bar -->
-      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm flex flex-wrap items-end gap-3.5" data-testid="dian-filters-bar">
-        <div class="form-group-inline flex flex-col gap-1">
-          <label class="text-xs font-bold text-slate-700">Tipo Documento</label>
+      <div class="bg-white border border-slate-200 rounded-xl p-5 md:p-6 mb-4 shadow-sm flex flex-wrap items-end gap-4" data-testid="dian-filters-bar">
+        <div class="form-group-inline mb-0 min-w-[200px]">
+          <label class="form-label-sm">Tipo Documento</label>
           <select
-            class="input-base input-sm text-xs"
+            class="input-base input-sm text-xs w-full"
             data-testid="select-filtro-tipo-dian"
             [ngModel]="filtroTipo()"
             (ngModelChange)="filtroTipo.set($event); buscar()"
@@ -286,10 +311,10 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           </select>
         </div>
 
-        <div class="form-group-inline flex flex-col gap-1">
-          <label class="text-xs font-bold text-slate-700">Estado DIAN</label>
+        <div class="form-group-inline mb-0 min-w-[180px]">
+          <label class="form-label-sm">Estado DIAN</label>
           <select
-            class="input-base input-sm text-xs"
+            class="input-base input-sm text-xs w-full"
             data-testid="select-filtro-estado-dian"
             [ngModel]="filtroEstado()"
             (ngModelChange)="filtroEstado.set($event); buscar()"
@@ -303,20 +328,20 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
           </select>
         </div>
 
-        <div class="form-group-inline flex-1 min-w-[220px] flex flex-col gap-1">
-          <label class="text-xs font-bold text-slate-700">Búsqueda</label>
+        <div class="form-group-inline flex-1 min-w-[260px] mb-0">
+          <label class="form-label-sm">Búsqueda</label>
           <input
             type="text"
             class="input-base input-sm text-xs w-full"
             data-testid="input-buscar-dian"
-            placeholder="Buscar por número, CUFE, tercero..."
+            placeholder="🔍 Buscar por número, CUFE, tercero..."
             [ngModel]="filtroBusqueda()"
             (ngModelChange)="filtroBusqueda.set($event)"
             (keyup.enter)="buscar()"
           />
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 mb-0.5">
           <button
             type="button"
             class="btn btn-secondary btn-sm flex items-center gap-1.5 font-medium"
@@ -426,6 +451,17 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
                   </td>
                   <td class="p-3 text-right">
                     <div class="flex items-center justify-end gap-1">
+                      <!-- Detail modal button -->
+                      <button
+                        type="button"
+                        class="btn-secondary btn-xs p-1"
+                        title="Ver Detalle del Documento Electrónico"
+                        [attr.data-testid]="'btn-detalle-' + doc.id"
+                        (click)="abrirModalDetalle(doc)"
+                      >
+                        👁️
+                      </button>
+
                       <!-- XML Download -->
                       <button
                         type="button"
@@ -469,6 +505,15 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
                           (click)="abrirModalNc(doc)"
                         >
                           🧾 NC
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-secondary btn-xs p-1 text-purple-700 hover:bg-purple-50"
+                          title="Emitir Nota Débito referente a esta Factura"
+                          [attr.data-testid]="'btn-nd-' + doc.id"
+                          (click)="abrirModalNd(doc)"
+                        >
+                          📈 ND
                         </button>
                       }
                     </div>
@@ -516,10 +561,29 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
         (guardado)="onConfigGuardada($event)"
       />
 
+      <app-modal-emitir-factura-directa
+        [visible]="modalFacturaDirectaVisible()"
+        (cerrar)="cerrarModalFacturaDirecta()"
+        (emitido)="onDocumentoEmitido($event)"
+      />
+
+      <app-modal-emitir-masiva-dian
+        [visible]="modalMasivaVisible()"
+        (cerrar)="cerrarModalMasiva()"
+        (procesado)="onMasivaProcesada($event)"
+      />
+
       <app-modal-nota-credito-dian
         [visible]="modalNcVisible()"
-        [documento]="documentoSeleccionadoParaNc()"
+        [documento]="documentoSeleccionado()"
         (cerrar)="cerrarModalNc()"
+        (emitido)="onDocumentoEmitido($event)"
+      />
+
+      <app-modal-nota-debito-dian
+        [visible]="modalNdVisible()"
+        [documento]="documentoSeleccionado()"
+        (cerrar)="cerrarModalNd()"
         (emitido)="onDocumentoEmitido($event)"
       />
 
@@ -527,6 +591,13 @@ import { ModalDocumentoSoporteComponent } from '../modals/modal-documento-soport
         [visible]="modalDsVisible()"
         (cerrar)="cerrarModalDs()"
         (emitido)="onDocumentoEmitido($event)"
+      />
+
+      <app-modal-detalle-factura-dian
+        [visible]="modalDetalleVisible()"
+        [documento]="documentoSeleccionado()"
+        (cerrar)="cerrarModalDetalle()"
+        (actualizado)="onDocumentoActualizado($event)"
       />
     </div>
   `,
@@ -555,9 +626,13 @@ export class ContabilidadDianComponent implements OnInit {
 
   // Modal controls
   readonly modalConfigVisible = signal<boolean>(false);
+  readonly modalFacturaDirectaVisible = signal<boolean>(false);
+  readonly modalMasivaVisible = signal<boolean>(false);
   readonly modalNcVisible = signal<boolean>(false);
+  readonly modalNdVisible = signal<boolean>(false);
   readonly modalDsVisible = signal<boolean>(false);
-  readonly documentoSeleccionadoParaNc = signal<DocumentoElectronicoModel | null>(null);
+  readonly modalDetalleVisible = signal<boolean>(false);
+  readonly documentoSeleccionado = signal<DocumentoElectronicoModel | null>(null);
 
   // Computed KPIs
   readonly totalEmitidos = computed(() => this.total());
@@ -643,14 +718,45 @@ export class ContabilidadDianComponent implements OnInit {
     this.cargarConfiguracion();
   }
 
+  abrirModalFacturaDirecta(): void {
+    this.modalFacturaDirectaVisible.set(true);
+  }
+
+  cerrarModalFacturaDirecta(): void {
+    this.modalFacturaDirectaVisible.set(false);
+  }
+
+  abrirModalMasiva(): void {
+    this.modalMasivaVisible.set(true);
+  }
+
+  cerrarModalMasiva(): void {
+    this.modalMasivaVisible.set(false);
+  }
+
+  onMasivaProcesada(res: ResultadoFacturasMasivasModel): void {
+    this.mensajeExito.set(`Lote procesado: ${res.exitosas} facturas emitidas exitosamente (${res.fallidas} fallidas).`);
+    this.cargarDocumentos();
+  }
+
   abrirModalNc(doc: DocumentoElectronicoModel): void {
-    this.documentoSeleccionadoParaNc.set(doc);
+    this.documentoSeleccionado.set(doc);
     this.modalNcVisible.set(true);
   }
 
   cerrarModalNc(): void {
     this.modalNcVisible.set(false);
-    this.documentoSeleccionadoParaNc.set(null);
+    this.documentoSeleccionado.set(null);
+  }
+
+  abrirModalNd(doc: DocumentoElectronicoModel): void {
+    this.documentoSeleccionado.set(doc);
+    this.modalNdVisible.set(true);
+  }
+
+  cerrarModalNd(): void {
+    this.modalNdVisible.set(false);
+    this.documentoSeleccionado.set(null);
   }
 
   abrirModalDs(): void {
@@ -661,8 +767,27 @@ export class ContabilidadDianComponent implements OnInit {
     this.modalDsVisible.set(false);
   }
 
+  abrirModalDetalle(doc: DocumentoElectronicoModel): void {
+    this.documentoSeleccionado.set(doc);
+    this.modalDetalleVisible.set(true);
+  }
+
+  cerrarModalDetalle(): void {
+    this.modalDetalleVisible.set(false);
+    this.documentoSeleccionado.set(null);
+  }
+
   onDocumentoEmitido(doc: DocumentoElectronicoModel): void {
     this.mensajeExito.set(`Documento ${doc.prefijo}-${doc.numero} emitido exitosamente (Estado: ${doc.estadoDian}).`);
+    this.cerrarModalFacturaDirecta();
+    this.cerrarModalNc();
+    this.cerrarModalNd();
+    this.cerrarModalDs();
+    this.cargarDocumentos();
+  }
+
+  onDocumentoActualizado(doc: DocumentoElectronicoModel): void {
+    this.mensajeExito.set(`Documento ${doc.prefijo}-${doc.numero} actualizado.`);
     this.cargarDocumentos();
   }
 

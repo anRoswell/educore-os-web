@@ -9,11 +9,13 @@ import {
   LibroMayorCuenta,
   AuxiliarTerceroReporte,
   Tercero,
+  FlujoEfectivoModel,
+  NotasNiifModel,
 } from '../models/contabilidad.models';
 
 import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
 
-type ReporteActivo = 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxiliar' | 'certificados' | 'exogena' | 'presupuesto' | 'conciliacion';
+type ReporteActivo = 'graficas' | 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxiliar' | 'flujo' | 'notas' | 'certificados' | 'exogena' | 'presupuesto' | 'conciliacion';
 
 @Component({
   selector: 'app-contabilidad-reportes',
@@ -175,6 +177,98 @@ type ReporteActivo = 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxiliar' | 'cert
       gap: 0.375rem;
       line-height: 1.3;
     }
+    /* Estilos Dashboard Gerencial NIIF */
+    .chart-container-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+    }
+    .chart-container-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+    .chart-bars-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      height: 230px;
+      padding-top: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      overflow-x: auto;
+    }
+    .chart-bar-group {
+      flex: 1;
+      min-width: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      cursor: pointer;
+      position: relative;
+      padding: 0 2px;
+      border-radius: 6px;
+      transition: background-color 0.15s ease;
+    }
+    .chart-bar-group:hover {
+      background-color: rgba(241, 245, 249, 0.8);
+    }
+    .chart-bar-columns {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+    }
+    .bar-col {
+      width: 11px;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease;
+      min-height: 4px;
+    }
+    .bar-col:hover {
+      transform: scaleY(1.05);
+      filter: brightness(1.15);
+    }
+    .bar-col-ingreso {
+      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    .bar-col-gasto {
+      background: linear-gradient(180deg, #f87171 0%, #dc2626 100%);
+    }
+    .bar-col-excedente {
+      background: linear-gradient(180deg, #10b981 0%, #047857 100%);
+    }
+    .bar-col-flujo-in {
+      background: linear-gradient(180deg, #06b6d4 0%, #0891b2 100%);
+    }
+    .bar-col-flujo-out {
+      background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%);
+    }
+    .chart-month-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #64748b;
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+    }
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+    }
   `],
   template: `
     <div class="tab-content" data-testid="tab-content-reportes">
@@ -192,6 +286,547 @@ type ReporteActivo = 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxiliar' | 'cert
           </button>
         }
       </div>
+
+      <!-- ─── 0. DASHBOARD FINANCIERO GERENCIAL (GRÁFICAS NIIF) ──────────── -->
+      @if (reporteActivo() === 'graficas') {
+        <div data-testid="seccion-dashboard-gerencial" class="space-y-4">
+          <!-- Banner Superior & Filtros Gerenciales -->
+          <div class="card p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
+            <div class="reportes-card-header">
+              <div class="reportes-card-title-group">
+                <span class="reportes-card-icon">📊</span>
+                <div class="reportes-card-title-texts">
+                  <h3 class="reportes-card-title">Dashboard Financiero Gerencial</h3>
+                  <p class="reportes-card-subtitle">Analítica gráfica comparativa de rentabilidad, estructura patrimonial, flujo de fondos y presupuesto NIIF</p>
+                </div>
+              </div>
+              <div class="reportes-info-badge text-indigo-800 bg-indigo-50/90 border border-indigo-200">
+                <span>🏛️</span>
+                <span><strong>Norma Técnica NIIF:</strong> Consolidación automática de cuentas nominales, patrimoniales y flujo de fondos.</span>
+              </div>
+            </div>
+
+            <div class="reportes-filter-row justify-between">
+              <div class="flex flex-wrap items-end gap-3">
+                <div class="reportes-filter-group">
+                  <label class="reportes-filter-label">Vigencia Fiscal (Año)</label>
+                  <input
+                    class="input-base input-sm w-year font-mono font-bold"
+                    data-testid="input-dashboard-anio"
+                    type="number"
+                    min="2020"
+                    max="2035"
+                    [ngModel]="dashboardAnio()"
+                    (ngModelChange)="onDashboardAnioChange($event)"
+                  />
+                </div>
+
+                <div class="reportes-filter-group">
+                  <label class="reportes-filter-label">Modo de Comparación</label>
+                  <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100 shadow-2xs">
+                    <button
+                      type="button"
+                      class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer"
+                      [class.bg-white]="dashboardModo() === 'MENSUAL'"
+                      [class.text-indigo-700]="dashboardModo() === 'MENSUAL'"
+                      [class.shadow-xs]="dashboardModo() === 'MENSUAL'"
+                      [class.text-slate-600]="dashboardModo() !== 'MENSUAL'"
+                      data-testid="btn-modo-mensual"
+                      (click)="setDashboardModo('MENSUAL')"
+                    >
+                      📅 Mensual (12 Meses)
+                    </button>
+                    <button
+                      type="button"
+                      class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer"
+                      [class.bg-white]="dashboardModo() === 'TRIMESTRAL'"
+                      [class.text-indigo-700]="dashboardModo() === 'TRIMESTRAL'"
+                      [class.shadow-xs]="dashboardModo() === 'TRIMESTRAL'"
+                      [class.text-slate-600]="dashboardModo() !== 'TRIMESTRAL'"
+                      data-testid="btn-modo-trimestral"
+                      (click)="setDashboardModo('TRIMESTRAL')"
+                    >
+                      📈 Trimestral (T1 - T4)
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-primary btn-sm inline-flex items-center gap-1.5 font-semibold"
+                  data-testid="btn-actualizar-dashboard"
+                  (click)="cargarDashboardGerencial()"
+                  [disabled]="cargando()"
+                >
+                  <span>🔄</span>
+                  <span>{{ cargando() ? 'Consolidando...' : 'Actualizar Analítica' }}</span>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm inline-flex items-center gap-1.5"
+                  data-testid="btn-exportar-dashboard-excel"
+                  (click)="exportarDashboardExcel()"
+                >
+                  <span>⬇</span>
+                  <span>Exportar Informe (.xlsx)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spinner si está cargando -->
+          @if (cargando()) {
+            <div class="card p-12 bg-white border border-slate-200 rounded-xl shadow-xs flex flex-col items-center justify-center text-slate-500">
+              <div class="spinner mb-3"></div>
+              <span class="text-xs font-semibold">Generando métricas y consolidando gráficas financieras NIIF...</span>
+            </div>
+          } @else if (dashboardGerencial()) {
+            <!-- 1. Cuadrícula de KPIs Ejecutivos NIIF -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="dashboard-kpis-grid">
+              <!-- KPI 1: Excedente Neto Anual -->
+              <div class="stat-card border-green-500">
+                <div class="stat-label">
+                  <span>Excedente Neto Anual</span>
+                  <span class="text-base">💎</span>
+                </div>
+                <div class="stat-value text-emerald-700" data-testid="kpi-excedente-neto">
+                  $ {{ dashboardGerencial()?.totalesAnuales?.excedenteNeto | number:'1.0-0' }}
+                </div>
+                <div class="stat-footer flex items-center justify-between">
+                  <span>Margen Neto NIIF:</span>
+                  <span class="ratio-badge bg-emerald-100 text-emerald-800 font-bold" data-testid="badge-margen-neto">
+                    {{ dashboardGerencial()?.ratiosFinancieros?.margenNeto }}%
+                  </span>
+                </div>
+              </div>
+
+              <!-- KPI 2: Razón Corriente / Liquidez -->
+              <div class="stat-card border-blue-500">
+                <div class="stat-label">
+                  <span>Razón Corriente (Liquidez)</span>
+                  <span class="text-base">💧</span>
+                </div>
+                <div class="stat-value text-blue-700" data-testid="kpi-razon-corriente">
+                  {{ dashboardGerencial()?.ratiosFinancieros?.razonCorriente }}x
+                </div>
+                <div class="stat-footer flex items-center justify-between">
+                  <span>Activo vs Pasivo Corto Plazo</span>
+                  <span
+                    class="ratio-badge font-bold"
+                    [class.bg-blue-100]="(dashboardGerencial()?.ratiosFinancieros?.razonCorriente || 0) >= 1.2"
+                    [class.text-blue-800]="(dashboardGerencial()?.ratiosFinancieros?.razonCorriente || 0) >= 1.2"
+                    [class.bg-amber-100]="(dashboardGerencial()?.ratiosFinancieros?.razonCorriente || 0) < 1.2"
+                    [class.text-amber-800]="(dashboardGerencial()?.ratiosFinancieros?.razonCorriente || 0) < 1.2"
+                  >
+                    {{ (dashboardGerencial()?.ratiosFinancieros?.razonCorriente || 0) >= 1.2 ? 'Solvencia Óptima' : 'Vigilar Liquidez' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- KPI 3: Nivel de Endeudamiento -->
+              <div class="stat-card border-purple-500">
+                <div class="stat-label">
+                  <span>Nivel de Endeudamiento</span>
+                  <span class="text-base">⚖️</span>
+                </div>
+                <div class="stat-value text-purple-700" data-testid="kpi-nivel-endeudamiento">
+                  {{ dashboardGerencial()?.ratiosFinancieros?.nivelEndeudamiento }}%
+                </div>
+                <div class="stat-footer flex items-center justify-between">
+                  <span>Pasivos / Activo Total</span>
+                  <span class="ratio-badge bg-purple-100 text-purple-800 font-bold">
+                    {{ (dashboardGerencial()?.ratiosFinancieros?.nivelEndeudamiento || 0) <= 50 ? 'Estructura Sana' : 'Apalancado' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- KPI 4: Autonomía de Caja -->
+              <div class="stat-card border-indigo-500">
+                <div class="stat-label">
+                  <span>Autonomía de Caja</span>
+                  <span class="text-base">⏱️</span>
+                </div>
+                <div class="stat-value text-indigo-700" data-testid="kpi-dias-caja">
+                  {{ dashboardGerencial()?.ratiosFinancieros?.diasRotacionCaja }} Días
+                </div>
+                <div class="stat-footer flex items-center justify-between">
+                  <span>Cobertura Operativa</span>
+                  <span class="ratio-badge bg-indigo-100 text-indigo-800 font-bold">
+                    Disponible / Gasto Diario
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Gráfica 1: Comparativo Mensual / Trimestral (Ingresos vs Gastos vs Excedente) -->
+            <div class="chart-container-card space-y-3" data-testid="seccion-grafica-comparativa">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                <div>
+                  <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <span>📈</span>
+                    <span>Comparativo {{ dashboardModo() === 'MENSUAL' ? 'Mensual' : 'Trimestral' }}: Ingresos (Clase 4) vs Gastos/Costos (Clases 5, 6, 7) vs Excedente</span>
+                  </h4>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    Visualización de devengo y rentabilidad institucional durante la vigencia {{ dashboardAnio() }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-3 flex-wrap">
+                  <div class="legend-chip">
+                    <span class="legend-dot" style="background: #2563eb;"></span>
+                    <span>Ingresos</span>
+                  </div>
+                  <div class="legend-chip">
+                    <span class="legend-dot" style="background: #dc2626;"></span>
+                    <span>Gastos y Costos</span>
+                  </div>
+                  <div class="legend-chip">
+                    <span class="legend-dot" style="background: #059669;"></span>
+                    <span>Excedente Neto</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contenedor Visual de Barras Verticales -->
+              <div class="chart-bars-wrap" data-testid="contenedor-barras-comparativas">
+                @if (dashboardModo() === 'MENSUAL') {
+                  @for (item of dashboardGerencial()?.resumenMensual; track item.mes) {
+                    <div
+                      class="chart-bar-group"
+                      [class.bg-indigo-50]="mesDetalleSeleccionado()?.mes === item.mes"
+                      (click)="seleccionarMesDetalle(item)"
+                      [title]="item.mesNombre + ':\nIngresos: $' + (item.ingresos | number:'1.0-0') + '\nGastos: $' + (item.gastos + item.costos | number:'1.0-0') + '\nExcedente: $' + (item.excedenteNeto | number:'1.0-0')"
+                      data-testid="bar-group-mes"
+                    >
+                      <div class="chart-bar-columns">
+                        <!-- Barra Ingreso -->
+                        <div
+                          class="bar-col bar-col-ingreso"
+                          [style.height.%]="calcularPorcentajeBarra(item.ingresos, maxIngresosGastos())"
+                          [title]="'Ingresos: $' + (item.ingresos | number:'1.0-0')"
+                        ></div>
+                        <!-- Barra Gastos y Costos -->
+                        <div
+                          class="bar-col bar-col-gasto"
+                          [style.height.%]="calcularPorcentajeBarra(item.gastos + item.costos, maxIngresosGastos())"
+                          [title]="'Gastos: $' + ((item.gastos + item.costos) | number:'1.0-0')"
+                        ></div>
+                        <!-- Barra Excedente -->
+                        <div
+                          class="bar-col bar-col-excedente"
+                          [style.height.%]="calcularPorcentajeBarra(Math.max(0, item.excedenteNeto), maxIngresosGastos())"
+                          [title]="'Excedente: $' + (item.excedenteNeto | number:'1.0-0')"
+                        ></div>
+                      </div>
+                      <span class="chart-month-label">{{ item.mesNombre }}</span>
+                    </div>
+                  }
+                } @else {
+                  @for (tri of trimestresData(); track tri.trimestre) {
+                    <div
+                      class="chart-bar-group"
+                      [title]="tri.nombre + ':\nIngresos: $' + (tri.ingresos | number:'1.0-0') + '\nGastos: $' + (tri.gastos | number:'1.0-0') + '\nExcedente: $' + (tri.excedente | number:'1.0-0')"
+                      data-testid="bar-group-trimestre"
+                    >
+                      <div class="chart-bar-columns">
+                        <div
+                          class="bar-col bar-col-ingreso !w-4"
+                          [style.height.%]="calcularPorcentajeBarra(tri.ingresos, maxTrimestres())"
+                        ></div>
+                        <div
+                          class="bar-col bar-col-gasto !w-4"
+                          [style.height.%]="calcularPorcentajeBarra(tri.gastos, maxTrimestres())"
+                        ></div>
+                        <div
+                          class="bar-col bar-col-excedente !w-4"
+                          [style.height.%]="calcularPorcentajeBarra(Math.max(0, tri.excedente), maxTrimestres())"
+                        ></div>
+                      </div>
+                      <span class="chart-month-label">{{ tri.nombre }}</span>
+                    </div>
+                  }
+                }
+              </div>
+
+              <!-- Detalle del mes seleccionado en tarjeta desplegable -->
+              @if (mesDetalleSeleccionado()) {
+                <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs" data-testid="card-detalle-mes-seleccionado">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-indigo-900 uppercase">📅 Detalle {{ mesDetalleSeleccionado()?.mesNombre }}:</span>
+                    <span class="text-blue-700 font-semibold">Ingresos: <strong>$ {{ mesDetalleSeleccionado()?.ingresos | number:'1.0-0' }}</strong></span>
+                    <span class="text-slate-300">|</span>
+                    <span class="text-rose-700 font-semibold">Gastos/Costos: <strong>$ {{ (mesDetalleSeleccionado()?.gastos + mesDetalleSeleccionado()?.costos) | number:'1.0-0' }}</strong></span>
+                    <span class="text-slate-300">|</span>
+                    <span class="text-emerald-700 font-semibold">Excedente: <strong>$ {{ mesDetalleSeleccionado()?.excedenteNeto | number:'1.0-0' }}</strong></span>
+                  </div>
+                  <button type="button" class="text-indigo-600 hover:text-indigo-900 font-bold cursor-pointer" (click)="mesDetalleSeleccionado.set(null)">✕ Cerrar</button>
+                </div>
+              }
+
+              <!-- Tabla de datos comparativos -->
+              <div class="overflow-x-auto w-full pt-1">
+                <table class="tabla-datos w-full text-xs" data-testid="tabla-datos-comparativos">
+                  <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th class="py-2 px-3 text-left font-semibold text-slate-600">Periodo</th>
+                      <th class="py-2 px-3 text-right font-semibold text-blue-700">Ingresos (Clase 4)</th>
+                      <th class="py-2 px-3 text-right font-semibold text-rose-700">Gastos (Clase 5 y 7)</th>
+                      <th class="py-2 px-3 text-right font-semibold text-amber-700">Costos (Clase 6)</th>
+                      <th class="py-2 px-3 text-right font-semibold text-emerald-700">Excedente Neto</th>
+                      <th class="py-2 px-3 text-right font-semibold text-slate-600">% Margen</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (m of dashboardGerencial()?.resumenMensual; track m.mes) {
+                      <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-1.5 px-3 font-semibold text-slate-800">{{ m.mesNombre }}</td>
+                        <td class="py-1.5 px-3 text-right font-mono text-blue-800">$ {{ m.ingresos | number:'1.0-0' }}</td>
+                        <td class="py-1.5 px-3 text-right font-mono text-rose-800">$ {{ m.gastos | number:'1.0-0' }}</td>
+                        <td class="py-1.5 px-3 text-right font-mono text-amber-800">$ {{ m.costos | number:'1.0-0' }}</td>
+                        <td class="py-1.5 px-3 text-right font-mono font-bold" [class.text-emerald-700]="m.excedenteNeto >= 0" [class.text-rose-700]="m.excedenteNeto < 0">
+                          $ {{ m.excedenteNeto | number:'1.0-0' }}
+                        </td>
+                        <td class="py-1.5 px-3 text-right font-mono font-semibold text-slate-700">
+                          {{ m.ingresos > 0 ? (Math.round((m.excedenteNeto / m.ingresos) * 1000) / 10) : 0 }}%
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                  <tfoot class="bg-slate-50 font-bold border-t border-slate-200">
+                    <tr>
+                      <td class="py-2 px-3 text-slate-800 uppercase">Total Anual</td>
+                      <td class="py-2 px-3 text-right font-mono text-blue-900">$ {{ dashboardGerencial()?.totalesAnuales?.totalIngresos | number:'1.0-0' }}</td>
+                      <td class="py-2 px-3 text-right font-mono text-rose-900">$ {{ dashboardGerencial()?.totalesAnuales?.totalGastos | number:'1.0-0' }}</td>
+                      <td class="py-2 px-3 text-right font-mono text-amber-900">$ {{ dashboardGerencial()?.totalesAnuales?.totalCostos | number:'1.0-0' }}</td>
+                      <td class="py-2 px-3 text-right font-mono text-emerald-900">$ {{ dashboardGerencial()?.totalesAnuales?.excedenteNeto | number:'1.0-0' }}</td>
+                      <td class="py-2 px-3 text-right font-mono text-slate-800">{{ dashboardGerencial()?.ratiosFinancieros?.margenNeto }}%</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- 3. Fila Doble: Estructura Patrimonial NIIF & Flujo de Efectivo -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <!-- Gráfica 2: Estructura Patrimonial (Activos vs Pasivos vs Patrimonio) -->
+              <div class="chart-container-card space-y-3" data-testid="seccion-estructura-patrimonial">
+                <div class="pb-2 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                      <span>🏛️</span>
+                      <span>Estructura Patrimonial NIIF</span>
+                    </h4>
+                    <p class="text-xs text-slate-500 mt-0.5">Ecuación Patrimonial: Activo = Pasivo + Patrimonio</p>
+                  </div>
+                  <span
+                    class="badge-mini px-2 py-0.5 rounded font-bold text-xs"
+                    [class.bg-emerald-50]="dashboardGerencial()?.estructuraPatrimonial?.cuadra"
+                    [class.text-emerald-800]="dashboardGerencial()?.estructuraPatrimonial?.cuadra"
+                    [class.border-emerald-200]="dashboardGerencial()?.estructuraPatrimonial?.cuadra"
+                    data-testid="badge-cuadre-patrimonial"
+                  >
+                    {{ dashboardGerencial()?.estructuraPatrimonial?.cuadra ? '✅ Cuadrado NIIF' : '⚠️ En Revisión' }}
+                  </span>
+                </div>
+
+                <!-- Barras de Composición Proporcional -->
+                <div class="space-y-3 py-1">
+                  <!-- Activos -->
+                  <div>
+                    <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                      <span>Total Activos: $ {{ dashboardGerencial()?.estructuraPatrimonial?.totalActivos | number:'1.0-0' }}</span>
+                      <span class="text-blue-700">Corriente {{ dashboardGerencial()?.estructuraPatrimonial?.porcentajeActivoCorriente }}% · No Corriente {{ dashboardGerencial()?.estructuraPatrimonial?.porcentajeActivoNoCorriente }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-6 rounded-lg flex overflow-hidden p-0.5 border border-slate-200 shadow-2xs">
+                      <div
+                        class="bg-blue-600 h-full rounded-l-md flex items-center justify-center text-[10px] text-white font-bold transition-all"
+                        [style.width.%]="dashboardGerencial()?.estructuraPatrimonial?.porcentajeActivoCorriente || 50"
+                        [title]="'Activo Corriente: $' + (dashboardGerencial()?.estructuraPatrimonial?.activoCorriente | number:'1.0-0')"
+                      >
+                        Corriente ({{ dashboardGerencial()?.estructuraPatrimonial?.porcentajeActivoCorriente }}%)
+                      </div>
+                      <div
+                        class="bg-indigo-400 h-full rounded-r-md flex items-center justify-center text-[10px] text-white font-bold transition-all"
+                        [style.width.%]="dashboardGerencial()?.estructuraPatrimonial?.porcentajeActivoNoCorriente || 50"
+                        [title]="'Activo No Corriente: $' + (dashboardGerencial()?.estructuraPatrimonial?.activoNoCorriente | number:'1.0-0')"
+                      >
+                        Fijo ({{ dashboardGerencial()?.estructuraPatrimonial?.porcentajeActivoNoCorriente }}%)
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Pasivo + Patrimonio (Financiación) -->
+                  <div>
+                    <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                      <span>Pasivos + Patrimonio: $ {{ (dashboardGerencial()?.estructuraPatrimonial?.totalPasivos + dashboardGerencial()?.estructuraPatrimonial?.patrimonio) | number:'1.0-0' }}</span>
+                      <span class="text-purple-700">Pasivo {{ dashboardGerencial()?.estructuraPatrimonial?.porcentajePasivo }}% · Patrimonio {{ dashboardGerencial()?.estructuraPatrimonial?.porcentajePatrimonio }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-6 rounded-lg flex overflow-hidden p-0.5 border border-slate-200 shadow-2xs">
+                      <div
+                        class="bg-rose-500 h-full rounded-l-md flex items-center justify-center text-[10px] text-white font-bold transition-all"
+                        [style.width.%]="dashboardGerencial()?.estructuraPatrimonial?.porcentajePasivo || 25"
+                        [title]="'Pasivos: $' + (dashboardGerencial()?.estructuraPatrimonial?.totalPasivos | number:'1.0-0')"
+                      >
+                        Pasivo ({{ dashboardGerencial()?.estructuraPatrimonial?.porcentajePasivo }}%)
+                      </div>
+                      <div
+                        class="bg-emerald-600 h-full rounded-r-md flex items-center justify-center text-[10px] text-white font-bold transition-all"
+                        [style.width.%]="dashboardGerencial()?.estructuraPatrimonial?.porcentajePatrimonio || 75"
+                        [title]="'Patrimonio Institucional: $' + (dashboardGerencial()?.estructuraPatrimonial?.patrimonio | number:'1.0-0')"
+                      >
+                        Patrimonio ({{ dashboardGerencial()?.estructuraPatrimonial?.porcentajePatrimonio }}%)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Detalle en cuadrícula de 3 columnas -->
+                <div class="grid grid-cols-3 gap-2 pt-2 text-center text-xs">
+                  <div class="bg-blue-50/70 border border-blue-100 p-2.5 rounded-xl">
+                    <span class="text-blue-700 font-bold block">Activos</span>
+                    <strong class="font-mono text-slate-800">$ {{ dashboardGerencial()?.estructuraPatrimonial?.totalActivos | number:'1.0-0' }}</strong>
+                  </div>
+                  <div class="bg-rose-50/70 border border-rose-100 p-2.5 rounded-xl">
+                    <span class="text-rose-700 font-bold block">Pasivos</span>
+                    <strong class="font-mono text-slate-800">$ {{ dashboardGerencial()?.estructuraPatrimonial?.totalPasivos | number:'1.0-0' }}</strong>
+                  </div>
+                  <div class="bg-emerald-50/70 border border-emerald-100 p-2.5 rounded-xl">
+                    <span class="text-emerald-700 font-bold block">Patrimonio</span>
+                    <strong class="font-mono text-slate-800">$ {{ dashboardGerencial()?.estructuraPatrimonial?.patrimonio | number:'1.0-0' }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gráfica 3: Tendencia de Flujo de Efectivo (NIC 7) -->
+              <div class="chart-container-card space-y-3" data-testid="seccion-flujo-tendencia">
+                <div class="pb-2 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                      <span>💵</span>
+                      <span>Flujo de Efectivo & Disponible (NIC 7)</span>
+                    </h4>
+                    <p class="text-xs text-slate-500 mt-0.5">Entradas vs Salidas efectivas en Caja y Bancos (Cuentas 11)</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="legend-chip">
+                      <span class="legend-dot" style="background: #06b6d4;"></span>
+                      <span>Entradas</span>
+                    </div>
+                    <div class="legend-chip">
+                      <span class="legend-dot" style="background: #ea580c;"></span>
+                      <span>Salidas</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Barras de Flujo Mensual -->
+                <div class="chart-bars-wrap !h-[145px]" data-testid="contenedor-barras-flujo">
+                  @for (f of dashboardGerencial()?.resumenMensual; track f.mes) {
+                    <div
+                      class="chart-bar-group"
+                      [title]="f.mesNombre + ':\nEntradas: $' + (f.entradasEfectivo | number:'1.0-0') + '\nSalidas: $' + (f.salidasEfectivo | number:'1.0-0') + '\nNeto Mes: $' + (f.flujoDisponible | number:'1.0-0')"
+                    >
+                      <div class="chart-bar-columns">
+                        <div
+                          class="bar-col bar-col-flujo-in"
+                          [style.height.%]="calcularPorcentajeBarra(f.entradasEfectivo, maxFlujo())"
+                        ></div>
+                        <div
+                          class="bar-col bar-col-flujo-out"
+                          [style.height.%]="calcularPorcentajeBarra(f.salidasEfectivo, maxFlujo())"
+                        ></div>
+                      </div>
+                      <span class="chart-month-label">{{ f.mesNombre }}</span>
+                    </div>
+                  }
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                  <div class="bg-cyan-50/70 border border-cyan-100 p-2 rounded-lg flex justify-between items-center">
+                    <span class="text-cyan-800 font-semibold">Total Entradas Efectivas:</span>
+                    <strong class="font-mono text-cyan-900">$ {{ (dashboardGerencial()?.totalesAnuales?.totalIngresos || 0) | number:'1.0-0' }}</strong>
+                  </div>
+                  <div class="bg-orange-50/70 border border-orange-100 p-2 rounded-lg flex justify-between items-center">
+                    <span class="text-orange-800 font-semibold">Total Salidas Efectivas:</span>
+                    <strong class="font-mono text-orange-900">$ {{ ((dashboardGerencial()?.totalesAnuales?.totalGastos || 0) + (dashboardGerencial()?.totalesAnuales?.totalCostos || 0)) | number:'1.0-0' }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Gráfica 4: Control & Ejecución Presupuestal Global -->
+            <div class="chart-container-card space-y-3" data-testid="seccion-ejecucion-presupuestal-dashboard">
+              <div class="pb-2 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <span>🎯</span>
+                    <span>Ejecución Presupuestal Global vs Contabilidad Real</span>
+                  </h4>
+                  <p class="text-xs text-slate-500 mt-0.5">Metas aprobadas por Consejo Directivo vs Recaudo y Giros ejecutados</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="badge-mini font-bold px-2.5 py-0.5 rounded text-xs inline-flex items-center gap-1"
+                    [class.bg-emerald-100]="dashboardGerencial()?.ejecucionPresupuestal?.semaforo === 'VERDE'"
+                    [class.text-emerald-800]="dashboardGerencial()?.ejecucionPresupuestal?.semaforo === 'VERDE'"
+                    [class.bg-amber-100]="dashboardGerencial()?.ejecucionPresupuestal?.semaforo === 'AMARILLO'"
+                    [class.text-amber-800]="dashboardGerencial()?.ejecucionPresupuestal?.semaforo === 'AMARILLO'"
+                    [class.bg-rose-100]="dashboardGerencial()?.ejecucionPresupuestal?.semaforo === 'ROJO'"
+                    [class.text-rose-800]="dashboardGerencial()?.ejecucionPresupuestal?.semaforo === 'ROJO'"
+                    data-testid="badge-semaforo-presupuesto-dashboard"
+                  >
+                    <span>●</span>
+                    <span>Semáforo de Gasto: {{ dashboardGerencial()?.ejecucionPresupuestal?.semaforo }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Barra Ingresos Presupuestados vs Recaudados -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-2">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="font-bold text-blue-900">📥 Recaudo de Ingresos</span>
+                    <span class="font-mono font-bold text-blue-700">{{ dashboardGerencial()?.ejecucionPresupuestal?.porcentajeIngresos }}% ejecutado</span>
+                  </div>
+                  <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                    <div
+                      class="bg-blue-600 h-full rounded-full transition-all duration-500"
+                      [style.width.%]="Math.min(100, dashboardGerencial()?.ejecucionPresupuestal?.porcentajeIngresos || 0)"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+                    <span>Recaudado: $ {{ dashboardGerencial()?.ejecucionPresupuestal?.ingresosRecaudados | number:'1.0-0' }}</span>
+                    <span>Meta: $ {{ dashboardGerencial()?.ejecucionPresupuestal?.ingresosPresupuestados | number:'1.0-0' }}</span>
+                  </div>
+                </div>
+
+                <!-- Barra Gastos Presupuestados vs Pagados -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-2">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="font-bold text-rose-900">📤 Ejecución de Gastos</span>
+                    <span class="font-mono font-bold text-rose-700">{{ dashboardGerencial()?.ejecucionPresupuestal?.porcentajeGastos }}% ejecutado</span>
+                  </div>
+                  <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      [class.bg-emerald-500]="(dashboardGerencial()?.ejecucionPresupuestal?.porcentajeGastos || 0) <= 85"
+                      [class.bg-amber-500]="(dashboardGerencial()?.ejecucionPresupuestal?.porcentajeGastos || 0) > 85 && (dashboardGerencial()?.ejecucionPresupuestal?.porcentajeGastos || 0) <= 100"
+                      [class.bg-rose-600]="(dashboardGerencial()?.ejecucionPresupuestal?.porcentajeGastos || 0) > 100"
+                      [style.width.%]="Math.min(100, dashboardGerencial()?.ejecucionPresupuestal?.porcentajeGastos || 0)"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+                    <span>Pagado: $ {{ dashboardGerencial()?.ejecucionPresupuestal?.gastosPagados | number:'1.0-0' }}</span>
+                    <span>Apropiación: $ {{ dashboardGerencial()?.ejecucionPresupuestal?.gastosPresupuestados | number:'1.0-0' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
 
       <!-- ─── 1. BALANCE GENERAL ─────────────────────────────────────────── -->
       @if (reporteActivo() === 'balance') {
@@ -926,7 +1561,7 @@ type ReporteActivo = 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxiliar' | 'cert
                           <td class="text-right font-mono font-semibold">{{ m.saldoAcumulado | number:'1.2-2' }}</td>
                         </tr>
                       }
-                      @if (auxiliarTercero()!.movimientos.length === 0) {
+                      @if (!auxiliarTercero()?.movimientos || auxiliarTercero()!.movimientos.length === 0) {
                         <tr>
                           <td colspan="8" class="text-center py-8 text-gray-400">
                             Sin movimientos para este tercero en el periodo seleccionado.
@@ -1609,6 +2244,319 @@ type ReporteActivo = 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxiliar' | 'cert
         </div>
       }
 
+      <!-- ─── FLUJO DE EFECTIVO (NIC 7 — Método Indirecto) ────────────────── -->
+      @if (reporteActivo() === 'flujo') {
+        <div data-testid="seccion-flujo-efectivo" class="space-y-4">
+          <div class="card p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-xs">
+            <div class="reportes-card-header">
+              <div class="reportes-card-title-group">
+                <span class="reportes-card-icon">💵</span>
+                <div class="reportes-card-title-texts">
+                  <h3 class="reportes-card-title" data-testid="title-flujo-efectivo">Estado de Flujos de Efectivo</h3>
+                  <p class="reportes-card-subtitle">Método Indirecto NIIF (NIC 7) — Actividades de Operación, Inversión y Financiación</p>
+                </div>
+              </div>
+              <div class="reportes-info-badge text-emerald-800 bg-emerald-50/80 border border-emerald-200/70">
+                <span>ℹ️</span>
+                <span>Reconcilia el excedente neto con la liquidez real en Caja y Bancos.</span>
+              </div>
+            </div>
+
+            <div class="reportes-filter-row">
+              <div class="reportes-filter-group">
+                <label class="reportes-filter-label">Fecha Inicio *</label>
+                <input
+                  class="input-base input-sm w-date"
+                  data-testid="input-flujo-desde"
+                  type="date"
+                  [(ngModel)]="flujoDesde"
+                />
+              </div>
+              <div class="reportes-filter-group">
+                <label class="reportes-filter-label">Fecha Fin *</label>
+                <input
+                  class="input-base input-sm w-date"
+                  data-testid="input-flujo-hasta"
+                  type="date"
+                  [(ngModel)]="flujoHasta"
+                />
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="btn-primary btn-sm flex items-center gap-1.5"
+                  (click)="generarFlujo()"
+                  [disabled]="cargando()"
+                  data-testid="btn-generar-flujo"
+                >
+                  🔍 Generar Flujo
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm flex items-center gap-1.5"
+                  (click)="descargarFlujoPdf()"
+                  data-testid="btn-exportar-flujo-pdf"
+                >
+                  📄 PDF
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm flex items-center gap-1.5"
+                  (click)="descargarFlujoExcel()"
+                  data-testid="btn-exportar-flujo-excel"
+                >
+                  📊 Excel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          @if (cargando()) {
+            <div class="card p-8 text-center text-slate-500">
+              ⏳ Calculando Estado de Flujos de Efectivo...
+            </div>
+          } @else if (flujo(); as f) {
+            <!-- KPIs Resumen de Flujo -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4" data-testid="kpis-flujo-grid">
+              <div class="stat-card border-blue-500">
+                <div class="stat-label">Excedente Neto Base</div>
+                <div class="stat-value text-blue-700">\${{ f.excedenteNeto | number:'1.0-0' }}</div>
+                <div class="stat-footer">Punto de partida del PyG</div>
+              </div>
+              <div class="stat-card border-green-500">
+                <div class="stat-label">Flujo Neto Operación</div>
+                <div class="stat-value text-emerald-700">\${{ f.flujoNetoOperacion | number:'1.0-0' }}</div>
+                <div class="stat-footer">Ajustes no monetarios + KTO</div>
+              </div>
+              <div class="stat-card border-yellow-500">
+                <div class="stat-label">Flujo Neto Inversión</div>
+                <div class="stat-value text-amber-700">\${{ f.flujoNetoInversion | number:'1.0-0' }}</div>
+                <div class="stat-footer">Propiedades y equipos</div>
+              </div>
+              <div class="stat-card border-purple-500">
+                <div class="stat-label">Flujo Neto Financiación</div>
+                <div class="stat-value text-purple-700">\${{ f.flujoNetoFinanciacion | number:'1.0-0' }}</div>
+                <div class="stat-footer">Obligaciones y capital</div>
+              </div>
+            </div>
+
+            <!-- Conciliación de Efectivo Banner -->
+            <div class="card p-4 bg-slate-900 text-white rounded-xl shadow-md flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <span class="text-xs text-slate-400 block font-semibold uppercase tracking-wider">Saldo Inicial de Efectivo</span>
+                <span class="text-lg font-bold font-mono">\${{ f.saldoInicialEfectivo | number:'1.0-0' }} COP</span>
+              </div>
+              <div class="text-center">
+                <span class="text-xs text-slate-400 block font-semibold uppercase tracking-wider">Variación Neta del Periodo</span>
+                <span class="text-lg font-bold font-mono" [class.text-emerald-400]="f.variacionNetaEfectivo >= 0" [class.text-red-400]="f.variacionNetaEfectivo < 0">
+                  {{ f.variacionNetaEfectivo >= 0 ? '+' : '' }}\${{ f.variacionNetaEfectivo | number:'1.0-0' }} COP
+                </span>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-slate-400 block font-semibold uppercase tracking-wider">Saldo Final de Efectivo</span>
+                <span class="text-xl font-bold font-mono text-emerald-400">\${{ f.saldoFinalEfectivo | number:'1.0-0' }} COP</span>
+              </div>
+            </div>
+
+            <!-- Desglose por Actividades -->
+            <div class="card p-4 bg-white border border-slate-200 rounded-xl space-y-4">
+              <h4 class="text-sm font-bold text-slate-800 border-b pb-2">1. Actividades de Operación</h4>
+              <table class="tabla-datos w-full text-xs">
+                <thead>
+                  <tr class="bg-slate-50">
+                    <th class="text-left py-2 px-3">Concepto / Partida</th>
+                    <th class="text-right py-2 px-3 w-44">Valor (COP)</th>
+                    <th class="text-left py-2 px-3 w-48">Nota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="font-semibold bg-blue-50/50">
+                    <td class="py-2 px-3">Excedente Neto del Ejercicio (PyG)</td>
+                    <td class="text-right py-2 px-3 font-mono">\${{ f.excedenteNeto | number:'1.0-0' }}</td>
+                    <td class="py-2 px-3 text-slate-500">Resultado operacional base</td>
+                  </tr>
+                  @for (p of f.ajustesNoMonetarios; track p.concepto) {
+                    <tr class="border-b">
+                      <td class="py-1.5 px-3">{{ p.concepto }}</td>
+                      <td class="text-right py-1.5 px-3 font-mono" [class.text-emerald-700]="p.valor > 0">\${{ p.valor | number:'1.0-0' }}</td>
+                      <td class="py-1.5 px-3 text-slate-500">{{ p.nota }}</td>
+                    </tr>
+                  }
+                  @for (p of f.cambiosCapitalTrabajo; track p.concepto) {
+                    <tr class="border-b">
+                      <td class="py-1.5 px-3">{{ p.concepto }}</td>
+                      <td class="text-right py-1.5 px-3 font-mono" [class.text-emerald-700]="p.valor > 0" [class.text-red-600]="p.valor < 0">\${{ p.valor | number:'1.0-0' }}</td>
+                      <td class="py-1.5 px-3 text-slate-500">{{ p.nota }}</td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot class="bg-slate-100 font-bold">
+                  <tr>
+                    <td class="py-2 px-3">FLUJO NETO DE ACTIVIDADES DE OPERACIÓN</td>
+                    <td class="text-right py-2 px-3 font-mono text-emerald-800">\${{ f.flujoNetoOperacion | number:'1.0-0' }}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              <h4 class="text-sm font-bold text-slate-800 border-b pb-2 pt-2">2. Actividades de Inversión</h4>
+              <table class="tabla-datos w-full text-xs">
+                <thead>
+                  <tr class="bg-slate-50">
+                    <th class="text-left py-2 px-3">Concepto / Partida</th>
+                    <th class="text-right py-2 px-3 w-44">Valor (COP)</th>
+                    <th class="text-left py-2 px-3 w-48">Nota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of f.actividadesInversion; track p.concepto) {
+                    <tr class="border-b">
+                      <td class="py-1.5 px-3">{{ p.concepto }}</td>
+                      <td class="text-right py-1.5 px-3 font-mono" [class.text-red-600]="p.valor < 0" [class.text-emerald-700]="p.valor > 0">\${{ p.valor | number:'1.0-0' }}</td>
+                      <td class="py-1.5 px-3 text-slate-500">{{ p.nota }}</td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot class="bg-slate-100 font-bold">
+                  <tr>
+                    <td class="py-2 px-3">FLUJO NETO DE ACTIVIDADES DE INVERSIÓN</td>
+                    <td class="text-right py-2 px-3 font-mono text-amber-800">\${{ f.flujoNetoInversion | number:'1.0-0' }}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              <h4 class="text-sm font-bold text-slate-800 border-b pb-2 pt-2">3. Actividades de Financiación</h4>
+              <table class="tabla-datos w-full text-xs">
+                <thead>
+                  <tr class="bg-slate-50">
+                    <th class="text-left py-2 px-3">Concepto / Partida</th>
+                    <th class="text-right py-2 px-3 w-44">Valor (COP)</th>
+                    <th class="text-left py-2 px-3 w-48">Nota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of f.actividadesFinanciacion; track p.concepto) {
+                    <tr class="border-b">
+                      <td class="py-1.5 px-3">{{ p.concepto }}</td>
+                      <td class="text-right py-1.5 px-3 font-mono">\${{ p.valor | number:'1.0-0' }}</td>
+                      <td class="py-1.5 px-3 text-slate-500">{{ p.nota }}</td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot class="bg-slate-100 font-bold">
+                  <tr>
+                    <td class="py-2 px-3">FLUJO NETO DE ACTIVIDADES DE FINANCIACIÓN</td>
+                    <td class="text-right py-2 px-3 font-mono text-purple-800">\${{ f.flujoNetoFinanciacion | number:'1.0-0' }}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ─── NOTAS NIIF A LOS ESTADOS FINANCIEROS ───────────────────────── -->
+      @if (reporteActivo() === 'notas') {
+        <div data-testid="seccion-notas-niif" class="space-y-4">
+          <div class="card p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-xs">
+            <div class="reportes-card-header">
+              <div class="reportes-card-title-group">
+                <span class="reportes-card-icon">📑</span>
+                <div class="reportes-card-title-texts">
+                  <h3 class="reportes-card-title" data-testid="title-notas-niif">Notas y Revelaciones a los Estados Financieros</h3>
+                  <p class="reportes-card-subtitle">Pliego oficial NIIF para Pymes (Decreto 2420 de 2015) para Consejo Directivo y Revisoría Fiscal</p>
+                </div>
+              </div>
+              <div class="reportes-info-badge text-indigo-800 bg-indigo-50/80 border border-indigo-200/70">
+                <span>ℹ️</span>
+                <span>Revelaciones cualitativas y cuantitativas obligatorias para aprobación de asamblea.</span>
+              </div>
+            </div>
+
+            <div class="reportes-filter-row">
+              <div class="reportes-filter-group">
+                <label class="reportes-filter-label">Vigencia Fiscal *</label>
+                <input
+                  class="input-base input-sm w-year"
+                  data-testid="input-notas-anio"
+                  type="number"
+                  [(ngModel)]="notasAnio"
+                />
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="btn-primary btn-sm flex items-center gap-1.5"
+                  (click)="generarNotas()"
+                  [disabled]="cargando()"
+                  data-testid="btn-generar-notas"
+                >
+                  🔍 Generar Notas NIIF
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm flex items-center gap-1.5"
+                  (click)="descargarNotasPdf()"
+                  data-testid="btn-exportar-notas-pdf"
+                >
+                  📄 Exportar PDF Oficial
+                </button>
+              </div>
+            </div>
+          </div>
+
+          @if (cargando()) {
+            <div class="card p-8 text-center text-slate-500">
+              ⏳ Compilando Notas y Revelaciones NIIF...
+            </div>
+          } @else if (notas(); as n) {
+            <div class="space-y-3" data-testid="lista-notas-niif">
+              @for (nota of n.notas; track nota.numero) {
+                <div class="card p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
+                  <div class="flex items-center justify-between border-b pb-2 mb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 text-xs font-bold font-mono">
+                        Nota {{ nota.numero }}
+                      </span>
+                      <h4 class="font-bold text-slate-800 text-sm m-0">{{ nota.titulo }}</h4>
+                    </div>
+                    <span class="text-xs text-slate-500 italic">{{ nota.normaReferencia }}</span>
+                  </div>
+                  <p class="text-xs text-slate-700 leading-relaxed m-0 whitespace-pre-line">{{ nota.contenido }}</p>
+
+                  @if (nota.tablaDatos && nota.tablaDatos.filas.length > 0) {
+                    <div class="mt-3 overflow-x-auto border border-slate-200 rounded-lg">
+                      <table class="tabla-datos w-full text-xs">
+                        <thead class="bg-slate-50">
+                          <tr>
+                            @for (col of nota.tablaDatos.columnas; track col; let idx = $index) {
+                              <th class="py-1.5 px-2" [class.text-left]="idx === 0" [class.text-right]="idx > 0">{{ col }}</th>
+                            }
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (fila of nota.tablaDatos.filas; track $index) {
+                            <tr class="border-t hover:bg-slate-50/50">
+                              @for (val of fila; track $index; let idx = $index) {
+                                <td class="py-1.5 px-2" [class.text-left]="idx === 0" [class.text-right]="idx > 0" [class.font-mono]="idx > 0">
+                                  {{ formatCeldaNota(val, idx) }}
+                                </td>
+                              }
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
       <!-- Template reutilizable para tablas jerárquicas de balance/PyG -->
       <ng-template #tablaBalance let-cuentas let-total="total">
         <table class="tabla-datos w-full text-xs mb-1">
@@ -1654,27 +2602,89 @@ type ReporteActivo = 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxiliar' | 'cert
 })
 export class ContabilidadReportesComponent implements OnInit {
   private readonly svc = inject(ContabilidadService);
+  readonly Math = Math;
 
   readonly cargando = signal<boolean>(false);
-  readonly reporteActivo = signal<ReporteActivo>('balance');
+  readonly reporteActivo = signal<ReporteActivo>('graficas');
   readonly balance = signal<BalanceGeneral | null>(null);
   readonly pyg = signal<EstadoResultados | null>(null);
   readonly libroDiario = signal<LibroDiarioItem[]>([]);
   readonly libroMayor = signal<LibroMayorCuenta[]>([]);
   readonly auxiliarTercero = signal<AuxiliarTerceroReporte | null>(null);
+  readonly flujo = signal<FlujoEfectivoModel | null>(null);
+  readonly notas = signal<NotasNiifModel | null>(null);
   readonly terceros = signal<Tercero[]>([]);
 
+  // ─── Dashboard Financiero Gerencial Signals ──────────────────────────────
+  readonly dashboardGerencial = signal<any | null>(null);
+  readonly dashboardAnio = signal<number>(new Date().getFullYear());
+  readonly dashboardModo = signal<'MENSUAL' | 'TRIMESTRAL'>('MENSUAL');
+  readonly mesDetalleSeleccionado = signal<any | null>(null);
+
   readonly reportes: { key: ReporteActivo; label: string; icono: string }[] = [
+    { key: 'graficas', label: 'Dashboard Gerencial', icono: '📊' },
     { key: 'balance', label: 'Balance General', icono: '🏛' },
     { key: 'pyg', label: 'Estado Resultados', icono: '📈' },
     { key: 'diario', label: 'Libro Diario', icono: '📋' },
     { key: 'mayor', label: 'Libro Mayor', icono: '📒' },
     { key: 'auxiliar', label: 'Auxiliar Tercero', icono: '👤' },
+    { key: 'flujo', label: 'Flujo de Efectivo NIC 7', icono: '💵' },
+    { key: 'notas', label: 'Notas NIIF', icono: '📑' },
     { key: 'certificados', label: 'Certificados Tributarios', icono: '📜' },
     { key: 'exogena', label: 'Exógena DIAN', icono: '🏛' },
     { key: 'presupuesto', label: 'Control Presupuestal', icono: '📊' },
     { key: 'conciliacion', label: 'Conciliación Bancaria', icono: '🏦' },
   ];
+
+  readonly maxIngresosGastos = computed(() => {
+    const list = this.dashboardGerencial()?.resumenMensual || [];
+    let max = 1000000;
+    for (const m of list) {
+      const g = Number(m.gastos || 0) + Number(m.costos || 0);
+      const val = Math.max(Number(m.ingresos || 0), g, Number(m.excedenteNeto || 0));
+      if (val > max) max = val;
+    }
+    return max;
+  });
+
+  readonly trimestresData = computed(() => {
+    const list = this.dashboardGerencial()?.resumenMensual || [];
+    const t = [
+      { trimestre: 1, nombre: 'T1 (Ene-Mar)', ingresos: 0, gastos: 0, excedente: 0 },
+      { trimestre: 2, nombre: 'T2 (Abr-Jun)', ingresos: 0, gastos: 0, excedente: 0 },
+      { trimestre: 3, nombre: 'T3 (Jul-Sep)', ingresos: 0, gastos: 0, excedente: 0 },
+      { trimestre: 4, nombre: 'T4 (Oct-Dic)', ingresos: 0, gastos: 0, excedente: 0 },
+    ];
+    for (const m of list) {
+      const idx = Math.floor((m.mes - 1) / 3);
+      if (t[idx]) {
+        t[idx].ingresos += Number(m.ingresos || 0);
+        t[idx].gastos += (Number(m.gastos || 0) + Number(m.costos || 0));
+        t[idx].excedente += Number(m.excedenteNeto || 0);
+      }
+    }
+    return t;
+  });
+
+  readonly maxTrimestres = computed(() => {
+    const tList = this.trimestresData();
+    let max = 1000000;
+    for (const tri of tList) {
+      const val = Math.max(tri.ingresos, tri.gastos, tri.excedente);
+      if (val > max) max = val;
+    }
+    return max;
+  });
+
+  readonly maxFlujo = computed(() => {
+    const list = this.dashboardGerencial()?.resumenMensual || [];
+    let max = 1000000;
+    for (const m of list) {
+      const val = Math.max(Number(m.entradasEfectivo || 0), Number(m.salidasEfectivo || 0));
+      if (val > max) max = val;
+    }
+    return max;
+  });
 
   readonly certificado = signal<any | null>(null);
   readonly exogenaValidacion = signal<any | null>(null);
@@ -1687,10 +2697,12 @@ export class ContabilidadReportesComponent implements OnInit {
   presupuestoIdSeleccionado = 'pres-1';
   conciliacionFormato: 'XLSX' | 'CSV' | 'OFX' = 'XLSX';
 
-
   balanceFechaCorte = new Date().toISOString().split('T')[0];
   pygDesde = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
   pygHasta = new Date().toISOString().split('T')[0];
+  flujoDesde = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+  flujoHasta = new Date().toISOString().split('T')[0];
+  notasAnio = new Date().getFullYear();
   desdeFiltro = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
   hastaFiltro = new Date().toISOString().split('T')[0];
   mayorCuenta = '';
@@ -1710,7 +2722,55 @@ export class ContabilidadReportesComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.cargarDashboardGerencial();
     this.cargarTerceros();
+  }
+
+  cargarDashboardGerencial(anio?: number): void {
+    const targetAnio = anio || this.dashboardAnio();
+    this.cargando.set(true);
+    this.svc.getDashboardGerencial(targetAnio).subscribe({
+      next: (data) => {
+        this.dashboardGerencial.set(data);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.dashboardGerencial.set(null);
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  onDashboardAnioChange(nuevoAnio: number): void {
+    this.dashboardAnio.set(nuevoAnio);
+    this.cargarDashboardGerencial(nuevoAnio);
+  }
+
+  setDashboardModo(modo: 'MENSUAL' | 'TRIMESTRAL'): void {
+    this.dashboardModo.set(modo);
+  }
+
+  seleccionarMesDetalle(item: any): void {
+    if (this.mesDetalleSeleccionado()?.mes === item.mes) {
+      this.mesDetalleSeleccionado.set(null);
+    } else {
+      this.mesDetalleSeleccionado.set(item);
+    }
+  }
+
+  calcularPorcentajeBarra(valor: number, max: number): number {
+    const v = Number(valor) || 0;
+    const m = Number(max) || 1;
+    if (v <= 0) return 3;
+    const pct = Math.round((v / m) * 100);
+    return Math.max(4, Math.min(100, pct));
+  }
+
+  exportarDashboardExcel(): void {
+    this.svc.descargarReporteExcel('estado-resultados', {
+      fechaInicio: `${this.dashboardAnio()}-01-01`,
+      fechaFin: `${this.dashboardAnio()}-12-31`,
+    });
   }
 
   cargarTerceros(): void {
@@ -1722,6 +2782,9 @@ export class ContabilidadReportesComponent implements OnInit {
 
   seleccionarReporte(key: ReporteActivo): void {
     this.reporteActivo.set(key);
+    if (key === 'graficas' && !this.dashboardGerencial()) {
+      this.cargarDashboardGerencial();
+    }
   }
 
   generarBalance(): void {
@@ -1808,22 +2871,80 @@ export class ContabilidadReportesComponent implements OnInit {
         this.auxiliarCuentaCodigo || undefined,
       )
       .subscribe({
-        next: (data) => {
-          this.auxiliarTercero.set(data);
+        next: (data: any) => {
+          if (Array.isArray(data)) {
+            const movs = data.map((r: any) => ({
+              fecha: r.fecha,
+              comprobante: `${r.tipo}-${String(r.consecutivo || 0).padStart(6, '0')}`,
+              cuentaCodigo: r.codigoCuenta || r.codigo_cuenta,
+              cuentaNombre: r.nombreCuenta || r.nombre_cuenta,
+              concepto: r.concepto,
+              debito: Number(r.debito || 0),
+              credito: Number(r.credito || 0),
+              saldoAcumulado: Number(r.saldoAcumulado || 0),
+            }));
+            const totDeb = movs.reduce((sum: number, m: any) => sum + m.debito, 0);
+            const totCred = movs.reduce((sum: number, m: any) => sum + m.credito, 0);
+            const primerTercero = data[0]?.tercero || 'Consolidado Terceros';
+            const primerNit = data[0]?.nit || '';
+            const finalSaldo = movs.length > 0 ? movs[movs.length - 1].saldoAcumulado : 0;
+
+            this.auxiliarTercero.set({
+              terceroId: this.terceroFiltroId || '',
+              terceroNombre: primerTercero,
+              numeroIdentificacion: primerNit,
+              fechaInicio: this.desdeFiltro,
+              fechaFin: this.hastaFiltro,
+              movimientos: movs,
+              totalDebito: totDeb,
+              totalCredito: totCred,
+              saldoFinal: finalSaldo,
+            });
+          } else if (data && Array.isArray(data.movimientos)) {
+            this.auxiliarTercero.set(data);
+          } else {
+            this.auxiliarTercero.set({
+              terceroId: '',
+              terceroNombre: 'Sin movimientos',
+              numeroIdentificacion: '',
+              fechaInicio: this.desdeFiltro,
+              fechaFin: this.hastaFiltro,
+              movimientos: [],
+              totalDebito: 0,
+              totalCredito: 0,
+              saldoFinal: 0,
+            });
+          }
           this.cargando.set(false);
         },
         error: () => {
-          this.auxiliarTercero.set(null);
+          this.auxiliarTercero.set({
+            terceroId: '',
+            terceroNombre: 'Sin movimientos',
+            numeroIdentificacion: '',
+            fechaInicio: this.desdeFiltro,
+            fechaFin: this.hastaFiltro,
+            movimientos: [],
+            totalDebito: 0,
+            totalCredito: 0,
+            saldoFinal: 0,
+          });
           this.cargando.set(false);
         },
       });
   }
 
   exportarExcel(reporte: string): void {
+    let fi = this.desdeFiltro;
+    let ff = this.hastaFiltro;
+    if (reporte === 'estado-resultados' || reporte === 'pyg') {
+      fi = this.pygDesde;
+      ff = this.pygHasta;
+    }
     const params: Record<string, string> = {
       fechaCorte: this.balanceFechaCorte,
-      fechaInicio: this.reporteActivo() === 'pyg' ? this.pygDesde : this.desdeFiltro,
-      fechaFin: this.reporteActivo() === 'pyg' ? this.pygHasta : this.hastaFiltro,
+      fechaInicio: fi,
+      fechaFin: ff,
       codigoCuenta: this.mayorCuenta || this.auxiliarCuentaCodigo,
       terceroId: this.terceroFiltroId,
     };
@@ -1831,10 +2952,16 @@ export class ContabilidadReportesComponent implements OnInit {
   }
 
   exportarPdf(reporte: string): void {
+    let fi = this.desdeFiltro;
+    let ff = this.hastaFiltro;
+    if (reporte === 'estado-resultados' || reporte === 'pyg') {
+      fi = this.pygDesde;
+      ff = this.pygHasta;
+    }
     const params: Record<string, string> = {
       fechaCorte: this.balanceFechaCorte,
-      fechaInicio: this.reporteActivo() === 'pyg' ? this.pygDesde : this.desdeFiltro,
-      fechaFin: this.reporteActivo() === 'pyg' ? this.pygHasta : this.hastaFiltro,
+      fechaInicio: fi,
+      fechaFin: ff,
       codigoCuenta: this.mayorCuenta || this.auxiliarCuentaCodigo,
       terceroId: this.terceroFiltroId,
     };
@@ -1958,4 +3085,77 @@ export class ContabilidadReportesComponent implements OnInit {
     });
   }
 
+  // ─── Flujo de Efectivo NIC 7 ─────────────────────────────────────────────
+  generarFlujo(): void {
+    this.cargando.set(true);
+    this.svc.getFlujoEfectivo(this.flujoDesde, this.flujoHasta).subscribe({
+      next: (data) => {
+        this.flujo.set(data);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.flujo.set(null);
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  descargarFlujoPdf(): void {
+    const fi = this.flujoDesde || `${new Date().getFullYear()}-01-01`;
+    const ff = this.flujoHasta || new Date().toISOString().split('T')[0];
+    this.svc.descargarFlujoEfectivoPdf(fi, ff).subscribe({
+      next: (blob) => this.descargarBlob(blob, `flujo_efectivo_${fi}_${ff}.pdf`),
+      error: () => {},
+    });
+  }
+
+  descargarFlujoExcel(): void {
+    const fi = this.flujoDesde || `${new Date().getFullYear()}-01-01`;
+    const ff = this.flujoHasta || new Date().toISOString().split('T')[0];
+    this.svc.descargarFlujoEfectivoExcel(fi, ff).subscribe({
+      next: (blob) => this.descargarBlob(blob, `flujo_efectivo_${fi}_${ff}.xlsx`),
+      error: () => {},
+    });
+  }
+
+  // ─── Notas NIIF ──────────────────────────────────────────────────────────
+  generarNotas(): void {
+    this.cargando.set(true);
+    this.svc.getNotasNiif(this.notasAnio).subscribe({
+      next: (data) => {
+        this.notas.set(data);
+        this.cargando.set(false);
+      },
+      error: () => {
+        this.notas.set(null);
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  descargarNotasPdf(): void {
+    const anio = this.notasAnio || new Date().getFullYear();
+    this.svc.descargarNotasNiifPdf(anio).subscribe({
+      next: (blob) => this.descargarBlob(blob, `notas_niif_${anio}.pdf`),
+      error: () => {},
+    });
+  }
+
+  private descargarBlob(blob: Blob, nombreArchivo: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
+  formatCeldaNota(val: any, idx: number): string {
+    if (idx > 0 && typeof val === 'number') {
+      return '$' + val.toLocaleString('es-CO');
+    }
+    return String(val ?? '');
+  }
 }

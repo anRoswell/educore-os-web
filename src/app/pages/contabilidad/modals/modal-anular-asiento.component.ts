@@ -11,7 +11,7 @@ import { Asiento } from '../models/contabilidad.models';
   template: `
     @if (visible() && asiento()) {
       <div class="modal-backdrop" data-testid="modal-anular-asiento-backdrop" (click)="cancelar()">
-        <div class="modal-box w-[500px]" data-testid="modal-anular-asiento" (click)="$event.stopPropagation()">
+        <div class="modal-box w-[500px] rounded-2xl shadow-xl border border-slate-100 p-6" data-testid="modal-anular-asiento" (click)="$event.stopPropagation()">
           <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 text-lg shadow-xs">
@@ -27,28 +27,29 @@ import { Asiento } from '../models/contabilidad.models';
             <span class="badge-mini badge-red">Acción Auditada</span>
           </div>
 
-          <div class="modal-body space-y-4 pt-3">
+          <div class="modal-body space-y-4 pt-4">
             @if (errorMensaje()) {
-              <div class="bg-red-50 border border-red-200 text-red-700 text-xs rounded p-2" data-testid="alert-error-anulacion">
+              <div class="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3" data-testid="alert-error-anulacion">
                 {{ errorMensaje() }}
               </div>
             }
 
-            <p class="text-sm text-gray-700">
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
               ¿Está seguro que desea anular el comprobante
-              <strong>{{ asiento()!.tipoComprobante }}-{{ asiento()!.consecutivo | number:'6.0-0' }}</strong>?
-            </p>
-
-            <div class="bg-red-50 border border-red-200 rounded p-3 text-xs text-red-700">
-              ⚠ <strong>Advertencia:</strong> Esta acción marcará el comprobante como
-              <code>VOID</code> y generará automáticamente un asiento de reverso (tipo NOT)
-              manteniendo la pista de auditoría. No puede deshacerse.
+              <strong class="text-slate-900 font-bold">{{ asiento()!.tipoComprobante }}-{{ asiento()!.consecutivo | number:'6.0-0' }}</strong>?
             </div>
 
-            <div class="form-group">
-              <label class="form-label text-xs font-semibold">Motivo de Anulación * (mínimo 5 caracteres)</label>
+            <div class="bg-rose-50/80 border border-rose-200 rounded-xl p-3.5 text-xs text-rose-700 flex items-start gap-2.5">
+              <span class="text-base flex-shrink-0">⚠️</span>
+              <span class="leading-relaxed"><strong>Advertencia:</strong> Esta acción marcará el comprobante como
+              <code>VOID</code> y generará automáticamente un asiento de reverso (tipo NOT)
+              manteniendo la pista de auditoría. No puede deshacerse.</span>
+            </div>
+
+            <div class="form-group flex flex-col items-start gap-1">
+              <label class="form-label text-xs font-semibold text-slate-700">Motivo de Anulación * (mínimo 5 caracteres)</label>
               <textarea
-                class="input-base h-24 text-xs"
+                class="input-base h-24 text-xs w-full"
                 data-testid="textarea-motivo-anulacion"
                 [ngModel]="motivo()"
                 (ngModelChange)="motivo.set($event)"
@@ -57,10 +58,10 @@ import { Asiento } from '../models/contabilidad.models';
             </div>
           </div>
 
-          <div class="modal-actions flex justify-end gap-2 pt-4 border-t mt-4">
+          <div class="modal-actions flex items-center justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
             <button
               type="button"
-              class="btn-secondary"
+              class="btn-secondary btn-sm font-medium"
               data-testid="btn-cancelar-anulacion"
               (click)="cancelar()"
             >
@@ -68,7 +69,7 @@ import { Asiento } from '../models/contabilidad.models';
             </button>
             <button
               type="button"
-              class="btn-danger"
+              class="btn-danger btn-sm font-semibold shadow-sm"
               data-testid="btn-confirmar-anulacion"
               [disabled]="!motivoValido() || procesando()"
               (click)="confirmar()"

@@ -13,7 +13,7 @@ import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directi
   template: `
     @if (visible()) {
       <div class="modal-backdrop" data-testid="modal-nuevo-asiento-backdrop" (click)="cancelar()">
-        <div class="modal-box w-[820px]" data-testid="modal-nuevo-asiento" (click)="$event.stopPropagation()">
+        <div class="modal-box w-[820px] rounded-2xl shadow-xl border border-slate-100 p-6" data-testid="modal-nuevo-asiento" (click)="$event.stopPropagation()">
           <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-lg shadow-xs">
@@ -51,18 +51,18 @@ import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directi
               <div class="form-group flex flex-col items-start gap-1">
                 <label class="form-label text-xs font-semibold text-slate-700">Tipo *</label>
                 <select
-                  class="input-base w-full text-xs"
+                  class="input-base w-full text-xs font-medium"
                   data-testid="input-nuevo-asiento-tipo"
                   [ngModel]="tipoComprobante()"
                   (ngModelChange)="tipoComprobante.set($event)"
                 >
-                  <option value="CAU">CAU — Causación</option>
-                  <option value="ING">ING — Ingreso</option>
-                  <option value="EGR">EGR — Egreso</option>
-                  <option value="AJU">AJU — Ajuste</option>
-                  <option value="NOT">NOT — Nota</option>
-                  <option value="CIER">CIER — Cierre</option>
-                  <option value="APE">APE — Apertura</option>
+                  <option value="CAU">🧾 CAU — Causación</option>
+                  <option value="ING">💵 ING — Ingreso / Recaudo</option>
+                  <option value="EGR">💸 EGR — Egreso / Pago</option>
+                  <option value="AJU">⚙️ AJU — Ajuste Contable</option>
+                  <option value="NOT">📝 NOT — Nota Contable</option>
+                  <option value="CIER">🏁 CIER — Cierre Fiscal</option>
+                  <option value="APE">🏛️ APE — Apertura Inicial</option>
                 </select>
               </div>
 

@@ -58,6 +58,27 @@ export class DianService {
     );
   }
 
+  emitirFacturaDirecta(dto: import('../models/contabilidad.models').EmitirFacturaDirectaModel): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
+    return this.http.post<{ success: boolean; message: string; documento: DocumentoElectronicoModel }>(
+      `${this.base}/facturas/emitir-directa`,
+      dto,
+    );
+  }
+
+  emitirFacturasMasivas(dto: import('../models/contabilidad.models').EmitirFacturasMasivasModel): Observable<import('../models/contabilidad.models').ResultadoFacturasMasivasModel> {
+    return this.http.post<import('../models/contabilidad.models').ResultadoFacturasMasivasModel>(
+      `${this.base}/facturas/emitir-masiva`,
+      dto,
+    );
+  }
+
+  enviarFacturaEmail(documentoId: string, dto?: import('../models/contabilidad.models').EnviarFacturaEmailModel): Observable<{ success: boolean; message: string; enviadoA: string }> {
+    return this.http.post<{ success: boolean; message: string; enviadoA: string }>(
+      `${this.base}/documentos/${documentoId}/enviar-email`,
+      dto || {},
+    );
+  }
+
   emitirNotaCredito(dto: {
     documentoReferenciadoId: string;
     concepto: string;

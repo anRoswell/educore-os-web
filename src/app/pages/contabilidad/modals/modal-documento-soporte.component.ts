@@ -158,12 +158,15 @@ export class ModalDocumentoSoporteComponent implements OnInit {
   readonly errorMensaje = signal<string | null>(null);
 
   constructor() {
-    effect(() => {
-      if (this.visible()) {
-        this.cargarTerceros();
-        this.errorMensaje.set(null);
-      }
-    });
+    effect(
+      () => {
+        if (this.visible()) {
+          this.cargarTerceros();
+          this.errorMensaje.set(null);
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   ngOnInit(): void {

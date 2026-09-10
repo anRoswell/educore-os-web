@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContabilidadService } from '../services/contabilidad.service';
 import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.directive';
+import { FlatpickrDirective } from '../../../shared/directives/flatpickr.directive';
 
 @Component({
   selector: 'app-modal-traslado-presupuestal',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyMaskDirective],
+  imports: [CommonModule, FormsModule, CurrencyMaskDirective, FlatpickrDirective],
   template: `
     @if (visible()) {
       <div class="modal-backdrop" data-testid="modal-traslado-presupuestal-backdrop" (click)="cerrarModal()">
@@ -121,9 +122,11 @@ import { CurrencyMaskDirective } from '../../../shared/directives/currency-mask.
               <div class="form-group flex flex-col items-start gap-1">
                 <label class="form-label text-xs font-semibold text-gray-700">Fecha del Acuerdo *</label>
                 <input
-                  type="date"
+                  type="text"
+                  appFlatpickr
                   class="input-base w-full text-xs font-mono"
                   data-testid="input-traslado-fecha-acuerdo"
+                  placeholder="dd/mm/aaaa"
                   [ngModel]="fechaAcuerdo()"
                   (ngModelChange)="fechaAcuerdo.set($event)"
                 />

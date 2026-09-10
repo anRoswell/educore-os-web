@@ -275,7 +275,19 @@ export interface ExtractoLineaItem {
             (click)="ejecutarAutoMatch()"
           >
             <span>⚡</span>
-            <span>Auto-Match (Cruce Automático)</span>
+            <span>Auto-Match Estándar</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn-primary btn-sm flex items-center gap-1.5"
+            style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);"
+            data-testid="btn-ejecutar-fuzzy-match"
+            [disabled]="cargando() || extractos().length === 0"
+            (click)="ejecutarAutoMatchFuzzy()"
+          >
+            <span>🤖</span>
+            <span>AI Fuzzy Match (95%+ Match)</span>
           </button>
 
           <button
@@ -858,6 +870,31 @@ export class ContabilidadConciliacionComponent implements OnInit {
       error: (err) => {
         console.error('Error en auto-match:', err);
         this.errorMensaje.set('Error al ejecutar cruce automático de conciliación.');
+        this.cargando.set(false);
+      },
+    });
+  }
+
+  ejecutarAutoMatchFuzzy(): void {
+    const extId = this.extractoSeleccionadoId() || (this.extractos().length > 0 ? this.extractos()[0].id : 'ext-001');
+    this.cargando.set(true);
+    this.errorMensaje.set(null);
+
+    this.svc.autoMatchFuzzy({ extractoId: extId, umbralConfianzaMinimo: 70 }).subscribe({
+      next: (res) => {
+        this.resultadoAutoMatch.set(res);
+        this.mensajeExito.set(
+          `🤖 Conciliación con IA finalizada: ${res.coincidenciasExactas} exactas, ${res.coincidenciasFuzzy} por Fuzzy Match (Tasa de éxito: ${res.tasaExito}%).`
+        );
+        this.cargando.set(false);
+        if (this.extractoSeleccionadoId()) {
+          this.cargarLineas(this.extractoSeleccionadoId());
+        }
+        this.cargarInforme();
+      },
+      error: (err) => {
+        console.error('Error en auto-match fuzzy:', err);
+        this.errorMensaje.set('Error al ejecutar cruce inteligente con IA.');
         this.cargando.set(false);
       },
     });

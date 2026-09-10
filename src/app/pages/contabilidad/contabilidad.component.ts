@@ -18,6 +18,7 @@ import { ContabilidadCierreComponent } from './tabs/contabilidad-cierre.componen
 import { ContabilidadActivosFijosComponent } from './tabs/contabilidad-activos-fijos.component';
 import { ContabilidadDocumentoSoporteComponent } from './tabs/contabilidad-documento-soporte.component';
 import { ContabilidadNominaElectronicaComponent } from './tabs/contabilidad-nomina-electronica.component';
+import { ContabilidadDispersionComponent } from './tabs/contabilidad-dispersion.component';
 
 export type TabActivo =
   | 'puc'
@@ -35,6 +36,7 @@ export type TabActivo =
   | 'presupuesto'
   | 'deterioro'
   | 'conciliacion'
+  | 'dispersion'
   | 'exogena'
   | 'cierre'
   | 'activos-fijos';
@@ -59,6 +61,7 @@ export type TabActivo =
     ContabilidadPresupuestoTabComponent,
     ContabilidadDeterioroComponent,
     ContabilidadConciliacionComponent,
+    ContabilidadDispersionComponent,
     ContabilidadExogenaComponent,
     ContabilidadCierreComponent,
     ContabilidadActivosFijosComponent,
@@ -222,6 +225,15 @@ export type TabActivo =
       <button
         type="button"
         class="tab-btn"
+        [class.active]="tab() === 'dispersion'"
+        (click)="setTab('dispersion')"
+        data-testid="tab-dispersion"
+      >
+        💸 Dispersión Masiva H2H
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
         [class.active]="tab() === 'exogena'"
         (click)="setTab('exogena')"
         data-testid="tab-exogena"
@@ -293,6 +305,9 @@ export type TabActivo =
       }
       @if (tab() === 'conciliacion') {
         <app-contabilidad-conciliacion />
+      }
+      @if (tab() === 'dispersion') {
+        <app-contabilidad-dispersion />
       }
       @if (tab() === 'exogena') {
         <app-contabilidad-exogena />

@@ -40,6 +40,16 @@ export interface Tercero {
   primerApellido?: string;
   razonSocial?: string;
   nombreCompleto?: string;
+  esEstudiante?: boolean;
+  esAcudiente?: boolean;
+  esDocente?: boolean;
+  esColaborador?: boolean;
+  esProveedor?: boolean;
+  esOtro?: boolean;
+  bancoCodigo?: string;
+  bancoNombre?: string;
+  tipoCuenta?: string;
+  numeroCuenta?: string;
   email?: string;
   telefono?: string;
   activo: boolean;
@@ -1050,3 +1060,96 @@ export interface ResultadoNominaMasivaModel {
   totalDeducciones: number;
   nominas: NominaElectronicaModel[];
 }
+
+// ==========================================
+// DISPERSIÓN BANCARIA MASIVA H2H & AI FUZZY
+// ==========================================
+
+export type TipoDispersionModel = 'NOMINA' | 'PROVEEDORES' | 'SERVICIOS' | 'MIXTO';
+export type FormatoBancoDispersionModel = 'ASOBANCARIA_2001' | 'BANCOLOMBIA_PAB' | 'DAVIVIENDA_ACH' | 'BANCO_BOGOTA' | 'SAP_MT940';
+export type EstadoDispersionLoteModel = 'BORRADOR' | 'GENERADO' | 'TRANSMITIDO' | 'APLICADO' | 'ANULADO';
+
+export interface DispersionItemModel {
+  id?: string;
+  loteId?: string;
+  terceroId?: string;
+  nombreBeneficiario: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  bancoDestinoCodigo: string;
+  bancoDestinoNombre: string;
+  tipoCuentaDestinatario: string;
+  numeroCuentaDestinatario: string;
+  monto: number;
+  referenciaPago?: string;
+  emailNotificacion?: string;
+  estado?: string;
+  origenTipo?: string;
+  origenId?: string;
+}
+
+export interface DispersionLoteModel {
+  id: string;
+  colegioId: string;
+  codigoLote: string;
+  tipo: TipoDispersionModel;
+  formatoBanco: FormatoBancoDispersionModel;
+  bancoOrigen: string;
+  numeroCuentaOrigen: string;
+  tipoCuentaOrigen: string;
+  fechaAplicacion: string;
+  totalRegistros: number;
+  montoTotal: number;
+  estado: EstadoDispersionLoteModel;
+  archivoNombre?: string;
+  contenidoArchivo?: string;
+  asientoId?: string;
+  observaciones?: string;
+  items?: DispersionItemModel[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CrearDispersionLoteModel {
+  tipo: TipoDispersionModel;
+  formatoBanco: FormatoBancoDispersionModel;
+  bancoOrigen: string;
+  numeroCuentaOrigen: string;
+  tipoCuentaOrigen: string;
+  fechaAplicacion: string;
+  observaciones?: string;
+  items: DispersionItemModel[];
+}
+
+export interface ConfirmarDispersionLoteModel {
+  cuentaPucBanco: string;
+  fechaContable?: string;
+  detalleEgreso?: string;
+}
+
+export interface LineaFuzzyMatchDetailModel {
+  lineaId: string;
+  fecha: string;
+  concepto: string;
+  monto: number;
+  tipoMovimiento: 'DEBITO' | 'CREDITO';
+  matchScore: number;
+  confianza: 'ALTA' | 'MEDIA' | 'BAJA' | 'SIN_MATCH';
+  reglaCoincidencia: string;
+  candidateId?: string;
+  candidateRef?: string;
+  candidateTercero?: string;
+  asientoSugerido?: {
+    cuentaPucCodigo: string;
+    cuentaPucNombre: string;
+    naturaleza: 'DEBITO' | 'CREDITO';
+    descripcion: string;
+  };
+}
+
+export interface AutoMatchFuzzyResultadoModel extends AutoMatchResultadoModel {
+  coincidenciasFuzzy: number;
+  sugerenciasHeuristicas: number;
+  detalles: LineaFuzzyMatchDetailModel[];
+}
+

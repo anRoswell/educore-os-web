@@ -2268,7 +2268,9 @@ type ReporteActivo = 'graficas' | 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxi
                 <input
                   class="input-base input-sm w-date"
                   data-testid="input-flujo-desde"
-                  type="date"
+                  type="text"
+                  appFlatpickr
+                  placeholder="dd/mm/aaaa"
                   [(ngModel)]="flujoDesde"
                 />
               </div>
@@ -2277,7 +2279,9 @@ type ReporteActivo = 'graficas' | 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxi
                 <input
                   class="input-base input-sm w-date"
                   data-testid="input-flujo-hasta"
-                  type="date"
+                  type="text"
+                  appFlatpickr
+                  placeholder="dd/mm/aaaa"
                   [(ngModel)]="flujoHasta"
                 />
               </div>

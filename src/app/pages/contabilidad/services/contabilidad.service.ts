@@ -49,6 +49,11 @@ import {
   CrearNominaIndividualModel,
   GenerarNominaMasivaModel,
   ResultadoNominaMasivaModel,
+  DispersionLoteModel,
+  DispersionItemModel,
+  CrearDispersionLoteModel,
+  ConfirmarDispersionLoteModel,
+  AutoMatchFuzzyResultadoModel,
 } from '../models/contabilidad.models';
 
 @Injectable({ providedIn: 'root' })
@@ -706,7 +711,65 @@ export class ContabilidadService {
   generarNominaMasiva(dto: GenerarNominaMasivaModel): Observable<ResultadoNominaMasivaModel> {
     return this.http.post<ResultadoNominaMasivaModel>(`${this.base}/nomina-electronica/masiva`, dto);
   }
+
+  // ─── Dispersión Bancaria Masiva H2H ───────────────────────────────────────
+  listarLotesDispersion(filtros?: { tipo?: string; estado?: string }): Observable<DispersionLoteModel[]> {
+    let params = new HttpParams();
+    if (filtros?.tipo) params = params.set('tipo', filtros.tipo);
+    if (filtros?.estado) params = params.set('estado', filtros.estado);
+    return this.http.get<DispersionLoteModel[]>(`${this.base}/dispersion-bancaria/lotes`, { params });
+  }
+
+  obtenerLoteDispersion(id: string): Observable<DispersionLoteModel> {
+    return this.http.get<DispersionLoteModel>(`${this.base}/dispersion-bancaria/lotes/${id}`);
+  }
+
+  crearLoteDispersion(dto: CrearDispersionLoteModel): Observable<DispersionLoteModel> {
+    return this.http.post<DispersionLoteModel>(`${this.base}/dispersion-bancaria/lotes`, dto);
+  }
+
+  descargarArchivoDispersion(id: string): Observable<Blob> {
+    return this.http.get(`${this.base}/dispersion-bancaria/lotes/${id}/descargar`, {
+      responseType: 'blob',
+    });
+  }
+
+  confirmarLoteDispersion(id: string, dto: ConfirmarDispersionLoteModel): Observable<{ lote: DispersionLoteModel; asientoId: string; numeroComprobante: string }> {
+    return this.http.post<{ lote: DispersionLoteModel; asientoId: string; numeroComprobante: string }>(
+      `${this.base}/dispersion-bancaria/lotes/${id}/confirmar`,
+      dto,
+    );
+  }
+
+  obtenerPendientesDispersion(tipo = 'PROVEEDORES'): Observable<DispersionItemModel[]> {
+    const params = new HttpParams().set('tipo', tipo);
+    return this.http.get<DispersionItemModel[]>(`${this.base}/dispersion-bancaria/pendientes`, { params });
+  }
+
+  // ─── Conciliación Bancaria con AI Fuzzy Match ────────────────────────────
+  autoMatchFuzzy(dto: {
+    extractoId: string;
+    toleranciaDias?: number;
+    toleranciaMonto?: number;
+    umbralConfianzaMinimo?: number;
+  }): Observable<AutoMatchFuzzyResultadoModel> {
+    return this.http.post<AutoMatchFuzzyResultadoModel>(`${this.base}/conciliacion/auto-match-fuzzy`, dto);
+  }
+
+  aplicarSugerenciaConciliacion(dto: {
+    extractoLineaId: string;
+    cuentaPucCodigo: string;
+    cuentaBancoCodigo: string;
+    concepto?: string;
+    terceroId?: string;
+  }): Observable<{ asientoId: string; numeroComprobante: string; mensaje: string }> {
+    return this.http.post<{ asientoId: string; numeroComprobante: string; mensaje: string }>(
+      `${this.base}/conciliacion/aplicar-sugerencia`,
+      dto,
+    );
+  }
 }
+
 
 
 

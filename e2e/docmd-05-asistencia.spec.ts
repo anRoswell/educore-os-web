@@ -44,7 +44,7 @@ test.describe('DocMD-05: Control de Asistencia Digital & Excusas Médicas (Exhau
 
     // 4. Barra de Pestañas
     const tabs = page.locator('.tabs-nav .tab-btn');
-    await expect(tabs).toHaveCount(2);
+    await expect(tabs).toHaveCount(3);
 
     sniffer.assertZeroErrors();
   });
@@ -84,6 +84,11 @@ test.describe('DocMD-05: Control de Asistencia Digital & Excusas Médicas (Exhau
     const tabExcusas = page.locator('.tabs-nav .tab-btn:has-text("Excusas")');
     await tabExcusas.click();
     await expect(page.locator('h3:has-text("Bandeja de Entrada: Justificaciones")')).toBeVisible();
+
+    // --- Tab 3: Consolidado & Ausentismo ---
+    const tabConsolidado = page.locator('.tabs-nav .tab-btn:has-text("Consolidado")');
+    await tabConsolidado.click();
+    await expect(page.locator('h3:has-text("Consolidado de Asistencia")')).toBeVisible();
 
     sniffer.assertZeroErrors();
   });
@@ -188,8 +193,27 @@ test.describe('DocMD-05: Control de Asistencia Digital & Excusas Médicas (Exhau
     await btnRadicar.click();
     await expect(modal.first()).toBeVisible();
 
+    // Seleccionar salón en cascada si está disponible
+    const selectSalon = page.locator('#modalSelectSalon, .modal-card select').first();
+    if (await selectSalon.isVisible()) {
+      const opts = await selectSalon.locator('option').count();
+      if (opts > 1) {
+        await selectSalon.selectOption({ index: 1 });
+        await page.waitForTimeout(300);
+      }
+    }
+
+    // Seleccionar estudiante en cascada
+    const selectEstudiante = page.locator('#modalSelectEstudiante');
+    if (await selectEstudiante.isVisible() && await selectEstudiante.isEnabled()) {
+      const optsEst = await selectEstudiante.locator('option').count();
+      if (optsEst > 1) {
+        await selectEstudiante.selectOption({ index: 1 });
+      }
+    }
+
     // Seleccionar motivo
-    const selectMotivo = page.locator('.modal-card select.form-select');
+    const selectMotivo = page.locator('.modal-card select:has(option[value="MEDICA"])').first();
     if (await selectMotivo.isVisible()) {
       await selectMotivo.selectOption('MEDICA');
     }

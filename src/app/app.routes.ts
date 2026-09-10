@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { AdminLayoutComponent } from './layout/admin-layout.component';
 import { authGuard } from './core/guards/auth.guard';
+import { superAdminGuard } from './core/guards/super-admin.guard';
 
 export const routes: Routes = [
   {
@@ -164,6 +165,27 @@ export const routes: Routes = [
       {
         path: 'transporte',
         redirectTo: 'transporte-restaurante',
+        pathMatch: 'full',
+      },
+      {
+        path: 'permisos',
+        canActivate: [superAdminGuard],
+        loadComponent: () =>
+          import('./pages/permisos/permisos.component').then(
+            (m) => m.PermisosComponent,
+          ),
+      },
+      {
+        path: 'super-admin/modulos-colegios',
+        canActivate: [superAdminGuard],
+        loadComponent: () =>
+          import('./pages/super-admin/super-admin-modulos.component').then(
+            (m) => m.SuperAdminModulosComponent,
+          ),
+      },
+      {
+        path: 'super-admin',
+        redirectTo: 'super-admin/modulos-colegios',
         pathMatch: 'full',
       },
     ],

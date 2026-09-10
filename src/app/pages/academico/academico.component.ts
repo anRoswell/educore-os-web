@@ -399,6 +399,54 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
       </div>
 
       <!-- ========================================== -->
+      <!-- MODAL DE ALERTA DE DEPENDENCIAS PEDAGÓGICAS-->
+      <!-- ========================================== -->
+      @if (modalAlertaDependencia().visible) {
+        <div class="modal-backdrop animate-fade-in" style="z-index: 10600;">
+          <div class="modal-card card card-glass animate-slide-up" style="max-width: 540px; border-left: 5px solid #f59e0b;">
+            <div class="modal-header d-flex flex-between align-center p-4 border-b">
+              <div class="d-flex align-center" style="gap: 12px;">
+                <div class="header-icon-circle bg-amber-subtle text-amber" style="font-size: 1.5rem; background: #fffbeb; color: #d97706; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                  {{ modalAlertaDependencia().icono }}
+                </div>
+                <div>
+                  <span class="badge" style="background: #fef3c7; color: #b45309; font-weight: 700; font-size: 0.72rem; padding: 2px 8px; border-radius: 6px;">PRERREQUISITO REQUERIDO</span>
+                  <h3 class="m-0 font-bold text-lg text-slate-800" style="margin-top: 2px;">{{ modalAlertaDependencia().titulo }}</h3>
+                </div>
+              </div>
+              <button (click)="cerrarAlertaDependencia()" class="close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body p-4">
+              <div class="p-3 mb-3 rounded-lg" style="background: #fffbeb; border: 1px solid #fde68a;">
+                <div class="d-flex align-center gap-2 mb-1">
+                  <span class="font-bold text-sm" style="color: #92400e;">📌 Dependencia Faltante:</span>
+                  <span class="badge" style="background: #d97706; color: white; font-size: 0.75rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">{{ modalAlertaDependencia().pasoDependencia }}</span>
+                </div>
+                <p class="text-sm m-0" style="color: #78350f; line-height: 1.45;">
+                  {{ modalAlertaDependencia().mensaje }}
+                </p>
+              </div>
+
+              <div class="steps-flow-preview p-3 rounded-lg border bg-slate-50 text-xs text-slate-600">
+                <strong class="text-slate-700 block mb-1">💡 Ruta Cronológica Obligatoria:</strong>
+                <span>0. Año Lectivo ➔ 1. Nivel ➔ 2. Grado ➔ 3. Grupo ➔ 4. Área ➔ 5. Asignatura ➔ 6. Periodo ➔ 7. Actividad</span>
+              </div>
+            </div>
+
+            <div class="modal-footer p-3 border-t d-flex flex-between align-center" style="background: #f8fafc;">
+              <button (click)="cerrarAlertaDependencia()" class="btn btn-secondary btn-sm">
+                Entendido / Cancelar
+              </button>
+              <button (click)="modalAlertaDependencia().accionFn()" class="btn btn-primary btn-sm" style="font-weight: 700;">
+                {{ modalAlertaDependencia().accionTexto }} ➔
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ========================================== -->
       <!-- MODAL 0: APERTURAR / GESTIONAR AÑO LECTIVO -->
       <!-- ========================================== -->
       @if (modalNuevoAnio()) {
@@ -1593,6 +1641,23 @@ export class AcademicoComponent implements OnInit {
   readonly modalReglasSiee = signal(false);
   readonly modalCierreAno = signal(false);
   readonly modalBarrido = signal(false);
+  readonly modalAlertaDependencia = signal<{
+    visible: boolean;
+    titulo: string;
+    pasoDependencia: string;
+    mensaje: string;
+    icono: string;
+    accionTexto: string;
+    accionFn: () => void;
+  }>({
+    visible: false,
+    titulo: '',
+    pasoDependencia: '',
+    mensaje: '',
+    icono: '⚠️',
+    accionTexto: '',
+    accionFn: () => {},
+  });
   confirmarCierreAnoCheckbox = false;
   readonly isEjecutandoCierre = signal(false);
 
@@ -1978,11 +2043,58 @@ export class AcademicoComponent implements OnInit {
     });
   }
 
+  // --- GESTIÓN DE ALERTAS DE DEPENDENCIAS PEDAGÓGICAS ---
+  mostrarAlertaDependencia(
+    titulo: string,
+    pasoDependencia: string,
+    mensaje: string,
+    icono: string,
+    accionTexto: string,
+    accionFn: () => void
+  ) {
+    this.toast.warning(titulo, mensaje);
+    this.modalAlertaDependencia.set({
+      visible: true,
+      titulo,
+      pasoDependencia,
+      mensaje,
+      icono,
+      accionTexto,
+      accionFn: () => {
+        this.cerrarAlertaDependencia();
+        accionFn();
+      },
+    });
+  }
+
+  cerrarAlertaDependencia() {
+    this.modalAlertaDependencia.set({
+      visible: false,
+      titulo: '',
+      pasoDependencia: '',
+      mensaje: '',
+      icono: '⚠️',
+      accionTexto: '',
+      accionFn: () => {},
+    });
+  }
+
   // --- CRUD: CREAR GRADO ---
   abrirModalNuevoGrado() {
+    if (!this.nivelesList() || this.nivelesList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Nivel Educativo',
+        'Paso 1: Nivel Educativo',
+        'Para registrar un Grado Escolar (ej: Transición, 1° a 5°, 6° a 9°, 10°, 11°), primero debes crear al menos un Nivel Educativo (Preescolar, Primaria, Secundaria o Media).',
+        '🎓',
+        'Crear Nivel Educativo',
+        () => this.abrirModalNuevoNivel()
+      );
+      return;
+    }
     this.nuevoGrado = {
       nombre: '',
-      nivelId: this.nivelesList()[0]?.id || '81000000-0000-4000-8000-000000000001',
+      nivelId: this.nivelesList()[0]?.id,
       codigoSimat: '',
       orden: (this.gradosList().length || 0) + 1,
     };
@@ -2023,6 +2135,28 @@ export class AcademicoComponent implements OnInit {
 
   // --- CRUD: CREAR GRUPO ---
   abrirModalNuevoGrupo() {
+    if (!this.aniosLectivosList() || this.aniosLectivosList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Año Lectivo',
+        'Paso 0: Año Lectivo',
+        'Para abrir un Grupo o Salón y asignar cupos, la institución debe tener aperturado al menos un Año Lectivo activo.',
+        '🗓️',
+        'Crear Año Lectivo',
+        () => this.abrirModalNuevoAnio()
+      );
+      return;
+    }
+    if (!this.gradosList() || this.gradosList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Grado Escolar',
+        'Paso 2: Grado Escolar',
+        'Para abrir un Grupo o Salón (ej: 10-A, 10-B), primero debes registrar los Grados Escolares a los que pertenecerán los salones.',
+        '🏛️',
+        'Crear Grado Escolar',
+        () => this.abrirModalNuevoGrado()
+      );
+      return;
+    }
     this.nuevoGrupo = {
       gradoId: this.selectedGradoId() || this.gradosList()[0]?.id || '',
       nombre: '',
@@ -2046,7 +2180,7 @@ export class AcademicoComponent implements OnInit {
 
     const payload = {
       gradoId: this.nuevoGrupo.gradoId || this.gradosList()[0]?.id,
-      anioLectivoId: 'a1a1a1a1-1111-4111-8111-000000002026',
+      anioLectivoId: this.aniosLectivosList()[0]?.id,
       nombre: this.nuevoGrupo.nombre,
       cupoMaximo: Number(this.nuevoGrupo.cupoMaximo) || 35,
     };
@@ -2108,8 +2242,19 @@ export class AcademicoComponent implements OnInit {
 
   // --- CRUD: CREAR ASIGNATURA ---
   abrirModalNuevaAsignatura() {
+    if (!this.areasList() || this.areasList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Área Fundamental',
+        'Paso 4: Área (Ley 115)',
+        'Para crear una Asignatura (ej: Álgebra, Química, Lengua Castellana, Inglés), primero debes registrar el Área del Conocimiento (ej: Matemáticas, Ciencias Naturales, Humanidades) según el Art. 23 de la Ley 115.',
+        '📐',
+        'Crear Área Fundamental',
+        () => this.abrirModalNuevaArea()
+      );
+      return;
+    }
     this.nuevaAsignatura = {
-      areaId: this.areasList()[0]?.id || '0a000000-0000-4000-8000-000000000001',
+      areaId: this.areasList()[0]?.id,
       nombre: '',
       codigo: '',
       pesoAreaPorcentaje: 100,
@@ -2146,11 +2291,22 @@ export class AcademicoComponent implements OnInit {
 
   // --- CRUD: CREAR PERIODO ---
   abrirModalNuevoPeriodo() {
+    if (!this.aniosLectivosList() || this.aniosLectivosList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Año Lectivo',
+        'Paso 0: Año Lectivo',
+        'Para programar Periodos Académicos (fechas de inicio, fin y pesos porcentuales), primero debes aperturar un Año Lectivo activo en la institución.',
+        '🗓️',
+        'Crear Año Lectivo',
+        () => this.abrirModalNuevoAnio()
+      );
+      return;
+    }
     const totalActual = this.periodosList().length || 0;
     const estandarSugerido = this.periodosEstandarList()[totalActual];
 
     this.nuevoPeriodo = {
-      anioLectivoId: this.aniosLectivosList()[0]?.id || 'a1a1a1a1-1111-4111-8111-000000002026',
+      anioLectivoId: this.aniosLectivosList()[0]?.id,
       numero: totalActual + 1,
       nombre: `Periodo ${totalActual + 1}`,
       pesoPorcentual: estandarSugerido?.peso || (Number(estandarSugerido?.valor) || 25),
@@ -2193,6 +2349,17 @@ export class AcademicoComponent implements OnInit {
 
   // --- CRUD: REGLAS SIEE ---
   abrirModalReglasSiee() {
+    if (!this.aniosLectivosList() || this.aniosLectivosList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Año Lectivo',
+        'Paso 0: Año Lectivo',
+        'Para parametrizar las Reglas de Promoción y Reprobación del SIEE (Decreto 1290), se requiere al menos un Año Lectivo registrado.',
+        '🗓️',
+        'Crear Año Lectivo',
+        () => this.abrirModalNuevoAnio()
+      );
+      return;
+    }
     this.api.get<any[]>('academico/siee/reglas').subscribe({
       next: (reglas) => {
         if (reglas && reglas.length > 0) {
@@ -2229,6 +2396,28 @@ export class AcademicoComponent implements OnInit {
 
   // --- CIERRE DE AÑO SIEE ---
   abrirModalCierreAno() {
+    if (!this.aniosLectivosList() || this.aniosLectivosList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Año Lectivo',
+        'Paso 0: Año Lectivo',
+        'Para ejecutar el Cierre de Año Escolar y generar las Actas de Promoción, la institución debe tener un Año Lectivo activo.',
+        '🗓️',
+        'Crear Año Lectivo',
+        () => this.abrirModalNuevoAnio()
+      );
+      return;
+    }
+    if (!this.periodosList() || this.periodosList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Faltan Periodos Académicos',
+        'Paso 6: Periodo Académico',
+        'No se puede procesar el Cierre de Año sin haber configurado los Periodos Académicos y digitado las calificaciones en la planilla.',
+        '📅',
+        'Crear Periodo Académico',
+        () => this.abrirModalNuevoPeriodo()
+      );
+      return;
+    }
     this.confirmarCierreAnoCheckbox = false;
     this.modalManager.open('cierreAno');
     this.modalCierreAno.set(true);
@@ -2277,6 +2466,39 @@ export class AcademicoComponent implements OnInit {
 
   // --- CRUD: CREAR ACTIVIDAD EVALUATIVA ---
   abrirModalNuevaActividad() {
+    if (!this.periodosList() || this.periodosList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Periodo Académico',
+        'Paso 6: Periodo Académico',
+        'Para crear Actividades Evaluativas (evaluaciones, tareas, quizes SIEE), primero debes programar al menos un Periodo Académico activo.',
+        '📅',
+        'Crear Periodo Académico',
+        () => this.abrirModalNuevoPeriodo()
+      );
+      return;
+    }
+    if (!this.asignaturasList() || this.asignaturasList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Asignatura Curricular',
+        'Paso 5: Asignatura',
+        'Para programar Actividades Evaluativas debes tener registradas las Asignaturas correspondientes en el plan de estudios.',
+        '📚',
+        'Crear Asignatura',
+        () => this.abrirModalNuevaAsignatura()
+      );
+      return;
+    }
+    if (!this.todosGruposList() || this.todosGruposList().length === 0) {
+      this.mostrarAlertaDependencia(
+        'Falta Grupo / Salón',
+        'Paso 3: Grupo / Salón',
+        'Para programar Actividades Evaluativas debes tener al menos un Grupo o Salón registrado.',
+        '🚪',
+        'Crear Grupo / Salón',
+        () => this.abrirModalNuevoGrupo()
+      );
+      return;
+    }
     this.nuevaActividad = {
       titulo: '',
       dimension: 'COGNITIVO',

@@ -135,6 +135,7 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
   });
 
   it('5. Debe abrir modal y crear un nuevo Periodo Académico', () => {
+    component.aniosLectivosList.set([{ id: 'anio-2026', nombre: '2026' }]);
     component.periodosList.set([{ id: 'per-1', nombre: 'Periodo 1' }]);
     component.abrirModalNuevoPeriodo();
 
@@ -153,6 +154,7 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
   });
 
   it('6. Debe gestionar las reglas SIEE de promoción escolar', () => {
+    component.aniosLectivosList.set([{ id: 'anio-2026', nombre: '2026' }]);
     vi.spyOn(apiService, 'get').mockReturnValue(of([{ materiasReprobadasLimite: 2, notaMinimaAprobacion: 3.5 }]));
     component.abrirModalReglasSiee();
 
@@ -230,5 +232,111 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
       expect.stringContaining('academico/boletines/descargar-masivo/gp-10a/periodo/per-1'),
       '_blank'
     );
+  });
+
+  it('10. Debe validar dependencia de Nivel al intentar crear un Grado', () => {
+    component.nivelesList.set([]);
+    component.abrirModalNuevoGrado();
+
+    expect(component.modalNuevoGrado()).toBe(false);
+    expect(component.modalAlertaDependencia().visible).toBe(true);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 1: Nivel Educativo');
+
+    // Al haber niveles, sí debe abrir el modal
+    component.cerrarAlertaDependencia();
+    component.nivelesList.set([{ id: 'niv-1', nombre: 'Básica Secundaria' }]);
+    component.abrirModalNuevoGrado();
+    expect(component.modalNuevoGrado()).toBe(true);
+  });
+
+  it('11. Debe validar dependencias de Año Lectivo y Grado al intentar crear un Grupo', () => {
+    component.aniosLectivosList.set([]);
+    component.gradosList.set([]);
+    component.abrirModalNuevoGrupo();
+
+    expect(component.modalNuevoGrupo()).toBe(false);
+    expect(component.modalAlertaDependencia().visible).toBe(true);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 0: Año Lectivo');
+
+    // Con año lectivo pero sin grados
+    component.cerrarAlertaDependencia();
+    component.aniosLectivosList.set([{ id: 'anio-1', nombre: '2026' }]);
+    component.abrirModalNuevoGrupo();
+
+    expect(component.modalNuevoGrupo()).toBe(false);
+    expect(component.modalAlertaDependencia().visible).toBe(true);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 2: Grado Escolar');
+
+    // Con año lectivo y grados
+    component.cerrarAlertaDependencia();
+    component.gradosList.set([{ id: 'gr-10', nombre: '10°' }]);
+    component.abrirModalNuevoGrupo();
+    expect(component.modalNuevoGrupo()).toBe(true);
+  });
+
+  it('12. Debe validar dependencia de Área al intentar crear una Asignatura', () => {
+    component.areasList.set([]);
+    component.abrirModalNuevaAsignatura();
+
+    expect(component.modalNuevaAsignatura()).toBe(false);
+    expect(component.modalAlertaDependencia().visible).toBe(true);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 4: Área');
+
+    // Con área existente
+    component.cerrarAlertaDependencia();
+    component.areasList.set([{ id: 'ar-1', nombre: 'Ciencias Naturales' }]);
+    component.abrirModalNuevaAsignatura();
+    expect(component.modalNuevaAsignatura()).toBe(true);
+  });
+
+  it('13. Debe validar dependencias completas al intentar crear una Actividad Evaluativa', () => {
+    component.periodosList.set([]);
+    component.asignaturasList.set([]);
+    component.todosGruposList.set([]);
+
+    // Falta Periodo
+    component.abrirModalNuevaActividad();
+    expect(component.modalNuevaActividad()).toBe(false);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 6: Periodo');
+
+    // Falta Asignatura
+    component.cerrarAlertaDependencia();
+    component.periodosList.set([{ id: 'per-1', nombre: 'Periodo 1' }]);
+    component.abrirModalNuevaActividad();
+    expect(component.modalNuevaActividad()).toBe(false);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 5: Asignatura');
+
+    // Falta Grupo
+    component.cerrarAlertaDependencia();
+    component.asignaturasList.set([{ id: 'asig-1', nombre: 'Física' }]);
+    component.abrirModalNuevaActividad();
+    expect(component.modalNuevaActividad()).toBe(false);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 3: Grupo');
+
+    // Con todas las dependencias
+    component.cerrarAlertaDependencia();
+    component.todosGruposList.set([{ id: 'gp-10a', nombre: '10-A' }]);
+    component.abrirModalNuevaActividad();
+    expect(component.modalNuevaActividad()).toBe(true);
+  });
+
+  it('14. Debe validar dependencias de Año Lectivo y Periodos antes de Cierre de Año', () => {
+    component.aniosLectivosList.set([]);
+    component.periodosList.set([]);
+
+    component.abrirModalCierreAno();
+    expect(component.modalCierreAno()).toBe(false);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 0: Año Lectivo');
+
+    component.cerrarAlertaDependencia();
+    component.aniosLectivosList.set([{ id: 'anio-1', nombre: '2026' }]);
+    component.abrirModalCierreAno();
+    expect(component.modalCierreAno()).toBe(false);
+    expect(component.modalAlertaDependencia().pasoDependencia).toContain('Paso 6: Periodo');
+
+    component.cerrarAlertaDependencia();
+    component.periodosList.set([{ id: 'per-1', nombre: 'Periodo 1' }]);
+    component.abrirModalCierreAno();
+    expect(component.modalCierreAno()).toBe(true);
   });
 });

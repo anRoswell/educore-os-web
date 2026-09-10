@@ -2,19 +2,12 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
-import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-colegio.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalNuevoColegioComponent],
+  imports: [CommonModule, FormsModule],
   template: `
-    <app-modal-nuevo-colegio
-      [visible]="modalNuevoColegio"
-      (visibleChange)="modalNuevoColegio.set($event)"
-      (colegioCreado)="onColegioCreado($event)"
-    ></app-modal-nuevo-colegio>
-
     <div class="login-page">
       <!-- Columna Izquierda: Showcase de la Plataforma (Visible en pantallas grandes) -->
       <div class="showcase-side">
@@ -59,51 +52,36 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
         <div class="login-card card card-glass">
           
           <!-- Encabezado Compacto Horizontal -->
+          <!-- Encabezado Compacto Horizontal -->
           <div class="card-header-compact">
             <div class="header-logo-icon">
               <img src="assets/educoreos_logo_transparent.png" alt="EduCoreOS Logo" />
             </div>
             <div class="header-text-box">
               <h3>Iniciar Sesión en EduCoreOS</h3>
-              <p>Selecciona tu institución y perfil para ingresar o usa tus credenciales</p>
+              <p>Ingresa con tus credenciales institucionales o explora los perfiles en modo demo</p>
             </div>
           </div>
 
           <!-- Disposición Adaptativa: 2 Columnas en Desktop, 1 Columna en Tablet/Móvil -->
           <div class="card-columns-grid">
             
-            <!-- Columna 1: Selección de Tenant y Roles Demo -->
+            <!-- Columna 1: Demo en Vivo para Clientes -->
             <div class="col-tenant-roles">
-              <!-- Selector de Colegio con Escudo/Logo -->
-              <div class="form-group mb-2">
-                <div class="flex-between mb-1">
-                  <label class="form-label mb-0" style="font-size: 0.78rem; font-weight: 700; color: #334155;">Institución Educativa (Tenant)</label>
-                  <button (click)="modalNuevoColegio.set(true)" class="btn-link-action" title="Crear nuevo colegio con logo" style="font-size: 0.72rem;">
-                    + Registrar Colegio
-                  </button>
-                </div>
-                
-                <div class="colegio-selector-card">
-                  <div class="colegio-logo-badge" [style.background-color]="colegios()[selectedColegioIndex]?.colorPrimario || '#4f46e5'">
-                    @if (colegios()[selectedColegioIndex]?.logoUrl) {
-                      <img [src]="colegios()[selectedColegioIndex]?.logoUrl" alt="Escudo" class="colegio-badge-img" />
-                    } @else {
-                      {{ colegios()[selectedColegioIndex]?.nombre?.substring(0, 2)?.toUpperCase() }}
-                    }
-                  </div>
-                  <select class="form-select" [(ngModel)]="selectedColegioIndex" style="font-size: 0.8rem; padding: 0.35rem 0.5rem;">
-                    @for (col of colegios(); track col.id; let i = $index) {
-                      <option [value]="i">{{ col.nombre }} — {{ col.ciudad }}</option>
-                    }
-                  </select>
+              <!-- Banner Demo Comercial -->
+              <div class="demo-commercial-badge">
+                <span class="demo-icon">🎯</span>
+                <div class="demo-commercial-text">
+                  <strong>DEMO EN VIVO PARA CLIENTES</strong>
+                  <span>Simula la experiencia de cada perfil institucional</span>
                 </div>
               </div>
 
               <!-- Acceso Rápido por Roles Demo -->
               <div class="roles-picker-box">
-                <span class="roles-label">⚡ ACCESO RÁPIDO DEMO POR ROL:</span>
+                <span class="roles-label">SELECCIONA EL PERFIL A PROBAR:</span>
                 <div class="roles-grid">
-                  <button (click)="login('RECTOR')" class="role-btn rector" type="button">
+                  <button (click)="login('RECTOR')" class="role-btn rector" type="button" title="Probar vista de Rectoría">
                     <span class="role-icon">🏛️</span>
                     <div class="role-text">
                       <strong>Rectoría</strong>
@@ -111,7 +89,7 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
                     </div>
                   </button>
 
-                  <button (click)="login('DOCENTE')" class="role-btn docente" type="button">
+                  <button (click)="login('DOCENTE')" class="role-btn docente" type="button" title="Probar vista de Docente">
                     <span class="role-icon">👩‍🏫</span>
                     <div class="role-text">
                       <strong>Docente Titular</strong>
@@ -119,15 +97,15 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
                     </div>
                   </button>
 
-                  <button (click)="login('TESORERO')" class="role-btn tesorero" type="button">
+                  <button (click)="login('TESORERO')" class="role-btn tesorero" type="button" title="Probar vista de Tesorería">
                     <span class="role-icon">💰</span>
                     <div class="role-text">
                       <strong>Tesorería</strong>
-                      <span>Cartera & Pagos</span>
+                      <span>Cartera & DIAN</span>
                     </div>
                   </button>
 
-                  <button (click)="login('COORDINADOR')" class="role-btn coordinador" type="button">
+                  <button (click)="login('COORDINADOR')" class="role-btn coordinador" type="button" title="Probar vista de Coordinación">
                     <span class="role-icon">📋</span>
                     <div class="role-text">
                       <strong>Coordinación</strong>
@@ -135,38 +113,63 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
                     </div>
                   </button>
 
-                  <button (click)="login('ESTUDIANTE')" class="role-btn estudiante" type="button">
+                  <button (click)="login('ESTUDIANTE')" class="role-btn estudiante" type="button" title="Probar vista de Estudiante / Padre">
                     <span class="role-icon">👨‍🎓</span>
                     <div class="role-text">
                       <strong>Estudiante / Acudiente</strong>
-                      <span>Portal Académico, Pagos & Muro</span>
+                      <span>Portal Académico, Pagos & LMS</span>
                     </div>
                   </button>
                 </div>
               </div>
 
-              <!-- Botón Destacado para Registrar Nuevo Colegio -->
-              <div class="mt-2 text-center">
-                <button (click)="modalNuevoColegio.set(true)" class="btn btn-outline-primary w-full btn-xs" type="button">
-                  🏫 ¿Colegio nuevo? Regístralo con su Escudo
-                </button>
+              <div class="demo-info-note">
+                <span>💡 Acceso instantáneo para evaluación de clientes.</span>
               </div>
             </div>
 
             <!-- Columna 2: Ingreso con Credenciales Formulario -->
             <div class="col-credentials">
               <div class="credentials-box">
-                <span class="roles-label">🔐 INGRESO CON CREDENCIALES:</span>
+                <div class="credential-box-header">
+                  <span class="credential-title">🔐 INGRESO INSTITUCIONAL</span>
+                  <span class="credential-subtitle">Para directivos, docentes, administrativos y estudiantes</span>
+                </div>
+
+                @if (errorMessage()) {
+                  <div class="login-error-alert" role="alert">
+                    <span class="error-alert-icon">⚠️</span>
+                    <div class="error-alert-content">
+                      <strong>Acceso Denegado</strong>
+                      <span>{{ errorMessage() }}</span>
+                    </div>
+                    <button type="button" (click)="errorMessage.set('')" class="error-close-btn" title="Cerrar">&times;</button>
+                  </div>
+                }
                 
-                <form (submit)="login('RECTOR')">
+                <form (submit)="onLoginSubmit()">
                   <div class="form-group mb-2">
                     <label class="form-label" style="font-size: 0.78rem; font-weight: 600;">Correo Institucional</label>
-                    <input type="email" class="form-control form-control-sm" value="rectoria@sanbartolome.edu.co" placeholder="usuario@colegio.edu.co" />
+                    <input 
+                      type="email" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="emailInput" 
+                      (ngModelChange)="errorMessage.set('')"
+                      name="email"
+                      placeholder="usuario@colegio.edu.co" 
+                      required />
                   </div>
 
                   <div class="form-group mb-3">
                     <label class="form-label" style="font-size: 0.78rem; font-weight: 600;">Contraseña</label>
-                    <input type="password" class="form-control form-control-sm" value="••••••••••••" placeholder="Tu contraseña" />
+                    <input 
+                      type="password" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="passwordInput" 
+                      (ngModelChange)="errorMessage.set('')"
+                      name="password"
+                      placeholder="Tu contraseña" 
+                      required />
                   </div>
 
                   <button type="submit" class="btn btn-primary w-full btn-sm">
@@ -178,7 +181,7 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
                   <span class="badge-icon">🛡️</span>
                   <div class="badge-info">
                     <strong>Acceso Seguro Certificado</strong>
-                    <span>Cifrado SSL/TLS 256-bit y aislamiento multi-tenant por institución.</span>
+                    <span>Cifrado SSL/TLS 256-bit y multi-tenant por institución.</span>
                   </div>
                 </div>
               </div>
@@ -476,6 +479,37 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
       justify-content: space-between;
     }
 
+    .demo-commercial-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.75rem;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08));
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 8px;
+      margin-bottom: 0.4rem;
+    }
+
+    .demo-icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .demo-commercial-text strong {
+      display: block;
+      font-size: 0.72rem;
+      color: #4338ca;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .demo-commercial-text span {
+      display: block;
+      font-size: 0.64rem;
+      color: #64748b;
+      line-height: 1.2;
+    }
+
     .roles-picker-box {
       margin: 0.5rem 0 0.75rem 0;
       padding: 0.75rem 0.85rem;
@@ -558,6 +592,87 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
       height: 100%;
     }
 
+    .credential-box-header {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .credential-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #334155;
+      letter-spacing: 0.04em;
+      display: block;
+    }
+
+    .credential-subtitle {
+      font-size: 0.64rem;
+      color: #64748b;
+      display: block;
+      margin-top: 0.1rem;
+    }
+
+    .login-error-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.6rem 0.75rem;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-left: 4px solid #ef4444;
+      border-radius: 8px;
+      margin-bottom: 0.85rem;
+      animation: fadeInAlert 200ms ease;
+    }
+
+    @keyframes fadeInAlert {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .error-alert-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      line-height: 1.2;
+    }
+
+    .error-alert-content {
+      flex: 1;
+    }
+
+    .error-alert-content strong {
+      display: block;
+      font-size: 0.72rem;
+      color: #991b1b;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .error-alert-content span {
+      display: block;
+      font-size: 0.66rem;
+      color: #b91c1c;
+      line-height: 1.3;
+      margin-top: 0.15rem;
+    }
+
+    .error-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      color: #991b1b;
+      cursor: pointer;
+      padding: 0 0.2rem;
+      line-height: 1;
+      opacity: 0.7;
+      transition: opacity 150ms ease;
+    }
+
+    .error-close-btn:hover {
+      opacity: 1;
+    }
+
     .security-badge-card {
       margin-top: 1rem;
       background: rgba(99, 102, 241, 0.06);
@@ -586,38 +701,6 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
       color: #64748b;
       line-height: 1.25;
       display: block;
-    }
-
-    .colegio-selector-card {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 0.4rem 0.5rem;
-    }
-
-    .colegio-logo-badge {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      background: #4f46e5;
-      color: #ffffff;
-      font-weight: 800;
-      font-size: 0.78rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .colegio-badge-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
     }
 
     /* Pie de Marca Corporativa Sectic SAS */
@@ -743,17 +826,21 @@ import { ModalNuevoColegioComponent } from '../../shared/components/modal-nuevo-
 })
 export class LoginComponent {
   readonly authService = inject(AuthService);
-  readonly colegios = this.authService.colegiosDisponibles;
-  selectedColegioIndex = 0;
-  readonly modalNuevoColegio = signal<boolean>(false);
+
+  emailInput = 'rectoria@sanbartolome.edu.co';
+  passwordInput = 'EduCore2026*';
+  errorMessage = signal<string>('');
 
   login(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTUDIANTE') {
-    this.authService.loginDemo(role, Number(this.selectedColegioIndex));
+    this.errorMessage.set('');
+    this.authService.loginDemo(role);
   }
 
-  onColegioCreado(nuevoColegio: any) {
-    this.selectedColegioIndex = 0;
-    // Iniciar sesión inmediatamente como rector del nuevo colegio
-    this.authService.loginDemo('RECTOR', 0);
+  onLoginSubmit() {
+    this.errorMessage.set('');
+    const result = this.authService.loginWithCredentials(this.emailInput, this.passwordInput);
+    if (!result.success && result.message) {
+      this.errorMessage.set(result.message);
+    }
   }
 }

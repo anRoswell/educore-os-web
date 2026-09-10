@@ -45,9 +45,11 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
         <div class="tenant-selector-box">
           <div class="flex-between mb-1">
             <label class="tenant-label" style="margin: 0;">INSTITUCIÓN EDUCATIVA (TENANT)</label>
-            <button (click)="modalNuevoColegio.set(true)" class="btn-link-crear-colegio" title="Registrar Nueva Institución Educativa">
-              + Nuevo
-            </button>
+            @if (authService.user()?.role === 'SUPER_ADMIN') {
+              <button (click)="modalNuevoColegio.set(true)" class="btn-link-crear-colegio" title="Registrar Nueva Institución Educativa">
+                + Nuevo
+              </button>
+            }
           </div>
           <div class="tenant-card">
             <div class="tenant-avatar" [style.background-color]="authService.colegio()?.colorPrimario || '#6366f1'">
@@ -62,58 +64,73 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
               <span class="tenant-sub">DANE: {{ authService.colegio()?.codigoDane }}</span>
             </div>
           </div>
-          <div class="tenant-select-row">
-            <select 
-              class="tenant-select-dropdown" 
-              [value]="authService.colegio()?.id" 
-              (change)="onColegioChange($event)">
-              @for (col of authService.colegiosDisponibles(); track col.id) {
-                <option [value]="col.id">{{ col.nombre }} ({{ col.ciudad }})</option>
-              }
-            </select>
-          </div>
+          @if (authService.colegiosDisponibles().length > 1) {
+            <div class="tenant-select-row">
+              <select 
+                class="tenant-select-dropdown" 
+                [value]="authService.colegio()?.id" 
+                (change)="onColegioChange($event)">
+                @for (col of authService.colegiosDisponibles(); track col.id) {
+                  <option [value]="col.id">{{ col.nombre }} ({{ col.ciudad }})</option>
+                }
+              </select>
+            </div>
+          } @else {
+            <div class="tenant-badge-single">
+              <span class="badge-single-dot"></span>
+              <span>Sede Institucional Única</span>
+            </div>
+          }
         </div>
 
         <!-- Menú de Navegación por Categorías -->
         <nav class="nav-menu">
-          <!-- CORE DASHBOARD -->
+          <!-- 1. CORE DASHBOARD (Todos los roles) -->
           <div class="nav-section-title">PANEL PRINCIPAL & BI</div>
           <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
             <span class="nav-icon">📊</span>
             <span class="nav-text">
               @if (authService.user()?.role === 'DOCENTE') {
                 Dashboard Pedagógico
-              } @else if (authService.user()?.role === 'TESORERO') {
+              } @else if (authService.user()?.role === 'TESORERO' || authService.user()?.role === 'CONTADOR') {
                 Dashboard Financiero
               } @else if (authService.user()?.role === 'COORDINADOR') {
                 Dashboard Coordinación
+              } @else if (authService.user()?.role === 'ESTUDIANTE' || authService.user()?.role === 'ACUDIENTE') {
+                Portal del Estudiante
               } @else {
-                Dashboard Rectoría
+                Dashboard Rectoría & BI
               }
             </span>
           </a>
 
-          <!-- GESTIÓN ACADÉMICA (No visible para Tesorería) -->
-          @if (authService.user()?.role !== 'TESORERO') {
+          <!-- 2. GESTIÓN ACADÉMICA & LMS (Rector, Coordinador, Docente, Estudiante, Super Admin) -->
+          @if (authService.user()?.role !== 'TESORERO' && authService.user()?.role !== 'CONTADOR' && authService.user()?.role !== 'REVISOR_FISCAL') {
             <div class="nav-section-title">GESTIÓN ACADÉMICA & LMS</div>
-            <a routerLink="/academico" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">🎓</span>
-              <span class="nav-text">Gestión Académica (Dec. 1290)</span>
-            </a>
-            <a routerLink="/lms" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">📚</span>
-              <span class="nav-text">
-                {{ authService.user()?.role === 'DOCENTE' ? 'Aula Virtual & Tareas' : 'Aula Virtual & Tareas LMS' }}
-              </span>
-              <span class="badge-mini" style="background: rgba(79, 70, 229, 0.2); color: #818cf8; border-color: rgba(79, 70, 229, 0.3);">LMS</span>
-            </a>
-            <a routerLink="/asistencia" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">📅</span>
-              <span class="nav-text">
-                {{ authService.user()?.role === 'ESTUDIANTE' ? 'Mis Faltas & Excusas' : 'Asistencia & Excusas' }}
-              </span>
-            </a>
-            @if (authService.user()?.role !== 'DOCENTE' && authService.user()?.role !== 'ESTUDIANTE') {
+            @if (authService.isModuloActivo('M01') && authService.user()?.role !== 'ESTUDIANTE' && authService.user()?.role !== 'ACUDIENTE') {
+              <a routerLink="/academico" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">🎓</span>
+                <span class="nav-text">Gestión Académica (Dec. 1290)</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M02')) {
+              <a routerLink="/lms" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">📚</span>
+                <span class="nav-text">
+                  {{ authService.user()?.role === 'DOCENTE' || authService.user()?.role === 'ESTUDIANTE' ? 'Aula Virtual & Tareas' : 'Aula Virtual & Tareas LMS' }}
+                </span>
+                <span class="badge-mini" style="background: rgba(79, 70, 229, 0.2); color: #818cf8; border-color: rgba(79, 70, 229, 0.3);">LMS</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M05')) {
+              <a routerLink="/asistencia" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">📅</span>
+                <span class="nav-text">
+                  {{ authService.user()?.role === 'ESTUDIANTE' ? 'Mis Faltas & Excusas' : 'Asistencia & Excusas' }}
+                </span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M06') && (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'COORDINADOR' || authService.user()?.role === 'SUPER_ADMIN' || authService.user()?.role === 'SECRETARIA')) {
               <a routerLink="/matriculas" routerLinkActive="active" class="nav-link">
                 <span class="nav-icon">👥</span>
                 <span class="nav-text">Matrículas & Ficha 360°</span>
@@ -121,88 +138,129 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
             }
           }
 
-          <!-- ÁREA FINANCIERA & TALENTO HUMANO (Únicamente para Rectoría y Tesorería - NUNCA Docentes) -->
-          @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'TESORERO' || authService.user()?.role === 'SUPER_ADMIN') {
+          <!-- 3. ÁREA FINANCIERA & TALENTO HUMANO (Rectoría, Tesorería, Contador, Revisor Fiscal, Super Admin) -->
+          @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'TESORERO' || authService.user()?.role === 'CONTADOR' || authService.user()?.role === 'REVISOR_FISCAL' || authService.user()?.role === 'SUPER_ADMIN') {
             <div class="nav-section-title">FINANZAS & TALENTO HUMANO</div>
-            <a routerLink="/tesoreria" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">💰</span>
-              <span class="nav-text">Tesorería & Facturación</span>
-            </a>
-            <a routerLink="/talento-humano" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">👔</span>
-              <span class="nav-text">Talento Humano & Nómina</span>
-              <span class="badge-mini" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">RRHH</span>
-            </a>
-          }
-          @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'SUPER_ADMIN' ||
-               authService.user()?.role === 'CONTADOR' || authService.user()?.role === 'REVISOR_FISCAL') {
-            <a routerLink="/contabilidad" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">🏛</span>
-              <span class="nav-text">Contabilidad NIIF</span>
-              <span class="badge-mini" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">NIIF</span>
-            </a>
+            @if (authService.isModuloActivo('M03')) {
+              <a routerLink="/tesoreria" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">Tesorería & Facturación</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M15') && (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'SUPER_ADMIN' || authService.user()?.role === 'TESORERO')) {
+              <a routerLink="/talento-humano" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">👔</span>
+                <span class="nav-text">Talento Humano & Nómina</span>
+                <span class="badge-mini" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">RRHH</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M04')) {
+              <a routerLink="/contabilidad" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">🏛</span>
+                <span class="nav-text">Contabilidad NIIF</span>
+                <span class="badge-mini" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">NIIF</span>
+              </a>
+            }
           }
 
-          <!-- INNOVACIÓN & COMUNIDAD (No visible para Tesorería) -->
-          @if (authService.user()?.role !== 'TESORERO') {
+          <!-- 4. INNOVACIÓN & COMUNIDAD (No visible para finanzas puras) -->
+          @if (authService.user()?.role !== 'TESORERO' && authService.user()?.role !== 'CONTADOR' && authService.user()?.role !== 'REVISOR_FISCAL') {
             <div class="nav-section-title">INNOVACIÓN & AULA</div>
-            <a routerLink="/educore-ai" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">✨</span>
-              <span class="nav-text">
-                {{ authService.user()?.role === 'DOCENTE' ? 'EduCore AI Planeador' : 'EduCore AI & RAG PEI' }}
-              </span>
-              <span class="badge-mini">AI</span>
-            </a>
-            <a routerLink="/convivencia" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">🛡️</span>
-              <span class="nav-text">{{ authService.user()?.role === 'ESTUDIANTE' ? 'Mi Observador' : 'Convivencia & Observador' }}</span>
-              <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">1620</span>
-            </a>
-          @if (authService.user()?.role !== 'ESTUDIANTE') {
-            <a routerLink="/inclusion" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">🧩</span>
-              <span class="nav-text">Inclusión & PIAR (DUA)</span>
-              <span class="badge-mini" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">1421</span>
-            </a>
-            <a routerLink="/habeas-data" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">⚖️</span>
-              <span class="nav-text">Protección de Datos & SIC</span>
-              <span class="badge-mini" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; border-color: rgba(2, 132, 199, 0.3);">1581</span>
-            </a>
-          }
-            <a routerLink="/gobierno-escolar" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">🗳️</span>
-              <span class="nav-text">Gobierno & Elecciones</span>
-            </a>
+            @if (authService.user()?.role !== 'ESTUDIANTE' && authService.user()?.role !== 'ACUDIENTE') {
+              <a routerLink="/educore-ai" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">✨</span>
+                <span class="nav-text">
+                  {{ authService.user()?.role === 'DOCENTE' ? 'EduCore AI Planeador' : 'EduCore AI & RAG PEI' }}
+                </span>
+                <span class="badge-mini">AI</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M07')) {
+              <a routerLink="/convivencia" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">🛡️</span>
+                <span class="nav-text">{{ authService.user()?.role === 'ESTUDIANTE' ? 'Mi Observador' : 'Convivencia & Observador' }}</span>
+                <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">1620</span>
+              </a>
+            }
+            @if (authService.user()?.role !== 'ESTUDIANTE' && authService.user()?.role !== 'ACUDIENTE') {
+              @if (authService.isModuloActivo('M08')) {
+                <a routerLink="/inclusion" routerLinkActive="active" class="nav-link">
+                  <span class="nav-icon">🧩</span>
+                  <span class="nav-text">Inclusión & PIAR (DUA)</span>
+                  <span class="badge-mini" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">1421</span>
+                </a>
+              }
+              @if (authService.isModuloActivo('M09')) {
+                <a routerLink="/habeas-data" routerLinkActive="active" class="nav-link">
+                  <span class="nav-icon">⚖️</span>
+                  <span class="nav-text">Protección de Datos & SIC</span>
+                  <span class="badge-mini" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; border-color: rgba(2, 132, 199, 0.3);">1581</span>
+                </a>
+              }
+            }
+            @if (authService.isModuloActivo('M10')) {
+              <a routerLink="/gobierno-escolar" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">🗳️</span>
+                <span class="nav-text">{{ authService.user()?.role === 'ESTUDIANTE' ? 'Votaciones Escolares' : 'Gobierno & Elecciones' }}</span>
+              </a>
+            }
           }
 
-          <!-- HERRAMIENTAS & SISTEMA (Directivos: Rectoría y Coordinación) -->
-          @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'COORDINADOR' || authService.user()?.role === 'SUPER_ADMIN') {
-            <div class="nav-section-title">HERRAMIENTAS & GESTIÓN</div>
+          <!-- 5. COMUNICACIONES (Visible para toda la comunidad si M11 está activo) -->
+          @if (authService.isModuloActivo('M11')) {
+            <div class="nav-section-title">COMUNICACIONES & MENSAJES</div>
             <a routerLink="/comunicaciones" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">📢</span>
               <span class="nav-text">Comunicados Institucionales</span>
-              <span class="badge-mini" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.3);">NEW</span>
+              <span class="badge-mini" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.3);">CIRCULAR</span>
             </a>
-            <a routerLink="/documental" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">📑</span>
-              <span class="nav-text">Gestión Documental & Flujos</span>
-              <span class="badge-mini" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">BPM</span>
+          }
+
+          <!-- 6. HERRAMIENTAS & SISTEMA (Directivos y Administrativos) -->
+          @if (authService.user()?.role === 'RECTOR' || authService.user()?.role === 'COORDINADOR' || authService.user()?.role === 'SUPER_ADMIN' || authService.user()?.role === 'SECRETARIA') {
+            <div class="nav-section-title">HERRAMIENTAS & GESTIÓN</div>
+            @if (authService.isModuloActivo('M12')) {
+              <a routerLink="/documental" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">📑</span>
+                <span class="nav-text">Gestión Documental & Flujos</span>
+                <span class="badge-mini" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border-color: rgba(99, 102, 241, 0.3);">BPM</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M13')) {
+              <a routerLink="/importador" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">📥</span>
+                <span class="nav-text">Importador Excel & SIMAT</span>
+                <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">XLS</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M14')) {
+              <a routerLink="/porteria" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">🛡️</span>
+                <span class="nav-text">Portería & Control Acceso</span>
+                <span class="badge-mini" style="background: rgba(52, 211, 153, 0.2); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">QR</span>
+              </a>
+            }
+            @if (authService.isModuloActivo('M16')) {
+              <a routerLink="/transporte-restaurante" routerLinkActive="active" class="nav-link">
+                <span class="nav-icon">🚌</span>
+                <span class="nav-text">Transporte & Restaurante</span>
+                <span class="badge-mini" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">GPS</span>
+              </a>
+            }
+          }
+ 
+          <!-- 7. GESTIÓN SAAS (EXCLUSIVO SUPER ADMIN) -->
+          @if (authService.user()?.role === 'SUPER_ADMIN') {
+            <div class="nav-section-title" style="color: #fbbf24;">👑 ADMINISTRACIÓN SAAS</div>
+            <a routerLink="/super-admin/modulos-colegios" routerLinkActive="active" class="nav-link">
+              <span class="nav-icon">⚙️</span>
+              <span class="nav-text">Módulos por Colegio</span>
+              <span class="badge-mini" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border-color: rgba(245, 158, 11, 0.4);">GLOBAL</span>
             </a>
-            <a routerLink="/importador" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">📥</span>
-              <span class="nav-text">Importador Excel & SIMAT</span>
-              <span class="badge-mini" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">XLS</span>
-            </a>
-            <a routerLink="/porteria" routerLinkActive="active" class="nav-link">
+            <a routerLink="/permisos" routerLinkActive="active" class="nav-link">
               <span class="nav-icon">🛡️</span>
-              <span class="nav-text">Portería & Control Acceso</span>
-              <span class="badge-mini" style="background: rgba(52, 211, 153, 0.2); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">QR</span>
-            </a>
-            <a routerLink="/transporte-restaurante" routerLinkActive="active" class="nav-link">
-              <span class="nav-icon">🚌</span>
-              <span class="nav-text">Transporte & Restaurante</span>
-              <span class="badge-mini" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">GPS</span>
+              <span class="nav-text">Matriz de Permisos RBAC</span>
+              <span class="badge-mini" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.3);">RBAC</span>
             </a>
           }
         </nav>
@@ -464,6 +522,28 @@ import { ModalNuevoColegioComponent } from '../shared/components/modal-nuevo-col
         color: #f8fafc;
         padding: 0.5rem;
       }
+    }
+
+    .tenant-badge-single {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.65rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #34d399;
+      margin-top: 0.45rem;
+    }
+
+    .badge-single-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #10b981;
+      box-shadow: 0 0 6px #10b981;
     }
 
     /* Menu Links */

@@ -1,0 +1,1153 @@
+<div class="asistencia-page animate-fade-in">
+  <!-- CABECERA PRINCIPAL -->
+  <header class="page-header">
+    <div class="header-title-block">
+      <div class="header-badge">
+        <span>🛡️ DECRETO 1860 & CONTROL BIOMÉTRICO ESCOLAR</span>
+      </div>
+      <div class="d-flex align-center" style="gap: 12px; flex-wrap: wrap;">
+        <h1 class="page-title">Toma de Asistencia & Excusas Médicas</h1>
+        <span class="badge badge-primary-subtle" style="font-size: 0.75rem; font-weight: 700;">MÓDULO 05</span>
+      </div>
+      <p class="page-subtitle">
+        Control de presentismo, ausentismo diario, radicación de incapacidades médicas y notificaciones automáticas a acudientes
+      </p>
+    </div>
+
+    <!-- ACCIONES DE CABECERA Y SELECTOR DE FECHA RÁPIDO -->
+    <div class="header-actions-wrapper">
+      <div class="date-navigator-box">
+        <button class="btn btn-outline btn-sm btn-icon" (click)="cambiarFecha(-1)" title="Día anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="icon-sm">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <div class="date-picker-wrapper">
+          <input
+            type="text"
+            appFlatpickr
+            class="form-control form-control-sm date-picker-input"
+            [(ngModel)]="fechaActual"
+            (ngModelChange)="onFechaChange()"
+            placeholder="dd/mm/aaaa"
+            title="Seleccionar fecha en calendario"
+          />
+        </div>
+
+        <button class="btn btn-outline btn-sm btn-icon" (click)="cambiarFecha(1)" title="Día siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="icon-sm">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+
+        <button class="btn btn-secondary btn-sm btn-hoy" (click)="irAHoy()" title="Ir al día de hoy">
+          <span>📅 Hoy</span>
+        </button>
+      </div>
+
+      <button class="btn btn-outline btn-sm" (click)="abrirModalImprimir()" title="Imprimir planilla de asistencia en PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        <span>Planilla Oficial PDF</span>
+      </button>
+
+      <button class="btn btn-outline btn-sm" (click)="recargarTodo()" title="Recargar datos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>Refrescar</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- TARJETAS DE INDICADORES / METRICAS GLOBALES ELEVADAS -->
+  <div class="stats-grid metrics-grid">
+    <!-- KPI 1: Total Estudiantes -->
+    <div class="stat-card metric-card border-indigo">
+      <span class="stat-icon metric-icon">👥</span>
+      <div class="stat-info metric-info">
+        <span class="metric-label">Total</span>
+        <div class="metric-value">
+          @if (isLoadingPlanilla()) {
+            <div class="skeleton-box" style="width: 70px; height: 32px;"></div>
+          } @else {
+            {{ alumnosLista().length }} Alumnos
+          }
+        </div>
+        <div class="metric-footer">
+          <span>{{ cargaSeleccionadaObj()?.grupoNombre || 'Grupo activo' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 2: Presentes -->
+    <div class="stat-card success metric-card border-green">
+      <span class="stat-icon metric-icon">✅</span>
+      <div class="stat-info metric-info">
+        <span class="metric-label">Presentes</span>
+        <div class="metric-value text-green">
+          @if (isLoadingPlanilla()) {
+            <div class="skeleton-box" style="width: 45px; height: 32px;"></div>
+          } @else {
+            {{ totalesAsistencia().presentes }}
+          }
+        </div>
+        <div class="metric-footer">
+          <span class="font-semibold text-emerald">{{ totalesAsistencia().porcentajePresentes }}% de asistencia</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 3: Retardos -->
+    <div class="stat-card warning metric-card border-amber">
+      <span class="stat-icon metric-icon">⏱️</span>
+      <div class="stat-info metric-info">
+        <span class="metric-label">Retardos</span>
+        <div class="metric-value text-amber">
+          @if (isLoadingPlanilla()) {
+            <div class="skeleton-box" style="width: 45px; height: 32px;"></div>
+          } @else {
+            {{ totalesAsistencia().retardos }}
+          }
+        </div>
+        <div class="metric-footer">
+          <span>Llegadas tarde registradas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 4: Faltas Totales -->
+    <div class="stat-card danger metric-card border-red">
+      <span class="stat-icon metric-icon">❌</span>
+      <div class="stat-info metric-info">
+        <span class="metric-label">Faltas Totales</span>
+        <div class="metric-value text-red">
+          @if (isLoadingPlanilla()) {
+            <div class="skeleton-box" style="width: 45px; height: 32px;"></div>
+          } @else {
+            {{ totalesAsistencia().faltas }}
+          }
+        </div>
+        <div class="metric-footer">
+          <span>{{ totalesAsistencia().faltasInjustificadas }} injustificadas · {{ totalesAsistencia().faltasJustificadas }} con excusa</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BARRA DE PESTAÑAS / TABS -->
+  <div class="tabs-nav tabs-container">
+    @if (role() === 'DOCENTE' || role() === 'RECTOR' || role() === 'COORDINADOR' || role() === 'SUPER_ADMIN') {
+      <button (click)="tabActiva.set('tomar_lista')" [class.active]="tabActiva() === 'tomar_lista'" class="tab-btn">
+        <span class="tab-icon">📋</span>
+        <span>Tomar Lista de Clase</span>
+        <span class="tab-badge">{{ alumnosLista().length }}</span>
+      </button>
+    }
+
+    @if (role() === 'ESTUDIANTE' || role() === 'COORDINADOR' || role() === 'RECTOR' || role() === 'DOCENTE' || role() === 'SUPER_ADMIN') {
+      <button (click)="tabActiva.set('excusas')" [class.active]="tabActiva() === 'excusas'" class="tab-btn">
+        <span class="tab-icon">🏥</span>
+        <span>Excusas & Justificaciones</span>
+        @if (kpiExcusasPendientes() > 0) {
+          <span class="tab-badge badge-warning-pill">{{ kpiExcusasPendientes() }} pendientes</span>
+        }
+      </button>
+    }
+
+    <button (click)="tabActiva.set('consolidado')" [class.active]="tabActiva() === 'consolidado'" class="tab-btn">
+      <span class="tab-icon">📊</span>
+      <span>Consolidado & Ausentismo</span>
+    </button>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 1: TOMAR LISTA DE CLASE (DOCENTES / COORDINACIÓN)             -->
+  <!-- ================================================================= -->
+  @if (tabActiva() === 'tomar_lista') {
+    <div class="tab-body animate-fade-in">
+      
+      @if (!periodoActivoId()) {
+        <div class="alert-banner mb-3 d-flex align-center flex-between" style="background: #fffbeb; border: 1px solid #fde68a; padding: 0.85rem 1.15rem; border-radius: 12px; gap: 1rem; flex-wrap: wrap;">
+          <div class="d-flex align-center" style="gap: 10px;">
+            <span style="font-size: 1.35rem;">⚠️</span>
+            <div>
+              <strong style="color: #92400e; font-size: 0.9rem;">Sin Periodo Académico Activo:</strong>
+              <p style="color: #b45309; font-size: 0.82rem; margin: 2px 0 0 0;">
+                No se encontró un periodo académico activo para registrar asistencia. Debe crearlo o activarlo en el módulo académico.
+              </p>
+            </div>
+          </div>
+          <a routerLink="/academico" class="btn btn-outline btn-sm" style="border-color: #f59e0b; color: #b45309; font-weight: 700;">
+            ⚙️ Configurar Periodos
+          </a>
+        </div>
+      }
+
+      <!-- FILTROS Y CONTEXTO DE LA CLASE -->
+      <div class="card filter-bar-card shadow-sm">
+        <div class="filters-grid">
+          <div class="form-group">
+            <label class="form-label font-semibold text-slate-700">
+              <span>📚 Asignatura y Grupo Asignado *</span>
+            </label>
+            <div class="select-wrapper">
+              <select class="form-select" [(ngModel)]="cargaDocenteSeleccionada" (change)="cargarPlanillaAsistencia()">
+                @for (c of cargasDocentes(); track c.id) {
+                  <option [value]="c.id">{{ c.asignaturaNombre }} — {{ c.grupoNombre }}</option>
+                } @empty {
+                  <option value="">No tienes cargas académicas asignadas</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label font-semibold text-slate-700">
+              <span>📖 Tema Tratado en Clase</span>
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="temaClase"
+              placeholder="Ej: Revolución Industrial, Leyes de Newton, Ecuaciones..."
+            />
+          </div>
+
+          <div class="form-group" style="max-width: 220px;">
+            <label class="form-label font-semibold text-slate-700">
+              <span>⏰ Hora / Bloque</span>
+            </label>
+            <input
+              type="text"
+              appFlatpickr
+              [enableTime]="true"
+              [noCalendar]="true"
+              [time24hr]="true"
+              dateFormat="H:i"
+              class="form-control"
+              [(ngModel)]="bloqueHorario"
+              placeholder="07:00"
+              title="Seleccionar hora de la sesión"
+            />
+          </div>
+        </div>
+
+        <!-- BARRA DE ACCIONES RÁPIDAS Y BÚSQUEDA -->
+        <div class="quick-actions-bar">
+          <div class="bulk-buttons-group">
+            <span class="text-xs font-bold text-slate-500 uppercase">Acciones Rápidas:</span>
+            <button class="btn btn-outline btn-xs btn-bulk-present" (click)="marcarTodos('PRESENTE')" title="Marcar a todos los alumnos como Presentes">
+              ⚡ Marcar Todos Presentes
+            </button>
+            <button class="btn btn-outline btn-xs" (click)="marcarTodos('RETARDO')" title="Marcar a todos con Retardo">
+              ⏱️ Todos Retardo
+            </button>
+            <button class="btn btn-outline btn-xs" (click)="cargarPlanillaAsistencia()" title="Restablecer estados">
+              🔄 Restablecer
+            </button>
+          </div>
+
+          <div class="search-and-sms-box">
+            <div class="search-input-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="text"
+                class="form-control form-control-sm search-control"
+                [(ngModel)]="filtroTexto"
+                placeholder="Buscar estudiante por nombre..."
+              />
+              @if (filtroTexto()) {
+                <button class="clear-search-btn" (click)="filtroTexto.set('')">&times;</button>
+              }
+            </div>
+
+            <label class="sms-global-toggle" title="Notificar a acudientes por SMS cuando se registre una inasistencia o retardo">
+              <span class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="notificarSmsGlobal" (change)="toggleNotificarGlobal()">
+                <span class="slider"></span>
+              </span>
+              <span class="sms-label">
+                <span class="sms-title">Alertas SMS / Push</span>
+                <span class="sms-sub">Encolar a padres</span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA INTERACTIVA DE ASISTENCIA -->
+      <div class="card table-card shadow-sm mt-3">
+        <div class="table-responsive">
+          <table class="data-table mt-0">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th style="min-width: 240px;">Estudiante</th>
+                <th style="min-width: 320px; width: 340px;">Estado de Asistencia</th>
+                <th style="width: 170px; text-align: center;">Notificar SMS a Padres</th>
+                <th>Observaciones Internas</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (isLoadingPlanilla()) {
+                @for (item of [1,2,3,4,5]; track item) {
+                  <tr>
+                    <td><div class="skeleton-box" style="width: 24px; height: 24px; border-radius: 4px;"></div></td>
+                    <td>
+                      <div class="d-flex align-center" style="gap: 10px;">
+                        <div class="skeleton-box" style="width: 36px; height: 36px; border-radius: 50%;"></div>
+                        <div>
+                          <div class="skeleton-box" style="width: 160px; height: 16px;"></div>
+                          <div class="skeleton-box" style="width: 90px; height: 12px; margin-top: 4px;"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><div class="skeleton-box" style="width: 220px; height: 40px; border-radius: 10px;"></div></td>
+                    <td style="text-align: center;"><div class="skeleton-box" style="width: 46px; height: 24px; border-radius: 12px; margin: 0 auto;"></div></td>
+                    <td><div class="skeleton-box" style="width: 100%; height: 36px; border-radius: 6px;"></div></td>
+                  </tr>
+                }
+              } @else {
+                @for (a of alumnosFiltrados(); track a.matriculaId; let i = $index) {
+                  <tr [class.row-absent]="a.estado === 'FALTA_INJUSTIFICADA'" [class.row-late]="a.estado === 'RETARDO'" [class.row-excused]="a.estado === 'FALTA_JUSTIFICADA'">
+                    <td class="text-slate-500 font-medium">{{ i + 1 }}</td>
+                    <td>
+                      <div class="student-profile-cell">
+                        <div class="student-avatar" [style.background]="getAvatarColor(a.estudianteNombre)">
+                          {{ getInitials(a.estudianteNombre) }}
+                        </div>
+                        <div class="student-details">
+                          <span class="student-name font-semibold">{{ a.estudianteNombre }}</span>
+                          <span class="student-meta text-xs text-slate-500">
+                            Mat: {{ a.matriculaId.slice(0, 8) }}
+                            @if (a.numeroDocumento) { · Doc: {{ a.numeroDocumento }} }
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="estado-selector-modern">
+                        <!-- Botón P: Presente -->
+                        <button
+                          type="button"
+                          (click)="setEstadoAlumno(a, 'PRESENTE')"
+                          [class.active]="a.estado === 'PRESENTE'"
+                          class="estado-pill pill-presente btn-presente"
+                          title="Presente: El estudiante asistió puntualmente a la clase">
+                          <span class="pill-dot"></span>
+                          <span class="pill-label">P</span>
+                          <span class="pill-text">Presente</span>
+                        </button>
+
+                        <!-- Botón R: Retardo -->
+                        <button
+                          type="button"
+                          (click)="setEstadoAlumno(a, 'RETARDO')"
+                          [class.active]="a.estado === 'RETARDO'"
+                          class="estado-pill pill-retardo btn-retardo"
+                          title="Retardo: El estudiante llegó después de la hora pactada">
+                          <span class="pill-dot"></span>
+                          <span class="pill-label">R</span>
+                          <span class="pill-text">Retardo</span>
+                        </button>
+
+                        <!-- Botón F: Falta Injustificada -->
+                        <button
+                          type="button"
+                          (click)="setEstadoAlumno(a, 'FALTA_INJUSTIFICADA')"
+                          [class.active]="a.estado === 'FALTA_INJUSTIFICADA'"
+                          class="estado-pill pill-falta btn-falta"
+                          title="Falta Injustificada: Ausencia sin justificación ni comprobante">
+                          <span class="pill-dot"></span>
+                          <span class="pill-label">F</span>
+                          <span class="pill-text">Falta</span>
+                        </button>
+
+                        <!-- Botón FJ: Falta Justificada -->
+                        <button
+                          type="button"
+                          (click)="setEstadoAlumno(a, 'FALTA_JUSTIFICADA')"
+                          [class.active]="a.estado === 'FALTA_JUSTIFICADA'"
+                          class="estado-pill pill-justificada btn-justificada"
+                          title="Falta Justificada: Ausencia con excusa médica o calamidad avalada">
+                          <span class="pill-dot"></span>
+                          <span class="pill-label">FJ</span>
+                          <span class="pill-text">Excusa</span>
+                        </button>
+                      </div>
+
+                      @if (a.estado === 'RETARDO') {
+                        <div class="retardo-sub-input animate-fade-in">
+                          <span class="text-2xs text-amber-700 font-bold">Minutos de retraso:</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="120"
+                            class="form-control form-control-xs retardo-minutes-input"
+                            [(ngModel)]="a.minutosRetardo"
+                            placeholder="Min"
+                          />
+                          <span class="text-2xs text-slate-500">min</span>
+                        </div>
+                      }
+                    </td>
+
+                    <!-- Toggle SMS -->
+                    <td style="text-align: center;">
+                      @if (a.estado !== 'PRESENTE') {
+                        <div class="sms-toggle-cell">
+                          <label class="toggle-switch">
+                            <input type="checkbox" [(ngModel)]="a.notificarAcudiente">
+                            <span class="slider"></span>
+                          </label>
+                          <span class="sms-status-pill" [class.active]="a.notificarAcudiente">
+                            {{ a.notificarAcudiente ? '🔔 SMS Activo' : '🔕 Silenciado' }}
+                          </span>
+                        </div>
+                      } @else {
+                        <span class="text-slate-300 text-xs font-medium">No aplica</span>
+                      }
+                    </td>
+
+                    <!-- Observaciones -->
+                    <td>
+                      <div class="obs-input-wrapper">
+                        <input
+                          type="text"
+                          class="form-control form-control-sm obs-input"
+                          [(ngModel)]="a.observacion"
+                          placeholder="Opcional: motivo o anotación pedagógica..."
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="empty-table-cell text-center py-5">
+                      @if (cargasDocentes().length === 0) {
+                        <div class="empty-state-box">
+                          <span class="empty-state-icon">⚠️</span>
+                          <h4 class="empty-state-title">No tienes Cargas Académicas asignadas</h4>
+                          <p class="empty-state-desc">
+                            Para registrar la asistencia de una clase, el docente debe tener asignaturas y grupos asignados en el año lectivo y periodo activo.
+                          </p>
+                          <div class="mt-3">
+                            <a routerLink="/academico" class="btn btn-primary btn-sm">
+                              📚 Ir a Gestión Académica para Asignar Carga
+                            </a>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="empty-state-box">
+                          <span class="empty-state-icon">👥</span>
+                          <h4 class="empty-state-title">No hay estudiantes matriculados en este grupo</h4>
+                          <p class="empty-state-desc">
+                            No se encontraron estudiantes activos matriculados para este grupo. Registra estudiantes en el módulo de Matrículas e Inscripciones.
+                          </p>
+                          <div class="mt-3">
+                            <a routerLink="/matriculas" class="btn btn-primary btn-sm">
+                              👥 Ir a Matrículas para Inscribir Estudiantes
+                            </a>
+                          </div>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- FOOTER ELEVADO CON RESUMEN Y BOTÓN DE REGISTRO -->
+        @if (alumnosLista().length > 0) {
+          <div class="table-action-footer">
+            <div class="attendance-progress-summary">
+              <div class="progress-meta">
+                <span class="text-xs font-bold text-slate-600">Presentismo de la Clase:</span>
+                <span class="text-xs font-extrabold text-emerald-600">{{ totalesAsistencia().porcentajePresentes }}%</span>
+                <span class="text-xs text-slate-400">({{ totalesAsistencia().presentes }} de {{ alumnosLista().length }} estudiantes)</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" [style.width.%]="totalesAsistencia().porcentajePresentes"></div>
+              </div>
+            </div>
+
+            <div class="save-button-wrapper">
+              <button
+                class="btn btn-primary btn-save-session shadow-md"
+                (click)="guardarPlanilla()"
+                [disabled]="isSaving()">
+                @if (isSaving()) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  <span>Guardando Sesión...</span>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  <span>Registrar Sesión y Enviar Alertas</span>
+                }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- TAB 2: EXCUSAS & JUSTIFICACIONES MÉDICAS                           -->
+  <!-- ================================================================= -->
+  @if (tabActiva() === 'excusas') {
+    <div class="tab-body animate-fade-in">
+      @if (role() === 'ESTUDIANTE') {
+        <!-- VISTA ESTUDIANTE / ACUDIENTE: RADICAR DIRECTAMENTE -->
+        <div class="grid-cols-2 student-excusa-grid">
+          <div class="card shadow-sm p-4">
+            <div class="card-header border-b pb-3 mb-3">
+              <div class="d-flex align-center" style="gap: 10px;">
+                <div class="header-icon-circle bg-indigo-subtle text-indigo">🏥</div>
+                <div>
+                  <h3 class="font-bold text-slate-800 m-0">Radicar Nueva Incapacidad</h3>
+                  <p class="text-xs text-slate-500 m-0">Sube tu comprobante médico o carta de padres para justificar inasistencias</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label font-semibold text-slate-700">Motivo de la Inasistencia *</label>
+              <select class="form-select" [(ngModel)]="nuevaExcusa.motivo">
+                <option value="MEDICA">🏥 Incapacidad Médica (EPS / Clínica)</option>
+                <option value="CALAMIDAD">🏠 Calamidad Doméstica</option>
+                <option value="VIAJE">✈️ Representación Escolar / Viaje</option>
+                <option value="OTRO">📝 Otro Motivo Justificado</option>
+              </select>
+            </div>
+
+            <div class="grid-cols-2 mb-3" style="gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label font-semibold text-slate-700">Fecha Inicio *</label>
+                <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaExcusa.fechaInicio" placeholder="dd/mm/aaaa" />
+              </div>
+              <div class="form-group">
+                <label class="form-label font-semibold text-slate-700">Fecha Fin *</label>
+                <input type="text" appFlatpickr [minDate]="nuevaExcusa.fechaInicio" class="form-control" [(ngModel)]="nuevaExcusa.fechaFin" placeholder="dd/mm/aaaa" />
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label font-semibold text-slate-700">Descripción / Diagnóstico</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="nuevaExcusa.descripcion" placeholder="Explica detalladamente la causa de la ausencia..."></textarea>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label font-semibold text-slate-700">Adjuntar Soporte Médico (PDF, PNG, JPG)</label>
+              <div class="file-upload-dropzone">
+                <input type="file" class="form-control file-input-hidden" (change)="onExcusaFileSelected($event)" accept=".pdf,.png,.jpg,.jpeg" id="studentExcusaFile" />
+                <label for="studentExcusaFile" class="dropzone-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span class="upload-text">Haz clic aquí o arrastra tu archivo médico</span>
+                  <span class="upload-hint">Formatos: PDF, JPG, PNG (Máx 10 MB)</span>
+                </label>
+              </div>
+
+              @if (nombreArchivoExcusa()) {
+                <div class="file-attached-badge mt-2 animate-fade-in">
+                  <span class="badge-icon">✓</span>
+                  <span class="file-name">{{ nombreArchivoExcusa() }}</span>
+                </div>
+              }
+            </div>
+
+            <button class="btn btn-primary w-full py-2 shadow-md" (click)="radicarExcusa()" [disabled]="isSaving()">
+              <span>📤 Enviar a Coordinación</span>
+            </button>
+          </div>
+
+          <!-- HISTORIAL DEL ESTUDIANTE -->
+          <div class="card shadow-sm p-4">
+            <div class="card-header border-b pb-3 mb-3">
+              <div class="d-flex align-center" style="gap: 10px;">
+                <div class="header-icon-circle bg-emerald-subtle text-emerald">📜</div>
+                <div>
+                  <h3 class="font-bold text-slate-800 m-0">Historial de Excusas Radicadas</h3>
+                  <p class="text-xs text-slate-500 m-0">Consulta el estado de aprobación de tus justificaciones</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="excusas-history-list">
+              @for (exc of excusasList(); track exc.id) {
+                <div class="excusa-history-card">
+                  <div class="d-flex flex-between align-center mb-1">
+                    <span class="badge" [class.badge-success]="exc.estado === 'APROBADA'" [class.badge-warning]="exc.estado === 'PENDIENTE'" [class.badge-danger]="exc.estado === 'RECHAZADA'">
+                      {{ exc.estado }}
+                    </span>
+                    <span class="text-xs text-slate-400 font-medium">{{ exc.fechaInicio | date:'dd MMM' }} - {{ exc.fechaFin | date:'dd MMM yyyy' }}</span>
+                  </div>
+                  <div class="excusa-reason font-semibold text-slate-800">{{ exc.motivo }}</div>
+                  <p class="excusa-desc text-xs text-slate-600 mb-2">{{ exc.descripcion }}</p>
+                  @if (exc.urlSoporte) {
+                    <button (click)="abrirVisorSoporte(exc.urlSoporte, 'Comprobante: ' + exc.motivo)" class="btn btn-secondary btn-xs btn-ver-adjunto">
+                      📄 Ver Soporte Adjunto
+                    </button>
+                  }
+                </div>
+              } @empty {
+                <div class="empty-state mt-4 text-center py-5">
+                  <div class="empty-icon text-2xl">📂</div>
+                  <h4 class="font-bold text-slate-700 mt-2">No has radicado excusas este periodo</h4>
+                  <p class="text-xs text-slate-400">Cuando presentes una incapacidad médica, aparecerá registrada en esta sección.</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      } @else {
+        <!-- VISTA COORDINACIÓN / RECTORÍA / DOCENCIA: BANDEJA DE ENTRADA -->
+        <div class="card shadow-sm">
+          <div class="card-header d-flex flex-between align-center p-4 border-b flex-wrap" style="gap: 1rem;">
+            <div>
+              <div class="d-flex align-center" style="gap: 8px;">
+                <span class="badge badge-info-subtle">AUDITORÍA & JUSTIFICACIONES</span>
+              </div>
+              <h3 class="m-0 font-bold text-lg text-slate-800 mt-1">📥 Bandeja de Entrada: Justificaciones y Excusas</h3>
+              <p class="text-xs text-slate-500 m-0 mt-1">
+                Aprueba incapacidades para reclasificar automáticamente las inasistencias de los estudiantes a faltas justificadas.
+              </p>
+            </div>
+
+            <div class="d-flex align-center" style="gap: 10px;">
+              <button class="btn btn-primary btn-sm shadow-sm" (click)="modalRadicarExcusa.set(true)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Radicar Nueva Incapacidad</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- FILTROS DE BANDEJA DE EXCUSAS -->
+          <div class="excusas-filter-strip p-3 bg-slate-50 border-b d-flex flex-between align-center flex-wrap" style="gap: 0.75rem;">
+            <div class="filter-pills d-flex align-center" style="gap: 0.5rem;">
+              <button class="filter-pill" [class.active]="filtroEstadoExcusa() === 'TODAS'" (click)="filtroEstadoExcusa.set('TODAS')">
+                Todas ({{ excusasList().length }})
+              </button>
+              <button class="filter-pill pill-warn" [class.active]="filtroEstadoExcusa() === 'PENDIENTE'" (click)="filtroEstadoExcusa.set('PENDIENTE')">
+                Pendientes ({{ kpiExcusasPendientes() }})
+              </button>
+              <button class="filter-pill pill-succ" [class.active]="filtroEstadoExcusa() === 'APROBADA'" (click)="filtroEstadoExcusa.set('APROBADA')">
+                Aprobadas ({{ kpiExcusasAprobadas() }})
+              </button>
+              <button class="filter-pill pill-dang" [class.active]="filtroEstadoExcusa() === 'RECHAZADA'" (click)="filtroEstadoExcusa.set('RECHAZADA')">
+                Rechazadas
+              </button>
+            </div>
+
+            <div class="search-input-box" style="max-width: 280px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="text"
+                class="form-control form-control-sm search-control"
+                [(ngModel)]="filtroTextoExcusas"
+                placeholder="Filtrar por estudiante o motivo..."
+              />
+            </div>
+          </div>
+
+          <!-- TABLA DE EXCUSAS -->
+          <div class="table-responsive">
+            <table class="data-table mt-0">
+              <thead>
+                <tr>
+                  <th style="min-width: 200px;">Estudiante</th>
+                  <th style="min-width: 160px;">Fechas Inasistencia</th>
+                  <th>Motivo & Diagnóstico</th>
+                  <th style="min-width: 150px;">Soporte Adjunto</th>
+                  <th style="width: 120px;">Estado</th>
+                  <th style="min-width: 180px; text-align: right;">Acciones Rápidas</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (exc of excusasFiltradas(); track exc.id) {
+                  <tr>
+                    <td>
+                      <div class="student-profile-cell">
+                        <div class="student-avatar" [style.background]="getAvatarColor(exc.estudianteNombre)">
+                          {{ getInitials(exc.estudianteNombre) }}
+                        </div>
+                        <div class="student-details">
+                          <span class="student-name font-semibold">{{ exc.estudianteNombre }}</span>
+                          <span class="student-meta text-xs text-slate-500">Radicado: #{{ exc.id.slice(0, 8) }}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td>
+                      <div class="date-range-badge">
+                        <span class="date-text font-semibold">{{ exc.fechaInicio | date:'dd MMM' }} - {{ exc.fechaFin | date:'dd MMM yyyy' }}</span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span class="badge badge-info" style="font-size: 0.75rem;">{{ exc.motivo }}</span>
+                      <div class="text-xs text-slate-600 mt-1" style="max-width: 260px; line-height: 1.4;">
+                        {{ exc.descripcion }}
+                      </div>
+                    </td>
+
+                    <td>
+                      @if (exc.urlSoporte) {
+                        <div class="d-flex align-center" style="gap: 6px;">
+                          <button
+                            (click)="abrirVisorSoporte(exc.urlSoporte, 'Soporte: ' + exc.estudianteNombre)"
+                            class="btn btn-secondary btn-xs btn-ver-adjunto">
+                            📄 Ver Adjunto
+                          </button>
+                          <a [href]="resolveUrl(exc.urlSoporte)" target="_blank" class="btn btn-outline btn-xs" title="Abrir directo en pestaña">
+                            ↗
+                          </a>
+                        </div>
+                      } @else {
+                        <span class="text-xs text-slate-400 italic">Sin soporte adjunto</span>
+                      }
+                    </td>
+
+                    <td>
+                      <span class="badge" [class.badge-success]="exc.estado === 'APROBADA'" [class.badge-warning]="exc.estado === 'PENDIENTE'" [class.badge-danger]="exc.estado === 'RECHAZADA'">
+                        {{ exc.estado }}
+                      </span>
+                    </td>
+
+                    <td style="text-align: right;">
+                      @if (exc.estado === 'PENDIENTE') {
+                        <div class="d-inline-flex align-center" style="gap: 6px;">
+                          <button class="btn btn-success btn-sm" (click)="aprobarExcusa(exc)" title="Aprobar y reclasificar fallas automáticamente">
+                            ✅ Aprobar
+                          </button>
+                          <button class="btn btn-danger btn-sm" (click)="rechazarExcusa(exc)" title="Rechazar justificación">
+                            ❌ Rechazar
+                          </button>
+                        </div>
+                      } @else {
+                        <span class="badge badge-neutral text-xs">Procesada</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="text-center py-5">
+                      <div class="empty-state-box">
+                        <span class="empty-state-icon">📥</span>
+                        <h4 class="empty-state-title">No hay excusas médicas en este filtro</h4>
+                        <p class="empty-state-desc">Las solicitudes de justificación radicadas por estudiantes y acudientes aparecerán aquí.</p>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- TAB 3: CONSOLIDADO & REPORTE DE AUSENTISMO                         -->
+  <!-- ================================================================= -->
+  @if (tabActiva() === 'consolidado') {
+    <div class="tab-body animate-fade-in">
+      <div class="card shadow-sm p-4">
+        <div class="card-header d-flex flex-between align-center border-b pb-3 mb-4 flex-wrap" style="gap: 1rem;">
+          <div>
+            <h3 class="m-0 font-bold text-lg text-slate-800">📊 Consolidado de Asistencia y Alerta de Pérdida por Inasistencia</h3>
+            <p class="text-xs text-slate-500 m-0 mt-1">
+              Monitoreo del umbral del 20% de inasistencia no justificada estipulado en el Sistema Institucional de Evaluación (SIEE)
+            </p>
+          </div>
+          <button class="btn btn-outline btn-sm" (click)="abrirModalImprimir()">
+            🖨️ Exportar Resumen PDF
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Grupo</th>
+                <th>Total Sesiones</th>
+                <th>Asistencias</th>
+                <th>Retardos</th>
+                <th>Faltas Injustificadas</th>
+                <th>% Presentismo</th>
+                <th>Estado Académico</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (res of resumenConsolidado(); track res.matriculaId) {
+                <tr>
+                  <td class="font-semibold">{{ res.estudianteNombre }}</td>
+                  <td>{{ res.grupoNombre }}</td>
+                  <td>{{ res.totalClases }}</td>
+                  <td class="text-emerald font-bold">{{ res.asistencias }}</td>
+                  <td class="text-amber font-bold">{{ res.retardos }}</td>
+                  <td class="text-red font-bold">{{ res.faltasInjustificadas }}</td>
+                  <td>
+                    <div class="d-flex align-center" style="gap: 8px;">
+                      <div class="progress-track" style="width: 80px; height: 6px;">
+                        <div class="progress-bar" [style.width.%]="res.porcentajeAsistencia" [style.background]="res.porcentajeAsistencia < 80 ? '#ef4444' : '#10b981'"></div>
+                      </div>
+                      <span class="text-xs font-bold" [class.text-red]="res.porcentajeAsistencia < 80" [class.text-emerald]="res.porcentajeAsistencia >= 80">
+                        {{ res.porcentajeAsistencia }}%
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    @if (res.riesgoPerdida) {
+                      <span class="badge badge-danger">⚠️ Riesgo de Pérdida (>20%)</span>
+                    } @else {
+                      <span class="badge badge-success">✓ Normal</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="text-center py-4 text-slate-500">
+                    Cargando consolidado de inasistencias del periodo...
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- MODAL: RADICAR NUEVA EXCUSA / INCAPACIDAD                          -->
+  <!-- ================================================================= -->
+  <!-- MODAL: RADICAR NUEVA INCAPACIDAD / JUSTIFICACIÓN MÉDICA           -->
+  <!-- ================================================================= -->
+  @if (modalRadicarExcusa()) {
+    <div class="modal-backdrop animate-fade-in" style="z-index: 10500;">
+      <div class="modal-card form-modal animate-slide-up" style="max-width: 820px; width: 95%;">
+        <div class="modal-header d-flex flex-between align-center p-4 border-b">
+          <div class="d-flex align-center" style="gap: 12px;">
+            <div class="header-icon-circle bg-indigo-subtle text-indigo" style="font-size: 1.4rem;">🏥</div>
+            <div>
+              <h3 class="m-0 font-bold text-lg text-slate-800">Radicar Nueva Incapacidad</h3>
+              <p class="m-0 text-xs text-slate-500">Registrar justificación de ausencia médica o calamidad doméstica</p>
+            </div>
+          </div>
+          <button class="close-btn" (click)="modalRadicarExcusa.set(false)" title="Cerrar">&times;</button>
+        </div>
+
+        <div class="modal-body p-4">
+          <!-- FILA 1: Salón y Estudiante en Cascada -->
+          <div class="grid-cols-2 mb-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            <div class="form-group">
+              <label class="form-label font-semibold text-slate-700">
+                <span>🏫 Salón / Grado *</span>
+              </label>
+              <div class="select-wrapper">
+                <select
+                  class="form-select"
+                  [(ngModel)]="salonSeleccionadoExcusa"
+                  (ngModelChange)="onSalonExcusaChange()"
+                  id="modalSelectSalon"
+                >
+                  <option value="" disabled>Selecciona un salón / grupo...</option>
+                  @for (s of salonesList(); track s.id) {
+                    <option [value]="s.id">{{ s.gradoNombre ? s.gradoNombre + ' — ' : '' }}{{ s.nombre }}</option>
+                  } @empty {
+                    @for (c of cargasDocentes(); track c.id) {
+                      <option [value]="c.grupoId || c.id">{{ c.grupoNombre }}</option>
+                    }
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label font-semibold text-slate-700">
+                <span>👤 Estudiante *</span>
+              </label>
+              <div class="select-wrapper">
+                <select
+                  class="form-select"
+                  [(ngModel)]="nuevaExcusa.matriculaId"
+                  (ngModelChange)="onEstudianteExcusaChange($event)"
+                  [disabled]="!salonSeleccionadoExcusa() || isLoadingEstudiantesSalon()"
+                  id="modalSelectEstudiante"
+                >
+                  @if (!salonSeleccionadoExcusa()) {
+                    <option value="" disabled>Primero selecciona un salón...</option>
+                  } @else if (isLoadingEstudiantesSalon()) {
+                    <option value="" disabled>Cargando estudiantes del salón...</option>
+                  } @else {
+                    <option value="" disabled>Selecciona un estudiante...</option>
+                    @for (est of estudiantesSalonExcusa(); track est.matriculaId) {
+                      <option [value]="est.matriculaId">
+                        {{ est.nombreCompleto }}{{ est.documento ? ' — Doc: ' + est.documento : '' }}
+                      </option>
+                    } @empty {
+                      <option value="" disabled>No hay estudiantes matriculados en este salón</option>
+                    }
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- FILA 2: Motivo y Rango de Fechas -->
+          <div class="grid-cols-3 mb-3" style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1.25rem;">
+            <div class="form-group">
+              <label class="form-label font-semibold text-slate-700">Motivo de Inasistencia *</label>
+              <div class="select-wrapper">
+                <select class="form-select" [(ngModel)]="nuevaExcusa.motivo">
+                  <option value="MEDICA">🏥 Incapacidad Médica (EPS / Consulta)</option>
+                  <option value="CALAMIDAD">🏠 Calamidad Doméstica</option>
+                  <option value="VIAJE">✈️ Representación Escolar / Viaje</option>
+                  <option value="OTRO">📝 Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label font-semibold text-slate-700">Fecha Inicio *</label>
+              <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaExcusa.fechaInicio" placeholder="dd/mm/aaaa" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label font-semibold text-slate-700">Fecha Fin *</label>
+              <input type="text" appFlatpickr [minDate]="nuevaExcusa.fechaInicio" class="form-control" [(ngModel)]="nuevaExcusa.fechaFin" placeholder="dd/mm/aaaa" />
+            </div>
+          </div>
+
+          <!-- FILA 3: Diagnóstico y Adjunto en 2 columnas amplias -->
+          <div class="grid-cols-2 mb-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: stretch;">
+            <div class="form-group d-flex flex-column">
+              <label class="form-label font-semibold text-slate-700">Descripción / Diagnóstico *</label>
+              <textarea
+                class="form-control flex-1"
+                rows="5"
+                [(ngModel)]="nuevaExcusa.descripcion"
+                style="resize: vertical; min-height: 120px;"
+                placeholder="Explica brevemente el motivo, diagnóstico médico o recomendaciones del especialista...">
+              </textarea>
+            </div>
+
+            <div class="form-group d-flex flex-column">
+              <label class="form-label font-semibold text-slate-700">Adjuntar Soporte Médico (PDF / Imagen)</label>
+              <div class="file-upload-dropzone flex-1" style="min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <input
+                  type="file"
+                  class="form-control file-input-hidden"
+                  (change)="onExcusaFileSelected($event)"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  id="modalExcusaFile"
+                />
+                <label for="modalExcusaFile" class="dropzone-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span class="upload-text">Selecciona o arrastra el certificado</span>
+                  <span class="upload-hint">PDF o Imagen hasta 10MB</span>
+                </label>
+              </div>
+
+              @if (nombreArchivoExcusa()) {
+                <div class="file-attached-badge mt-2 animate-fade-in">
+                  <span class="badge-icon">✓</span>
+                  <span class="file-name">{{ nombreArchivoExcusa() }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer p-3 border-t d-flex flex-end" style="gap: 0.75rem;">
+          <button class="btn btn-secondary" (click)="modalRadicarExcusa.set(false)">Cancelar</button>
+          <button class="btn btn-primary" (click)="radicarExcusa()" [disabled]="isSaving()">
+            @if (isSaving()) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+              <span>Enviando...</span>
+            } @else {
+              <span>📤 Enviar a Coordinación</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- MODAL: VISOR DE SOPORTE MÉDICO (PDF / IMAGEN)                     -->
+  <!-- ================================================================= -->
+  @if (modalVisorSoporte().visible) {
+    <div class="modal-backdrop animate-fade-in" style="z-index: 10500;">
+      <div class="modal-card visor-modal animate-slide-up" style="max-width: 880px; width: 95%; height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-header d-flex flex-between align-center p-3 border-b">
+          <div class="d-flex align-center" style="gap: 10px;">
+            <div class="header-icon-circle bg-blue-subtle text-blue">🏥</div>
+            <div>
+              <h3 class="font-bold text-slate-800 m-0 text-base">{{ modalVisorSoporte().titulo }}</h3>
+              <span class="text-xs text-slate-500">Documento de Soporte y Certificación Médica</span>
+            </div>
+          </div>
+          <div class="d-flex align-center" style="gap: 8px;">
+            <a [href]="modalVisorSoporte().url" target="_blank" download class="btn btn-secondary btn-xs">
+              ⬇️ Descargar
+            </a>
+            <button (click)="cerrarVisorSoporte()" class="close-btn" title="Cerrar visor">&times;</button>
+          </div>
+        </div>
+
+        <div class="modal-body flex-1 p-2 bg-slate-100 d-flex align-center justify-center overflow-hidden">
+          @if (modalVisorSoporte().esImagen) {
+            <img [src]="modalVisorSoporte().url" [alt]="modalVisorSoporte().titulo" class="max-h-full max-w-full object-contain rounded shadow" />
+          } @else {
+            <iframe [src]="getSafeViewerUrl(modalVisorSoporte().url)" class="w-full h-full border-0 rounded" title="Soporte Médico"></iframe>
+          }
+        </div>
+
+        <div class="modal-footer p-3 border-t d-flex flex-end">
+          <button (click)="cerrarVisorSoporte()" class="btn btn-secondary">Cerrar Visor</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- MODAL / DOCUMENTO IMPRIMIBLE: PLANILLA OFICIAL DE ASISTENCIA       -->
+  <!-- ================================================================= -->
+  @if (modalImprimirPlanilla()) {
+    <div class="modal-backdrop animate-fade-in" style="z-index: 10500;">
+      <div class="modal-card animate-slide-up" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-header d-flex flex-between align-center p-4 border-b">
+          <div>
+            <h3 class="m-0 font-bold text-slate-800">🖨️ Vista Previa: Planilla Oficial de Asistencia</h3>
+            <span class="text-xs text-slate-500">Documento legal para archivo y firmas institucionales</span>
+          </div>
+          <button class="close-btn" (click)="modalImprimirPlanilla.set(false)">&times;</button>
+        </div>
+
+        <div class="modal-body p-4 overflow-y-auto" style="background: #f8fafc;">
+          <!-- FORMATO OFICIAL IMPRIMIBLE -->
+          <div id="planilla-imprimible" class="print-sheet-card p-4 bg-white rounded shadow-sm">
+            <div class="print-header-section d-flex flex-between align-center border-b pb-3 mb-3">
+              <div>
+                <h2 class="school-title font-bold text-slate-900 m-0" style="font-size: 1.25rem;">
+                  {{ authService.colegio()?.nombre || 'COLEGIO BILINGÜE DE CARTAGENA' }}
+                </h2>
+                <div class="school-meta text-xs text-slate-600 mt-1">
+                  NIT: {{ authService.colegio()?.nit || '890.100.222-1' }} · Código DANE: {{ authService.colegio()?.codigoDane || '113001000123' }}
+                </div>
+                <div class="school-meta text-xs text-slate-500">
+                  Resolución de Aprobación No. {{ authService.colegio()?.resolucionAprobacion || '1420 de 2024' }} — {{ authService.colegio()?.ciudad || 'Colombia' }}
+                </div>
+              </div>
+              <div class="document-badge text-right">
+                <span class="badge badge-primary font-bold" style="font-size: 0.85rem;">PLANILLA OFICIAL DIARIA</span>
+                <div class="text-xs text-slate-500 mt-1 font-semibold">Fecha: {{ fechaActual() | date:'dd/MM/yyyy' }}</div>
+              </div>
+            </div>
+
+            <div class="session-info-grid mb-3 p-3 bg-slate-50 rounded border text-xs">
+              <div class="grid-cols-2" style="gap: 0.5rem;">
+                <div><strong>Docente:</strong> {{ authService.user()?.primerNombre }} {{ authService.user()?.primerApellido }}</div>
+                <div><strong>Asignatura:</strong> {{ cargaSeleccionadaObj()?.asignaturaNombre || 'Asignatura' }}</div>
+                <div><strong>Grupo / Grado:</strong> {{ cargaSeleccionadaObj()?.grupoNombre || 'Grupo' }}</div>
+                <div><strong>Horario / Bloque:</strong> {{ bloqueHorario() }}</div>
+                <div style="grid-column: span 2;"><strong>Tema de la Sesión:</strong> {{ temaClase() || 'Sesión de clase regular' }}</div>
+              </div>
+            </div>
+
+            <!-- Tabla Imprimible -->
+            <table class="table-print w-full text-xs">
+              <thead>
+                <tr>
+                  <th style="width: 40px; text-align: center;">#</th>
+                  <th>Estudiante</th>
+                  <th style="width: 100px; text-align: center;">Estado</th>
+                  <th style="width: 90px; text-align: center;">Retardo (Min)</th>
+                  <th>Observación / Novedad</th>
+                  <th style="width: 140px; text-align: center;">Firma Estudiante</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of alumnosLista(); track a.matriculaId; let i = $index) {
+                  <tr>
+                    <td style="text-align: center;">{{ i + 1 }}</td>
+                    <td class="font-semibold">{{ a.estudianteNombre }}</td>
+                    <td style="text-align: center;">
+                      <span class="font-bold">
+                        {{ a.estado === 'PRESENTE' ? 'PRESENTE' : (a.estado === 'RETARDO' ? 'RETARDO' : (a.estado === 'FALTA_JUSTIFICADA' ? 'EXCUSA' : 'FALTA')) }}
+                      </span>
+                    </td>
+                    <td style="text-align: center;">{{ a.minutosRetardo || '-' }}</td>
+                    <td>{{ a.observacion || '-' }}</td>
+                    <td style="border-bottom: 1px dotted #cbd5e1;"></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Resumen Estadístico al pie -->
+            <div class="print-stats-summary mt-3 d-flex flex-between text-xs font-semibold p-2 bg-slate-50 border rounded">
+              <span>Total: {{ alumnosLista().length }}</span>
+              <span>Presentes: {{ totalesAsistencia().presentes }}</span>
+              <span>Retardos: {{ totalesAsistencia().retardos }}</span>
+              <span>Faltas: {{ totalesAsistencia().faltas }}</span>
+              <span>% Asistencia: {{ totalesAsistencia().porcentajePresentes }}%</span>
+            </div>
+
+            <!-- Firmas Legales -->
+            <div class="print-signatures-section mt-5 d-flex flex-between" style="padding: 0 2rem;">
+              <div class="signature-line text-center" style="width: 220px; border-top: 1px solid #334155; padding-top: 6px; font-size: 0.75rem;">
+                <strong>Docente Titular</strong><br>
+                <span>{{ authService.user()?.primerNombre }} {{ authService.user()?.primerApellido }}</span>
+              </div>
+              <div class="signature-line text-center" style="width: 220px; border-top: 1px solid #334155; padding-top: 6px; font-size: 0.75rem;">
+                <strong>Coordinación Académica</strong><br>
+                <span>Visto Bueno / Archivo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer p-3 border-t d-flex flex-between">
+          <button class="btn btn-secondary" (click)="modalImprimirPlanilla.set(false)">Cerrar</button>
+          <button class="btn btn-primary" (click)="imprimirPlanillaDirecta()">
+            🖨️ Imprimir / Guardar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

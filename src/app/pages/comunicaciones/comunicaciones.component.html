@@ -1,183 +1,786 @@
 <div class="layout-container">
-  <header class="d-flex flex-between align-center" style="margin-bottom: 2rem;">
+  <!-- Cabecera Principal -->
+  <header class="d-flex flex-between align-center" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
     <div class="header-title">
-      <h1 style="margin: 0; display: inline-block;">Gestión de Comunicados</h1>
-      <p class="text-secondary" style="margin: 0; margin-top: 4px;">Administra los boletines, noticias y anuncios para Web y Móvil</p>
+      <div class="d-flex align-center" style="gap: 10px;">
+        <span class="badge badge-primary" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Módulo 07</span>
+        <h1 style="margin: 0; display: inline-block; font-size: 1.6rem; font-weight: 800;">Gestión de Comunicados</h1>
+      </div>
+      <p class="text-secondary" style="margin: 0; margin-top: 4px; font-size: 0.9rem;">
+        Administra los boletines, noticias, circulares con acuse legal de recibo y anuncios para Web y Móvil
+      </p>
     </div>
-    <div class="header-actions">
-      <button (click)="nuevoComunicado()" class="btn btn-primary shadow-sm">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        <span>Nuevo Comunicado</span>
+    <div class="header-actions d-flex align-center" style="gap: 10px;">
+      <button (click)="cargarComunicados(); cargarMensajes();" class="btn btn-outline btn-sm shadow-sm" title="Recargar datos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>Refrescar</span>
       </button>
+
+      @if (activeTab() === 'MENSAJES') {
+        <button (click)="abrirNuevoMensaje()" class="btn btn-primary shadow-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Redactar Mensaje</span>
+        </button>
+      } @else {
+        <button (click)="nuevoComunicado()" class="btn btn-primary shadow-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Nuevo Comunicado</span>
+        </button>
+      }
     </div>
   </header>
 
-  <!-- Pestañas -->
-  <div class="tabs-container">
-    <button class="tab-btn" [class.active]="activeTab === 'WEB'" (click)="activeTab = 'WEB'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-      Comunicados Web
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'MOVIL'" (click)="activeTab = 'MOVIL'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-      Comunicados App Móvil
-    </button>
-  </div>
+  <!-- Tarjetas de Indicadores / Métricas Globales Elevadas -->
+  <div class="metrics-grid">
+    <!-- KPI 1: Total Comunicados -->
+    <div class="metric-card border-indigo">
+      <span class="metric-icon">📢</span>
+      <div class="metric-info">
+        <span class="metric-label">Total Circulares</span>
+        <div class="metric-value">{{ kpiTotalComunicados() }}</div>
+        <div class="metric-footer">
+          <span>Circulares & noticias oficiales</span>
+        </div>
+      </div>
+    </div>
 
-  <!-- Contenido de la Tabla -->
-  <div class="card shadow-sm" style="padding: 0; overflow: hidden; border: 1px solid var(--border-primary); margin-top: 1rem;">
-    <div class="table-container" style="border: none; border-radius: 0;">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th style="width: 45%;">Detalle del Comunicado</th>
-            <th>Tipo</th>
-            <th>Fecha de Creación</th>
-            <th>Estado</th>
-            <th style="text-align: right;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (c of comunicadosFiltrados; track c.id) {
-            <tr>
-              <td>
-                <div class="d-flex align-center" style="gap: 12px;">
-                  <div class="d-flex align-center justify-center shadow-sm"
-                       style="flex-shrink: 0; width: 40px; height: 40px; border-radius: 8px;"
-                       [style.backgroundColor]="activeTab === 'WEB' ? '#e0e7ff' : '#d1fae5'"
-                       [style.color]="activeTab === 'WEB' ? '#4f46e5' : '#059669'">
-                    @if (activeTab === 'WEB') {
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                    } @else {
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-                    }
-                  </div>
-                  <div>
-                    <div style="font-weight: bold; color: var(--text-primary); font-size: 0.95rem;">{{ c.titulo }}</div>
-                    <div class="text-muted d-flex align-center" style="font-size: 0.75rem; gap: 4px; margin-top: 4px;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                      Plataforma {{ c.tipoPlataforma }}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="badge" style="font-size: 0.7rem; padding: 0.3rem 0.6rem; background: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-secondary);">
-                  {{ c.tipoPlataforma === 'WEB' ? 'HTML ENRIQUECIDO' : (c.imagenes?.length ? c.imagenes[0].formatoVisual.replace('_', ' ') : 'SIN IMAGEN') }}
-                </span>
-              </td>
-              <td>
-                <div class="d-flex align-center text-secondary" style="gap: 8px; font-weight: 500;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted" style="width: 16px; height: 16px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                  {{ c.fechaPublicacion | date:'mediumDate' }}
-                </div>
-              </td>
-              <td>
-                <span class="badge" 
-                      [class.badge-success]="c.activo" 
-                      [class.badge-secondary]="!c.activo"
-                      style="padding: 0.4rem 0.7rem; font-size: 0.75rem;">
-                  <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px;" [style.backgroundColor]="c.activo ? '#10b981' : '#94a3b8'"></span>
-                  {{ c.activo ? 'Publicado' : 'Borrador / Oculto' }}
-                </span>
-              </td>
-              <td style="text-align: right;">
-                <div class="d-flex justify-end" style="gap: 4px;">
-                  <button (click)="editar(c)" class="btn btn-sm btn-icon btn-ghost text-primary" title="Editar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  </button>
-                  <button (click)="eliminarComunicado(c.id)" class="btn btn-sm btn-icon btn-ghost text-danger" title="Eliminar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-          
-          @if (comunicadosFiltrados.length === 0) {
-            <tr>
-              <td colspan="5">
-                <div class="table-empty" style="padding: 3rem 0;">
-                  <svg class="text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 64px; height: 64px; margin: 0 auto 1rem auto; display: block; opacity: 0.5;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5L18.5 5H15m-2 15h2"></path>
-                  </svg>
-                  <h3 style="font-size: 1.125rem; font-weight: bold; margin-bottom: 0.25rem;">Sin comunicados</h3>
-                  <p class="text-muted" style="max-width: 24rem; margin: 0 auto;">No hay comunicados registrados para la plataforma {{ activeTab }}. Presiona "Nuevo Comunicado" para crear uno.</p>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <!-- KPI 2: Circulares Web Publicadas -->
+    <div class="metric-card border-blue">
+      <span class="metric-icon">🌐</span>
+      <div class="metric-info">
+        <span class="metric-label">Web Publicadas</span>
+        <div class="metric-value" style="color: #0284c7;">{{ kpiWebPublicados() }}</div>
+        <div class="metric-footer">
+          <span>Portal institucional activo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 3: Sliders Móvil Activos -->
+    <div class="metric-card border-green">
+      <span class="metric-icon">📱</span>
+      <div class="metric-info">
+        <span class="metric-label">Móvil Activos</span>
+        <div class="metric-value" style="color: #059669;">{{ kpiMovilActivos() }}</div>
+        <div class="metric-footer">
+          <span>App Familias & Padres</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 4: Requieren Firma Legal -->
+    <div class="metric-card border-amber">
+      <span class="metric-icon">✍️</span>
+      <div class="metric-info">
+        <span class="metric-label">Con Firma Legal</span>
+        <div class="metric-value" style="color: #b45309;">{{ kpiRequierenFirma() }}</div>
+        <div class="metric-footer">
+          <span>Acuse de recibo exigido</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI 5: Mensajes Pendientes -->
+    <div class="metric-card border-pink">
+      <span class="metric-icon">💬</span>
+      <div class="metric-info">
+        <span class="metric-label">Mensajes Inbox</span>
+        <div class="metric-value" style="color: #db2777;">{{ mensajesInbox().length }}</div>
+        <div class="metric-footer">
+          <span>{{ kpiMensajesSinLeer() }} pendientes de lectura</span>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- Pestañas Principales (Tab Navigation) -->
+  <div class="tabs-container" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-primary); padding-bottom: 0;">
+    <button class="tab-btn" [class.active]="activeTab() === 'WEB'" (click)="activeTab.set('WEB')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+      <span>Comunicados Web</span>
+      <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 2px 6px; font-size: 0.7rem; border-radius: 999px;">
+        {{ comunicadosWebFiltrados().length }}
+      </span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'MOVIL'" (click)="activeTab.set('MOVIL')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+      </svg>
+      <span>Comunicados App Móvil</span>
+      <span class="badge" style="background: rgba(5, 150, 105, 0.1); color: #059669; padding: 2px 6px; font-size: 0.7rem; border-radius: 999px;">
+        {{ comunicadosMovilFiltrados().length }}
+      </span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'MENSAJES'" (click)="activeTab.set('MENSAJES')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>Mensajería Directa</span>
+      @if (kpiMensajesSinLeer() > 0) {
+        <span class="badge badge-danger" style="padding: 2px 6px; font-size: 0.7rem; border-radius: 999px;">
+          {{ kpiMensajesSinLeer() }}
+        </span>
+      }
+    </button>
+  </div>
+
+  <!-- Barra de Filtros y Búsqueda Reactiva -->
+  <div class="card shadow-sm" style="padding: 1rem; border: 1px solid var(--border-primary); margin-top: 1rem; background: var(--bg-secondary);">
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 0.75rem; align-items: center;">
+      <!-- Búsqueda por texto -->
+      <div style="position: relative;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 10px; top: 10px; width: 16px; height: 16px; color: var(--text-tertiary);">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Buscar por título, contenido o destinatario..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          style="padding-left: 2.2rem; background: white;"
+        />
+      </div>
+
+      <!-- Filtro Estado -->
+      <div>
+        <select class="form-control form-select" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)" style="background: white;">
+          <option value="TODOS">Estado: Todos</option>
+          <option value="PUBLICADO">Publicados</option>
+          <option value="BORRADOR">Borrador / Ocultos</option>
+        </select>
+      </div>
+
+      <!-- Filtro Prioridad -->
+      <div>
+        <select class="form-control form-select" [ngModel]="filtroPrioridad()" (ngModelChange)="filtroPrioridad.set($event)" style="background: white;">
+          <option value="TODAS">Prioridad: Todas</option>
+          <option value="NORMAL">Normal</option>
+          <option value="ALTA">Alta</option>
+          <option value="URGENTE">Urgente</option>
+        </select>
+      </div>
+
+      <!-- Filtro Alcance -->
+      <div>
+        <select class="form-control form-select" [ngModel]="filtroAlcance()" (ngModelChange)="filtroAlcance.set($event)" style="background: white;">
+          <option value="TODOS">Alcance: Todos</option>
+          <option value="GENERAL">Toda la Institución</option>
+          <option value="GRADO">Por Grado</option>
+          <option value="GRUPO">Por Grupo</option>
+        </select>
+      </div>
+
+      <!-- Botón Limpiar -->
+      <div>
+        <button
+          (click)="limpiarFiltros()"
+          class="btn btn-outline btn-sm"
+          style="background: white; white-space: nowrap;"
+          title="Restablecer todos los filtros"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Limpiar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 1: COMUNICADOS WEB -->
+  @if (activeTab() === 'WEB') {
+    <div class="card shadow-sm" style="padding: 0; overflow: hidden; border: 1px solid var(--border-primary); margin-top: 1rem;">
+      <div class="table-container" style="border: none; border-radius: 0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 38%;">Detalle del Comunicado</th>
+              <th style="width: 15%;">Prioridad & Firma</th>
+              <th style="width: 15%;">Alcance</th>
+              <th style="width: 14%;">Fecha Creación</th>
+              <th style="width: 8%;">Estado</th>
+              <th style="text-align: right; width: 10%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of comunicadosWebFiltrados(); track c.id) {
+              <tr>
+                <!-- Detalle -->
+                <td>
+                  <div class="d-flex align-center" style="gap: 12px;">
+                    <div class="d-flex align-center justify-center shadow-sm"
+                         style="flex-shrink: 0; width: 40px; height: 40px; border-radius: 8px; background-color: #e0e7ff; color: #4f46e5;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                        {{ c.titulo }}
+                      </div>
+                      <div class="text-muted d-flex align-center" style="font-size: 0.75rem; gap: 8px; margin-top: 4px;">
+                        <span>Circular Oficial</span>
+                        @if (c.emisor) {
+                          <span>• Por: {{ c.emisor.nombres }} {{ c.emisor.apellidos }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Prioridad & Firma -->
+                <td>
+                  <div class="d-flex flex-column" style="gap: 4px;">
+                    <!-- Badge de Prioridad -->
+                    <span class="badge"
+                          [style.backgroundColor]="c.prioridad === 'URGENTE' ? '#fee2e2' : (c.prioridad === 'ALTA' ? '#fef3c7' : '#f1f5f9')"
+                          [style.color]="c.prioridad === 'URGENTE' ? '#b91c1c' : (c.prioridad === 'ALTA' ? '#b45309' : '#475569')"
+                          style="font-size: 0.7rem; padding: 0.2rem 0.5rem; font-weight: 700; width: fit-content; border-radius: 4px;">
+                      {{ c.prioridad || 'NORMAL' }}
+                    </span>
+
+                    <!-- Badge Requiere Firma -->
+                    @if (c.requiereFirma) {
+                      <span class="badge" style="background: #e0e7ff; color: #4338ca; font-size: 0.65rem; padding: 0.15rem 0.4rem; width: fit-content;">
+                        ✍️ Requiere Firma
+                      </span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Alcance -->
+                <td>
+                  <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">
+                    @if (c.alcance === 'TODOS' || !c.alcance) {
+                      <span class="badge badge-secondary" style="font-size: 0.75rem;">🏫 Toda la Institución</span>
+                    } @else if (c.alcance === 'GRADO') {
+                      <span class="badge badge-primary" style="font-size: 0.75rem;">🎓 Grado {{ c.grado?.nombre || 'Seleccionado' }}</span>
+                    } @else if (c.alcance === 'GRUPO') {
+                      <span class="badge badge-info" style="font-size: 0.75rem;">👥 Grupo {{ c.grupo?.nombre || 'Seleccionado' }}</span>
+                    } @else {
+                      <span class="badge badge-secondary" style="font-size: 0.75rem;">{{ c.alcance }}</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Fecha -->
+                <td>
+                  <div class="d-flex align-center text-secondary" style="gap: 6px; font-size: 0.85rem; font-weight: 500;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted" style="width: 14px; height: 14px;">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    {{ c.fechaPublicacion || c.createdAt | date:'mediumDate' }}
+                  </div>
+                </td>
+
+                <!-- Estado -->
+                <td>
+                  <button
+                    (click)="toggleEstado(c)"
+                    class="badge"
+                    [class.badge-success]="c.activo"
+                    [class.badge-secondary]="!c.activo"
+                    style="padding: 0.35rem 0.6rem; font-size: 0.75rem; cursor: pointer; border: none;"
+                    title="Clic para cambiar estado"
+                  >
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px;" [style.backgroundColor]="c.activo ? '#10b981' : '#94a3b8'"></span>
+                    {{ c.activo ? 'Publicado' : 'Borrador' }}
+                  </button>
+                </td>
+
+                <!-- Acciones -->
+                <td style="text-align: right;">
+                  <div class="d-flex justify-end" style="gap: 4px;">
+                    <!-- Botón Lector Oficial / Preview -->
+                    <button (click)="verLector(c)" class="btn btn-sm btn-icon btn-ghost text-primary" title="Ver circular">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+
+                    <!-- Botón Estadísticas & Trazabilidad -->
+                    <button (click)="abrirEstadisticas(c)" class="btn btn-sm btn-icon btn-ghost text-info" title="Métricas & Trazabilidad de Lectura">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                      </svg>
+                    </button>
+
+                    <!-- Botón Editar -->
+                    <button (click)="editar(c)" class="btn btn-sm btn-icon btn-ghost text-secondary" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+
+                    <!-- Botón Eliminar -->
+                    <button (click)="eliminarComunicado(c.id!)" class="btn btn-sm btn-icon btn-ghost text-danger" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @if (comunicadosWebFiltrados().length === 0) {
+              <tr>
+                <td colspan="6">
+                  <div class="table-empty" style="padding: 3rem 0; text-align: center;">
+                    <svg class="text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 56px; height: 56px; margin: 0 auto 1rem auto; display: block; opacity: 0.4;">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5L18.5 5H15m-2 15h2"></path>
+                    </svg>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">No se encontraron comunicados web</h3>
+                    <p class="text-muted" style="max-width: 26rem; margin: 0 auto 1.25rem auto; font-size: 0.85rem;">
+                      No hay registros que coincidan con los criterios de búsqueda o filtros aplicados.
+                    </p>
+                    <button (click)="nuevoComunicado()" class="btn btn-primary btn-sm">
+                      + Crear Comunicado Web
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 2: COMUNICADOS MÓVIL (SLIDERS / HISTORIAS) -->
+  @if (activeTab() === 'MOVIL') {
+    <div class="card shadow-sm" style="padding: 0; overflow: hidden; border: 1px solid var(--border-primary); margin-top: 1rem;">
+      <div class="table-container" style="border: none; border-radius: 0;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 40%;">Boletín Móvil (Slider)</th>
+              <th style="width: 20%;">Formato Visual</th>
+              <th style="width: 15%;">Diapositivas</th>
+              <th style="width: 15%;">Estado</th>
+              <th style="text-align: right; width: 10%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of comunicadosMovilFiltrados(); track c.id) {
+              <tr>
+                <!-- Slider Info -->
+                <td>
+                  <div class="d-flex align-center" style="gap: 12px;">
+                    <div class="d-flex align-center justify-center shadow-sm"
+                         style="flex-shrink: 0; width: 44px; height: 44px; border-radius: 8px; background-color: #d1fae5; color: #059669; overflow: hidden;">
+                      @if (c.imagenes && c.imagenes.length > 0 && c.imagenes[0].urlAdjunto) {
+                        <img [src]="getStaticUrl(c.imagenes[0].urlAdjunto)" (click)="previewImageUrl = c.imagenes[0].urlAdjunto" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;" />
+                      } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                        </svg>
+                      }
+                    </div>
+                    <div>
+                      <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                        {{ c.titulo }}
+                      </div>
+                      <div class="text-muted" style="font-size: 0.75rem; margin-top: 2px;">
+                        Publicación Móvil App Familias
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Formato Visual -->
+                <td>
+                  <span class="badge" style="font-size: 0.7rem; padding: 0.3rem 0.6rem; background: var(--bg-secondary); border: 1px solid var(--border-primary); color: var(--text-secondary);">
+                    {{ c.imagenes && c.imagenes.length > 0 ? c.imagenes[0].formatoVisual.replace('_', ' ') : 'ESTÁNDAR' }}
+                  </span>
+                </td>
+
+                <!-- Diapositivas -->
+                <td>
+                  <span class="badge badge-info" style="font-size: 0.75rem;">
+                    🖼️ {{ c.imagenes?.length || 0 }} {{ (c.imagenes?.length === 1) ? 'imagen' : 'imágenes' }}
+                  </span>
+                </td>
+
+                <!-- Estado -->
+                <td>
+                  <button
+                    (click)="toggleEstado(c)"
+                    class="badge"
+                    [class.badge-success]="c.activo"
+                    [class.badge-secondary]="!c.activo"
+                    style="padding: 0.35rem 0.6rem; font-size: 0.75rem; cursor: pointer; border: none;"
+                    title="Clic para cambiar estado"
+                  >
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px;" [style.backgroundColor]="c.activo ? '#10b981' : '#94a3b8'"></span>
+                    {{ c.activo ? 'Activo en App' : 'Inactivo / Oculto' }}
+                  </button>
+                </td>
+
+                <!-- Acciones -->
+                <td style="text-align: right;">
+                  <div class="d-flex justify-end" style="gap: 4px;">
+                    <button (click)="verLector(c)" class="btn btn-sm btn-icon btn-ghost text-primary" title="Vista previa slider">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                    <button (click)="abrirEstadisticas(c)" class="btn btn-sm btn-icon btn-ghost text-info" title="Métricas">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                      </svg>
+                    </button>
+                    <button (click)="editar(c)" class="btn btn-sm btn-icon btn-ghost text-secondary" title="Editar carrusel">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button (click)="eliminarComunicado(c.id!)" class="btn btn-sm btn-icon btn-ghost text-danger" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @if (comunicadosMovilFiltrados().length === 0) {
+              <tr>
+                <td colspan="5">
+                  <div class="table-empty" style="padding: 3rem 0; text-align: center;">
+                    <svg class="text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 56px; height: 56px; margin: 0 auto 1rem auto; display: block; opacity: 0.4;">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                      <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">No hay sliders móviles activos</h3>
+                    <p class="text-muted" style="max-width: 26rem; margin: 0 auto 1.25rem auto; font-size: 0.85rem;">
+                      Crea un carrusel de imágenes para informar a las familias desde la app móvil.
+                    </p>
+                    <button (click)="nuevoComunicado()" class="btn btn-primary btn-sm">
+                      + Crear Slider Móvil
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 3: MENSAJERÍA DIRECTA & BANDEJA -->
+  @if (activeTab() === 'MENSAJES') {
+    <div style="margin-top: 1rem;">
+      <div class="d-flex flex-between align-center" style="margin-bottom: 1rem;">
+        <div class="tabs-container" style="margin: 0; padding: 0; border: none; gap: 8px;">
+          <button class="tab-btn btn-sm" [class.active]="tabMensajes() === 'INBOX'" (click)="tabMensajes.set('INBOX')">
+            📥 Bandeja de Entrada ({{ mensajesInbox().length }})
+          </button>
+          <button class="tab-btn btn-sm" [class.active]="tabMensajes() === 'ENVIADOS'" (click)="tabMensajes.set('ENVIADOS')">
+            📤 Mensajes Enviados ({{ mensajesEnviados().length }})
+          </button>
+        </div>
+        <button (click)="abrirNuevoMensaje()" class="btn btn-primary btn-sm shadow-sm">
+          + Redactar Mensaje
+        </button>
+      </div>
+
+      <div class="card shadow-sm" style="padding: 0; overflow: hidden; border: 1px solid var(--border-primary);">
+        <div class="table-container" style="border: none; border-radius: 0;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">{{ tabMensajes() === 'INBOX' ? 'Remitente' : 'Destinatario' }}</th>
+                <th style="width: 45%;">Asunto & Mensaje</th>
+                <th style="width: 15%;">Fecha</th>
+                <th style="width: 15%; text-align: right;">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (msg of mensajesFiltrados(); track msg.id) {
+                <tr [style.backgroundColor]="!msg.leido && tabMensajes() === 'INBOX' ? 'rgba(79, 70, 229, 0.03)' : 'transparent'">
+                  <!-- Usuario -->
+                  <td>
+                    <div class="d-flex align-center" style="gap: 10px;">
+                      <div style="width: 36px; height: 36px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+                        {{ (tabMensajes() === 'INBOX' ? (msg.remitente?.nombres?.[0] || 'D') : (msg.destinatario?.nombres?.[0] || 'U')) }}
+                      </div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">
+                          {{ tabMensajes() === 'INBOX' ? ((msg.remitente?.nombres || 'Docente') + ' ' + (msg.remitente?.apellidos || '')) : ((msg.destinatario?.nombres || 'Usuario') + ' ' + (msg.destinatario?.apellidos || '')) }}
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem;">
+                          {{ tabMensajes() === 'INBOX' ? msg.remitente?.email : msg.destinatario?.email }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Asunto y contenido -->
+                  <td>
+                    <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary);">
+                      {{ msg.asunto || 'Sin Asunto' }}
+                    </div>
+                    <div class="text-secondary" style="font-size: 0.8rem; margin-top: 2px; max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      {{ msg.mensaje }}
+                    </div>
+                  </td>
+
+                  <!-- Fecha -->
+                  <td>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                      {{ msg.createdAt | date:'short' }}
+                    </div>
+                  </td>
+
+                  <!-- Estado / Acción -->
+                  <td style="text-align: right;">
+                    @if (tabMensajes() === 'INBOX') {
+                      @if (!msg.leido) {
+                        <button (click)="marcarMensajeLeido(msg)" class="btn btn-sm btn-outline" style="font-size: 0.75rem; background: white;" title="Marcar como leído">
+                          ✓ Marcar Leído
+                        </button>
+                      } @else {
+                        <span class="badge badge-success" style="font-size: 0.75rem;">✓ Leído</span>
+                      }
+                    } @else {
+                      <span class="badge" [class.badge-success]="msg.leido" [class.badge-secondary]="!msg.leido" style="font-size: 0.75rem;">
+                        {{ msg.leido ? '✓ Entregado & Leído' : 'Enviado' }}
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+
+              @if (mensajesFiltrados().length === 0) {
+                <tr>
+                  <td colspan="4">
+                    <div class="table-empty" style="padding: 3rem 0; text-align: center;">
+                      <p class="text-muted" style="margin: 0; font-size: 0.9rem;">No hay mensajes registrados en esta bandeja.</p>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
 </div>
 
-<!-- Modal para Crear/Editar Comunicado -->
+<!-- ========================================================= -->
+<!-- MODAL 1: CREAR / EDITAR COMUNICADO                        -->
+<!-- ========================================================= -->
 @if (showModal && selectedComunicado) {
 <div class="modal-backdrop">
   <div class="modal-card modal-xl">
-    <div class="modal-header" style="background-color: var(--bg-tertiary); padding: 1.5rem; margin: 0; border-bottom: 1px solid var(--border-primary); border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);">
+    <div class="modal-header" style="background-color: var(--bg-tertiary); padding: 1.25rem 1.5rem; margin: 0; border-bottom: 1px solid var(--border-primary); border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);">
       <div class="d-flex align-center" style="gap: 12px;">
         <div class="d-flex align-center justify-center" style="width: 40px; height: 40px; border-radius: 8px; background: white; box-shadow: var(--shadow-sm); color: var(--primary-600);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
         </div>
         <div>
-          <h3 style="margin: 0; font-size: 1.25rem;">{{ selectedComunicado.id ? 'Editar Comunicado' : 'Nuevo Comunicado' }}</h3>
-          <p class="text-muted" style="margin: 0; font-size: 0.85rem; margin-top: 2px;">Plataforma {{ activeTab }}</p>
+          <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800;">
+            {{ selectedComunicado.id ? 'Editar Comunicado' : 'Nuevo Comunicado' }}
+          </h3>
+          <p class="text-muted" style="margin: 0; font-size: 0.85rem; margin-top: 2px;">
+            Plataforma {{ selectedComunicado.tipoPlataforma }}
+          </p>
         </div>
       </div>
       <button (click)="cerrarModal()" class="btn btn-icon btn-ghost" title="Cerrar" style="background: white;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
       </button>
     </div>
     
-    <div class="modal-body" style="padding: 1.5rem;">
+    <div class="modal-body" style="padding: 1.5rem; max-height: 75vh; overflow-y: auto;">
       
-      <!-- Sección General con fondo sutil -->
-      <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem;">
-        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-top: 0; margin-bottom: 1rem;">Información Principal</h4>
+      <!-- Sección General de Configuración -->
+      <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-top: 0; margin-bottom: 1rem; font-weight: 700;">
+          1. Configuración & Audiencia
+        </h4>
         
-        <div class="form-group mb-0">
-          <label class="form-label">Título del Comunicado</label>
-          <input type="text" [(ngModel)]="selectedComunicado.titulo" maxlength="80" class="form-control" placeholder="Ej: Invitación Escuela para Padres" style="background-color: white;">
-          <span class="form-hint">Máximo 80 caracteres. Este será el título principal.</span>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-weight: 600;">Título del Comunicado *</label>
+          <input
+            type="text"
+            [(ngModel)]="selectedComunicado.titulo"
+            maxlength="150"
+            class="form-control"
+            placeholder="Ej: Circular 014: Jornada Pedagógica y Entrega de Informes"
+            style="background-color: white;"
+          />
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <!-- Plataforma -->
+          <div class="form-group mb-0">
+            <label class="form-label text-xs">Plataforma Destino</label>
+            <select [(ngModel)]="selectedComunicado.tipoPlataforma" class="form-control form-select form-control-sm" style="background-color: white;">
+              <option value="WEB">Portal Web (HTML Enriquecido)</option>
+              <option value="MOVIL">App Móvil (Carrusel de Imágenes)</option>
+            </select>
+          </div>
+
+          <!-- Prioridad -->
+          <div class="form-group mb-0">
+            <label class="form-label text-xs">Nivel de Prioridad</label>
+            <select [(ngModel)]="selectedComunicado.prioridad" class="form-control form-select form-control-sm" style="background-color: white;">
+              <option value="NORMAL">Normal (Informativo)</option>
+              <option value="ALTA">Alta (Atención Requerida)</option>
+              <option value="URGENTE">Urgente (Notificación Inmediata)</option>
+            </select>
+          </div>
+
+          <!-- Alcance -->
+          <div class="form-group mb-0">
+            <label class="form-label text-xs">Alcance Institucional</label>
+            <select [(ngModel)]="selectedComunicado.alcance" class="form-control form-select form-control-sm" style="background-color: white;">
+              <option value="TODOS">Toda la Institución (General)</option>
+              <option value="SEDE">Por Sede</option>
+              <option value="GRADO">Por Grado Específico</option>
+              <option value="GRUPO">Por Grupo Específico</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selectores condicionales si el alcance es GRADO o GRUPO -->
+        @if (selectedComunicado.alcance === 'GRADO') {
+          <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+            <label class="form-label text-xs">Selecciona el Grado</label>
+            <select [(ngModel)]="selectedComunicado.gradoId" class="form-control form-select form-control-sm" style="background-color: white;">
+              <option [ngValue]="null">Selecciona un grado...</option>
+              @for (g of grados(); track g.id) {
+                <option [value]="g.id">{{ g.nombre }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        @if (selectedComunicado.alcance === 'GRUPO') {
+          <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+            <label class="form-label text-xs">Selecciona el Grupo</label>
+            <select [(ngModel)]="selectedComunicado.grupoId" class="form-control form-select form-control-sm" style="background-color: white;">
+              <option [ngValue]="null">Selecciona un grupo...</option>
+              @for (grp of grupos(); track grp.id) {
+                <option [value]="grp.id">{{ grp.nombre }} ({{ grp.grado?.nombre }})</option>
+              }
+            </select>
+          </div>
+        }
+
+        <!-- Checkbox Exigir Firma Legal -->
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-primary); display: flex; align-items: center; justify-content: space-between;">
+          <div class="d-flex align-center" style="gap: 8px;">
+            <input
+              type="checkbox"
+              id="chkFirma"
+              [(ngModel)]="selectedComunicado.requiereFirma"
+              style="width: 18px; height: 18px; cursor: pointer;"
+            />
+            <label for="chkFirma" style="cursor: pointer; font-size: 0.9rem; font-weight: 600; margin: 0;">
+              Exigir acuse de recibo y firma digital obligatoria a padres de familia
+            </label>
+          </div>
+          <span class="badge badge-info" style="font-size: 0.7rem;">Sello de tiempo legal</span>
+        </div>
+
+        <!-- URL Adjunto Oficial -->
+        <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+          <label class="form-label text-xs">Documento Oficial / Adjunto PDF (URL opcional)</label>
+          <input
+            type="text"
+            [(ngModel)]="selectedComunicado.urlAdjunto"
+            class="form-control form-control-sm"
+            placeholder="https://storage.educoreos.com/circulares/circular-014.pdf"
+            style="background-color: white;"
+          />
         </div>
       </div>
 
       <!-- Sección de Contenido -->
       <div>
-        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-top: 0; margin-bottom: 1rem;">
-          {{ activeTab === 'WEB' ? 'Cuerpo del Comunicado' : 'Gestor de Carrusel' }}
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-top: 0; margin-bottom: 1rem; font-weight: 700;">
+          {{ selectedComunicado.tipoPlataforma === 'WEB' ? '2. Cuerpo de la Circular' : '2. Gestor de Diapositivas Móviles' }}
         </h4>
 
-        @if (activeTab === 'WEB') {
+        @if (selectedComunicado.tipoPlataforma === 'WEB') {
           <div class="form-group mb-0">
             <quill-editor 
               [(ngModel)]="selectedComunicado.contenidoHtml" 
-              placeholder="Escribe el contenido del comunicado aquí..."
-              [styles]="{height: '250px', backgroundColor: 'white'}">
+              placeholder="Escribe el contenido oficial de la circular aquí..."
+              [styles]="{height: '240px', backgroundColor: 'white'}">
             </quill-editor>
           </div>
         } @else {
           <div class="d-flex flex-between align-center" style="margin-bottom: 1rem; padding: 1rem; background-color: var(--bg-tertiary); border-radius: var(--radius-lg); border: 1px dashed var(--border-primary);">
             <div class="d-flex align-center" style="gap: 8px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary-600" style="width: 24px; height: 24px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary-600" style="width: 24px; height: 24px;">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
               <div>
-                <strong style="display: block; font-size: 0.9rem;">Imágenes del Móvil (Slider)</strong>
-                <span class="text-muted" style="font-size: 0.75rem;">Añade y ordena las imágenes</span>
+                <strong style="display: block; font-size: 0.9rem;">Imágenes del Carrusel Móvil</strong>
+                <span class="text-muted" style="font-size: 0.75rem;">Añade y organiza las diapositivas que verán los usuarios</span>
               </div>
             </div>
             <button (click)="agregarImagenMovil()" class="btn btn-primary btn-sm shadow-sm">
-              <span>+ Añadir Imagen</span>
+              <span>+ Añadir Diapositiva</span>
             </button>
           </div>
           
           <div class="d-flex flex-column overflow-y-auto" style="gap: 1rem; max-height: 40vh; padding-right: 0.5rem;">
             @for (img of selectedComunicado.imagenes; track img; let i = $index) {
-              <div class="card bg-secondary" style="position: relative; padding: 1.25rem; border: 1px solid var(--border-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                <button (click)="removerImagenMovil(i)" class="btn btn-icon btn-sm" style="position: absolute; top: 1rem; right: 1rem; background-color: #fee2e2; color: #ef4444; border: none;" title="Eliminar imagen">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <div class="card bg-secondary" style="position: relative; padding: 1.25rem; border: 1px solid var(--border-primary);">
+                <button (click)="removerImagenMovil(i)" class="btn btn-icon btn-sm" style="position: absolute; top: 1rem; right: 1rem; background-color: #fee2e2; color: #ef4444; border: none;" title="Eliminar diapositiva">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
                 </button>
                 
                 <div style="display: grid; grid-template-columns: 80px 1fr; gap: 1rem;">
@@ -188,24 +791,27 @@
                   
                   <div class="form-group mb-0">
                     <label class="form-label text-xs">Archivo de Imagen</label>
-                    
                     @if (img.urlAdjunto) {
                       <div class="d-flex align-center" style="gap: 12px; background: white; padding: 4px; border: 1px solid var(--border-primary); border-radius: var(--radius-md);">
-                        <img [src]="getStaticUrl(img.urlAdjunto)" (click)="previewImageUrl = img.urlAdjunto" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-primary); cursor: pointer;" title="Ver imagen en tamaño completo">
+                        <img [src]="getStaticUrl(img.urlAdjunto)" (click)="previewImageUrl = img.urlAdjunto" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" title="Ver imagen completa">
                         <div class="flex-1" style="flex: 1; overflow: hidden;">
                           <div style="font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ img.urlAdjunto }}">
                             {{ getFilename(img.urlAdjunto) }}
                           </div>
                         </div>
                         <button (click)="img.urlAdjunto = ''" class="btn btn-icon btn-ghost btn-sm text-danger" title="Cambiar imagen">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="M12 8v4"></path>
+                            <path d="M12 16h.01"></path>
+                          </svg>
                         </button>
                       </div>
                     } @else {
                       <div class="d-flex align-center" style="gap: 12px;">
                         <input type="file" accept="image/*" (change)="subirImagenCarrousel($event, img)" style="display: none;" #fileInput>
                         <button (click)="fileInput.click()" class="btn btn-secondary btn-sm" [disabled]="isUploadingImg" style="width: 100%; border: 1px dashed var(--border-primary); background: white;">
-                          {{ isUploadingImg ? 'Subiendo archivo...' : 'Seleccionar archivo local' }}
+                          {{ isUploadingImg ? 'Subiendo imagen...' : 'Seleccionar archivo local' }}
                         </button>
                       </div>
                     }
@@ -213,8 +819,8 @@
                 </div>
                 
                 <div class="form-group mb-0" style="margin-top: 1rem;">
-                  <label class="form-label text-xs">Texto / Título de la Imagen</label>
-                  <input type="text" [(ngModel)]="img.texto" class="form-control form-control-sm" style="background-color: white;" placeholder="Ej. ¡Bienvenidos al nuevo año escolar!">
+                  <label class="form-label text-xs">Texto / Subtítulo de la Diapositiva</label>
+                  <input type="text" [(ngModel)]="img.texto" class="form-control form-control-sm" style="background-color: white;" placeholder="Ej: ¡Bienvenidos al nuevo año académico!">
                 </div>
                 
                 <div class="form-group mb-0" style="margin-top: 1rem;">
@@ -227,10 +833,10 @@
               </div>
             }
             
-            @if (selectedComunicado.imagenes.length === 0) {
+            @if (!selectedComunicado.imagenes || selectedComunicado.imagenes.length === 0) {
               <div style="padding: 2.5rem; text-align: center; border: 2px dashed var(--border-primary); border-radius: var(--radius-xl); background-color: var(--bg-secondary);">
                 <p style="color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 600;">No hay imágenes en el carrusel.</p>
-                <p class="text-muted" style="font-size: 0.85rem;">Las aplicaciones móviles requieren al menos una imagen para mostrar el comunicado.</p>
+                <p class="text-muted" style="font-size: 0.85rem;">Presiona "+ Añadir Diapositiva" para agregar imágenes al boletín móvil.</p>
               </div>
             }
           </div>
@@ -238,12 +844,12 @@
       </div>
     </div>
 
-    <div class="modal-footer" style="padding: 1.25rem 1.5rem; background-color: var(--bg-secondary); border-top: 1px solid var(--border-primary); border-bottom-left-radius: var(--radius-xl); border-bottom-right-radius: var(--radius-xl); margin: 0;">
+    <div class="modal-footer" style="padding: 1.25rem 1.5rem; background-color: var(--bg-secondary); border-top: 1px solid var(--border-primary); border-bottom-left-radius: var(--radius-xl); border-bottom-right-radius: var(--radius-xl); margin: 0; display: flex; justify-content: space-between;">
       <button (click)="cerrarModal()" class="btn btn-outline" style="background-color: white;">Cancelar</button>
       <div style="display: flex; gap: 8px;">
-        <button (click)="guardar(false)" class="btn btn-success shadow-sm">Guardar borrador</button>
-        <button (click)="guardar(true)" class="btn btn-primary shadow-sm" [title]="activeTab === 'MOVIL' ? 'Publicar (Reemplazará el actual en la app)' : 'Publicar Comunicado'">
-          {{ activeTab === 'MOVIL' && selectedComunicado.id ? 'Publicar/Reemplazar' : 'Publicar' }}
+        <button (click)="guardar(false)" class="btn btn-secondary shadow-sm" style="background: white;">Guardar Borrador</button>
+        <button (click)="guardar(true)" class="btn btn-primary shadow-sm">
+          {{ selectedComunicado.tipoPlataforma === 'MOVIL' && selectedComunicado.id ? 'Publicar / Reemplazar' : 'Publicar Circular' }}
         </button>
       </div>
     </div>
@@ -251,26 +857,388 @@
 </div>
 }
 
-<!-- Modal de Confirmación Genérico -->
+<!-- ========================================================= -->
+<!-- MODAL 2: LECTOR OFICIAL DE CIRCULAR (READER VIEW)         -->
+<!-- ========================================================= -->
+@if (showReaderModal && readingComunicado) {
+<div class="modal-backdrop">
+  <div class="modal-card modal-lg" style="max-width: 800px;">
+    <div class="modal-header" style="background: white; border-bottom: 1px solid var(--border-primary); padding: 1.25rem 1.5rem;">
+      <div class="d-flex align-center" style="gap: 10px;">
+        <span class="badge badge-primary" style="font-size: 0.75rem;">LECTOR OFICIAL</span>
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">Circular Institucional</h3>
+      </div>
+      <div class="d-flex align-center" style="gap: 8px;">
+        <button (click)="imprimirCircular()" class="btn btn-sm btn-outline" style="background: white;" title="Imprimir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>Imprimir</span>
+        </button>
+        <button (click)="cerrarLector()" class="btn btn-icon btn-ghost" title="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Documento con Membrete Institucional -->
+    <div class="modal-body" style="padding: 2.5rem 2rem; background: #fafafa; max-height: 75vh; overflow-y: auto;">
+      <div style="background: white; padding: 2.5rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        
+        <!-- Membrete -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+              {{ currentColegio()?.nombre || 'Colegio Mayor de San Bartolomé' }}
+            </h2>
+            <p style="margin: 0; font-size: 0.8rem; color: #64748b; margin-top: 2px;">
+              NIT: {{ currentColegio()?.nit || '890.102.345-1' }} • Código DANE: {{ currentColegio()?.codigoDane || '111001002003' }}
+            </p>
+            <p style="margin: 0; font-size: 0.75rem; color: #94a3b8;">
+              {{ currentColegio()?.ciudad || 'Bogotá D.C.' }}, Colombia
+            </p>
+          </div>
+          <div style="text-align: right;">
+            <span class="badge"
+                  [style.backgroundColor]="readingComunicado.prioridad === 'URGENTE' ? '#fee2e2' : '#f1f5f9'"
+                  [style.color]="readingComunicado.prioridad === 'URGENTE' ? '#b91c1c' : '#334155'"
+                  style="font-size: 0.75rem; font-weight: 700; padding: 4px 8px;">
+              CIRCULAR: {{ readingComunicado.prioridad || 'NORMAL' }}
+            </span>
+            <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">
+              {{ readingComunicado.fechaPublicacion || readingComunicado.createdAt | date:'longDate' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Título y Metadatos -->
+        <div style="margin-bottom: 1.5rem;">
+          <h1 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; line-height: 1.3;">
+            {{ readingComunicado.titulo }}
+          </h1>
+          <div style="display: flex; gap: 12px; font-size: 0.8rem; color: #64748b; flex-wrap: wrap;">
+            <span><strong>Dirigido a:</strong> {{ readingComunicado.alcance === 'TODOS' ? 'Comunidad Educativa General' : readingComunicado.alcance }}</span>
+            <span>•</span>
+            <span><strong>Emitido por:</strong> {{ readingComunicado.emisor ? (readingComunicado.emisor.nombres + ' ' + readingComunicado.emisor.apellidos) : 'Rectoría Institucional' }}</span>
+            @if (readingComunicado.requiereFirma) {
+              <span>•</span>
+              <span class="badge badge-warning" style="font-size: 0.7rem;">⚠️ Exige Acuse Legal</span>
+            }
+          </div>
+        </div>
+
+        <!-- Contenido HTML -->
+        <div style="font-size: 0.95rem; line-height: 1.7; color: #334155; margin-bottom: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.25rem;"
+             [innerHTML]="readingComunicado.contenidoHtml || readingComunicado.contenido">
+        </div>
+
+        <!-- Diapositivas / Imágenes si es móvil -->
+        @if (readingComunicado.imagenes && readingComunicado.imagenes.length > 0) {
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9;">
+            <h4 style="font-size: 0.85rem; text-transform: uppercase; color: #64748b; margin-bottom: 1rem;">Diapositivas Adjuntas:</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+              @for (img of readingComunicado.imagenes; track img.id) {
+                <div style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #f8fafc;">
+                  <img [src]="getStaticUrl(img.urlAdjunto)" (click)="previewImageUrl = img.urlAdjunto" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" />
+                  @if (img.texto) {
+                    <div style="padding: 6px 8px; font-size: 0.75rem; color: #475569;">{{ img.texto }}</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Adjunto PDF si existe -->
+        @if (readingComunicado.urlAdjunto) {
+          <div style="margin-top: 1.5rem; padding: 1rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <div class="d-flex align-center" style="gap: 10px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px; color: #16a34a;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <div>
+                <div style="font-weight: 700; font-size: 0.85rem; color: #166534;">Documento Oficial Adjunto</div>
+                <div style="font-size: 0.75rem; color: #15803d;">{{ getFilename(readingComunicado.urlAdjunto) }}</div>
+              </div>
+            </div>
+            <a [href]="readingComunicado.urlAdjunto" target="_blank" class="btn btn-sm btn-success">
+              Descargar PDF
+            </a>
+          </div>
+        }
+
+        <!-- Firma Institucional -->
+        <div style="margin-top: 3rem; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <div style="width: 180px; border-bottom: 1px solid #0f172a; margin-bottom: 6px;"></div>
+            <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">Rectoría & Coordinación</div>
+            <div style="font-size: 0.75rem; color: #64748b;">EduCoreOS — Comunicaciones Oficiales</div>
+          </div>
+          <div style="text-align: right; font-size: 0.75rem; color: #94a3b8;">
+            Documento emitido con validez probatoria digital
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="modal-footer" style="background: white; border-top: 1px solid var(--border-primary); padding: 1rem 1.5rem; display: flex; justify-content: space-between;">
+      <button (click)="cerrarLector()" class="btn btn-outline">Cerrar</button>
+      <div class="d-flex align-center" style="gap: 8px;">
+        @if (readingComunicado.requiereFirma) {
+          <button (click)="confirmarLecturaPrueba(readingComunicado.id!)" class="btn btn-success shadow-sm" [disabled]="isSubmittingReading">
+            ✍️ Confirmar Lectura & Firmar Digitalmente
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ========================================================= -->
+<!-- MODAL 3: ESTADÍSTICAS & TRAZABILIDAD LEGAL DE LECTURA     -->
+<!-- ========================================================= -->
+@if (showStatsModal) {
+<div class="modal-backdrop">
+  <div class="modal-card modal-lg">
+    <div class="modal-header" style="background: var(--bg-tertiary); padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-primary); border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);">
+      <div class="d-flex align-center" style="gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: white; color: #4f46e5; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800;">Trazabilidad Legal & Métricas de Lectura</h3>
+          <p class="text-muted" style="margin: 0; font-size: 0.8rem;">Acuses de recibo y marcas de tiempo verificables</p>
+        </div>
+      </div>
+      <button (click)="cerrarEstadisticas()" class="btn btn-icon btn-ghost" title="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding: 1.5rem; max-height: 70vh; overflow-y: auto;">
+      @if (cargandoStats) {
+        <div style="text-align: center; padding: 3rem 0;">
+          <p class="text-muted">Cargando métricas de trazabilidad...</p>
+        </div>
+      } @else if (statsData) {
+        <!-- Título del Comunicado -->
+        <div style="margin-bottom: 1.25rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-primary);">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-tertiary); font-weight: 700;">Comunicado Evaluado:</div>
+          <h4 style="margin: 0; margin-top: 4px; font-size: 1.1rem; color: var(--text-primary); font-weight: 800;">
+            {{ statsData.titulo }}
+          </h4>
+        </div>
+
+        <!-- Tarjetas de Métricas -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="padding: 1rem; text-align: center; background: #eff6ff; border: 1px solid #bfdbfe;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8;">TOTAL LECTURAS</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #1e40af; margin-top: 4px;">{{ statsData.totalLecturas }}</div>
+            <div style="font-size: 0.7rem; color: #3b82f6;">Aperturas registradas</div>
+          </div>
+
+          <div class="card" style="padding: 1rem; text-align: center; background: #ecfdf5; border: 1px solid #a7f3d0;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #047857;">FIRMAS DIGITALES</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #065f46; margin-top: 4px;">{{ statsData.totalFirmas }}</div>
+            <div style="font-size: 0.7rem; color: #10b981;">Acuses de recibo firmados</div>
+          </div>
+
+          <div class="card" style="padding: 1rem; text-align: center; background: #faf5ff; border: 1px solid #e9d5ff;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #7e22ce;">REQUISITO LEGAL</div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: #6b21a8; margin-top: 10px;">
+              {{ statsData.requiereFirma ? 'OBLIGATORIO' : 'OPCIONAL' }}
+            </div>
+            <div style="font-size: 0.7rem; color: #a855f7;">Exigencia de acuse</div>
+          </div>
+        </div>
+
+        <!-- Tabla de Auditoría de Lecturas -->
+        <div>
+          <div class="d-flex flex-between align-center" style="margin-bottom: 0.75rem;">
+            <h4 style="margin: 0; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary);">
+              Registro de Auditoría en Tiempo Real
+            </h4>
+            <button (click)="confirmarLecturaPrueba(statsData.comunicadoId)" class="btn btn-sm btn-outline" style="background: white;" [disabled]="isSubmittingReading">
+              + Registrar Acuse de Prueba
+            </button>
+          </div>
+
+          <div class="table-container" style="border: 1px solid var(--border-primary);">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Usuario / Acudiente</th>
+                  <th>Fecha de Lectura</th>
+                  <th>IP de Origen</th>
+                  <th>Firma Digital</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (lec of statsData.ultimasLecturas; track lec.id) {
+                  <tr>
+                    <td>
+                      <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">
+                        {{ lec.user ? (lec.user.nombres + ' ' + lec.user.apellidos) : ('Usuario ' + (lec.userId | slice:0:8)) }}
+                      </div>
+                      <div class="text-muted" style="font-size: 0.75rem;">
+                        {{ lec.user?.email || 'ID: ' + lec.userId }}
+                      </div>
+                    </td>
+                    <td>
+                      <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        {{ lec.leidoEn | date:'medium' }}
+                      </div>
+                    </td>
+                    <td>
+                      <code style="font-size: 0.75rem; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">
+                        {{ lec.ipLectura || '127.0.0.1' }}
+                      </code>
+                    </td>
+                    <td>
+                      @if (lec.firmadoDigitalmente) {
+                        <span class="badge badge-success" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">
+                          ✓ Firmado {{ lec.fechaFirma ? (lec.fechaFirma | date:'shortTime') : '' }}
+                        </span>
+                      } @else {
+                        <span class="badge badge-secondary" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">
+                          Sin firma
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+
+                @if (!statsData.ultimasLecturas || statsData.ultimasLecturas.length === 0) {
+                  <tr>
+                    <td colspan="4">
+                      <div style="text-align: center; padding: 2rem 0; color: var(--text-secondary); font-size: 0.85rem;">
+                        Aún no se registran lecturas para este comunicado.
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer" style="padding: 1rem 1.5rem; background: var(--bg-secondary); border-top: 1px solid var(--border-primary); display: flex; justify-content: flex-end;">
+      <button (click)="cerrarEstadisticas()" class="btn btn-outline" style="background: white;">Cerrar</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ========================================================= -->
+<!-- MODAL 4: REDACTAR MENSAJE DIRECTO                         -->
+<!-- ========================================================= -->
+@if (showNewMessageModal) {
+<div class="modal-backdrop">
+  <div class="modal-card" style="max-width: 550px;">
+    <div class="modal-header" style="background: var(--bg-tertiary); padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-primary);">
+      <div class="d-flex align-center" style="gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: white; color: #ec4899; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800;">Redactar Mensaje Directo</h3>
+      </div>
+      <button (click)="cerrarNuevoMensajeModal()" class="btn btn-icon btn-ghost" title="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding: 1.5rem;">
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label class="form-label" style="font-weight: 600;">Asunto *</label>
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="nuevoMensaje.asunto"
+          placeholder="Ej: Citación a reunión de seguimiento académico"
+        />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label class="form-label" style="font-weight: 600;">Mensaje *</label>
+        <textarea
+          class="form-control"
+          rows="4"
+          [(ngModel)]="nuevoMensaje.mensaje"
+          placeholder="Escribe el cuerpo del mensaje aquí..."
+        ></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label text-xs">URL Adjunto Opcional</label>
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          [(ngModel)]="nuevoMensaje.urlAdjunto"
+          placeholder="https://storage.educoreos.com/adjuntos/evidencia.pdf"
+        />
+      </div>
+    </div>
+
+    <div class="modal-footer" style="padding: 1rem 1.5rem; background: var(--bg-secondary); border-top: 1px solid var(--border-primary); display: flex; justify-content: space-between;">
+      <button (click)="cerrarNuevoMensajeModal()" class="btn btn-outline" style="background: white;">Cancelar</button>
+      <button (click)="enviarMensajeDirecto()" class="btn btn-primary shadow-sm">
+        Enviar Mensaje
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ========================================================= -->
+<!-- MODAL 5: CONFIRMACIÓN DE ELIMINACIÓN GENÉRICO             -->
+<!-- ========================================================= -->
 @if (showConfirmModal) {
 <div class="modal-backdrop" style="z-index: 10500;">
   <div class="modal-card" style="max-width: 450px;">
     <div class="modal-header" style="border: none; padding-bottom: 0;">
       <div class="d-flex align-center" style="gap: 16px;">
         <div class="d-flex align-center justify-center" style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #ef4444; flex-shrink: 0;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
         </div>
-        <h3 style="margin: 0; font-size: 1.25rem;">{{ confirmModalConfig.title }}</h3>
+        <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800;">{{ confirmModalConfig.title }}</h3>
       </div>
     </div>
     
     <div class="modal-body" style="padding-top: 1rem; padding-bottom: 0;">
-      <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem; line-height: 1.5; padding-left: 64px;">{{ confirmModalConfig.message }}</p>
+      <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem; line-height: 1.5; padding-left: 64px;">
+        {{ confirmModalConfig.message }}
+      </p>
     </div>
 
     <div class="modal-footer" style="border: none; padding-top: 1.5rem; justify-content: flex-end; gap: 0.75rem;">
       <button (click)="showConfirmModal = false" class="btn btn-outline" style="background-color: white;">Cancelar</button>
-      <button (click)="confirmModalConfig.onConfirm()" class="btn" [ngClass]="confirmModalConfig.actionClass || 'btn-primary'">
+      <button (click)="confirmModalConfig.onConfirm()" class="btn" [ngClass]="confirmModalConfig.actionClass || 'btn-danger'">
         {{ confirmModalConfig.confirmText }}
       </button>
     </div>
@@ -278,14 +1246,19 @@
 </div>
 }
 
-<!-- Lightbox / Visor de Imagen a Tamaño Completo -->
+<!-- ========================================================= -->
+<!-- MODAL 6: LIGHTBOX / VISOR DE IMAGEN                       -->
+<!-- ========================================================= -->
 @if (previewImageUrl) {
 <div class="modal-backdrop" style="z-index: 10600; display: flex; justify-content: center; align-items: center; background-color: rgba(0,0,0,0.85);" (click)="previewImageUrl = null">
   <div style="position: relative; max-width: 90vw; max-height: 90vh;" (click)="$event.stopPropagation()">
     <button (click)="previewImageUrl = null" class="btn btn-icon btn-ghost" style="position: absolute; top: -40px; right: -40px; color: white;" title="Cerrar visor">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
     </button>
-    <img [src]="getStaticUrl(previewImageUrl)" style="max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,0.5);">
+    <img [src]="getStaticUrl(previewImageUrl)" style="max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,0.5);" />
   </div>
 </div>
 }

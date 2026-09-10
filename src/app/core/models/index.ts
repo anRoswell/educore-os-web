@@ -1,3 +1,7 @@
+export * from './permisos.models';
+export * from './comunicaciones.models';
+export * from './asistencia.models';
+
 export interface User {
   id: string;
   email: string;
@@ -5,6 +9,8 @@ export interface User {
   primerApellido: string;
   role: string;
   avatarUrl?: string;
+  colegioId?: string;
+  colegiosIds?: string[];
 }
 
 export interface Colegio {

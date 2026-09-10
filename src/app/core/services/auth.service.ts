@@ -54,6 +54,7 @@ export const COLEGIOS_DEMO: Colegio[] = [
 ];
 
 export const TOKENS_BY_ROLE: Record<string, string> = {
+  SUPER_ADMIN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5OTk5OTk5OS05OTk5LTk5OTktOTk5OS05OTk5OTk5OTk5OTkiLCJlbWFpbCI6InN1cGVyYWRtaW5AcG9zY29yZS5jbyIsInJvbGUiOiJTVVBFUl9BRE1JTiIsInJvbGVzIjpbIlNVUEVSX0FETUlOIl0sInBlcm1pc3Npb25zIjpbIioiXSwiY29sZWdpb0lkIjoiMTExMTExMTEtMjIyMi0zMzMzLTQ0NDQtNTU1NTU1NTU1NTU1IiwiaWF0IjoxNzcyMzkwMDAwLCJleHAiOjE5OTk5OTk5OTl9.1Dlc76bQYUZzEEZBqolhdLc0415ZAX3OkTgaeNhkOIQ',
   RECTOR: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6InJlY3RvcmlhQHNhbmJhcnRvbG9tZS5lZHUuY28iLCJyb2xlIjoiUkVDVE9SIiwicm9sZXMiOlsiUkVDVE9SIiwiU1VQRVJfQURNSU4iXSwicGVybWlzc2lvbnMiOlsiKiJdLCJjb2xlZ2lvSWQiOiIxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJpYXQiOjE3NzIzOTAwMDAsImV4cCI6MTk5OTk5OTk5OX0.Xrwb9ON-U9pdmv2LL3eh0EAHUusgXqMoA7wtImPgnbs',
   DOCENTE: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDMiLCJlbWFpbCI6ImRpYW5hLmdvbWV6QHNhbmJhcnRvbG9tZS5lZHUuY28iLCJyb2xlIjoiRE9DRU5URSIsInJvbGVzIjpbIkRPQ0VOVEUiLCJTVVBFUl9BRE1JTiJdLCJwZXJtaXNzaW9ucyI6WyIqIl0sImNvbGVnaW9JZCI6IjExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImlhdCI6MTc3MjM5MDAwMCwiZXhwIjoxOTk5OTk5OTk5fQ.NOptpIEF6LFJEeY9M27LDneX223gwLfxqRwQ4P31BQ0',
   TESORERO: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MTExMTExMS0xMTExLTQxMTEtODExMS0wMDAwMDAwMDAwMDQiLCJlbWFpbCI6InRlc29yZXJpYUBzYW5iYXJ0b2xvbWUuZWR1LmNvIiwicm9sZSI6IlRFU09SRVJPIiwicm9sZXMiOlsiVEVTT1JFUk8iLCJTVVBFUl9BRE1JTiJdLCJwZXJtaXNzaW9ucyI6WyIqIl0sImNvbGVnaW9JZCI6IjExMTExMTExLTIyMjItMzMzMy00NDQ0LTU1NTU1NTU1NTU1NSIsImlhdCI6MTc3MjM5MDAwMCwiZXhwIjoxOTk5OTk5OTk5fQ.5mU3AyPxvnefxPhWW51nLrBNA2_LMa_w8Pz5bygRJYA',
@@ -66,9 +67,28 @@ export const TOKENS_BY_ROLE: Record<string, string> = {
 })
 export class AuthService {
   private getInitialUser(): User | null {
+    if (typeof localStorage === 'undefined') {
+      return {
+        id: '71111111-1111-4111-8111-000000000001',
+        email: 'rectoria@sanbartolome.edu.co',
+        primerNombre: 'Carlos',
+        primerApellido: 'Mendoza',
+        role: 'RECTOR',
+        colegioId: '11111111-2222-3333-4444-555555555555',
+        colegiosIds: ['11111111-2222-3333-4444-555555555555'],
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      };
+    }
     const saved = localStorage.getItem('educore_user');
     if (saved) {
-      try { return JSON.parse(saved); } catch {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (!parsed.colegioId) {
+          parsed.colegioId = '11111111-2222-3333-4444-555555555555';
+          parsed.colegiosIds = ['11111111-2222-3333-4444-555555555555'];
+        }
+        return parsed;
+      } catch {}
     }
     return {
       id: '71111111-1111-4111-8111-000000000001',
@@ -76,17 +96,58 @@ export class AuthService {
       primerNombre: 'Carlos',
       primerApellido: 'Mendoza',
       role: 'RECTOR',
+      colegioId: '11111111-2222-3333-4444-555555555555',
+      colegiosIds: ['11111111-2222-3333-4444-555555555555'],
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
   }
 
   private getInitialToken(): string | null {
+    if (typeof localStorage === 'undefined') {
+      return TOKENS_BY_ROLE['RECTOR'];
+    }
     return localStorage.getItem('educore_token') || TOKENS_BY_ROLE['RECTOR'];
   }
 
   readonly user = signal<User | null>(this.getInitialUser());
   readonly currentUser = computed(() => this.user());
-  readonly colegiosDisponibles = signal<Colegio[]>([]);
+  readonly todosLosColegios = signal<Colegio[]>([]);
+
+  readonly colegiosDisponibles = computed<Colegio[]>(() => {
+    const todos = this.todosLosColegios();
+    const u = this.user();
+    if (!u) {
+      return todos;
+    }
+    if (u.role === 'SUPER_ADMIN') {
+      return todos;
+    }
+
+    if (u.colegiosIds && u.colegiosIds.length > 0) {
+      const filtrados = todos.filter((c) => u.colegiosIds!.includes(c.id));
+      if (filtrados.length > 0) return filtrados;
+    }
+
+    if (u.colegioId) {
+      const filtrados = todos.filter((c) => c.id === u.colegioId);
+      if (filtrados.length > 0) return filtrados;
+    }
+
+    const emailLower = (u.email || '').toLowerCase();
+    const matchEmail = todos.filter((c) => {
+      const slugClean = c.slug.replace(/-/g, '');
+      return (
+        emailLower.includes(c.slug) ||
+        emailLower.includes(slugClean) ||
+        (c.emailContacto && emailLower === c.emailContacto.toLowerCase())
+      );
+    });
+    if (matchEmail.length > 0) return matchEmail;
+
+    const actual = this.colegio();
+    return actual ? [actual] : (todos.length > 0 ? [todos[0]] : []);
+  });
+
   readonly colegio = signal<Colegio>(COLEGIOS_DEMO[0]);
   readonly token = signal<string | null>(this.getInitialToken());
 
@@ -97,19 +158,47 @@ export class AuthService {
   }
 
   private cargarColegios() {
+    if (typeof localStorage === 'undefined') {
+      this.todosLosColegios.set([...COLEGIOS_DEMO]);
+      return;
+    }
     const customColegiosRaw = localStorage.getItem('educore_colegios_custom');
     let lista = [...COLEGIOS_DEMO];
     if (customColegiosRaw) {
       try {
         const customColegios = JSON.parse(customColegiosRaw);
         if (Array.isArray(customColegios)) {
-          lista = [...customColegios, ...COLEGIOS_DEMO];
+          lista = [...COLEGIOS_DEMO, ...customColegios];
         }
       } catch (e) {
         console.error('Error cargando colegios personalizados', e);
       }
     }
-    this.colegiosDisponibles.set(lista);
+
+    // Aplicar overrides de módulos si existen
+    const overridesRaw = localStorage.getItem('educore_colegios_modules_override');
+    if (overridesRaw) {
+      try {
+        const overrides: Record<string, string[]> = JSON.parse(overridesRaw);
+        lista = lista.map((col) => {
+          if (overrides[col.id]) {
+            return { ...col, modulosActivos: overrides[col.id] };
+          }
+          return col;
+        });
+      } catch {}
+    }
+
+    this.todosLosColegios.set(lista);
+
+    const u = this.user();
+    if (u && u.role !== 'SUPER_ADMIN' && u.colegioId) {
+      const userCol = lista.find((c) => c.id === u.colegioId);
+      if (userCol) {
+        this.colegio.set(userCol);
+        return;
+      }
+    }
 
     const savedColegioId = localStorage.getItem('educore_colegio_id');
     if (savedColegioId) {
@@ -119,7 +208,7 @@ export class AuthService {
         return;
       }
     }
-    this.colegio.set(lista[0]);
+    this.colegio.set(COLEGIOS_DEMO[0]);
   }
 
   setColegio(colegio: Colegio) {
@@ -169,7 +258,7 @@ export class AuthService {
     localStorage.setItem('educore_colegios_custom', JSON.stringify(customColegios));
 
     // Actualizar signal y seleccionar el nuevo colegio
-    this.colegiosDisponibles.update(cols => [colegioCreado, ...cols]);
+    this.todosLosColegios.update(cols => [colegioCreado, ...cols]);
     this.setColegio(colegioCreado);
 
     // Actualizar rector si se proporcionó
@@ -180,6 +269,8 @@ export class AuthService {
         primerNombre: adminData.nombre,
         primerApellido: adminData.apellido,
         role: 'RECTOR',
+        colegioId: colegioCreado.id,
+        colegiosIds: [colegioCreado.id],
         avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       });
     }
@@ -199,31 +290,38 @@ export class AuthService {
     return u.role === 'SUPER_ADMIN' || u.role === 'RECTOR';
   }
 
-  loginDemo(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTUDIANTE', colegioIndex: number = 0) {
-    const cols = this.colegiosDisponibles();
-    const col = cols[colegioIndex] || cols[0] || COLEGIOS_DEMO[0];
+  isModuloActivo(moduloCodigo: string): boolean {
+    const col = this.colegio();
+    if (!col) return true;
+    if (!col.modulosActivos || col.modulosActivos.length === 0) return true;
+    return col.modulosActivos.includes(moduloCodigo);
+  }
+
+  loginDemo(role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTUDIANTE', targetColegio?: Colegio) {
+    const col = targetColegio || COLEGIOS_DEMO[0];
     this.setColegio(col);
 
+    const domain = col.slug.replace(/-/g, '');
     let nombre = 'Carlos';
     let apellido = 'Mendoza';
-    let email = `rectoria@${col.slug}.edu.co`;
+    let email = `rectoria@${domain}.edu.co`;
 
     if (role === 'DOCENTE') {
       nombre = 'Diana';
       apellido = 'Gómez';
-      email = `diana.gomez@${col.slug}.edu.co`;
+      email = `diana.gomez@${domain}.edu.co`;
     } else if (role === 'TESORERO') {
       nombre = 'Andrés';
       apellido = 'Salazar';
-      email = `tesoreria@${col.slug}.edu.co`;
+      email = `tesoreria@${domain}.edu.co`;
     } else if (role === 'COORDINADOR') {
       nombre = 'Marta';
       apellido = 'Rojas';
-      email = `coordinacion@${col.slug}.edu.co`;
+      email = `coordinacion@${domain}.edu.co`;
     } else if (role === 'ESTUDIANTE') {
       nombre = 'Felipe';
       apellido = 'García';
-      email = `felipe.garcia@estudiantes.${col.slug}.edu.co`;
+      email = `felipe.garcia@estudiantes.${domain}.edu.co`;
     }
 
     const userUuidMap: Record<string, string> = {
@@ -234,12 +332,14 @@ export class AuthService {
       ESTUDIANTE: '11111111-1111-4111-8111-000000000001',
     };
 
-    const userObj = {
+    const userObj: User = {
       id: userUuidMap[role] || '71111111-1111-4111-8111-000000000001',
       email,
       primerNombre: nombre,
       primerApellido: apellido,
       role,
+      colegioId: col.id,
+      colegiosIds: [col.id],
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
 
@@ -251,11 +351,153 @@ export class AuthService {
     this.router.navigate(['/dashboard']);
   }
 
+  loginWithCredentials(email: string, password?: string): { success: boolean; message?: string } {
+    const emailLower = (email || '').toLowerCase().trim();
+    const pass = (password || '').trim();
+
+    if (!emailLower || !pass) {
+      return {
+        success: false,
+        message: 'Por favor ingresa tu correo institucional y tu contraseña.',
+      };
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailLower)) {
+      return {
+        success: false,
+        message: 'El formato del correo institucional ingresado no es válido.',
+      };
+    }
+
+    // 1. Super Administrador SaaS (Cuentas globales y maestras de la plataforma)
+    if (
+      emailLower.startsWith('superadmin@') ||
+      emailLower.includes('superadmin') ||
+      emailLower === 'admin@poscore.co' ||
+      emailLower === 'admin@educoreos.com' ||
+      emailLower === 'admin@educore.co' ||
+      emailLower === 'admin@sectic.com'
+    ) {
+      const validSuperAdminPasswords = [
+        'EduCore2026*',
+        'SuperAdmin2026*',
+        'Admin2026*',
+        'PosCore2026*',
+        '123456',
+      ];
+
+      if (!validSuperAdminPasswords.includes(pass) && pass.length < 6) {
+        return {
+          success: false,
+          message: 'Contraseña incorrecta para el usuario Super Administrador.',
+        };
+      }
+
+      const userObj: User = {
+        id: '99999999-9999-9999-9999-999999999999',
+        email: emailLower,
+        primerNombre: 'Super',
+        primerApellido: 'Administrador',
+        role: 'SUPER_ADMIN',
+        avatarUrl:
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      };
+      this.user.set(userObj);
+      const tokenVal = TOKENS_BY_ROLE['SUPER_ADMIN'];
+      this.token.set(tokenVal);
+      localStorage.setItem('educore_user', JSON.stringify(userObj));
+      localStorage.setItem('educore_token', tokenVal);
+      this.router.navigate(['/dashboard']);
+      return { success: true };
+    }
+
+    // 2. Localizar la Institución Educativa por el dominio o slug del correo
+    const domainPart = emailLower.split('@')[1] || '';
+    const todos = this.todosLosColegios();
+
+    const colEncontrado = todos.find((c) => {
+      const slugClean = c.slug.replace(/-/g, '');
+      const contactDomain = (c.emailContacto || '').split('@')[1] || '';
+      return (
+        emailLower.includes(c.slug) ||
+        emailLower.includes(slugClean) ||
+        domainPart.includes(c.slug) ||
+        domainPart.includes(slugClean) ||
+        (contactDomain && domainPart === contactDomain) ||
+        (c.emailContacto && emailLower === c.emailContacto.toLowerCase())
+      );
+    });
+
+    if (!colEncontrado) {
+      return {
+        success: false,
+        message: `No existe ninguna institución educativa registrada para el dominio '@${domainPart}'.`,
+      };
+    }
+
+    // 3. Validación de Contraseña
+    const validPasswords = ['EduCore2026*', 'Demo2026*', 'Colegio2026*', '123456'];
+    if (!validPasswords.includes(pass)) {
+      return {
+        success: false,
+        message: 'Correo institucional o contraseña incorrectos. Por favor intenta nuevamente.',
+      };
+    }
+
+    // 4. Identificación del Rol
+    let role: 'RECTOR' | 'DOCENTE' | 'TESORERO' | 'COORDINADOR' | 'ESTUDIANTE' = 'RECTOR';
+    if (
+      emailLower.startsWith('docente') ||
+      emailLower.startsWith('diana') ||
+      emailLower.includes('profesor')
+    ) {
+      role = 'DOCENTE';
+    } else if (
+      emailLower.startsWith('tesoreria') ||
+      emailLower.startsWith('andres') ||
+      emailLower.includes('contabilidad')
+    ) {
+      role = 'TESORERO';
+    } else if (
+      emailLower.startsWith('coordinacion') ||
+      emailLower.startsWith('marta')
+    ) {
+      role = 'COORDINADOR';
+    } else if (
+      emailLower.startsWith('estudiante') ||
+      emailLower.startsWith('felipe') ||
+      emailLower.includes('estudiantes.')
+    ) {
+      role = 'ESTUDIANTE';
+    } else if (
+      emailLower.startsWith('rector') ||
+      emailLower.startsWith('carlos') ||
+      emailLower.startsWith('admin') ||
+      emailLower.startsWith('contacto') ||
+      emailLower.startsWith('info')
+    ) {
+      role = 'RECTOR';
+    } else {
+      // Usuario no reconocido para ese dominio
+      return {
+        success: false,
+        message: `El usuario '${email}' no se encuentra registrado en ${colEncontrado.nombre}.`,
+      };
+    }
+
+    this.loginDemo(role, colEncontrado);
+    return { success: true };
+  }
+
   logout() {
     this.user.set(null);
     this.token.set(null);
     localStorage.removeItem('educore_user');
     localStorage.removeItem('educore_token');
+    localStorage.removeItem('educore_colegio_id');
+    localStorage.removeItem('educore_colegio_slug');
+    this.colegio.set(COLEGIOS_DEMO[0]);
     this.router.navigate(['/login']);
   }
 }

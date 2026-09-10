@@ -1,4 +1,4 @@
-# EduCoreOSWeb
+# EduCoreOS Web
 
 > 📘 **Documentación General del Proyecto:** Consulte la arquitectura global, guía de SSOT y parámetros en el [README General de EduCoreOS](../README.md).
 >
@@ -6,56 +6,72 @@
 
 ## Development server
 
-To start a local development server, run:
+Para iniciar el servidor de desarrollo local:
 
 ```bash
-ng serve
+npm start
+# O alternativamente:
+ng serve --port 4201
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Abre `http://localhost:4201/` en tu navegador.
 
-## Code scaffolding
+## Compilación (Build)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Para compilar el proyecto Angular en modo producción:
 
 ```bash
-ng generate component component-name
+npm run build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Esto compilará la aplicación con optimización completa en `dist/EduCoreOS-web/browser/`.
+
+## Pruebas Unitarias y E2E
 
 ```bash
-ng generate --help
+# Pruebas unitarias con Vitest
+npm test
+
+# Pruebas End-to-End exhaustivas con Playwright
+npm run test:e2e
 ```
 
-## Building
+---
 
-To build the project run:
+## Despliegue Automático (CI/CD en VPS)
 
-```bash
-ng build
+El frontend web se empaqueta en una imagen Docker optimizada con Nginx Alpine y se publica automáticamente en GitHub Container Registry (GHCR) y en la VPS mediante GitHub Actions:
+
+- **QA:** Todo `push` a las ramas `dev`, `develop` o `qa` compila la imagen `ghcr.io/anroswell/educoreos-web:qa-latest` y despliega en `~/educoreos-qa`.
+- **Producción:** Todo `push` a las ramas `main` o `master` compila la imagen `ghcr.io/anroswell/educoreos-web:latest` y despliega en `~/educoreos-prod`.
+
+### Configuración de Secretos en GitHub
+
+En el repositorio `anRoswell/educore-os-web`, configure estos **Actions Secrets** (`Settings` -> `Secrets and variables` -> `Actions`):
+
+| Secret           | Descripción                     | Valor Ejemplo                   |
+| ---------------- | ------------------------------- | ------------------------------- |
+| `VPS_HOST`       | IP o dominio de la VPS          | `123.45.67.89`                  |
+| `VPS_USER`       | Usuario SSH con acceso a Docker | `ubuntu`                        |
+| `VPS_SSH_KEY`    | Clave privada SSH completa      | `-----BEGIN OPENSSH PRIVATE KEY...` |
+| `VPS_PASSPHRASE` | Frase de la clave (si aplica)   | `tu-passphrase-opcional`        |
+| `VPS_PORT`       | Puerto SSH (opcional, usa `22`) | `22`                            |
+
+### Configuración en la VPS
+
+En la VPS, los directorios `~/educoreos-qa` y `~/educoreos-prod` contienen el archivo `docker-compose.yml` con el servicio `frontend`:
+
+```yaml
+frontend:
+  image: ghcr.io/anroswell/educoreos-web:qa-latest # (o :latest en prod)
+  container_name: educoreos_web_qa
+  restart: always
+  ports:
+    - "4201:80"
+  depends_on:
+    - backend
+  networks:
+    - educoreos_qa_net
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Cada vez que el workflow se ejecuta, se autentica vía SSH, inicia sesión en GHCR con el token del workflow, descarga la última versión del frontend (`docker compose pull frontend`) y actualiza el contenedor sin interrupciones (`docker compose up -d --remove-orphans frontend`).

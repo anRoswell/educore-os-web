@@ -1,0 +1,75 @@
+name: CI/CD EduCoreOS Web - Deploy QA
+
+on:
+  push:
+    branches:
+      - dev
+      - develop
+      - qa
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: anroswell/educoreos-web
+
+jobs:
+  build-and-push:
+    name: Build & Push Web Image (QA)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=qa-latest
+            type=sha,prefix=qa-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: .dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-qa:
+    name: Deploy to VPS (QA)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Executing remote SSH deployment on VPS (QA)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          passphrase: ${{ secrets.VPS_PASSPHRASE }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          timeout: 60s
+          command_timeout: 10m
+          script: |
+            cd ~/educoreos-qa
+
+            # 1. Iniciar sesión en GHCR para descargar la imagen
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 2. Descargar la nueva versión y recrear contenedores del frontend
+            docker compose pull frontend
+            docker compose up -d --remove-orphans frontend

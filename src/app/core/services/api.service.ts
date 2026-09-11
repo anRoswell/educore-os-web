@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { getApiBaseUrl } from '../config/api-url';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
-  private readonly baseUrl = 'http://localhost:3001/api/v1';
+  private readonly baseUrl = getApiBaseUrl();
 
-  constructor(private readonly http: HttpClient) { }
+  constructor(private readonly http: HttpClient) {}
 
   getPdfUrl(path: string): string {
     const clean = path.startsWith('/') ? path.substring(1) : path;
@@ -40,7 +41,6 @@ export class ApiService {
     return this.http.post<T>(this.buildUrl(endpoint), body);
   }
 
-
   patch<T>(endpoint: string, body: any): Observable<T> {
     return this.http.patch<T>(this.buildUrl(endpoint), body);
   }
@@ -70,4 +70,3 @@ export class ApiService {
     return this.http.post<T>(this.buildUrl('storage/upload'), formData);
   }
 }
-

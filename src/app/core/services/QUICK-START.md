@@ -16,7 +16,7 @@ import { SocketService } from '@app/core/services';
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html'
+  templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit {
   private socketService = inject(SocketService);
@@ -27,9 +27,9 @@ export class AppComponent implements OnInit {
 
     // Conectar al backend
     this.socketService.connect({
-      url: 'http://localhost:3000',  // Cambia por tu URL
+      url: '', // Usa el dominio actual mediante el proxy
       path: '/socket.io',
-      auth: { token }
+      auth: { token },
     });
 
     // (Opcional) Monitorear estado de conexión
@@ -52,7 +52,7 @@ import { SocketService, ServerSocketEvents } from '@app/core/services';
     <div *ngFor="let notif of notifications">
       {{ notif.message }}
     </div>
-  `
+  `,
 })
 export class NotificationsComponent implements OnInit {
   private socketService = inject(SocketService);
@@ -60,11 +60,10 @@ export class NotificationsComponent implements OnInit {
 
   ngOnInit() {
     // Escuchar evento del servidor
-    this.socketService.on$<any>(ServerSocketEvents.NEW_NOTIFICATION)
-      .subscribe(notification => {
-        this.notifications.push(notification);
-        console.log('Nueva notificación:', notification);
-      });
+    this.socketService.on$<any>(ServerSocketEvents.NEW_NOTIFICATION).subscribe((notification) => {
+      this.notifications.push(notification);
+      console.log('Nueva notificación:', notification);
+    });
   }
 
   // Emitir evento al servidor
@@ -137,8 +136,8 @@ markAttendance(studentId: string, status: string) {
 
 ```typescript
 this.socketService.connect({
-  url: 'http://localhost:3000',
-  path: '/socket.io'
+  url: '',
+  path: '/socket.io',
 });
 ```
 
@@ -149,7 +148,7 @@ this.socketService.connect({
   url: 'https://api.educoreos.com',
   path: '/socket.io',
   transports: ['websocket'], // Solo websocket en producción
-  auth: { token: this.authService.getToken() }
+  auth: { token: this.authService.getToken() },
 });
 ```
 
@@ -168,7 +167,7 @@ this.socketService.connect({
         <span class="badge badge-danger">🔴 Desconectado</span>
       }
     </div>
-  `
+  `,
 })
 export class ConnectionStatusComponent {
   private socketService = inject(SocketService);
@@ -201,7 +200,7 @@ logout() {
 
 ```typescript
 // Verifica la URL y que el backend esté corriendo
-console.log('Intentando conectar a:', 'http://localhost:3000');
+console.log('Intentando conectar al dominio actual mediante el proxy');
 ```
 
 ### Problema: Token inválido
@@ -212,8 +211,8 @@ console.log('Intentando conectar a:', 'http://localhost:3000');
 const token = localStorage.getItem('token');
 if (token) {
   this.socketService.connect({
-    url: 'http://localhost:3000',
-    auth: { token }
+    url: '',
+    auth: { token },
   });
 }
 ```
@@ -223,8 +222,8 @@ if (token) {
 ```typescript
 // Verifica que el nombre del evento sea correcto (case-sensitive)
 // Verifica en la consola los logs del servicio
-this.socketService.on$('new-message')  // ✅ Correcto
-this.socketService.on$('newMessage')   // ❌ Diferente evento
+this.socketService.on$('new-message'); // ✅ Correcto
+this.socketService.on$('newMessage'); // ❌ Diferente evento
 ```
 
 ---

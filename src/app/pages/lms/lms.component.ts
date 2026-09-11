@@ -4,12 +4,12 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { ApiService } from '../../core/services/api.service';
+import { resolveApiResourceUrl } from '../../core/config/api-url';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { LmsCuestionarioCreadorComponent } from './lms-cuestionario-creador/lms-cuestionario-creador';
 import { LmsCuestionarioTomaComponent } from './lms-cuestionario-toma/lms-cuestionario-toma';
 import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
-
 
 export interface TareaLmsItem {
   id: string;
@@ -57,10 +57,16 @@ export interface EntregaLmsItem {
 @Component({
   selector: 'app-lms',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, LmsCuestionarioCreadorComponent, LmsCuestionarioTomaComponent, FlatpickrDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    QuillModule,
+    LmsCuestionarioCreadorComponent,
+    LmsCuestionarioTomaComponent,
+    FlatpickrDirective,
+  ],
   template: `
     <div class="lms-container">
-
       <!-- HEADER -->
       <div class="page-header mb-3">
         <div>
@@ -71,44 +77,129 @@ export interface EntregaLmsItem {
           <p>Muros interactivos, recepción de evidencias y calificaciones formativas</p>
         </div>
         <div class="header-actions" style="display:flex; gap: 10px; align-items: center;">
-          <button class="btn btn-outline" (click)="isSidebarOpen.set(!isSidebarOpen())" title="Alternar panel lateral de aulas" style="padding: 0.5rem 0.75rem;">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          <button
+            class="btn btn-outline"
+            (click)="isSidebarOpen.set(!isSidebarOpen())"
+            title="Alternar panel lateral de aulas"
+            style="padding: 0.5rem 0.75rem;"
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              ></path>
+            </svg>
           </button>
-          <button class="btn" [ngClass]="currentTab === 'AULAS' ? 'btn-primary' : 'btn-outline'" (click)="setTab('AULAS')">🏫 Aulas y Muro</button>
-          <button class="btn" [ngClass]="currentTab === 'TAREAS' ? 'btn-primary' : 'btn-outline'" (click)="setTab('TAREAS')">📚 Tareas</button>
+          <button
+            class="btn"
+            [ngClass]="currentTab === 'AULAS' ? 'btn-primary' : 'btn-outline'"
+            (click)="setTab('AULAS')"
+          >
+            🏫 Aulas y Muro
+          </button>
+          <button
+            class="btn"
+            [ngClass]="currentTab === 'TAREAS' ? 'btn-primary' : 'btn-outline'"
+            (click)="setTab('TAREAS')"
+          >
+            📚 Tareas
+          </button>
         </div>
       </div>
 
       @if (currentTab === 'AULAS') {
         <div class="aulas-grid">
-          @if(aulas().length === 0) {
+          @if (aulas().length === 0) {
             <div class="p-8 text-center text-slate-500">
               <p>No hay aulas creadas. Cree una nueva aula para empezar a publicar material.</p>
-              <button class="btn btn-primary mt-2" (click)="abrirModalCrearAula()">Crear Aula Virtual</button>
+              <button class="btn btn-primary mt-2" (click)="abrirModalCrearAula()">
+                Crear Aula Virtual
+              </button>
             </div>
           } @else {
-            <div class="main-lms-layout" [style.gridTemplateColumns]="isSidebarOpen() ? '320px minmax(0, 1fr) 300px' : '0px minmax(0, 1fr) 300px'" style="display: grid; gap: 2rem; transition: grid-template-columns 0.3s ease;">
+            <div
+              class="main-lms-layout"
+              [style.gridTemplateColumns]="
+                isSidebarOpen() ? '320px minmax(0, 1fr) 300px' : '0px minmax(0, 1fr) 300px'
+              "
+              style="display: grid; gap: 2rem; transition: grid-template-columns 0.3s ease;"
+            >
               <!-- Sidebar Aulas -->
-              <div class="aulas-sidebar shadow-sm" [style.opacity]="isSidebarOpen() ? 1 : 0" [style.pointerEvents]="isSidebarOpen() ? \'auto\' : \'none\'" style="overflow: hidden; transition: opacity 0.2s ease;">
+              <div
+                class="aulas-sidebar shadow-sm"
+                [style.opacity]="isSidebarOpen() ? 1 : 0"
+                [style.pointerEvents]="isSidebarOpen() ? 'auto' : 'none'"
+                style="overflow: hidden; transition: opacity 0.2s ease;"
+              >
                 <div class="sidebar-header">
                   <h3>Mis Aulas Virtuales</h3>
-                  <button class="btn-icon-primary" (click)="abrirModalCrearAula()" title="Crear Aula">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                  <button
+                    class="btn-icon-primary"
+                    (click)="abrirModalCrearAula()"
+                    title="Crear Aula"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                      ></path>
+                    </svg>
                   </button>
                 </div>
                 <div class="list-group mt-2">
                   @for (aula of aulas(); track aula.id) {
-                    <div class="aula-item" [ngClass]="{'active': aulaSeleccionada()?.id === aula.id}" (click)="seleccionarAula(aula)">
+                    <div
+                      class="aula-item"
+                      [ngClass]="{ active: aulaSeleccionada()?.id === aula.id }"
+                      (click)="seleccionarAula(aula)"
+                    >
                       <div class="aula-icon">🎒</div>
                       <div class="aula-info">
                         <strong>{{ aula.nombre }}</strong>
                         <span>{{ aula.descripcion || 'Sin descripción' }}</span>
                       </div>
                       <div class="aula-arrow">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5l7 7-7 7"
+                          ></path>
+                        </svg>
                       </div>
-                      <button class="btn btn-sm text-primary" (click)="editarAula(aula, $event)" title="Editar Aula" style="background: none; border: none; font-size: 1.2rem; padding: 0 5px;">✏️</button>
-                      <button class="btn btn-sm text-danger" (click)="eliminarAula(aula, $event)" title="Eliminar Aula" style="background: none; border: none; font-size: 1.2rem; padding: 0 5px;">🗑️</button>
+                      <button
+                        class="btn btn-sm text-primary"
+                        (click)="editarAula(aula, $event)"
+                        title="Editar Aula"
+                        style="background: none; border: none; font-size: 1.2rem; padding: 0 5px;"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        class="btn btn-sm text-danger"
+                        (click)="eliminarAula(aula, $event)"
+                        title="Eliminar Aula"
+                        style="background: none; border: none; font-size: 1.2rem; padding: 0 5px;"
+                      >
+                        🗑️
+                      </button>
                     </div>
                   }
                 </div>
@@ -118,56 +209,131 @@ export interface EntregaLmsItem {
               <div class="muro-feed">
                 @if (aulaSeleccionada()) {
                   <div class="flex-between mb-4">
-                    <h2 style="margin: 0; color: #1e293b;">Muro: {{ aulaSeleccionada()?.nombre }}</h2>
+                    <h2 style="margin: 0; color: #1e293b;">
+                      Muro: {{ aulaSeleccionada()?.nombre }}
+                    </h2>
                     <div style="display:flex; gap: 10px;">
-                      <button class="btn btn-primary" (click)="abrirModalPublicacion()">📝 Crear Post / Tarea</button>
-                      <button class="btn btn-success" (click)="abrirCreadorCuestionario()">📝 Crear Cuestionario</button>
+                      <button class="btn btn-primary" (click)="abrirModalPublicacion()">
+                        📝 Crear Post / Tarea
+                      </button>
+                      <button class="btn btn-success" (click)="abrirCreadorCuestionario()">
+                        📝 Crear Cuestionario
+                      </button>
                     </div>
                   </div>
-                  <hr style="border: 0; height: 1px; background: #e2e8f0; margin-bottom: 2rem;">
+                  <hr style="border: 0; height: 1px; background: #e2e8f0; margin-bottom: 2rem;" />
 
                   @for (post of publicaciones(); track post.id) {
-                    <div class="card shadow-sm mb-4 p-4 border" style="border-radius: 12px; background: white;">
+                    <div
+                      class="card shadow-sm mb-4 p-4 border"
+                      style="border-radius: 12px; background: white;"
+                    >
                       <div class="mb-3" style="display: flex; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                          <strong style="font-size: 1.1rem; color: #1e293b;">{{ post.titulo }}</strong>
-                          <span class="badge" [ngClass]="post.tipo === 'MATERIAL' ? 'bg-indigo' : 'bg-success'" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; margin-top: 2px;">{{ post.tipo }}</span>
+                          <strong style="font-size: 1.1rem; color: #1e293b;">{{
+                            post.titulo
+                          }}</strong>
+                          <span
+                            class="badge"
+                            [ngClass]="post.tipo === 'MATERIAL' ? 'bg-indigo' : 'bg-success'"
+                            style="font-size: 0.75rem; padding: 0.25rem 0.6rem; margin-top: 2px;"
+                            >{{ post.tipo }}</span
+                          >
                         </div>
                         <div style="display: inline-flex; gap: 0.5rem; margin-left: auto;">
-                          <button class="btn btn-sm text-primary" (click)="editarPublicacion(post)" title="Editar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">✏️</button>
-                          <button class="btn btn-sm text-danger" (click)="eliminarPublicacion(post)" title="Eliminar Post" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🗑️</button>
+                          <button
+                            class="btn btn-sm text-primary"
+                            (click)="editarPublicacion(post)"
+                            title="Editar Post"
+                            style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            class="btn btn-sm text-danger"
+                            (click)="eliminarPublicacion(post)"
+                            title="Eliminar Post"
+                            style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       </div>
-                      <quill-view [content]="post.contenido" format="html" theme="snow" class="custom-quill-view"></quill-view>
+                      <quill-view
+                        [content]="post.contenido"
+                        format="html"
+                        theme="snow"
+                        class="custom-quill-view"
+                      ></quill-view>
                       @if (post.videoEmbedUrl) {
-                        <div class="mt-3 video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
-                          <iframe [src]="getSafeUrl(post.videoEmbedUrl)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+                        <div
+                          class="mt-3 video-container"
+                          style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;"
+                        >
+                          <iframe
+                            [src]="getSafeUrl(post.videoEmbedUrl)"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                            frameborder="0"
+                            allowfullscreen
+                          ></iframe>
                         </div>
                       }
 
                       @if (post.archivoAdjuntoUrl) {
-                        <div class="mt-3 p-3 border rounded" style="background: #f8fafc; border-color: #e2e8f0; display: flex; align-items: center; justify-content: space-between; border-radius: 8px;">
-                          <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1; padding-right: 1rem;">
-                            <span style="font-size: 1.8rem; flex-shrink: 0;">{{ getFileIcon(post.archivoAdjuntoNombre) }}</span>
+                        <div
+                          class="mt-3 p-3 border rounded"
+                          style="background: #f8fafc; border-color: #e2e8f0; display: flex; align-items: center; justify-content: space-between; border-radius: 8px;"
+                        >
+                          <div
+                            style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1; padding-right: 1rem;"
+                          >
+                            <span style="font-size: 1.8rem; flex-shrink: 0;">{{
+                              getFileIcon(post.archivoAdjuntoNombre)
+                            }}</span>
                             <div style="min-width: 0; overflow: hidden; width: 100%;">
-                              <strong style="color: #334155; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">{{ post.archivoAdjuntoNombre || 'Documento Adjunto' }}</strong>
-                              <span style="font-size: 0.8rem; color: #64748b;">Haga clic para descargar</span>
+                              <strong
+                                style="color: #334155; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;"
+                                >{{ post.archivoAdjuntoNombre || 'Documento Adjunto' }}</strong
+                              >
+                              <span style="font-size: 0.8rem; color: #64748b;"
+                                >Haga clic para descargar</span
+                              >
                             </div>
                           </div>
-                          <a [href]="post.archivoAdjuntoUrl" target="_blank" class="btn btn-sm" style="flex-shrink: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;"  style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;">
+                          <a
+                            [href]="post.archivoAdjuntoUrl"
+                            target="_blank"
+                            class="btn btn-sm"
+                            style="flex-shrink: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;"
+                            style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.35rem 0.75rem; text-decoration: none; color: #4f46e5; font-weight: 600;"
+                          >
                             ⬇️ Descargar
                           </a>
                         </div>
                       }
 
-
-                      @if (post.tipo === 'EXAMEN' || post.titulo.includes('Examen') || post.titulo.includes('Cuestionario')) {
-                        <div class="mt-3 p-3 bg-slate-50 border rounded" style="background: #f8fafc; border-radius: 8px;">
+                      @if (
+                        post.tipo === 'EXAMEN' ||
+                        post.titulo.includes('Examen') ||
+                        post.titulo.includes('Cuestionario')
+                      ) {
+                        <div
+                          class="mt-3 p-3 bg-slate-50 border rounded"
+                          style="background: #f8fafc; border-radius: 8px;"
+                        >
                           <div class="flex-between">
                             <strong>📊 Resultados y Calificaciones</strong>
                             <div style="display: flex; gap: 8px;">
-                              <button class="btn btn-sm btn-outline" (click)="abrirExamenEstudiante({ titulo: post.titulo })">Vista Estudiante</button>
-                              <button class="btn btn-sm btn-success" (click)="sincronizarNotas('cuest-123')">
+                              <button
+                                class="btn btn-sm btn-outline"
+                                (click)="abrirExamenEstudiante({ titulo: post.titulo })"
+                              >
+                                Vista Estudiante
+                              </button>
+                              <button
+                                class="btn btn-sm btn-success"
+                                (click)="sincronizarNotas('cuest-123')"
+                              >
                                 🔄 Sincronizar con Planilla Académica
                               </button>
                             </div>
@@ -175,75 +341,125 @@ export interface EntregaLmsItem {
                         </div>
                       }
 
-                      <div class="text-muted text-sm mt-3 text-right">Publicado el {{ post.createdAt | date:'short' }}</div>
+                      <div class="text-muted text-sm mt-3 text-right">
+                        Publicado el {{ post.createdAt | date: 'short' }}
+                      </div>
                     </div>
                   }
                 } @else {
-                  <div class="p-8 text-center text-slate-500">Selecciona un aula para ver su muro.</div>
+                  <div class="p-8 text-center text-slate-500">
+                    Selecciona un aula para ver su muro.
+                  </div>
                 }
               </div>
 
               <!-- Columna Derecha (Widgets) -->
-              <div class="right-widgets" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                
+              <div
+                class="right-widgets"
+                style="display: flex; flex-direction: column; gap: 1.5rem;"
+              >
                 @if (aulaSeleccionada()) {
-                  <div class="widget-card shadow-sm border" style="background: white; border-radius: 12px; padding: 1.5rem;">
-                    <h3 style="font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">Próximas Tareas</h3>
+                  <div
+                    class="widget-card shadow-sm border"
+                    style="background: white; border-radius: 12px; padding: 1.5rem;"
+                  >
+                    <h3
+                      style="font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;"
+                    >
+                      Próximas Tareas
+                    </h3>
                     <div style="display: flex; flex-direction: column; gap: 1rem;">
-                      <div class="task-mini-item" style="display: flex; align-items: center; gap: 0.75rem;">
-                        <div style="background: #fee2e2; color: #ef4444; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                      <div
+                        class="task-mini-item"
+                        style="display: flex; align-items: center; gap: 0.75rem;"
+                      >
+                        <div
+                          style="background: #fee2e2; color: #ef4444; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;"
+                        >
                           24
                         </div>
                         <div>
-                          <strong style="display: block; font-size: 0.9rem; color: #334155;">Taller de Funciones</strong>
-                          <span style="font-size: 0.75rem; color: #ef4444;">Vence hoy a las 23:59</span>
+                          <strong style="display: block; font-size: 0.9rem; color: #334155;"
+                            >Taller de Funciones</strong
+                          >
+                          <span style="font-size: 0.75rem; color: #ef4444;"
+                            >Vence hoy a las 23:59</span
+                          >
                         </div>
                       </div>
-                      
-                      <div class="task-mini-item" style="display: flex; align-items: center; gap: 0.75rem;">
-                        <div style="background: #e0e7ff; color: #4f46e5; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+
+                      <div
+                        class="task-mini-item"
+                        style="display: flex; align-items: center; gap: 0.75rem;"
+                      >
+                        <div
+                          style="background: #e0e7ff; color: #4f46e5; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;"
+                        >
                           28
                         </div>
                         <div>
-                          <strong style="display: block; font-size: 0.9rem; color: #334155;">Evaluación Unidad 2</strong>
+                          <strong style="display: block; font-size: 0.9rem; color: #334155;"
+                            >Evaluación Unidad 2</strong
+                          >
                           <span style="font-size: 0.75rem; color: #64748b;">Próximo viernes</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div class="widget-card shadow-sm border" style="background: white; border-radius: 12px; padding: 1.5rem;">
-                    <h3 style="font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">Estadísticas del Aula</h3>
+                  <div
+                    class="widget-card shadow-sm border"
+                    style="background: white; border-radius: 12px; padding: 1.5rem;"
+                  >
+                    <h3
+                      style="font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;"
+                    >
+                      Estadísticas del Aula
+                    </h3>
                     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #64748b; font-size: 0.9rem;">Estudiantes Matriculados</span>
+                      <div
+                        style="display: flex; justify-content: space-between; align-items: center;"
+                      >
+                        <span style="color: #64748b; font-size: 0.9rem;"
+                          >Estudiantes Matriculados</span
+                        >
                         <strong style="color: #334155;">35</strong>
                       </div>
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #64748b; font-size: 0.9rem;">Total de Publicaciones</span>
+                      <div
+                        style="display: flex; justify-content: space-between; align-items: center;"
+                      >
+                        <span style="color: #64748b; font-size: 0.9rem;"
+                          >Total de Publicaciones</span
+                        >
                         <strong style="color: #334155;">{{ publicaciones().length }}</strong>
                       </div>
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <div
+                        style="display: flex; justify-content: space-between; align-items: center;"
+                      >
                         <span style="color: #64748b; font-size: 0.9rem;">Tareas Pendientes</span>
                         <strong style="color: #eab308;">2</strong>
                       </div>
                     </div>
                   </div>
                 } @else {
-                  <div class="widget-card shadow-sm border" style="background: white; border-radius: 12px; padding: 1.5rem; text-align: center;">
+                  <div
+                    class="widget-card shadow-sm border"
+                    style="background: white; border-radius: 12px; padding: 1.5rem; text-align: center;"
+                  >
                     <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">👈</div>
-                    <p style="color: #64748b; margin: 0; font-size: 0.95rem;">Selecciona un aula en el panel izquierdo para ver sus estadísticas y tareas pendientes.</p>
+                    <p style="color: #64748b; margin: 0; font-size: 0.95rem;">
+                      Selecciona un aula en el panel izquierdo para ver sus estadísticas y tareas
+                      pendientes.
+                    </p>
                   </div>
                 }
-
               </div>
             </div>
           }
         </div>
 
-
         <!-- Modal: Crear Cuestionario -->
-        @if(modalCuestionario()) {
+        @if (modalCuestionario()) {
           <div class="modal-backdrop">
             <div class="modal-card animate-slide-up" style="max-width: 800px;">
               <div class="modal-header">
@@ -251,8 +467,11 @@ export interface EntregaLmsItem {
                 <button class="close-btn" (click)="modalCuestionario.set(false)">X</button>
               </div>
               <div class="modal-body">
-                <div class="form-group mb-3"><label>Título del Examen</label><input type="text" class="form-control" [(ngModel)]="nuevoCuestionario.titulo"></div>
-                
+                <div class="form-group mb-3">
+                  <label>Título del Examen</label
+                  ><input type="text" class="form-control" [(ngModel)]="nuevoCuestionario.titulo" />
+                </div>
+
                 @for (p of nuevoCuestionario.preguntas; track $index) {
                   <div class="card p-3 mb-3 border">
                     <div class="flex-between mb-2">
@@ -262,29 +481,54 @@ export interface EntregaLmsItem {
                         <option value="ABIERTA_TEXTO">Respuesta Abierta (Ensayo)</option>
                       </select>
                     </div>
-                    <textarea class="form-control mb-2" [(ngModel)]="p.enunciado" placeholder="Escribe la pregunta..."></textarea>
-                    
+                    <textarea
+                      class="form-control mb-2"
+                      [(ngModel)]="p.enunciado"
+                      placeholder="Escribe la pregunta..."
+                    ></textarea>
+
                     @if (p.tipo === 'CERRADA_MULTIPLE') {
                       @for (o of p.opciones; track $index) {
-                        <div class="d-flex mb-1" style="display:flex; gap: 10px; align-items:center;">
-                          <input type="radio" [name]="'correcta_' + $index" [checked]="o.esCorrecta" (change)="o.esCorrecta = true">
-                          <input type="text" class="form-control" [(ngModel)]="o.texto" placeholder="Opción">
+                        <div
+                          class="d-flex mb-1"
+                          style="display:flex; gap: 10px; align-items:center;"
+                        >
+                          <input
+                            type="radio"
+                            [name]="'correcta_' + $index"
+                            [checked]="o.esCorrecta"
+                            (change)="o.esCorrecta = true"
+                          />
+                          <input
+                            type="text"
+                            class="form-control"
+                            [(ngModel)]="o.texto"
+                            placeholder="Opción"
+                          />
                         </div>
                       }
-                      <button class="btn btn-sm btn-outline mt-2" (click)="agregarOpcion($index)">+ Añadir Opción</button>
+                      <button class="btn btn-sm btn-outline mt-2" (click)="agregarOpcion($index)">
+                        + Añadir Opción
+                      </button>
                     }
                   </div>
                 }
 
-                <button class="btn btn-secondary w-100 mb-3" (click)="agregarPregunta()">➕ Agregar Pregunta</button>
+                <button class="btn btn-secondary w-100 mb-3" (click)="agregarPregunta()">
+                  ➕ Agregar Pregunta
+                </button>
               </div>
-              <div class="modal-footer"><button class="btn btn-primary w-100" (click)="guardarCuestionario()">Publicar Cuestionario</button></div>
+              <div class="modal-footer">
+                <button class="btn btn-primary w-100" (click)="guardarCuestionario()">
+                  Publicar Cuestionario
+                </button>
+              </div>
             </div>
           </div>
         }
 
         <!-- Modal: Tomar Examen -->
-        @if(modalTomarExamen()) {
+        @if (modalTomarExamen()) {
           <div class="modal-backdrop">
             <div class="modal-card animate-slide-up" style="max-width: 800px;">
               <div class="modal-header">
@@ -292,18 +536,24 @@ export interface EntregaLmsItem {
                 <button class="close-btn" (click)="modalTomarExamen.set(false)">X</button>
               </div>
               <div class="modal-body">
-                <div class="alert alert-warning">Una vez inicie, no podrá detener el temporizador.</div>
+                <div class="alert alert-warning">
+                  Una vez inicie, no podrá detener el temporizador.
+                </div>
                 <!-- Simulación de preguntas -->
                 <p><strong>1. ¿Cuál es el postulado principal de la teoría?</strong></p>
                 <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:15px;">
-                  <label><input type="radio" name="p1"> Opción A</label>
-                  <label><input type="radio" name="p1"> Opción B</label>
+                  <label><input type="radio" name="p1" /> Opción A</label>
+                  <label><input type="radio" name="p1" /> Opción B</label>
                 </div>
                 <p><strong>2. Escribe un ensayo sobre el tema:</strong></p>
                 <textarea class="form-control" rows="4"></textarea>
               </div>
               <div class="modal-footer">
-                <button class="btn btn-primary w-100" [disabled]="isSaving()" (click)="enviarExamen()">
+                <button
+                  class="btn btn-primary w-100"
+                  [disabled]="isSaving()"
+                  (click)="enviarExamen()"
+                >
                   {{ isSaving() ? 'Procesando...' : 'Entregar Respuestas' }}
                 </button>
               </div>
@@ -312,67 +562,117 @@ export interface EntregaLmsItem {
         }
 
         <!-- Modales Aulas -->
-        @if(modalCrearAula()) {
+        @if (modalCrearAula()) {
           <div class="modal-backdrop">
             <div class="modal-card form-modal animate-slide-up">
               <div class="modal-header-modern bg-gradient-indigo">
                 <div class="header-icon">🏫</div>
                 <div>
-                  <h3>{{ editandoAulaId() ? 'Editar Aula Virtual' : 'Crear Nueva Aula Virtual' }}</h3>
+                  <h3>
+                    {{ editandoAulaId() ? 'Editar Aula Virtual' : 'Crear Nueva Aula Virtual' }}
+                  </h3>
                   <p>Configura un nuevo espacio de aprendizaje para tus estudiantes</p>
                 </div>
                 <button class="close-btn-modern" (click)="modalCrearAula.set(false)">X</button>
               </div>
               <div class="modal-body-modern">
                 <div class="form-group">
-                  <label class="form-label-modern">Nombre de la Asignatura / Aula <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control-modern" [(ngModel)]="nuevaAula.nombre" placeholder="Ej: Laboratorio de Física 11-A">
+                  <label class="form-label-modern"
+                    >Nombre de la Asignatura / Aula <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control-modern"
+                    [(ngModel)]="nuevaAula.nombre"
+                    placeholder="Ej: Laboratorio de Física 11-A"
+                  />
                 </div>
                 <div class="form-group mt-3">
                   <label class="form-label-modern">Descripción Breve</label>
-                  <textarea class="form-control-modern" rows="3" [(ngModel)]="nuevaAula.descripcion" placeholder="¿De qué trata esta asignatura?"></textarea>
+                  <textarea
+                    class="form-control-modern"
+                    rows="3"
+                    [(ngModel)]="nuevaAula.descripcion"
+                    placeholder="¿De qué trata esta asignatura?"
+                  ></textarea>
                 </div>
               </div>
               <div class="modal-footer-modern">
-                <button class="btn btn-outline" (click)="modalCrearAula.set(false)">Cancelar</button>
-                <button class="btn btn-primary px-4" (click)="guardarAula()">Crear Aula Virtual</button>
+                <button class="btn btn-outline" (click)="modalCrearAula.set(false)">
+                  Cancelar
+                </button>
+                <button class="btn btn-primary px-4" (click)="guardarAula()">
+                  Crear Aula Virtual
+                </button>
               </div>
             </div>
           </div>
         }
-        @if(modalPublicacion()) {
+        @if (modalPublicacion()) {
           <div class="modal-backdrop">
-            <div class="modal-card form-modal animate-slide-up" style="max-width: 850px; overflow-y: auto; max-height: 95vh;">
+            <div
+              class="modal-card form-modal animate-slide-up"
+              style="max-width: 850px; overflow-y: auto; max-height: 95vh;"
+            >
               <div class="modal-header-modern bg-gradient-indigo">
                 <div class="header-icon">📝</div>
                 <div>
-                  <h3>{{ editandoPublicacionId() ? 'Editar Publicación' : 'Publicar en el Muro' }}</h3>
+                  <h3>
+                    {{ editandoPublicacionId() ? 'Editar Publicación' : 'Publicar en el Muro' }}
+                  </h3>
                   <p>Comparte contenido, videos o documentos con tus estudiantes.</p>
                 </div>
                 <button class="close-btn-modern" (click)="modalPublicacion.set(false)">X</button>
               </div>
               <div class="modal-body-modern">
                 <div class="form-group">
-                  <label class="form-label-modern">Título del Post <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control-modern" [(ngModel)]="nuevaPublicacion.titulo" placeholder="Ej: Lectura Obligatoria - Capítulo 1">
+                  <label class="form-label-modern"
+                    >Título del Post <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control-modern"
+                    [(ngModel)]="nuevaPublicacion.titulo"
+                    placeholder="Ej: Lectura Obligatoria - Capítulo 1"
+                  />
                 </div>
                 <div class="form-group mt-3">
-                  <label class="form-label-modern">Cuerpo del Mensaje <span class="text-danger">*</span></label>
-                  <quill-editor [(ngModel)]="nuevaPublicacion.contenido" 
-                                  [styles]="{height: '200px'}" 
-                                  placeholder="Instrucciones, saludos o explicación del tema...">
-                    </quill-editor>
+                  <label class="form-label-modern"
+                    >Cuerpo del Mensaje <span class="text-danger">*</span></label
+                  >
+                  <quill-editor
+                    [(ngModel)]="nuevaPublicacion.contenido"
+                    [styles]="{ height: '200px' }"
+                    placeholder="Instrucciones, saludos o explicación del tema..."
+                  >
+                  </quill-editor>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-3 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+
+                <div
+                  class="grid grid-cols-2 gap-3 mt-3"
+                  style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"
+                >
                   <div class="form-group">
                     <label class="form-label-modern">Adjuntar Video (YouTube/Vimeo)</label>
-                    <input type="text" class="form-control-modern" placeholder="https://youtube.com/watch?v=..." 
-                           [(ngModel)]="nuevaPublicacion.url_adjunta" (ngModelChange)="onUrlChange($event)">
-                    
+                    <input
+                      type="text"
+                      class="form-control-modern"
+                      placeholder="https://youtube.com/watch?v=..."
+                      [(ngModel)]="nuevaPublicacion.url_adjunta"
+                      (ngModelChange)="onUrlChange($event)"
+                    />
+
                     @if (videoPreviewUrl()) {
-                      <div class="mt-2 video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
-                        <iframe [src]="videoPreviewUrl()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+                      <div
+                        class="mt-2 video-container"
+                        style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;"
+                      >
+                        <iframe
+                          [src]="videoPreviewUrl()"
+                          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                          frameborder="0"
+                          allowfullscreen
+                        ></iframe>
                       </div>
                     }
                   </div>
@@ -386,691 +686,981 @@ export interface EntregaLmsItem {
                   </div>
                 </div>
 
-                <div class="form-group mt-4 p-4 border rounded text-center drag-drop-zone"
-                     [style.background]="isDragOver() ? '#f1f5f9' : '#f8fafc'"
-                     [style.borderColor]="isDragOver() ? '#6366f1' : '#cbd5e1'"
-                     (dragover)="onDragOver($event)"
-                     (dragleave)="onDragLeave($event)"
-                     (drop)="onDrop($event)"
-                     style="border: 2px dashed; transition: all 0.2s ease; cursor: pointer; border-radius: 8px;"
-                     (click)="fileInput.click()">
-                  <label class="form-label-modern mb-0" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%;">
+                <div
+                  class="form-group mt-4 p-4 border rounded text-center drag-drop-zone"
+                  [style.background]="isDragOver() ? '#f1f5f9' : '#f8fafc'"
+                  [style.borderColor]="isDragOver() ? '#6366f1' : '#cbd5e1'"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)"
+                  style="border: 2px dashed; transition: all 0.2s ease; cursor: pointer; border-radius: 8px;"
+                  (click)="fileInput.click()"
+                >
+                  <label
+                    class="form-label-modern mb-0"
+                    style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%;"
+                  >
                     <div style="font-size: 2.5rem; color: #94a3b8; margin-bottom: 0.5rem;">📎</div>
-                    <strong style="color: #475569; font-size: 1.1rem;">Arrastra y suelta un documento aquí</strong>
-                    <span style="color: #64748b; font-size: 0.9rem; margin-top: 0.25rem;">o haz clic para explorar (PDF, Word, Excel)</span>
+                    <strong style="color: #475569; font-size: 1.1rem;"
+                      >Arrastra y suelta un documento aquí</strong
+                    >
+                    <span style="color: #64748b; font-size: 0.9rem; margin-top: 0.25rem;"
+                      >o haz clic para explorar (PDF, Word, Excel)</span
+                    >
                   </label>
-                  <input #fileInput type="file" (change)="onFileSelected($event)" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
+                  <input
+                    #fileInput
+                    type="file"
+                    (change)="onFileSelected($event)"
+                    style="display: none;"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                  />
                   @if (archivoSeleccionado()) {
-                    <div class="mt-3 p-2 text-success" style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px;">
+                    <div
+                      class="mt-3 p-2 text-success"
+                      style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px;"
+                    >
                       <strong>✅ Seleccionado:</strong> {{ archivoSeleccionado()?.name }}
                     </div>
                   }
                 </div>
               </div>
               <div class="modal-footer-modern">
-                <button class="btn btn-outline" (click)="modalPublicacion.set(false)" [disabled]="isUploading()">Cancelar</button>
-                <button class="btn btn-primary px-4" (click)="guardarPublicacion()" [disabled]="isUploading()">
+                <button
+                  class="btn btn-outline"
+                  (click)="modalPublicacion.set(false)"
+                  [disabled]="isUploading()"
+                >
+                  Cancelar
+                </button>
+                <button
+                  class="btn btn-primary px-4"
+                  (click)="guardarPublicacion()"
+                  [disabled]="isUploading()"
+                >
                   @if (isUploading()) {
                     <span>Subiendo Archivo... ⏳</span>
                   } @else {
-                    <span>{{ editandoPublicacionId() ? 'Guardar Cambios' : 'Publicar en Muro' }}</span>
+                    <span>{{
+                      editandoPublicacionId() ? 'Guardar Cambios' : 'Publicar en Muro'
+                    }}</span>
                   }
                 </button>
               </div>
             </div>
           </div>
         }
-
       } @else {
+        <!-- TARJETAS KPI DE AULA VIRTUAL -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon bg-indigo">📝</div>
+            <div class="kpi-content">
+              <span class="kpi-label">TAREAS ACTIVAS</span>
+              <span class="kpi-value">{{ tareas().length }}</span>
+              <span class="kpi-hint">Asignadas en el periodo</span>
+            </div>
+          </div>
 
-      <!-- TARJETAS KPI DE AULA VIRTUAL -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon bg-indigo">📝</div>
-          <div class="kpi-content">
-            <span class="kpi-label">TAREAS ACTIVAS</span>
-            <span class="kpi-value">{{ tareas().length }}</span>
-            <span class="kpi-hint">Asignadas en el periodo</span>
+          <div class="kpi-card">
+            <div class="kpi-icon bg-emerald">📥</div>
+            <div class="kpi-content">
+              <span class="kpi-label">TOTAL ENTREGAS</span>
+              <span class="kpi-value">{{ totalEntregasRecibidas() }}</span>
+              <span class="kpi-hint text-success">Evidencias recibidas</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon bg-amber">⏳</div>
+            <div class="kpi-content">
+              <span class="kpi-label">POR CALIFICAR</span>
+              <span class="kpi-value" [class.text-warning]="totalPendientesCalificar() > 0">
+                {{ totalPendientesCalificar() }}
+              </span>
+              <span class="kpi-hint">Requieren revisión y feedback</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon bg-purple">⚖️</div>
+            <div class="kpi-content">
+              <span class="kpi-label">TASA DE CUMPLIMIENTO</span>
+              <span class="kpi-value text-indigo">{{ tasaCumplimiento() }}%</span>
+              <span class="kpi-hint">Estudiantes a tiempo</span>
+            </div>
           </div>
         </div>
 
-        <div class="kpi-card">
-          <div class="kpi-icon bg-emerald">📥</div>
-          <div class="kpi-content">
-            <span class="kpi-label">TOTAL ENTREGAS</span>
-            <span class="kpi-value">{{ totalEntregasRecibidas() }}</span>
-            <span class="kpi-hint text-success">Evidencias recibidas</span>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon bg-amber">⏳</div>
-          <div class="kpi-content">
-            <span class="kpi-label">POR CALIFICAR</span>
-            <span class="kpi-value" [class.text-warning]="totalPendientesCalificar() > 0">
-              {{ totalPendientesCalificar() }}
-            </span>
-            <span class="kpi-hint">Requieren revisión y feedback</span>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon bg-purple">⚖️</div>
-          <div class="kpi-content">
-            <span class="kpi-label">TASA DE CUMPLIMIENTO</span>
-            <span class="kpi-value text-indigo">{{ tasaCumplimiento() }}%</span>
-            <span class="kpi-hint">Estudiantes a tiempo</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- FILTROS Y SELECTORES DE GRUPO/MATERIA -->
-      <div class="card filter-bar mt-4">
-        <div class="filters-grid">
-          <div class="form-group">
-            <label class="form-label">Grupo Escolar</label>
-            <select class="form-select" [(ngModel)]="filtroGrupo" (change)="aplicarFiltros()">
-              <option value="TODOS">Todos los grupos</option>
-              @for (g of gruposList(); track g.id) {
-                <option [value]="g.nombre">{{ g.nombre }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Asignatura</label>
-            <select class="form-select" [(ngModel)]="filtroAsignatura" (change)="aplicarFiltros()">
-              <option value="TODAS">Todas las asignaturas</option>
-              @for (a of asignaturasList(); track a.id) {
-                <option [value]="a.nombre">{{ a.nombre }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Periodo Académico</label>
-            <select class="form-select" [(ngModel)]="filtroPeriodo" (change)="aplicarFiltros()">
-              <option value="TODOS">Todos los periodos</option>
-              @for (p of periodosList(); track p.id) {
-                <option [value]="p.nombre">{{ p.nombre }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Buscar por Título / Tema</label>
-            <input type="text" class="form-control" [(ngModel)]="filtroTexto" placeholder="Ej: Taller Mendel, Derivadas..." />
-          </div>
-        </div>
-      </div>
-
-      <!-- TABS DE NAVEGACIÓN -->
-      <div class="tabs-nav-wrapper mt-4" style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #e2e8f0; margin-bottom: 1rem;">
-        <div class="tabs-nav" style="border-bottom: none; padding-bottom: 0;">
-        <button 
-          (click)="tabActiva.set('tareas')" 
-          [class.active]="tabActiva() === 'tareas'" 
-          class="tab-btn">
-          <span>📋 Tareas Publicadas ({{ tareasFiltradas().length }})</span>
-        </button>
-        <button 
-          (click)="tabActiva.set('calificar')" 
-          [class.active]="tabActiva() === 'calificar'" 
-          class="tab-btn" 
-          [disabled]="!tareaSeleccionada()">
-          <span>
-            📝 Revisión & Calificación 1290
-            @if (tareaSeleccionada()) {
-              <small class="tab-badge-title">({{ tareaSeleccionada()?.titulo }})</small>
-            }
-          </span>
-        </button>
-        <button 
-          (click)="tabActiva.set('estudiante_vista')" 
-          [class.active]="tabActiva() === 'estudiante_vista'" 
-          class="tab-btn">
-          <span>👨‍🎓 Vista de Entrega (Portal Estudiante)</span>
-        </button>
-        </div>
-        <button class="btn btn-primary" (click)="abrirModalCrearTarea()" style="padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
-          ➕ Crear Nueva Tarea
-        </button>
-      </div>
-
-      <!-- TAB 1: BANDEJA DE TAREAS PUBLICADAS -->
-      @if (tabActiva() === 'tareas') {
-        <div class="tab-body animate-fade-in">
-          <div class="tareas-grid">
-            @for (tarea of tareasFiltradas(); track tarea.id) {
-              <div class="tarea-card" [class.tarea-activa]="tarea.id === tareaSeleccionada()?.id">
-                <div class="tarea-header">
-                  <div class="tarea-tags">
-                    <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
-                    <span class="badge badge-secondary">{{ tarea.grupoNombre }}</span>
-                    <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}% Periodo</span>
-                  </div>
-                  <div class="tarea-menu">
-                    <button (click)="abrirModalEditarTarea(tarea)" class="btn-icon text-primary" title="Editar Parámetros de la Tarea">
-                      ✏️
-                    </button>
-                    <button (click)="eliminarTareaConfirm(tarea)" class="btn-icon text-danger" title="Eliminar Tarea">
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-
-                <h3 class="tarea-titulo">{{ tarea.titulo }}</h3>
-                <p class="tarea-instrucciones">{{ tarea.instrucciones }}</p>
-
-                <!-- Guía adjunta -->
-                @if (tarea.urlGuiaAdjunta) {
-                  <div class="guia-attachment">
-                    <span class="guia-icon">📎</span>
-                    <div class="guia-info">
-                      <span class="guia-label">Guía / Material de Trabajo</span>
-                      <a [href]="resolveUrl(tarea.urlGuiaAdjunta)" target="_blank" class="guia-link">Descargar / Ver Documento ↗</a>
-                    </div>
-                  </div>
+        <!-- FILTROS Y SELECTORES DE GRUPO/MATERIA -->
+        <div class="card filter-bar mt-4">
+          <div class="filters-grid">
+            <div class="form-group">
+              <label class="form-label">Grupo Escolar</label>
+              <select class="form-select" [(ngModel)]="filtroGrupo" (change)="aplicarFiltros()">
+                <option value="TODOS">Todos los grupos</option>
+                @for (g of gruposList(); track g.id) {
+                  <option [value]="g.nombre">{{ g.nombre }}</option>
                 }
-
-                <!-- Fechas y Plazos -->
-                <div class="tarea-meta">
-                  <div class="meta-item">
-                    <span class="meta-icon">📅</span>
-                    <span><strong>Publicado:</strong> {{ tarea.fechaPublicacion | date:'dd/MM/yyyy' }}</span>
-                  </div>
-                  <div class="meta-item">
-                    <span class="meta-icon">⏰</span>
-                    <span><strong>Límite:</strong> {{ tarea.fechaLimite | date:'dd/MM/yyyy HH:mm' }}</span>
-                  </div>
-                </div>
-
-                <!-- Barra de Progreso de Entregas -->
-                <div class="progreso-container">
-                  <div class="progreso-header">
-                    <span>Avance de Entregas</span>
-                    <span class="progreso-numbers"><strong>{{ tarea.totalEntregas }}</strong> / {{ tarea.totalEstudiantes }}</span>
-                  </div>
-                  <div class="progress-bar-bg">
-                    <div 
-                      class="progress-bar-fill" 
-                      [style.width.%]="calcularPorcentaje(tarea.totalEntregas, tarea.totalEstudiantes)">
-                    </div>
-                  </div>
-                  <div class="progreso-footer">
-                    <span class="text-xs text-slate-500">Calificadas: {{ tarea.totalCalificadas }}</span>
-                    @if (tarea.totalTardias > 0) {
-                      <span class="text-xs text-warning">⚠️ {{ tarea.totalTardias }} tardías</span>
-                    }
-                  </div>
-                </div>
-
-                <!-- Footer Botones -->
-                <div class="tarea-footer">
-                  <button (click)="seleccionarTareaParaCalificar(tarea)" class="btn btn-primary w-full">
-                    <span>📋 Revisar Entregas & Calificar (1290)</span>
-                  </button>
-                </div>
-              </div>
-            } @empty {
-              <div class="empty-state card">
-                <div class="empty-icon">📭</div>
-                <h3>No hay tareas publicadas con los filtros seleccionados</h3>
-                <p>Haz clic en "Crear Nueva Tarea" para publicar una actividad con su guía de trabajo.</p>
-                <button (click)="abrirModalCrearTarea()" class="btn btn-primary mt-3">
-                  <span>➕ Publicar Primera Tarea</span>
-                </button>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- TAB 2: PLANILLA DE REVISIÓN Y CALIFICACIÓN 1290 -->
-      @if (tabActiva() === 'calificar' && tareaSeleccionada(); as tarea) {
-        <div class="tab-body animate-fade-in">
-          <div class="flex-between calificar-banner">
-            <div>
-              <div class="badge-header">
-                <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
-                <span class="badge badge-secondary">{{ tarea.grupoNombre }}</span>
-                <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}% del Periodo</span>
-              </div>
-              <div class="flex-align gap-2 mt-2">
-                <h2>{{ tarea.titulo }}</h2>
-                <button (click)="abrirModalEditarTarea(tarea)" class="btn btn-secondary btn-sm" title="Editar Parámetros">
-                  ✏️ Editar Tarea
-                </button>
-              </div>
-              <p class="text-slate-500 text-sm">Fecha Límite: {{ tarea.fechaLimite | date:'EEEE d MMMM y, hh:mm a' }}</p>
-            </div>
-            <div class="calificar-stats">
-              <div class="stat-pill">
-                <span class="stat-num">{{ entregasActuales().length }}</span>
-                <span class="stat-lbl">Matriculados</span>
-              </div>
-              <div class="stat-pill success">
-                <span class="stat-num">{{ totalEntregadasTarea() }}</span>
-                <span class="stat-lbl">Entregados</span>
-              </div>
-              <div class="stat-pill warning">
-                <span class="stat-num">{{ totalPendientesTarea() }}</span>
-                <span class="stat-lbl">Sin Calificar</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Escala 1290 Banner -->
-          <div class="escala-banner mt-3">
-            <span class="escala-title">⚖️ Escala Decreto 1290:</span>
-            <span class="badge badge-success">Superior: 4.6 - 5.0</span>
-            <span class="badge badge-info">Alto: 4.0 - 4.59</span>
-            <span class="badge badge-warning">Básico: 3.0 - 3.99</span>
-            <span class="badge badge-danger">Bajo: 1.0 - 2.99</span>
-          </div>
-
-          <!-- Tabla de Estudiantes y Entregas -->
-          <div class="table-container mt-4">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Estudiante</th>
-                  <th>Documento</th>
-                  <th>Estado Entrega</th>
-                  <th>Evidencia Digital</th>
-                  <th style="width: 130px;">Nota (1.0 - 5.0)</th>
-                  <th>Desempeño</th>
-                  <th>Retroalimentación Docente</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (est of entregasActuales(); track est.matriculaId; let i = $index) {
-                  <tr>
-                    <td class="font-mono text-slate-500">{{ i + 1 }}</td>
-                    <td>
-                      <div class="student-name">
-                        <strong>{{ est.estudianteApellidos }}</strong> {{ est.estudianteNombres }}
-                      </div>
-                      <span class="student-code text-xs text-slate-500">Cód: {{ est.codigoEstudiante }}</span>
-                    </td>
-                    <td class="font-mono text-xs">{{ est.estudianteDocumento }}</td>
-                    <td>
-                      @if (est.estadoEntrega === 'CALIFICADO') {
-                        <span class="badge badge-success">✓ Calificado</span>
-                      } @else if (est.estadoEntrega === 'ENTREGADO') {
-                        <span class="badge badge-info" [class.badge-warning]="est.esTardia">
-                          {{ est.esTardia ? '⚠️ Entregado Tarde' : '📥 Entregado a Tiempo' }}
-                        </span>
-                      } @else if (est.estadoEntrega === 'SIN_ENTREGAR_VENCIDO') {
-                        <span class="badge badge-danger">✕ Vencido sin Entrega</span>
-                      } @else {
-                        <span class="badge badge-secondary">⏳ Pendiente</span>
-                      }
-                      @if (est.fechaEntrega) {
-                        <div class="text-xs text-slate-500 mt-1">{{ est.fechaEntrega | date:'dd/MM/yyyy HH:mm' }}</div>
-                      }
-                    </td>
-                    <td>
-                      @if (est.urlArchivoEntrega) {
-                        <div class="flex items-center gap-1">
-                          <button (click)="abrirVisorEvidencia(est.urlArchivoEntrega, 'Evidencia: ' + est.estudianteNombres)" class="btn btn-secondary btn-xs btn-ver-evidencia">
-                            <span>📎 Ver Evidencia</span>
-                          </button>
-                          <a [href]="resolveUrl(est.urlArchivoEntrega)" target="_blank" class="btn btn-outline btn-xs" title="Abrir en pestaña nueva">
-                            ↗
-                          </a>
-                        </div>
-                        @if (est.contenidoTexto) {
-                          <p class="text-xs text-slate-600 mt-1 italic font-serif">"{{ est.contenidoTexto }}"</p>
-                        }
-                      } @else if (est.contenidoTexto) {
-                        <span class="text-xs text-slate-700 italic">"{{ est.contenidoTexto }}"</span>
-                      } @else {
-                        <span class="text-xs text-slate-400">Sin archivo</span>
-                      }
-                    </td>
-                    <td>
-                      <input 
-                        type="number" 
-                        step="0.1" 
-                        min="1.0" 
-                        max="5.0" 
-                        class="form-control form-control-sm text-center font-bold"
-                        [(ngModel)]="est.calificacion" 
-                        (ngModelChange)="calcularDesempenoAutomatico(est)"
-                        placeholder="Ej: 4.5" />
-                    </td>
-                    <td>
-                      @if (est.desempeno) {
-                        <span class="badge" 
-                          [class.badge-success]="est.desempeno === 'SUPERIOR'"
-                          [class.badge-info]="est.desempeno === 'ALTO'"
-                          [class.badge-warning]="est.desempeno === 'BASICO'"
-                          [class.badge-danger]="est.desempeno === 'BAJO'">
-                          {{ est.desempeno }}
-                        </span>
-                      } @else {
-                        <span class="text-xs text-slate-400">-</span>
-                      }
-                    </td>
-                    <td>
-                      <div class="feedback-container">
-                        <input 
-                          type="text" 
-                          class="form-control form-control-sm"
-                          [(ngModel)]="est.retroalimentacionDocente" 
-                          placeholder="Escribe una observación pedagógica..." />
-                        <div class="quick-feedback-tags">
-                          <button (click)="est.retroalimentacionDocente = 'Excelente dominio de los conceptos y puntualidad.'" class="tag-btn">🌟 Excelente</button>
-                          <button (click)="est.retroalimentacionDocente = 'Buen trabajo, profundizar en la justificación de los ejercicios.'" class="tag-btn">👍 Buen trabajo</button>
-                          <button (click)="est.retroalimentacionDocente = 'Debe presentar plan de mejoramiento para superar las dificultades.'" class="tag-btn">⚠️ Plan de Mejora</button>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <button 
-                        (click)="guardarCalificacionEstudiante(est)" 
-                        class="btn btn-primary btn-xs"
-                        [disabled]="!est.calificacion">
-                        <span>💾 Guardar</span>
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <div class="mt-4 flex-between">
-            <button (click)="tabActiva.set('tareas')" class="btn btn-secondary">
-              <span>← Volver a Tareas</span>
-            </button>
-            <div style="display:flex; gap: 10px; align-items: center;">
-              <button (click)="guardarTodasLasCalificaciones()" class="btn btn-success">
-                <span>💾 Guardar Toda la Planilla</span>
-              </button>
-              <button (click)="sincronizarNotasTareaConAcademico()" class="btn btn-primary" title="Enviar calificaciones a la Planilla Oficial del Módulo Académico">
-                <span>🔄 Sincronizar con Planilla Académica</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- TAB 3: VISTA SIMULADOR DEL ESTUDIANTE -->
-      @if (tabActiva() === 'estudiante_vista') {
-        <div class="tab-body animate-fade-in">
-          <div class="tab-body-header">
-            <div>
-              <h3 class="tab-body-title">👨‍🎓 Simulador de Bandeja de Tareas del Estudiante</h3>
-              <p class="tab-body-subtitle">Visualiza cómo ve el alumno sus tareas y sube evidencias digitales</p>
-            </div>
-            <div class="form-group" style="min-width: 280px; margin: 0;">
-              <label class="form-label" style="font-size: 0.75rem;">Estudiante Activo:</label>
-              <select class="form-select" [(ngModel)]="estudianteSimuladoId">
-                <option value="11111111-1111-4111-8111-000000000001">Mariana García Torres (10°A)</option>
-                <option value="11111111-1111-4111-8111-000000000002">David López Ramírez (10°A)</option>
-                <option value="11111111-1111-4111-8111-000000000003">Sofía Valentina Castro (10°A)</option>
               </select>
             </div>
-          </div>
 
-          <div class="tareas-grid">
-            @for (tarea of tareas(); track tarea.id) {
-              <div class="tarea-card student-view-card">
-                <div class="tarea-header">
-                  <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
-                  <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}%</span>
-                </div>
-                <h3 class="tarea-titulo">{{ tarea.titulo }}</h3>
-                <p class="tarea-instrucciones">{{ tarea.instrucciones }}</p>
-
-                @if (tarea.urlGuiaAdjunta) {
-                  <a [href]="resolveUrl(tarea.urlGuiaAdjunta)" target="_blank" class="guia-attachment">
-                    <span class="guia-icon">📎</span>
-                    <span class="guia-link">Descargar Guía de Trabajo ↗</span>
-                  </a>
+            <div class="form-group">
+              <label class="form-label">Asignatura</label>
+              <select
+                class="form-select"
+                [(ngModel)]="filtroAsignatura"
+                (change)="aplicarFiltros()"
+              >
+                <option value="TODAS">Todas las asignaturas</option>
+                @for (a of asignaturasList(); track a.id) {
+                  <option [value]="a.nombre">{{ a.nombre }}</option>
                 }
+              </select>
+            </div>
 
-                <div class="tarea-meta mt-3">
-                  <span class="text-xs text-slate-500">⏰ Límite: {{ tarea.fechaLimite | date:'dd/MM/yyyy HH:mm' }}</span>
+            <div class="form-group">
+              <label class="form-label">Periodo Académico</label>
+              <select class="form-select" [(ngModel)]="filtroPeriodo" (change)="aplicarFiltros()">
+                <option value="TODOS">Todos los periodos</option>
+                @for (p of periodosList(); track p.id) {
+                  <option [value]="p.nombre">{{ p.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Buscar por Título / Tema</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="filtroTexto"
+                placeholder="Ej: Taller Mendel, Derivadas..."
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- TABS DE NAVEGACIÓN -->
+        <div
+          class="tabs-nav-wrapper mt-4"
+          style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #e2e8f0; margin-bottom: 1rem;"
+        >
+          <div class="tabs-nav" style="border-bottom: none; padding-bottom: 0;">
+            <button
+              (click)="tabActiva.set('tareas')"
+              [class.active]="tabActiva() === 'tareas'"
+              class="tab-btn"
+            >
+              <span>📋 Tareas Publicadas ({{ tareasFiltradas().length }})</span>
+            </button>
+            <button
+              (click)="tabActiva.set('calificar')"
+              [class.active]="tabActiva() === 'calificar'"
+              class="tab-btn"
+              [disabled]="!tareaSeleccionada()"
+            >
+              <span>
+                📝 Revisión & Calificación 1290
+                @if (tareaSeleccionada()) {
+                  <small class="tab-badge-title">({{ tareaSeleccionada()?.titulo }})</small>
+                }
+              </span>
+            </button>
+            <button
+              (click)="tabActiva.set('estudiante_vista')"
+              [class.active]="tabActiva() === 'estudiante_vista'"
+              class="tab-btn"
+            >
+              <span>👨‍🎓 Vista de Entrega (Portal Estudiante)</span>
+            </button>
+          </div>
+          <button
+            class="btn btn-primary"
+            (click)="abrirModalCrearTarea()"
+            style="padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 0.5rem;"
+          >
+            ➕ Crear Nueva Tarea
+          </button>
+        </div>
+
+        <!-- TAB 1: BANDEJA DE TAREAS PUBLICADAS -->
+        @if (tabActiva() === 'tareas') {
+          <div class="tab-body animate-fade-in">
+            <div class="tareas-grid">
+              @for (tarea of tareasFiltradas(); track tarea.id) {
+                <div class="tarea-card" [class.tarea-activa]="tarea.id === tareaSeleccionada()?.id">
+                  <div class="tarea-header">
+                    <div class="tarea-tags">
+                      <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
+                      <span class="badge badge-secondary">{{ tarea.grupoNombre }}</span>
+                      <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}% Periodo</span>
+                    </div>
+                    <div class="tarea-menu">
+                      <button
+                        (click)="abrirModalEditarTarea(tarea)"
+                        class="btn-icon text-primary"
+                        title="Editar Parámetros de la Tarea"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        (click)="eliminarTareaConfirm(tarea)"
+                        class="btn-icon text-danger"
+                        title="Eliminar Tarea"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 class="tarea-titulo">{{ tarea.titulo }}</h3>
+                  <p class="tarea-instrucciones">{{ tarea.instrucciones }}</p>
+
+                  <!-- Guía adjunta -->
+                  @if (tarea.urlGuiaAdjunta) {
+                    <div class="guia-attachment">
+                      <span class="guia-icon">📎</span>
+                      <div class="guia-info">
+                        <span class="guia-label">Guía / Material de Trabajo</span>
+                        <a
+                          [href]="resolveUrl(tarea.urlGuiaAdjunta)"
+                          target="_blank"
+                          class="guia-link"
+                          >Descargar / Ver Documento ↗</a
+                        >
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Fechas y Plazos -->
+                  <div class="tarea-meta">
+                    <div class="meta-item">
+                      <span class="meta-icon">📅</span>
+                      <span
+                        ><strong>Publicado:</strong>
+                        {{ tarea.fechaPublicacion | date: 'dd/MM/yyyy' }}</span
+                      >
+                    </div>
+                    <div class="meta-item">
+                      <span class="meta-icon">⏰</span>
+                      <span
+                        ><strong>Límite:</strong>
+                        {{ tarea.fechaLimite | date: 'dd/MM/yyyy HH:mm' }}</span
+                      >
+                    </div>
+                  </div>
+
+                  <!-- Barra de Progreso de Entregas -->
+                  <div class="progreso-container">
+                    <div class="progreso-header">
+                      <span>Avance de Entregas</span>
+                      <span class="progreso-numbers"
+                        ><strong>{{ tarea.totalEntregas }}</strong> /
+                        {{ tarea.totalEstudiantes }}</span
+                      >
+                    </div>
+                    <div class="progress-bar-bg">
+                      <div
+                        class="progress-bar-fill"
+                        [style.width.%]="
+                          calcularPorcentaje(tarea.totalEntregas, tarea.totalEstudiantes)
+                        "
+                      ></div>
+                    </div>
+                    <div class="progreso-footer">
+                      <span class="text-xs text-slate-500"
+                        >Calificadas: {{ tarea.totalCalificadas }}</span
+                      >
+                      @if (tarea.totalTardias > 0) {
+                        <span class="text-xs text-warning"
+                          >⚠️ {{ tarea.totalTardias }} tardías</span
+                        >
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Footer Botones -->
+                  <div class="tarea-footer">
+                    <button
+                      (click)="seleccionarTareaParaCalificar(tarea)"
+                      class="btn btn-primary w-full"
+                    >
+                      <span>📋 Revisar Entregas & Calificar (1290)</span>
+                    </button>
+                  </div>
                 </div>
-
-                <div class="mt-3">
-                  <button (click)="abrirModalEntregar(tarea)" class="btn btn-primary btn-sm w-full">
-                    <span>📤 Entregar Evidencia Digital</span>
+              } @empty {
+                <div class="empty-state card">
+                  <div class="empty-icon">📭</div>
+                  <h3>No hay tareas publicadas con los filtros seleccionados</h3>
+                  <p>
+                    Haz clic en "Crear Nueva Tarea" para publicar una actividad con su guía de
+                    trabajo.
+                  </p>
+                  <button (click)="abrirModalCrearTarea()" class="btn btn-primary mt-3">
+                    <span>➕ Publicar Primera Tarea</span>
                   </button>
                 </div>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- MODAL CREAR NUEVA TAREA VIRTUAL -->
-      @if (modalCrearTarea()) {
-        <div class="modal-backdrop">
-          <div class="modal-card">
-            <div class="modal-header">
-              <h3>{{ modoEdicionTarea() ? '✏️ Editar Parámetros de la Tarea' : '📝 Publicar Nueva Tarea en Aula Virtual' }}</h3>
-              <button (click)="modalCrearTarea.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="grid-cols-2">
-                <div class="form-group">
-                  <label class="form-label">Asignatura & Grupo <span class="text-danger">*</span></label>
-                  <select class="form-select" [(ngModel)]="nuevaTareaForm.cargaDocenteId">
-                    @for (c of cargasDocentesList(); track c.id) {
-                      <option [value]="c.id">{{ c.asignatura?.nombre || c.asignaturaNombre || 'Materia' }} ({{ c.grupo?.nombre || c.grupoNombre || 'Grupo' }})</option>
-                    } @empty {
-                      <option value="a1b2c3d4-1111-4111-8111-000000000001">Matemáticas & Cálculo (10°A)</option>
-                    }
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Periodo Académico <span class="text-danger">*</span></label>
-                  <select class="form-select" [(ngModel)]="nuevaTareaForm.periodoId">
-                    @for (p of periodosList(); track p.id) {
-                      <option [value]="p.id">{{ p.nombre }}</option>
-                    } @empty {
-                      <option value="b1b2c3d4-1111-4111-8111-000000000001">Primer Periodo (25%)</option>
-                    }
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Título de la Tarea / Actividad <span class="text-danger">*</span></label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  [(ngModel)]="nuevaTareaForm.titulo" 
-                  placeholder="Ej: Taller de Leyes de Mendel y Cuadro de Punnett" />
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Instrucciones Pedagógicas <span class="text-danger">*</span></label>
-                <textarea 
-                  class="form-control" 
-                  rows="4" 
-                  [(ngModel)]="nuevaTareaForm.instrucciones" 
-                  placeholder="Escribe las instrucciones detalladas para los estudiantes..."></textarea>
-              </div>
-
-              <div class="grid-cols-2 mt-3">
-                <div class="form-group">
-                  <label class="form-label">Fecha y Hora Límite de Entrega <span class="text-danger">*</span></label>
-                  <input 
-                    type="text" 
-                    appFlatpickr
-                    [enableTime]="true"
-                    class="form-control" 
-                    [(ngModel)]="nuevaTareaForm.fechaLimite"
-                    placeholder="dd/mm/aaaa --:--" />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Peso Porcentual en Periodo (%)</label>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="100" 
-                    class="form-control" 
-                    [(ngModel)]="nuevaTareaForm.pesoPorcentaje" />
-                </div>
-              </div>
-
-              <!-- Adjuntar Guía PDF / Archivo -->
-              <div class="form-group mt-3">
-                <label class="form-label">Adjuntar Guía de Trabajo / Taller (PDF, DOCX o Imagen)</label>
-                <div class="file-upload-box">
-                  <input type="file" (change)="onArchivoGuiaSeleccionado($event)" class="file-input" id="guiaUpload" />
-                  <label for="guiaUpload" class="file-upload-label">
-                    <span>📁 {{ nombreArchivoGuia || 'Haz clic para seleccionar archivo desde tu equipo' }}</span>
-                  </label>
-                  @if (isUploading()) {
-                    <div class="text-xs text-indigo mt-1">⏳ Subiendo archivo al servidor seguro...</div>
-                  }
-                </div>
-                <input 
-                  type="text" 
-                  class="form-control mt-2" 
-                  [(ngModel)]="nuevaTareaForm.urlGuiaAdjunta" 
-                  (ngModelChange)="onUrlChange($event)"
-                  placeholder="O pega una URL directa (Google Drive, YouTube, etc.)" />
-                @if (videoPreviewUrl()) {
-                  <div class="mt-2 video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
-                    <iframe [src]="videoPreviewUrl()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
-                  </div>
-                }
-              </div>
-
-              <div class="form-check mt-3">
-                <label class="checkbox-label">
-                  <input type="checkbox" [(ngModel)]="nuevaTareaForm.permiteEntregaTardia" />
-                  <span>Permitir entregas tardías (después de la fecha límite con advertencia)</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="modalCrearTarea.set(false)" class="btn btn-secondary">Cancelar</button>
-              <button (click)="guardarNuevaTarea()" class="btn btn-primary" [disabled]="isSaving()">
-                <span>{{ isSaving() ? 'Guardando...' : (modoEdicionTarea() ? '💾 Guardar Cambios' : '🚀 Publicar Tarea en Aula Virtual') }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- MODAL SUBIR ENTREGA (ESTUDIANTE) -->
-      @if (modalEntregar()) {
-        <div class="modal-backdrop">
-          <div class="modal-card">
-            <div class="modal-header">
-              <h3>📤 Subir Evidencia Digital de Tarea</h3>
-              <button (click)="modalEntregar.set(false)" class="close-btn">&times;</button>
-            </div>
-
-            <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Tarea</label>
-                <input type="text" class="form-control" [value]="tareaParaEntregar()?.titulo" readonly />
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Archivo de Evidencia (PDF, Fotos de Cuaderno, DOCX)</label>
-                <div class="file-upload-box">
-                  <input type="file" (change)="onArchivoEntregaSeleccionado($event)" class="file-input" id="entregaUpload" />
-                  <label for="entregaUpload" class="file-upload-label">
-                    <span>📷 {{ nombreArchivoEntrega || 'Seleccionar foto del cuaderno o archivo PDF' }}</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">Comentarios o Respuestas del Estudiante</label>
-                <textarea 
-                  class="form-control" 
-                  rows="3" 
-                  [(ngModel)]="entregaForm.contenidoTexto" 
-                  placeholder="Escribe comentarios adicionales para el docente..."></textarea>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button (click)="modalEntregar.set(false)" class="btn btn-secondary">Cancelar</button>
-              <button (click)="confirmarEntrega()" class="btn btn-success" [disabled]="isSaving()">
-                <span>{{ isSaving() ? 'Enviando...' : '✅ Confirmar Entrega Digital' }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- MODAL ELIMINAR TAREA -->
-      @if (modalEliminarTarea()) {
-        <div class="modal-backdrop" style="z-index: 10500;">
-          <div class="modal-card" style="max-width: 460px;">
-            <div class="modal-header" style="border: none; padding-bottom: 0;">
-              <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.25rem;">
-                  🗑️
-                </div>
-                <h3 style="margin: 0; font-size: 1.2rem; color: #0f172a;">Eliminar Tarea Virtual</h3>
-              </div>
-            </div>
-            <div class="modal-body" style="padding-top: 1rem; padding-bottom: 0.5rem;">
-              <p style="color: #64748b; margin: 0; font-size: 0.95rem; line-height: 1.5; padding-left: 58px;">
-                ¿Estás seguro de eliminar la tarea <strong>"{{ modalEliminarTarea()?.titulo }}"</strong>? Esta acción retirará la tarea del aula virtual.
-              </p>
-            </div>
-            <div class="modal-footer" style="border: none; padding-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-              <button (click)="modalEliminarTarea.set(null)" class="btn btn-secondary">Cancelar</button>
-              <button (click)="confirmarEliminarTarea()" class="btn btn-danger">Sí, Eliminar</button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- MODAL VISOR DE EVIDENCIAS Y DOCUMENTOS -->
-      @if (modalVisorEvidencia().visible) {
-        <div class="modal-backdrop" style="z-index: 10500;">
-          <div class="modal-card visor-modal animate-slide-up" style="max-width: 900px; width: 95%; height: 85vh; display: flex; flex-direction: column;">
-            <div class="modal-header flex justify-between items-center p-4 border-b">
-              <h3 class="font-bold text-lg text-slate-800">📄 {{ modalVisorEvidencia().titulo }}</h3>
-              <div class="flex items-center gap-2">
-                <a [href]="modalVisorEvidencia().url" target="_blank" download class="btn btn-secondary btn-xs">Descargar</a>
-                <button (click)="cerrarVisorEvidencia()" class="close-btn">&times;</button>
-              </div>
-            </div>
-            <div class="modal-body flex-1 p-2 bg-slate-100 flex items-center justify-center overflow-hidden">
-              @if (modalVisorEvidencia().esImagen) {
-                <img [src]="modalVisorEvidencia().url" [alt]="modalVisorEvidencia().titulo" class="max-h-full max-w-full object-contain rounded shadow" />
-              } @else if (modalVisorEvidencia().esPdf) {
-                <iframe [src]="getSafeUrl(modalVisorEvidencia().url)" class="w-full h-full border-0 rounded" title="Visor PDF"></iframe>
-              } @else {
-                <iframe [src]="getSafeUrl(modalVisorEvidencia().url)" class="w-full h-full border-0 rounded" title="Visor Documento"></iframe>
               }
             </div>
-            <div class="modal-footer p-3 border-t flex justify-end">
-              <button (click)="cerrarVisorEvidencia()" class="btn btn-secondary">Cerrar Visor</button>
+          </div>
+        }
+
+        <!-- TAB 2: PLANILLA DE REVISIÓN Y CALIFICACIÓN 1290 -->
+        @if (tabActiva() === 'calificar' && tareaSeleccionada(); as tarea) {
+          <div class="tab-body animate-fade-in">
+            <div class="flex-between calificar-banner">
+              <div>
+                <div class="badge-header">
+                  <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
+                  <span class="badge badge-secondary">{{ tarea.grupoNombre }}</span>
+                  <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}% del Periodo</span>
+                </div>
+                <div class="flex-align gap-2 mt-2">
+                  <h2>{{ tarea.titulo }}</h2>
+                  <button
+                    (click)="abrirModalEditarTarea(tarea)"
+                    class="btn btn-secondary btn-sm"
+                    title="Editar Parámetros"
+                  >
+                    ✏️ Editar Tarea
+                  </button>
+                </div>
+                <p class="text-slate-500 text-sm">
+                  Fecha Límite: {{ tarea.fechaLimite | date: 'EEEE d MMMM y, hh:mm a' }}
+                </p>
+              </div>
+              <div class="calificar-stats">
+                <div class="stat-pill">
+                  <span class="stat-num">{{ entregasActuales().length }}</span>
+                  <span class="stat-lbl">Matriculados</span>
+                </div>
+                <div class="stat-pill success">
+                  <span class="stat-num">{{ totalEntregadasTarea() }}</span>
+                  <span class="stat-lbl">Entregados</span>
+                </div>
+                <div class="stat-pill warning">
+                  <span class="stat-num">{{ totalPendientesTarea() }}</span>
+                  <span class="stat-lbl">Sin Calificar</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Escala 1290 Banner -->
+            <div class="escala-banner mt-3">
+              <span class="escala-title">⚖️ Escala Decreto 1290:</span>
+              <span class="badge badge-success">Superior: 4.6 - 5.0</span>
+              <span class="badge badge-info">Alto: 4.0 - 4.59</span>
+              <span class="badge badge-warning">Básico: 3.0 - 3.99</span>
+              <span class="badge badge-danger">Bajo: 1.0 - 2.99</span>
+            </div>
+
+            <!-- Tabla de Estudiantes y Entregas -->
+            <div class="table-container mt-4">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Estudiante</th>
+                    <th>Documento</th>
+                    <th>Estado Entrega</th>
+                    <th>Evidencia Digital</th>
+                    <th style="width: 130px;">Nota (1.0 - 5.0)</th>
+                    <th>Desempeño</th>
+                    <th>Retroalimentación Docente</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (est of entregasActuales(); track est.matriculaId; let i = $index) {
+                    <tr>
+                      <td class="font-mono text-slate-500">{{ i + 1 }}</td>
+                      <td>
+                        <div class="student-name">
+                          <strong>{{ est.estudianteApellidos }}</strong> {{ est.estudianteNombres }}
+                        </div>
+                        <span class="student-code text-xs text-slate-500"
+                          >Cód: {{ est.codigoEstudiante }}</span
+                        >
+                      </td>
+                      <td class="font-mono text-xs">{{ est.estudianteDocumento }}</td>
+                      <td>
+                        @if (est.estadoEntrega === 'CALIFICADO') {
+                          <span class="badge badge-success">✓ Calificado</span>
+                        } @else if (est.estadoEntrega === 'ENTREGADO') {
+                          <span class="badge badge-info" [class.badge-warning]="est.esTardia">
+                            {{ est.esTardia ? '⚠️ Entregado Tarde' : '📥 Entregado a Tiempo' }}
+                          </span>
+                        } @else if (est.estadoEntrega === 'SIN_ENTREGAR_VENCIDO') {
+                          <span class="badge badge-danger">✕ Vencido sin Entrega</span>
+                        } @else {
+                          <span class="badge badge-secondary">⏳ Pendiente</span>
+                        }
+                        @if (est.fechaEntrega) {
+                          <div class="text-xs text-slate-500 mt-1">
+                            {{ est.fechaEntrega | date: 'dd/MM/yyyy HH:mm' }}
+                          </div>
+                        }
+                      </td>
+                      <td>
+                        @if (est.urlArchivoEntrega) {
+                          <div class="flex items-center gap-1">
+                            <button
+                              (click)="
+                                abrirVisorEvidencia(
+                                  est.urlArchivoEntrega,
+                                  'Evidencia: ' + est.estudianteNombres
+                                )
+                              "
+                              class="btn btn-secondary btn-xs btn-ver-evidencia"
+                            >
+                              <span>📎 Ver Evidencia</span>
+                            </button>
+                            <a
+                              [href]="resolveUrl(est.urlArchivoEntrega)"
+                              target="_blank"
+                              class="btn btn-outline btn-xs"
+                              title="Abrir en pestaña nueva"
+                            >
+                              ↗
+                            </a>
+                          </div>
+                          @if (est.contenidoTexto) {
+                            <p class="text-xs text-slate-600 mt-1 italic font-serif">
+                              "{{ est.contenidoTexto }}"
+                            </p>
+                          }
+                        } @else if (est.contenidoTexto) {
+                          <span class="text-xs text-slate-700 italic"
+                            >"{{ est.contenidoTexto }}"</span
+                          >
+                        } @else {
+                          <span class="text-xs text-slate-400">Sin archivo</span>
+                        }
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1.0"
+                          max="5.0"
+                          class="form-control form-control-sm text-center font-bold"
+                          [(ngModel)]="est.calificacion"
+                          (ngModelChange)="calcularDesempenoAutomatico(est)"
+                          placeholder="Ej: 4.5"
+                        />
+                      </td>
+                      <td>
+                        @if (est.desempeno) {
+                          <span
+                            class="badge"
+                            [class.badge-success]="est.desempeno === 'SUPERIOR'"
+                            [class.badge-info]="est.desempeno === 'ALTO'"
+                            [class.badge-warning]="est.desempeno === 'BASICO'"
+                            [class.badge-danger]="est.desempeno === 'BAJO'"
+                          >
+                            {{ est.desempeno }}
+                          </span>
+                        } @else {
+                          <span class="text-xs text-slate-400">-</span>
+                        }
+                      </td>
+                      <td>
+                        <div class="feedback-container">
+                          <input
+                            type="text"
+                            class="form-control form-control-sm"
+                            [(ngModel)]="est.retroalimentacionDocente"
+                            placeholder="Escribe una observación pedagógica..."
+                          />
+                          <div class="quick-feedback-tags">
+                            <button
+                              (click)="
+                                est.retroalimentacionDocente =
+                                  'Excelente dominio de los conceptos y puntualidad.'
+                              "
+                              class="tag-btn"
+                            >
+                              🌟 Excelente
+                            </button>
+                            <button
+                              (click)="
+                                est.retroalimentacionDocente =
+                                  'Buen trabajo, profundizar en la justificación de los ejercicios.'
+                              "
+                              class="tag-btn"
+                            >
+                              👍 Buen trabajo
+                            </button>
+                            <button
+                              (click)="
+                                est.retroalimentacionDocente =
+                                  'Debe presentar plan de mejoramiento para superar las dificultades.'
+                              "
+                              class="tag-btn"
+                            >
+                              ⚠️ Plan de Mejora
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          (click)="guardarCalificacionEstudiante(est)"
+                          class="btn btn-primary btn-xs"
+                          [disabled]="!est.calificacion"
+                        >
+                          <span>💾 Guardar</span>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-4 flex-between">
+              <button (click)="tabActiva.set('tareas')" class="btn btn-secondary">
+                <span>← Volver a Tareas</span>
+              </button>
+              <div style="display:flex; gap: 10px; align-items: center;">
+                <button (click)="guardarTodasLasCalificaciones()" class="btn btn-success">
+                  <span>💾 Guardar Toda la Planilla</span>
+                </button>
+                <button
+                  (click)="sincronizarNotasTareaConAcademico()"
+                  class="btn btn-primary"
+                  title="Enviar calificaciones a la Planilla Oficial del Módulo Académico"
+                >
+                  <span>🔄 Sincronizar con Planilla Académica</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      }
+        }
+
+        <!-- TAB 3: VISTA SIMULADOR DEL ESTUDIANTE -->
+        @if (tabActiva() === 'estudiante_vista') {
+          <div class="tab-body animate-fade-in">
+            <div class="tab-body-header">
+              <div>
+                <h3 class="tab-body-title">👨‍🎓 Simulador de Bandeja de Tareas del Estudiante</h3>
+                <p class="tab-body-subtitle">
+                  Visualiza cómo ve el alumno sus tareas y sube evidencias digitales
+                </p>
+              </div>
+              <div class="form-group" style="min-width: 280px; margin: 0;">
+                <label class="form-label" style="font-size: 0.75rem;">Estudiante Activo:</label>
+                <select class="form-select" [(ngModel)]="estudianteSimuladoId">
+                  <option value="11111111-1111-4111-8111-000000000001">
+                    Mariana García Torres (10°A)
+                  </option>
+                  <option value="11111111-1111-4111-8111-000000000002">
+                    David López Ramírez (10°A)
+                  </option>
+                  <option value="11111111-1111-4111-8111-000000000003">
+                    Sofía Valentina Castro (10°A)
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="tareas-grid">
+              @for (tarea of tareas(); track tarea.id) {
+                <div class="tarea-card student-view-card">
+                  <div class="tarea-header">
+                    <span class="badge badge-info">{{ tarea.asignaturaNombre }}</span>
+                    <span class="badge badge-purple">{{ tarea.pesoPorcentaje }}%</span>
+                  </div>
+                  <h3 class="tarea-titulo">{{ tarea.titulo }}</h3>
+                  <p class="tarea-instrucciones">{{ tarea.instrucciones }}</p>
+
+                  @if (tarea.urlGuiaAdjunta) {
+                    <a
+                      [href]="resolveUrl(tarea.urlGuiaAdjunta)"
+                      target="_blank"
+                      class="guia-attachment"
+                    >
+                      <span class="guia-icon">📎</span>
+                      <span class="guia-link">Descargar Guía de Trabajo ↗</span>
+                    </a>
+                  }
+
+                  <div class="tarea-meta mt-3">
+                    <span class="text-xs text-slate-500"
+                      >⏰ Límite: {{ tarea.fechaLimite | date: 'dd/MM/yyyy HH:mm' }}</span
+                    >
+                  </div>
+
+                  <div class="mt-3">
+                    <button
+                      (click)="abrirModalEntregar(tarea)"
+                      class="btn btn-primary btn-sm w-full"
+                    >
+                      <span>📤 Entregar Evidencia Digital</span>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- MODAL CREAR NUEVA TAREA VIRTUAL -->
+        @if (modalCrearTarea()) {
+          <div class="modal-backdrop">
+            <div class="modal-card">
+              <div class="modal-header">
+                <h3>
+                  {{
+                    modoEdicionTarea()
+                      ? '✏️ Editar Parámetros de la Tarea'
+                      : '📝 Publicar Nueva Tarea en Aula Virtual'
+                  }}
+                </h3>
+                <button (click)="modalCrearTarea.set(false)" class="close-btn">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <div class="grid-cols-2">
+                  <div class="form-group">
+                    <label class="form-label"
+                      >Asignatura & Grupo <span class="text-danger">*</span></label
+                    >
+                    <select class="form-select" [(ngModel)]="nuevaTareaForm.cargaDocenteId">
+                      @for (c of cargasDocentesList(); track c.id) {
+                        <option [value]="c.id">
+                          {{ c.asignatura?.nombre || c.asignaturaNombre || 'Materia' }} ({{
+                            c.grupo?.nombre || c.grupoNombre || 'Grupo'
+                          }})
+                        </option>
+                      } @empty {
+                        <option value="a1b2c3d4-1111-4111-8111-000000000001">
+                          Matemáticas & Cálculo (10°A)
+                        </option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label"
+                      >Periodo Académico <span class="text-danger">*</span></label
+                    >
+                    <select class="form-select" [(ngModel)]="nuevaTareaForm.periodoId">
+                      @for (p of periodosList(); track p.id) {
+                        <option [value]="p.id">{{ p.nombre }}</option>
+                      } @empty {
+                        <option value="b1b2c3d4-1111-4111-8111-000000000001">
+                          Primer Periodo (25%)
+                        </option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label"
+                    >Título de la Tarea / Actividad <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaTareaForm.titulo"
+                    placeholder="Ej: Taller de Leyes de Mendel y Cuadro de Punnett"
+                  />
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label"
+                    >Instrucciones Pedagógicas <span class="text-danger">*</span></label
+                  >
+                  <textarea
+                    class="form-control"
+                    rows="4"
+                    [(ngModel)]="nuevaTareaForm.instrucciones"
+                    placeholder="Escribe las instrucciones detalladas para los estudiantes..."
+                  ></textarea>
+                </div>
+
+                <div class="grid-cols-2 mt-3">
+                  <div class="form-group">
+                    <label class="form-label"
+                      >Fecha y Hora Límite de Entrega <span class="text-danger">*</span></label
+                    >
+                    <input
+                      type="text"
+                      appFlatpickr
+                      [enableTime]="true"
+                      class="form-control"
+                      [(ngModel)]="nuevaTareaForm.fechaLimite"
+                      placeholder="dd/mm/aaaa --:--"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Peso Porcentual en Periodo (%)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      class="form-control"
+                      [(ngModel)]="nuevaTareaForm.pesoPorcentaje"
+                    />
+                  </div>
+                </div>
+
+                <!-- Adjuntar Guía PDF / Archivo -->
+                <div class="form-group mt-3">
+                  <label class="form-label"
+                    >Adjuntar Guía de Trabajo / Taller (PDF, DOCX o Imagen)</label
+                  >
+                  <div class="file-upload-box">
+                    <input
+                      type="file"
+                      (change)="onArchivoGuiaSeleccionado($event)"
+                      class="file-input"
+                      id="guiaUpload"
+                    />
+                    <label for="guiaUpload" class="file-upload-label">
+                      <span
+                        >📁
+                        {{
+                          nombreArchivoGuia || 'Haz clic para seleccionar archivo desde tu equipo'
+                        }}</span
+                      >
+                    </label>
+                    @if (isUploading()) {
+                      <div class="text-xs text-indigo mt-1">
+                        ⏳ Subiendo archivo al servidor seguro...
+                      </div>
+                    }
+                  </div>
+                  <input
+                    type="text"
+                    class="form-control mt-2"
+                    [(ngModel)]="nuevaTareaForm.urlGuiaAdjunta"
+                    (ngModelChange)="onUrlChange($event)"
+                    placeholder="O pega una URL directa (Google Drive, YouTube, etc.)"
+                  />
+                  @if (videoPreviewUrl()) {
+                    <div
+                      class="mt-2 video-container"
+                      style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;"
+                    >
+                      <iframe
+                        [src]="videoPreviewUrl()"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                        frameborder="0"
+                        allowfullscreen
+                      ></iframe>
+                    </div>
+                  }
+                </div>
+
+                <div class="form-check mt-3">
+                  <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="nuevaTareaForm.permiteEntregaTardia" />
+                    <span
+                      >Permitir entregas tardías (después de la fecha límite con advertencia)</span
+                    >
+                  </label>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button (click)="modalCrearTarea.set(false)" class="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button
+                  (click)="guardarNuevaTarea()"
+                  class="btn btn-primary"
+                  [disabled]="isSaving()"
+                >
+                  <span>{{
+                    isSaving()
+                      ? 'Guardando...'
+                      : modoEdicionTarea()
+                        ? '💾 Guardar Cambios'
+                        : '🚀 Publicar Tarea en Aula Virtual'
+                  }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- MODAL SUBIR ENTREGA (ESTUDIANTE) -->
+        @if (modalEntregar()) {
+          <div class="modal-backdrop">
+            <div class="modal-card">
+              <div class="modal-header">
+                <h3>📤 Subir Evidencia Digital de Tarea</h3>
+                <button (click)="modalEntregar.set(false)" class="close-btn">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <div class="form-group">
+                  <label class="form-label">Tarea</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    [value]="tareaParaEntregar()?.titulo"
+                    readonly
+                  />
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label"
+                    >Archivo de Evidencia (PDF, Fotos de Cuaderno, DOCX)</label
+                  >
+                  <div class="file-upload-box">
+                    <input
+                      type="file"
+                      (change)="onArchivoEntregaSeleccionado($event)"
+                      class="file-input"
+                      id="entregaUpload"
+                    />
+                    <label for="entregaUpload" class="file-upload-label">
+                      <span
+                        >📷
+                        {{
+                          nombreArchivoEntrega || 'Seleccionar foto del cuaderno o archivo PDF'
+                        }}</span
+                      >
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label">Comentarios o Respuestas del Estudiante</label>
+                  <textarea
+                    class="form-control"
+                    rows="3"
+                    [(ngModel)]="entregaForm.contenidoTexto"
+                    placeholder="Escribe comentarios adicionales para el docente..."
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button (click)="modalEntregar.set(false)" class="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button
+                  (click)="confirmarEntrega()"
+                  class="btn btn-success"
+                  [disabled]="isSaving()"
+                >
+                  <span>{{ isSaving() ? 'Enviando...' : '✅ Confirmar Entrega Digital' }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- MODAL ELIMINAR TAREA -->
+        @if (modalEliminarTarea()) {
+          <div class="modal-backdrop" style="z-index: 10500;">
+            <div class="modal-card" style="max-width: 460px;">
+              <div class="modal-header" style="border: none; padding-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div
+                    style="width: 44px; height: 44px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.25rem;"
+                  >
+                    🗑️
+                  </div>
+                  <h3 style="margin: 0; font-size: 1.2rem; color: #0f172a;">
+                    Eliminar Tarea Virtual
+                  </h3>
+                </div>
+              </div>
+              <div class="modal-body" style="padding-top: 1rem; padding-bottom: 0.5rem;">
+                <p
+                  style="color: #64748b; margin: 0; font-size: 0.95rem; line-height: 1.5; padding-left: 58px;"
+                >
+                  ¿Estás seguro de eliminar la tarea
+                  <strong>"{{ modalEliminarTarea()?.titulo }}"</strong>? Esta acción retirará la
+                  tarea del aula virtual.
+                </p>
+              </div>
+              <div
+                class="modal-footer"
+                style="border: none; padding-top: 1.25rem; display: flex; justify-content: flex-end; gap: 0.75rem;"
+              >
+                <button (click)="modalEliminarTarea.set(null)" class="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button (click)="confirmarEliminarTarea()" class="btn btn-danger">
+                  Sí, Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- MODAL VISOR DE EVIDENCIAS Y DOCUMENTOS -->
+        @if (modalVisorEvidencia().visible) {
+          <div class="modal-backdrop" style="z-index: 10500;">
+            <div
+              class="modal-card visor-modal animate-slide-up"
+              style="max-width: 900px; width: 95%; height: 85vh; display: flex; flex-direction: column;"
+            >
+              <div class="modal-header flex justify-between items-center p-4 border-b">
+                <h3 class="font-bold text-lg text-slate-800">
+                  📄 {{ modalVisorEvidencia().titulo }}
+                </h3>
+                <div class="flex items-center gap-2">
+                  <a
+                    [href]="modalVisorEvidencia().url"
+                    target="_blank"
+                    download
+                    class="btn btn-secondary btn-xs"
+                    >Descargar</a
+                  >
+                  <button (click)="cerrarVisorEvidencia()" class="close-btn">&times;</button>
+                </div>
+              </div>
+              <div
+                class="modal-body flex-1 p-2 bg-slate-100 flex items-center justify-center overflow-hidden"
+              >
+                @if (modalVisorEvidencia().esImagen) {
+                  <img
+                    [src]="modalVisorEvidencia().url"
+                    [alt]="modalVisorEvidencia().titulo"
+                    class="max-h-full max-w-full object-contain rounded shadow"
+                  />
+                } @else if (modalVisorEvidencia().esPdf) {
+                  <iframe
+                    [src]="getSafeUrl(modalVisorEvidencia().url)"
+                    class="w-full h-full border-0 rounded"
+                    title="Visor PDF"
+                  ></iframe>
+                } @else {
+                  <iframe
+                    [src]="getSafeUrl(modalVisorEvidencia().url)"
+                    class="w-full h-full border-0 rounded"
+                    title="Visor Documento"
+                  ></iframe>
+                }
+              </div>
+              <div class="modal-footer p-3 border-t flex justify-end">
+                <button (click)="cerrarVisorEvidencia()" class="btn btn-secondary">
+                  Cerrar Visor
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       }
     </div>
-  
+
     <!-- Cuestionario Creador Modal -->
     @if (mostrandoCreadorCuestionario) {
       <app-lms-cuestionario-creador
         (cancel)="cerrarCreadorCuestionario()"
-        (created)="guardarNuevoCuestionario($event)">
+        (created)="guardarNuevoCuestionario($event)"
+      >
       </app-lms-cuestionario-creador>
     }
 
@@ -1080,749 +1670,1122 @@ export interface EntregaLmsItem {
         [cuestionario]="examenActivo"
         [matriculaId]="''"
         (cancel)="examenActivo = null"
-        (submitted)="submitExamen($event)">
+        (submitted)="submitExamen($event)"
+      >
       </app-lms-cuestionario-toma>
     }
-`,
-  styles: [`
-/* Quill Viewer Custom Fixes */
-.custom-quill-view .ql-editor {
-  padding: 0;
-  font-family: inherit;
-  font-size: 1rem;
-  color: #334155;
-  white-space: pre-wrap;
-}
-.custom-quill-view .ql-editor p {
-  margin-bottom: 0.75rem;
-}
-.custom-quill-view .ql-editor ul, .custom-quill-view .ql-editor ol {
-  padding-left: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-.custom-quill-view .ql-editor ul {
-  list-style-type: disc;
-}
-.custom-quill-view .ql-editor ol {
-  list-style-type: decimal;
-}
-.custom-quill-view .ql-editor h1, 
-.custom-quill-view .ql-editor h2, 
-.custom-quill-view .ql-editor h3 {
-  font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-    .lms-container {
-      padding: 1.5rem;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
-    }
-
-    .badge-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.35rem;
-      font-weight: 700;
-      font-size: 0.8rem;
-      color: #4f46e5;
-    }
-
-    .badge-pill {
-      background-color: #e0e7ff;
-      color: #3730a3;
-      padding: 0.15rem 0.6rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-    }
-
-    .page-header h1 {
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: #0f172a;
-      margin: 0;
-    }
-
-    .page-header p {
-      color: #64748b;
-      margin: 0.25rem 0 0 0;
-      font-size: 0.95rem;
-    }
-
-    /* KPIS */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 1rem;
-    }
-
-    .kpi-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 1rem; /* Modificado */
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .kpi-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-
-    .bg-indigo { background: #eef2ff; }
-    .bg-emerald { background: #ecfdf5; }
-    .bg-amber { background: #fffbeb; }
-    .bg-purple { background: #faf5ff; }
-
-    .kpi-content {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .kpi-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .kpi-value {
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #0f172a;
-      line-height: 1.2;
-    }
-
-    .kpi-hint {
-      font-size: 0.75rem;
-      color: #64748b;
-    }
-
-    /* FILTROS */
-    .card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 1rem; /* Modificado */
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .filters-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .form-label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #334155;
-    }
-
-    .form-select, .form-control {
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 0.55rem 0.85rem;
-      font-size: 0.9rem;
-      color: #0f172a;
-      background-color: #ffffff;
-      transition: border-color 150ms ease;
-    }
-
-    .form-select:focus, .form-control:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    /* TABS */
-    .tabs-nav {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 0.5rem;
-    }
-
-    .tab-btn {
-      background: none;
-      border: none;
-      padding: 0.65rem 1.2rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #64748b;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 150ms ease;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .tab-btn:hover:not(:disabled) {
-      background-color: #f1f5f9;
-      color: #0f172a;
-    }
-
-    .tab-btn.active {
-      background-color: #4f46e5;
-      color: #ffffff;
-    }
-
-    .tab-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .tab-badge-title {
-      font-size: 0.8rem;
-      opacity: 0.9;
-    }
-
-    /* CARDS DE TAREAS */
-    .tareas-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .tarea-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 1rem; /* Modificado */
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 1rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-      transition: all 150ms ease;
-    }
-
-    .tarea-card:hover {
-      border-color: #cbd5e1;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .tarea-card.tarea-activa {
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
-    }
-
-    .tarea-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .tarea-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }
-
-    .badge {
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.2rem 0.55rem;
-      border-radius: 6px;
-      display: inline-block;
-    }
-
-    .badge-info { background: #e0f2fe; color: #0369a1; }
-    .badge-secondary { background: #f1f5f9; color: #475569; }
-    .badge-purple { background: #faf5ff; color: #7e22ce; }
-    .badge-success { background: #dcfce7; color: #15803d; }
-    .badge-warning { background: #fef3c7; color: #b45309; }
-    .badge-danger { background: #fee2e2; color: #b91c1c; }
-
-    .tarea-titulo {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0;
-    }
-
-    .tarea-instrucciones {
-      font-size: 0.88rem;
-      color: #475569;
-      line-height: 1.4;
-      margin: 0;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .guia-attachment {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      padding: 0.6rem 0.85rem;
-      border-radius: 8px;
-    }
-
-    .guia-icon { font-size: 1.2rem; }
-    .guia-info { display: flex; flex-direction: column; }
-    .guia-label { font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-    .guia-link { font-size: 0.85rem; color: #4f46e5; font-weight: 700; text-decoration: none; }
-    .guia-link:hover { text-decoration: underline; }
-
-    .tarea-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      font-size: 0.82rem;
-      color: #64748b;
-      border-top: 1px solid #f1f5f9;
-      padding-top: 0.65rem;
-    }
-
-    .meta-item { display: flex; align-items: center; gap: 0.4rem; }
-
-    /* BARRA DE PROGRESO */
-    .progreso-container {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .progreso-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      color: #475569;
-    }
-
-    .progress-bar-bg {
-      height: 8px;
-      background: #e2e8f0;
-      border-radius: 9999px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4f46e5, #06b6d4);
-      border-radius: 9999px;
-      transition: width 300ms ease;
-    }
-
-    .progreso-footer {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    /* BOTONES */
-    .btn {
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      transition: all 150ms ease;
-    }
-
-    .btn-primary { background: #4f46e5; color: #ffffff; }
-    .btn-primary:hover { background: #4338ca; }
-    .btn-secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
-    .btn-secondary:hover { background: #e2e8f0; }
-    .btn-success { background: #059669; color: #ffffff; }
-    .btn-success:hover { background: #047857; }
-    .btn-sm { padding: 0.4rem 0.85rem; font-size: 0.82rem; }
-    .btn-xs { padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 6px; }
-    .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.2rem; }
-
-    /* TABLA */
-    .table-container {
-      overflow-x: auto;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.88rem;
-    }
-
-    .data-table th {
-      background-color: #f8fafc;
-      color: #475569;
-      font-weight: 700;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .data-table td {
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid #f1f5f9;
-      color: #1e293b;
-      vertical-align: middle;
-    }
-
-    .data-table tr:hover {
-      background-color: #f8fafc;
-    }
-
-    .escala-banner {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      flex-wrap: wrap;
-    }
-
-    .escala-title {
-      font-weight: 700;
-      font-size: 0.85rem;
-      color: #334155;
-    }
-
-    .feedback-container {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      min-width: 240px;
-    }
-
-    .quick-feedback-tags {
-      display: flex;
-      gap: 0.25rem;
-      flex-wrap: wrap;
-    }
-
-    .tag-btn {
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      padding: 0.1rem 0.4rem;
-      font-size: 0.68rem;
-      color: #475569;
-      cursor: pointer;
-    }
-
-    .tag-btn:hover {
-      background: #e2e8f0;
-      color: #0f172a;
-    }
-
-    .calificar-banner {
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 1rem;
-    }
-
-    .calificar-stats {
-      display: flex;
-      gap: 0.75rem;
-    }
-
-    .stat-pill {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 0.5rem 0.85rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .stat-pill.success { border-color: #86efac; background: #f0fdf4; }
-    .stat-pill.warning { border-color: #fde68a; background: #fefce8; }
-    .stat-num { font-size: 1.2rem; font-weight: 800; color: #0f172a; }
-    .stat-lbl { font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-
-    /* MODAL */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 1.5rem;
-    }
-
-    .modal-card {
-      width: 100%;
-      max-width: 680px;
-      background-color: #ffffff;
-      padding: 2rem;
-      border-radius: 16px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 1rem;
-    }
-
-    .modal-header h3 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0;
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: #64748b;
-      cursor: pointer;
-    }
-
-    .modal-body {
-      padding: 1.5rem 0;
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 1rem;
-    }
-
-    .file-upload-box {
-      border: 2px dashed #cbd5e1;
-      border-radius: 8px;
-      padding: 1rem;
-      text-align: center;
-      background: #f8fafc;
-      cursor: pointer;
-    }
-
-    .file-input {
-      display: none;
-    }
-
-    .file-upload-label {
-      cursor: pointer;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: #4f46e5;
-    }
-
-    .grid-cols-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .w-full { width: 100%; }
-    .mt-1 { margin-top: 0.25rem; }
-    .mt-2 { margin-top: 0.5rem; }
-    .mt-3 { margin-top: 0.75rem; }
-    .mt-4 { margin-top: 1rem; }
-    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .text-slate-500 { color: #64748b; }
-    .text-indigo { color: #4f46e5; }
-    .text-success { color: #059669; }
-    .text-warning { color: #d97706; }
-    .text-danger { color: #dc2626; }
-
-    /* --- ENHANCED LMS CSS --- */
-    .aulas-sidebar {
-      background: white;
-      border-radius: 12px;
-      padding: 1rem; /* Modificado */
-      border: 1px solid #e2e8f0;
-      height: fit-content;
-    }
-    .sidebar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      border-bottom: 1px solid #f1f5f9;
-      padding-bottom: 0.75rem;
-    }
-    .sidebar-header h3 { margin: 0; font-size: 1.1rem; color: #0f172a; font-weight: 700; }
-    .btn-icon-primary {
-      background: #e0e7ff;
-      color: #4f46e5;
-      border: none;
-      border-radius: 8px;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-icon-primary:hover { background: #4f46e5; color: white; }
-    .aula-item {
-      display: flex;
-      align-items: center;
-      padding: 0.6rem 0.4rem; /* Modificado */
-      border-radius: 10px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.2s ease;
-      margin-bottom: 0.5rem;
-    }
-    .aula-item:hover { background: #f8fafc; border-color: #e2e8f0; }
-    .aula-item.active { background: #eff6ff; border-color: #bfdbfe; box-shadow: 0 2px 4px rgba(59,130,246,0.05); }
-    .aula-icon { font-size: 1.5rem; margin-right: 1rem; background: white; padding: 0.4rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .aula-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .aula-info strong { color: #1e293b; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-    .aula-info span { color: #64748b; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-    .aula-arrow { color: #cbd5e1; transition: transform 0.2s; }
-    .aula-item.active .aula-arrow { color: #3b82f6; transform: translateX(3px); }
-
-    .muro-header {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      border: 1px solid #e2e8f0;
-    }
-    .muro-header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .muro-title-box { display: flex; align-items: center; gap: 1rem; }
-    .muro-avatar { font-size: 2.5rem; background: #f8fafc; padding: 0.75rem; border-radius: 12px; border: 1px solid #e2e8f0; }
-    .muro-title { margin: 0; font-size: 1.5rem; color: #0f172a; font-weight: 800; }
-    .muro-subtitle { margin: 0; color: #64748b; font-size: 0.95rem; }
-    .muro-actions { display: flex; gap: 0.75rem; }
-    .btn-icon-text { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; padding: 0.6rem 1rem; }
-
-    .empty-state {
-      background: white; border-radius: 12px; padding: 4rem 2rem;
-      text-align: center; border: 1px dashed #cbd5e1; margin-top: 1.5rem;
-    }
-    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .empty-state h3 { color: #1e293b; margin: 0 0 0.5rem 0; }
-    .empty-state p { color: #64748b; margin: 0; }
-
-    .post-card {
-      background: white; border-radius: 12px; padding: 1.5rem;
-      border: 1px solid #e2e8f0; margin-bottom: 1.5rem; margin-top: 1.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .post-card:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-    .post-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-    .post-author { display: flex; align-items: center; gap: 0.75rem; }
-    .post-author img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; }
-    .author-info { display: flex; flex-direction: column; }
-    .author-info strong { color: #0f172a; font-size: 0.95rem; }
-    .post-date { color: #64748b; font-size: 0.8rem; }
-    .post-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .badge-material { background: #e0e7ff; color: #3730a3; }
-    .badge-anuncio { background: #dcfce7; color: #166534; }
-    .badge-examen { background: #fee2e2; color: #991b1b; }
-    
-    .post-title { margin: 0 0 0.75rem 0; color: #1e293b; font-size: 1.2rem; }
-    .post-content { color: #475569; line-height: 1.6; white-space: pre-wrap; font-size: 0.95rem; }
-
-    .video-wrapper {
-      position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
-      border-radius: 10px; border: 1px solid #e2e8f0; background: #000;
-    }
-    .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-    .exam-integration-box {
-      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
-      padding: 1rem; /* Modificado */ display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 1rem;
-    }
-    .exam-info { display: flex; align-items: center; gap: 1rem; }
-    .exam-icon { font-size: 2rem; background: white; padding: 0.5rem; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-    .exam-info strong { color: #0f172a; display: block; margin-bottom: 0.2rem; }
-    .exam-info p { color: #64748b; font-size: 0.85rem; margin: 0; }
-    .exam-actions { display: flex; gap: 0.5rem; }
-
-    /* Modals Modern */
-    .form-modal { max-width: 600px; padding: 0; overflow: hidden; }
-    .bg-gradient-indigo { background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%); color: white; }
-    .modal-header-modern { display: flex; align-items: center; padding: 1.5rem 2rem; gap: 1rem; position: relative; }
-    .header-icon { font-size: 2.5rem; background: rgba(255,255,255,0.2); padding: 0.5rem; border-radius: 12px; }
-    .modal-header-modern h3 { margin: 0 0 0.25rem 0; font-size: 1.4rem; color: white; }
-    .modal-header-modern p { margin: 0; color: #c7d2fe; font-size: 0.9rem; }
-    .close-btn-modern { position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: background 0.2s; }
-    .close-btn-modern:hover { background: rgba(255,255,255,0.2); }
-    .modal-body-modern { padding: 2rem; background: white; }
-    .form-label-modern { display: block; font-weight: 600; color: #334155; margin-bottom: 0.5rem; font-size: 0.9rem; }
-    .form-control-modern { width: 100%; padding: 0.75rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; transition: border-color 0.2s, box-shadow 0.2s; }
-    .form-control-modern:focus { border-color: #4f46e5; outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-    .modal-footer-modern { padding: 1.25rem 2rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 1rem; }
-  `]
+  `,
+  styles: [
+    `
+      /* Quill Viewer Custom Fixes */
+      .custom-quill-view .ql-editor {
+        padding: 0;
+        font-family: inherit;
+        font-size: 1rem;
+        color: #334155;
+        white-space: pre-wrap;
+      }
+      .custom-quill-view .ql-editor p {
+        margin-bottom: 0.75rem;
+      }
+      .custom-quill-view .ql-editor ul,
+      .custom-quill-view .ql-editor ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .custom-quill-view .ql-editor ul {
+        list-style-type: disc;
+      }
+      .custom-quill-view .ql-editor ol {
+        list-style-type: decimal;
+      }
+      .custom-quill-view .ql-editor h1,
+      .custom-quill-view .ql-editor h2,
+      .custom-quill-view .ql-editor h3 {
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .lms-container {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+      }
+
+      .badge-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: #4f46e5;
+      }
+
+      .badge-pill {
+        background-color: #e0e7ff;
+        color: #3730a3;
+        padding: 0.15rem 0.6rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+      }
+
+      .page-header h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+      }
+
+      .page-header p {
+        color: #64748b;
+        margin: 0.25rem 0 0 0;
+        font-size: 0.95rem;
+      }
+
+      /* KPIS */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 1rem;
+      }
+
+      .kpi-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem; /* Modificado */
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      }
+
+      .bg-indigo {
+        background: #eef2ff;
+      }
+      .bg-emerald {
+        background: #ecfdf5;
+      }
+      .bg-amber {
+        background: #fffbeb;
+      }
+      .bg-purple {
+        background: #faf5ff;
+      }
+
+      .kpi-content {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .kpi-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.2;
+      }
+
+      .kpi-hint {
+        font-size: 0.75rem;
+        color: #64748b;
+      }
+
+      /* FILTROS */
+      .card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem; /* Modificado */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .form-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #334155;
+      }
+
+      .form-select,
+      .form-control {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.9rem;
+        color: #0f172a;
+        background-color: #ffffff;
+        transition: border-color 150ms ease;
+      }
+
+      .form-select:focus,
+      .form-control:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      }
+
+      /* TABS */
+      .tabs-nav {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+      }
+
+      .tab-btn {
+        background: none;
+        border: none;
+        padding: 0.65rem 1.2rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #64748b;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 150ms ease;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .tab-btn:hover:not(:disabled) {
+        background-color: #f1f5f9;
+        color: #0f172a;
+      }
+
+      .tab-btn.active {
+        background-color: #4f46e5;
+        color: #ffffff;
+      }
+
+      .tab-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .tab-badge-title {
+        font-size: 0.8rem;
+        opacity: 0.9;
+      }
+
+      /* CARDS DE TAREAS */
+      .tareas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.25rem;
+      }
+
+      .tarea-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem; /* Modificado */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        transition: all 150ms ease;
+      }
+
+      .tarea-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      .tarea-card.tarea-activa {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+      }
+
+      .tarea-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+
+      .tarea-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.2rem 0.55rem;
+        border-radius: 6px;
+        display: inline-block;
+      }
+
+      .badge-info {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+      .badge-secondary {
+        background: #f1f5f9;
+        color: #475569;
+      }
+      .badge-purple {
+        background: #faf5ff;
+        color: #7e22ce;
+      }
+      .badge-success {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .badge-warning {
+        background: #fef3c7;
+        color: #b45309;
+      }
+      .badge-danger {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .tarea-titulo {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+      }
+
+      .tarea-instrucciones {
+        font-size: 0.88rem;
+        color: #475569;
+        line-height: 1.4;
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .guia-attachment {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        padding: 0.6rem 0.85rem;
+        border-radius: 8px;
+      }
+
+      .guia-icon {
+        font-size: 1.2rem;
+      }
+      .guia-info {
+        display: flex;
+        flex-direction: column;
+      }
+      .guia-label {
+        font-size: 0.72rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .guia-link {
+        font-size: 0.85rem;
+        color: #4f46e5;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .guia-link:hover {
+        text-decoration: underline;
+      }
+
+      .tarea-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-size: 0.82rem;
+        color: #64748b;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 0.65rem;
+      }
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      /* BARRA DE PROGRESO */
+      .progreso-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .progreso-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #475569;
+      }
+
+      .progress-bar-bg {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 9999px;
+        overflow: hidden;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4f46e5, #06b6d4);
+        border-radius: 9999px;
+        transition: width 300ms ease;
+      }
+
+      .progreso-footer {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* BOTONES */
+      .btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        transition: all 150ms ease;
+      }
+
+      .btn-primary {
+        background: #4f46e5;
+        color: #ffffff;
+      }
+      .btn-primary:hover {
+        background: #4338ca;
+      }
+      .btn-secondary {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+      }
+      .btn-secondary:hover {
+        background: #e2e8f0;
+      }
+      .btn-success {
+        background: #059669;
+        color: #ffffff;
+      }
+      .btn-success:hover {
+        background: #047857;
+      }
+      .btn-sm {
+        padding: 0.4rem 0.85rem;
+        font-size: 0.82rem;
+      }
+      .btn-xs {
+        padding: 0.25rem 0.55rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+      }
+      .btn-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 0.2rem;
+      }
+
+      /* TABLA */
+      .table-container {
+        overflow-x: auto;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.88rem;
+      }
+
+      .data-table th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .data-table td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
+        vertical-align: middle;
+      }
+
+      .data-table tr:hover {
+        background-color: #f8fafc;
+      }
+
+      .escala-banner {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+      }
+
+      .escala-title {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #334155;
+      }
+
+      .feedback-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 240px;
+      }
+
+      .quick-feedback-tags {
+        display: flex;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+      }
+
+      .tag-btn {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 0.1rem 0.4rem;
+        font-size: 0.68rem;
+        color: #475569;
+        cursor: pointer;
+      }
+
+      .tag-btn:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+
+      .calificar-banner {
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 1rem;
+      }
+
+      .calificar-stats {
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      .stat-pill {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem 0.85rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .stat-pill.success {
+        border-color: #86efac;
+        background: #f0fdf4;
+      }
+      .stat-pill.warning {
+        border-color: #fde68a;
+        background: #fefce8;
+      }
+      .stat-num {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .stat-lbl {
+        font-size: 0.68rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      /* MODAL */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 1.5rem;
+      }
+
+      .modal-card {
+        width: 100%;
+        max-width: 680px;
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 16px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 1rem;
+      }
+
+      .modal-header h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #64748b;
+        cursor: pointer;
+      }
+
+      .modal-body {
+        padding: 1.5rem 0;
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 1rem;
+      }
+
+      .file-upload-box {
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        background: #f8fafc;
+        cursor: pointer;
+      }
+
+      .file-input {
+        display: none;
+      }
+
+      .file-upload-label {
+        cursor: pointer;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #4f46e5;
+      }
+
+      .grid-cols-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .w-full {
+        width: 100%;
+      }
+      .mt-1 {
+        margin-top: 0.25rem;
+      }
+      .mt-2 {
+        margin-top: 0.5rem;
+      }
+      .mt-3 {
+        margin-top: 0.75rem;
+      }
+      .mt-4 {
+        margin-top: 1rem;
+      }
+      .font-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .text-slate-500 {
+        color: #64748b;
+      }
+      .text-indigo {
+        color: #4f46e5;
+      }
+      .text-success {
+        color: #059669;
+      }
+      .text-warning {
+        color: #d97706;
+      }
+      .text-danger {
+        color: #dc2626;
+      }
+
+      /* --- ENHANCED LMS CSS --- */
+      .aulas-sidebar {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem; /* Modificado */
+        border: 1px solid #e2e8f0;
+        height: fit-content;
+      }
+      .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.75rem;
+      }
+      .sidebar-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #0f172a;
+        font-weight: 700;
+      }
+      .btn-icon-primary {
+        background: #e0e7ff;
+        color: #4f46e5;
+        border: none;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-icon-primary:hover {
+        background: #4f46e5;
+        color: white;
+      }
+      .aula-item {
+        display: flex;
+        align-items: center;
+        padding: 0.6rem 0.4rem; /* Modificado */
+        border-radius: 10px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+        margin-bottom: 0.5rem;
+      }
+      .aula-item:hover {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+      }
+      .aula-item.active {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.05);
+      }
+      .aula-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        background: white;
+        padding: 0.4rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      .aula-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .aula-info strong {
+        color: #1e293b;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+      .aula-info span {
+        color: #64748b;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+      .aula-arrow {
+        color: #cbd5e1;
+        transition: transform 0.2s;
+      }
+      .aula-item.active .aula-arrow {
+        color: #3b82f6;
+        transform: translateX(3px);
+      }
+
+      .muro-header {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+      }
+      .muro-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .muro-title-box {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .muro-avatar {
+        font-size: 2.5rem;
+        background: #f8fafc;
+        padding: 0.75rem;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+      .muro-title {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #0f172a;
+        font-weight: 800;
+      }
+      .muro-subtitle {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.95rem;
+      }
+      .muro-actions {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .btn-icon-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        padding: 0.6rem 1rem;
+      }
+
+      .empty-state {
+        background: white;
+        border-radius: 12px;
+        padding: 4rem 2rem;
+        text-align: center;
+        border: 1px dashed #cbd5e1;
+        margin-top: 1.5rem;
+      }
+      .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .empty-state h3 {
+        color: #1e293b;
+        margin: 0 0 0.5rem 0;
+      }
+      .empty-state p {
+        color: #64748b;
+        margin: 0;
+      }
+
+      .post-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+        margin-top: 1.5rem;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .post-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+      }
+      .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+      }
+      .post-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .post-author img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+      }
+      .author-info {
+        display: flex;
+        flex-direction: column;
+      }
+      .author-info strong {
+        color: #0f172a;
+        font-size: 0.95rem;
+      }
+      .post-date {
+        color: #64748b;
+        font-size: 0.8rem;
+      }
+      .post-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-material {
+        background: #e0e7ff;
+        color: #3730a3;
+      }
+      .badge-anuncio {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .badge-examen {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .post-title {
+        margin: 0 0 0.75rem 0;
+        color: #1e293b;
+        font-size: 1.2rem;
+      }
+      .post-content {
+        color: #475569;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        font-size: 0.95rem;
+      }
+
+      .video-wrapper {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #000;
+      }
+      .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .exam-integration-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 1rem; /* Modificado */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .exam-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .exam-icon {
+        font-size: 2rem;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+      .exam-info strong {
+        color: #0f172a;
+        display: block;
+        margin-bottom: 0.2rem;
+      }
+      .exam-info p {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin: 0;
+      }
+      .exam-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      /* Modals Modern */
+      .form-modal {
+        max-width: 600px;
+        padding: 0;
+        overflow: hidden;
+      }
+      .bg-gradient-indigo {
+        background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+        color: white;
+      }
+      .modal-header-modern {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        gap: 1rem;
+        position: relative;
+      }
+      .header-icon {
+        font-size: 2.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem;
+        border-radius: 12px;
+      }
+      .modal-header-modern h3 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.4rem;
+        color: white;
+      }
+      .modal-header-modern p {
+        margin: 0;
+        color: #c7d2fe;
+        font-size: 0.9rem;
+      }
+      .close-btn-modern {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .close-btn-modern:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .modal-body-modern {
+        padding: 2rem;
+        background: white;
+      }
+      .form-label-modern {
+        display: block;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+      .form-control-modern {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .form-control-modern:focus {
+        border-color: #4f46e5;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      }
+      .modal-footer-modern {
+        padding: 1.25rem 2rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
+    `,
+  ],
 })
 export class LmsComponent implements OnInit {
   mostrandoCreadorCuestionario = false;
-  
+
   abrirCreadorCuestionario() {
     this.mostrandoCreadorCuestionario = true;
   }
-  
+
   cerrarCreadorCuestionario() {
     this.mostrandoCreadorCuestionario = false;
   }
-  
+
   guardarNuevoCuestionario(cuestionarioData: any) {
     if (!this.aulaSeleccionada()) return;
-    
+
     // Asignar cargaDocenteId basado en el aula actual
     cuestionarioData.cargaDocenteId = this.aulaSeleccionada()?.cargaDocenteId;
-    
+
     this.api.post('lms/cuestionarios', cuestionarioData).subscribe({
       next: (res) => {
         this.toast.success('Cuestionario Creado', 'El examen ha sido publicado con éxito.');
         this.cerrarCreadorCuestionario();
         // Recargar o asociar a publicacion
       },
-      error: (err) => this.toast.error('Error', 'No se pudo crear el cuestionario.')
+      error: (err) => this.toast.error('Error', 'No se pudo crear el cuestionario.'),
     });
   }
-  
+
   submitExamen(respuestas: any) {
     if (!this.examenActivo) return;
     this.api.post(`lms/cuestionarios/${this.examenActivo.id}/enviar`, respuestas).subscribe({
@@ -1830,7 +2793,7 @@ export class LmsComponent implements OnInit {
         this.toast.success('Examen Enviado', `Obtuviste ${res.puntajeObtenido} puntos.`);
         this.examenActivo = null;
       },
-      error: () => this.toast.error('Error', 'No se pudo enviar el examen.')
+      error: () => this.toast.error('Error', 'No se pudo enviar el examen.'),
     });
   }
 
@@ -1852,9 +2815,15 @@ export class LmsComponent implements OnInit {
   examenActivo: any = null;
   respuestasEstudiante: any = {};
 
-
   nuevaAula = { nombre: '', descripcion: '', cargaDocenteId: null };
-  nuevaPublicacion: any = { titulo: '', contenido: '', url_adjunta: '', tipo: 'MATERIAL', archivoAdjuntoUrl: '', archivoAdjuntoNombre: '' };
+  nuevaPublicacion: any = {
+    titulo: '',
+    contenido: '',
+    url_adjunta: '',
+    tipo: 'MATERIAL',
+    archivoAdjuntoUrl: '',
+    archivoAdjuntoNombre: '',
+  };
 
   private sanitizer = inject(DomSanitizer);
 
@@ -1870,7 +2839,7 @@ export class LmsComponent implements OnInit {
       next: (res) => {
         this.aulas.set(res);
         if (res.length > 0) this.seleccionarAula(res[0]);
-      }
+      },
     });
   }
 
@@ -1878,19 +2847,20 @@ export class LmsComponent implements OnInit {
     event.stopPropagation();
     this.confirmModalConfig.set({
       title: 'Eliminar Aula',
-      message: '¿Está seguro de eliminar esta aula? Se perderán todas sus publicaciones y tareas de forma permanente.',
+      message:
+        '¿Está seguro de eliminar esta aula? Se perderán todas sus publicaciones y tareas de forma permanente.',
       confirmText: 'Sí, eliminar',
       onConfirm: () => {
         this.showConfirmModal.set(false);
         this.api.delete(`lms/aulas/${aula.id}`).subscribe(() => {
-          this.aulas.update(list => list.filter((a: any) => a.id !== aula.id));
+          this.aulas.update((list) => list.filter((a: any) => a.id !== aula.id));
           if (this.aulaSeleccionada()?.id === aula.id) {
             this.aulaSeleccionada.set(null);
             this.publicaciones.set([]);
           }
           this.toast.success('Eliminada', 'Aula eliminada correctamente.');
         });
-      }
+      },
     });
     this.showConfirmModal.set(true);
   }
@@ -1900,15 +2870,16 @@ export class LmsComponent implements OnInit {
     if (!aulaId) return;
     this.confirmModalConfig.set({
       title: 'Eliminar Publicación',
-      message: '¿Estás seguro de eliminar esta publicación del muro? Esta acción no se puede deshacer.',
+      message:
+        '¿Estás seguro de eliminar esta publicación del muro? Esta acción no se puede deshacer.',
       confirmText: 'Eliminar',
       onConfirm: () => {
         this.showConfirmModal.set(false);
         this.api.delete(`lms/aulas/${aulaId}/publicaciones/${post.id}`).subscribe(() => {
-          this.publicaciones.update(list => list.filter((p: any) => p.id !== post.id));
+          this.publicaciones.update((list) => list.filter((p: any) => p.id !== post.id));
           this.toast.success('Eliminada', 'Publicación eliminada.');
         });
-      }
+      },
     });
     this.showConfirmModal.set(true);
   }
@@ -1923,7 +2894,7 @@ export class LmsComponent implements OnInit {
   editarPublicacion(post: any) {
     this.editandoPublicacionId.set(post.id);
     this.nuevaPublicacion = { ...post };
-    
+
     if (post.videoEmbedUrl) {
       if (post.videoEmbedUrl.includes('youtube.com/embed/')) {
         const id = post.videoEmbedUrl.split('youtube.com/embed/')[1];
@@ -1935,7 +2906,7 @@ export class LmsComponent implements OnInit {
     } else {
       this.nuevaPublicacion.url_adjunta = '';
     }
-    
+
     this.onUrlChange(this.nuevaPublicacion.url_adjunta);
     this.modalPublicacion.set(true);
   }
@@ -1954,14 +2925,14 @@ export class LmsComponent implements OnInit {
     this.isSaving.set(true);
     const dto = {
       ...this.nuevaAula,
-      cargaDocenteId: this.nuevaAula.cargaDocenteId || 'a1b2c3d4-1111-4111-8111-000000000001'
+      cargaDocenteId: this.nuevaAula.cargaDocenteId || 'a1b2c3d4-1111-4111-8111-000000000001',
     };
 
     const idToEdit = this.editandoAulaId();
     if (idToEdit) {
       this.api.put<any>(`lms/aulas/${idToEdit}`, dto).subscribe({
         next: (res) => {
-          this.aulas.update(list => list.map(a => a.id === idToEdit ? { ...a, ...res } : a));
+          this.aulas.update((list) => list.map((a) => (a.id === idToEdit ? { ...a, ...res } : a)));
           this.modalCrearAula.set(false);
           this.isSaving.set(false);
           this.toast.success('Aula actualizada', 'El aula se actualizó correctamente.');
@@ -1969,12 +2940,12 @@ export class LmsComponent implements OnInit {
         error: () => {
           this.isSaving.set(false);
           this.modalCrearAula.set(false);
-        }
+        },
       });
     } else {
       this.api.post<any>('lms/aulas', dto).subscribe({
         next: (res) => {
-          this.aulas.update(list => [res, ...list]);
+          this.aulas.update((list) => [res, ...list]);
           this.modalCrearAula.set(false);
           this.isSaving.set(false);
           this.toast.success('Aula creada', 'El aula se ha creado correctamente.');
@@ -1982,7 +2953,7 @@ export class LmsComponent implements OnInit {
         error: () => {
           this.isSaving.set(false);
           this.modalCrearAula.set(false);
-        }
+        },
       });
     }
   }
@@ -1994,18 +2965,25 @@ export class LmsComponent implements OnInit {
 
   cargarPublicaciones(aulaId: string) {
     this.api.get<any[]>(`lms/aulas/${aulaId}/publicaciones`).subscribe({
-      next: (res) => this.publicaciones.set(res)
+      next: (res) => this.publicaciones.set(res),
     });
   }
 
   abrirModalPublicacion() {
     this.editandoPublicacionId.set(null);
     this.videoPreviewUrl.set(null);
-    this.nuevaPublicacion = { titulo: '', contenido: '', url_adjunta: '', tipo: 'MATERIAL', archivoAdjuntoUrl: '', archivoAdjuntoNombre: '' };
+    this.nuevaPublicacion = {
+      titulo: '',
+      contenido: '',
+      url_adjunta: '',
+      tipo: 'MATERIAL',
+      archivoAdjuntoUrl: '',
+      archivoAdjuntoNombre: '',
+    };
     this.modalPublicacion.set(true);
   }
 
-    // Drag & Drop
+  // Drag & Drop
   isDragOver = signal(false);
 
   onDragOver(event: DragEvent) {
@@ -2037,7 +3015,9 @@ export class LmsComponent implements OnInit {
       this.videoPreviewUrl.set(null);
       return;
     }
-    const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    const ytMatch = url.match(
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+    );
     if (ytMatch && ytMatch[1]) {
       this.videoPreviewUrl.set(this.getSafeUrl(`https://www.youtube.com/embed/${ytMatch[1]}`));
       return;
@@ -2049,7 +3029,6 @@ export class LmsComponent implements OnInit {
     }
     this.videoPreviewUrl.set(null);
   }
-
 
   getFileIcon(filename: string | undefined): string {
     if (!filename) return '📄';
@@ -2092,7 +3071,7 @@ export class LmsComponent implements OnInit {
           this.isUploading.set(false);
           this.isSaving.set(false);
           this.toast.error('Error', 'No se pudo subir el archivo.');
-        }
+        },
       });
     } else {
       this.crearPostBackend(aulaId);
@@ -2102,28 +3081,31 @@ export class LmsComponent implements OnInit {
   private crearPostBackend(aulaId: string) {
     const idToEdit = this.editandoPublicacionId();
     if (idToEdit) {
-      this.api.put<any>(`lms/aulas/${aulaId}/publicaciones/${idToEdit}`, this.nuevaPublicacion).subscribe({
-        next: (res) => {
-          this.publicaciones.update(list => list.map(p => p.id === idToEdit ? { ...p, ...res } : p));
-          this.modalPublicacion.set(false);
-          this.isSaving.set(false);
-          this.toast.success('Post actualizado', 'Tu post se ha actualizado.');
-        },
-        error: () => this.isSaving.set(false)
-      });
+      this.api
+        .put<any>(`lms/aulas/${aulaId}/publicaciones/${idToEdit}`, this.nuevaPublicacion)
+        .subscribe({
+          next: (res) => {
+            this.publicaciones.update((list) =>
+              list.map((p) => (p.id === idToEdit ? { ...p, ...res } : p)),
+            );
+            this.modalPublicacion.set(false);
+            this.isSaving.set(false);
+            this.toast.success('Post actualizado', 'Tu post se ha actualizado.');
+          },
+          error: () => this.isSaving.set(false),
+        });
     } else {
       this.api.post<any>(`lms/aulas/${aulaId}/publicaciones`, this.nuevaPublicacion).subscribe({
         next: (res) => {
-          this.publicaciones.update(list => [res, ...list]);
+          this.publicaciones.update((list) => [res, ...list]);
           this.modalPublicacion.set(false);
           this.isSaving.set(false);
           this.toast.success('Publicado', 'Tu post se ha creado en el muro.');
         },
-        error: () => this.isSaving.set(false)
+        error: () => this.isSaving.set(false),
       });
     }
   }
-
 
   getSafeUrl(url: string) {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
@@ -2133,10 +3115,16 @@ export class LmsComponent implements OnInit {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     const clean = url.startsWith('/') ? url : `/${url}`;
-    return `http://localhost:3001${clean}`;
+    return resolveApiResourceUrl(clean);
   }
 
-  modalVisorEvidencia = signal<{ visible: boolean; url: string; titulo: string; esPdf: boolean; esImagen: boolean }>({
+  modalVisorEvidencia = signal<{
+    visible: boolean;
+    url: string;
+    titulo: string;
+    esPdf: boolean;
+    esImagen: boolean;
+  }>({
     visible: false,
     url: '',
     titulo: '',
@@ -2158,7 +3146,13 @@ export class LmsComponent implements OnInit {
   }
 
   cerrarVisorEvidencia() {
-    this.modalVisorEvidencia.set({ visible: false, url: '', titulo: '', esPdf: false, esImagen: false });
+    this.modalVisorEvidencia.set({
+      visible: false,
+      url: '',
+      titulo: '',
+      esPdf: false,
+      esImagen: false,
+    });
   }
 
   private readonly api = inject(ApiService);
@@ -2173,7 +3167,12 @@ export class LmsComponent implements OnInit {
   editandoAulaId = signal<string | null>(null);
   editandoPublicacionId = signal<string | null>(null);
   showConfirmModal = signal(false);
-  confirmModalConfig = signal({ title: '', message: '', confirmText: 'Confirmar', onConfirm: () => {} });
+  confirmModalConfig = signal({
+    title: '',
+    message: '',
+    confirmText: 'Confirmar',
+    onConfirm: () => {},
+  });
   readonly isUploading = signal(false);
 
   // Filtros
@@ -2227,11 +3226,11 @@ export class LmsComponent implements OnInit {
 
   // Computed KPIs
   readonly totalEntregasRecibidas = computed(() =>
-    this.tareas().reduce((acc, t) => acc + (t.totalEntregas || 0), 0)
+    this.tareas().reduce((acc, t) => acc + (t.totalEntregas || 0), 0),
   );
 
   readonly totalPendientesCalificar = computed(() =>
-    this.tareas().reduce((acc, t) => acc + (t.totalEntregas - t.totalCalificadas), 0)
+    this.tareas().reduce((acc, t) => acc + (t.totalEntregas - t.totalCalificadas), 0),
   );
 
   readonly tasaCumplimiento = computed(() => {
@@ -2243,20 +3242,32 @@ export class LmsComponent implements OnInit {
   // Tareas filtradas
   readonly tareasFiltradas = computed(() => {
     return this.tareas().filter((t) => {
-      const matchGrupo = this.filtroGrupo === 'TODOS' || t.grupoNombre.toLowerCase().includes(this.filtroGrupo.toLowerCase());
-      const matchAsig = this.filtroAsignatura === 'TODAS' || t.asignaturaNombre.toLowerCase().includes(this.filtroAsignatura.toLowerCase());
-      const matchPeriodo = this.filtroPeriodo === 'TODOS' || t.periodoNombre.toLowerCase().includes(this.filtroPeriodo.toLowerCase());
-      const matchTexto = !this.filtroTexto || t.titulo.toLowerCase().includes(this.filtroTexto.toLowerCase()) || t.instrucciones.toLowerCase().includes(this.filtroTexto.toLowerCase());
+      const matchGrupo =
+        this.filtroGrupo === 'TODOS' ||
+        t.grupoNombre.toLowerCase().includes(this.filtroGrupo.toLowerCase());
+      const matchAsig =
+        this.filtroAsignatura === 'TODAS' ||
+        t.asignaturaNombre.toLowerCase().includes(this.filtroAsignatura.toLowerCase());
+      const matchPeriodo =
+        this.filtroPeriodo === 'TODOS' ||
+        t.periodoNombre.toLowerCase().includes(this.filtroPeriodo.toLowerCase());
+      const matchTexto =
+        !this.filtroTexto ||
+        t.titulo.toLowerCase().includes(this.filtroTexto.toLowerCase()) ||
+        t.instrucciones.toLowerCase().includes(this.filtroTexto.toLowerCase());
       return matchGrupo && matchAsig && matchPeriodo && matchTexto;
     });
   });
 
-  readonly totalEntregadasTarea = computed(() =>
-    this.entregasActuales().filter((e) => e.estadoEntrega === 'ENTREGADO' || e.estadoEntrega === 'CALIFICADO').length
+  readonly totalEntregadasTarea = computed(
+    () =>
+      this.entregasActuales().filter(
+        (e) => e.estadoEntrega === 'ENTREGADO' || e.estadoEntrega === 'CALIFICADO',
+      ).length,
   );
 
-  readonly totalPendientesTarea = computed(() =>
-    this.entregasActuales().filter((e) => e.estadoEntrega === 'ENTREGADO').length
+  readonly totalPendientesTarea = computed(
+    () => this.entregasActuales().filter((e) => e.estadoEntrega === 'ENTREGADO').length,
   );
 
   ngOnInit() {
@@ -2399,36 +3410,49 @@ export class LmsComponent implements OnInit {
     }
 
     if (est.entregaId) {
-      this.api.put(`lms/entregas/${est.entregaId}/calificar`, {
-        calificacion: est.calificacion,
-        retroalimentacionDocente: est.retroalimentacionDocente,
-        estado: 'CALIFICADO',
-      }).subscribe({
-        next: () => {
-          est.estadoEntrega = 'CALIFICADO';
-          this.toast.success('¡Calificación Guardada!', `Se registró la nota de ${est.calificacion} (${est.desempeno}) para ${est.estudianteNombres}.`);
-        },
-        error: () => {
-          est.estadoEntrega = 'CALIFICADO';
-          this.toast.success('¡Calificación Guardada!', `Se registró la nota de ${est.calificacion} (${est.desempeno}) para ${est.estudianteNombres}.`);
-        }
-      });
+      this.api
+        .put(`lms/entregas/${est.entregaId}/calificar`, {
+          calificacion: est.calificacion,
+          retroalimentacionDocente: est.retroalimentacionDocente,
+          estado: 'CALIFICADO',
+        })
+        .subscribe({
+          next: () => {
+            est.estadoEntrega = 'CALIFICADO';
+            this.toast.success(
+              '¡Calificación Guardada!',
+              `Se registró la nota de ${est.calificacion} (${est.desempeno}) para ${est.estudianteNombres}.`,
+            );
+          },
+          error: () => {
+            est.estadoEntrega = 'CALIFICADO';
+            this.toast.success(
+              '¡Calificación Guardada!',
+              `Se registró la nota de ${est.calificacion} (${est.desempeno}) para ${est.estudianteNombres}.`,
+            );
+          },
+        });
     } else {
       est.estadoEntrega = 'CALIFICADO';
-      this.toast.success('¡Calificación Registrada!', `Nota asignada a ${est.estudianteNombres}: ${est.calificacion} (${est.desempeno}).`);
+      this.toast.success(
+        '¡Calificación Registrada!',
+        `Nota asignada a ${est.estudianteNombres}: ${est.calificacion} (${est.desempeno}).`,
+      );
     }
   }
 
   guardarTodasLasCalificaciones() {
     const tarea = this.tareaSeleccionada();
     if (!tarea) return;
-    const pendientes = this.entregasActuales().filter(e => e.calificacion && e.estadoEntrega !== 'CALIFICADO');
+    const pendientes = this.entregasActuales().filter(
+      (e) => e.calificacion && e.estadoEntrega !== 'CALIFICADO',
+    );
     if (pendientes.length === 0) {
       this.toast.success('¡Planilla Lista!', 'Todas las calificaciones ya están guardadas.');
       return;
     }
     // Guardar cada una pendiente
-    pendientes.forEach(est => this.guardarCalificacionEstudiante(est));
+    pendientes.forEach((est) => this.guardarCalificacionEstudiante(est));
   }
 
   sincronizarNotasTareaConAcademico() {
@@ -2443,9 +3467,11 @@ export class LmsComponent implements OnInit {
         }
       },
       error: (err) => {
-        const msg = err?.error?.message || 'Verifica que la tarea tenga una Actividad de la Planilla enlazada.';
+        const msg =
+          err?.error?.message ||
+          'Verifica que la tarea tenga una Actividad de la Planilla enlazada.';
         this.toast.error('Error de Sincronización', msg);
-      }
+      },
     });
   }
 
@@ -2477,7 +3503,9 @@ export class LmsComponent implements OnInit {
       titulo: tarea.titulo,
       instrucciones: tarea.instrucciones,
       urlGuiaAdjunta: tarea.urlGuiaAdjunta || '',
-      fechaLimite: tarea.fechaLimite ? new Date(tarea.fechaLimite).toISOString().slice(0, 16) : '2026-08-25T23:59',
+      fechaLimite: tarea.fechaLimite
+        ? new Date(tarea.fechaLimite).toISOString().slice(0, 16)
+        : '2026-08-25T23:59',
       pesoPorcentaje: tarea.pesoPorcentaje || 15.0,
       permiteEntregaTardia: tarea.permiteEntregaTardia ?? true,
     };
@@ -2494,8 +3522,12 @@ export class LmsComponent implements OnInit {
       this.api.uploadFile<any>(file, 'lms', 'web').subscribe({
         next: (res) => {
           this.isUploading.set(false);
-          this.nuevaTareaForm.urlGuiaAdjunta = res?.url || res?.urlPublica || `/uploads/guias/${file.name}`;
-          this.toast.success('Guía Adjuntada', `Archivo ${file.name} subido exitosamente al servidor.`);
+          this.nuevaTareaForm.urlGuiaAdjunta =
+            res?.url || res?.urlPublica || `/uploads/guias/${file.name}`;
+          this.toast.success(
+            'Guía Adjuntada',
+            `Archivo ${file.name} subido exitosamente al servidor.`,
+          );
         },
         error: () => {
           this.isUploading.set(false);
@@ -2508,7 +3540,10 @@ export class LmsComponent implements OnInit {
 
   guardarNuevaTarea() {
     if (!this.nuevaTareaForm.titulo || !this.nuevaTareaForm.instrucciones) {
-      this.toast.error('Campos Requeridos', 'Por favor ingresa el título y las instrucciones de la tarea.');
+      this.toast.error(
+        'Campos Requeridos',
+        'Por favor ingresa el título y las instrucciones de la tarea.',
+      );
       return;
     }
 
@@ -2540,8 +3575,8 @@ export class LmsComponent implements OnInit {
                     permiteEntregaTardia: this.nuevaTareaForm.permiteEntregaTardia,
                     pesoPorcentaje: Number(this.nuevaTareaForm.pesoPorcentaje),
                   }
-                : t
-            )
+                : t,
+            ),
           );
 
           if (this.tareaSeleccionada()?.id === this.tareaEditandoId) {
@@ -2556,17 +3591,23 @@ export class LmsComponent implements OnInit {
                     permiteEntregaTardia: this.nuevaTareaForm.permiteEntregaTardia,
                     pesoPorcentaje: Number(this.nuevaTareaForm.pesoPorcentaje),
                   }
-                : null
+                : null,
             );
           }
 
           this.modalCrearTarea.set(false);
-          this.toast.success('¡Tarea Actualizada!', 'Los cambios en la tarea y sus parámetros fueron guardados exitosamente.');
+          this.toast.success(
+            '¡Tarea Actualizada!',
+            'Los cambios en la tarea y sus parámetros fueron guardados exitosamente.',
+          );
         },
         error: () => {
           this.isSaving.set(false);
           this.modalCrearTarea.set(false);
-          this.toast.success('¡Tarea Actualizada!', 'Los cambios en la tarea fueron guardados exitosamente.');
+          this.toast.success(
+            '¡Tarea Actualizada!',
+            'Los cambios en la tarea fueron guardados exitosamente.',
+          );
         },
       });
       return;
@@ -2604,15 +3645,21 @@ export class LmsComponent implements OnInit {
       next: () => {
         this.isSaving.set(false);
         this.cargarTareasBackend();
-    this.cargarAulas();
+        this.cargarAulas();
         this.modalCrearTarea.set(false);
-        this.toast.success('¡Tarea Publicada!', `La tarea "${nuevaItem.titulo}" ya está disponible en el aula virtual de los estudiantes.`);
+        this.toast.success(
+          '¡Tarea Publicada!',
+          `La tarea "${nuevaItem.titulo}" ya está disponible en el aula virtual de los estudiantes.`,
+        );
       },
       error: () => {
         this.isSaving.set(false);
         this.tareas.update((list) => [nuevaItem, ...list]);
         this.modalCrearTarea.set(false);
-        this.toast.success('¡Tarea Publicada!', `La tarea "${nuevaItem.titulo}" fue publicada en el aula virtual.`);
+        this.toast.success(
+          '¡Tarea Publicada!',
+          `La tarea "${nuevaItem.titulo}" fue publicada en el aula virtual.`,
+        );
       },
     });
   }
@@ -2627,7 +3674,10 @@ export class LmsComponent implements OnInit {
     this.api.delete(`lms/tareas/${tarea.id}`).subscribe({
       next: () => {
         this.tareas.update((list) => list.filter((t) => t.id !== tarea.id));
-        this.toast.warning('Tarea Eliminada', `La tarea "${tarea.titulo}" ha sido retirada del aula virtual.`);
+        this.toast.warning(
+          'Tarea Eliminada',
+          `La tarea "${tarea.titulo}" ha sido retirada del aula virtual.`,
+        );
         this.modalEliminarTarea.set(null);
       },
       error: () => {
@@ -2657,7 +3707,8 @@ export class LmsComponent implements OnInit {
       this.api.uploadFile<any>(file, 'lms', 'movil').subscribe({
         next: (res) => {
           this.isUploading.set(false);
-          this.entregaForm.urlArchivoEntrega = res?.url || res?.urlPublica || `/uploads/entregas/${file.name}`;
+          this.entregaForm.urlArchivoEntrega =
+            res?.url || res?.urlPublica || `/uploads/entregas/${file.name}`;
           this.toast.success('Evidencia Cargada', `Archivo ${file.name} cargado exitosamente.`);
         },
         error: () => {
@@ -2677,19 +3728,26 @@ export class LmsComponent implements OnInit {
     const payload = {
       matriculaId: '11111111-1111-4111-8111-000000000001',
       contenidoTexto: this.entregaForm.contenidoTexto,
-      urlArchivoEntrega: this.entregaForm.urlArchivoEntrega || '/uploads/entregas/evidencia_cuaderno.pdf',
+      urlArchivoEntrega:
+        this.entregaForm.urlArchivoEntrega || '/uploads/entregas/evidencia_cuaderno.pdf',
     };
 
     this.api.post(`lms/tareas/${tarea.id}/entregar`, payload).subscribe({
       next: () => {
         this.isSaving.set(false);
         this.modalEntregar.set(false);
-        this.toast.success('¡Tarea Entregada!', `Tu evidencia digital para "${tarea.titulo}" ha sido recibida por el docente.`);
+        this.toast.success(
+          '¡Tarea Entregada!',
+          `Tu evidencia digital para "${tarea.titulo}" ha sido recibida por el docente.`,
+        );
       },
       error: () => {
         this.isSaving.set(false);
         this.modalEntregar.set(false);
-        this.toast.success('¡Tarea Entregada!', `Evidencia enviada correctamente para "${tarea.titulo}".`);
+        this.toast.success(
+          '¡Tarea Entregada!',
+          `Evidencia enviada correctamente para "${tarea.titulo}".`,
+        );
       },
     });
   }
@@ -2706,7 +3764,10 @@ export class LmsComponent implements OnInit {
       tipo: 'CERRADA_MULTIPLE',
       enunciado: '',
       valorPuntos: 1.0,
-      opciones: [{ texto: '', esCorrecta: true }, { texto: '', esCorrecta: false }]
+      opciones: [
+        { texto: '', esCorrecta: true },
+        { texto: '', esCorrecta: false },
+      ],
     });
   }
 
@@ -2723,8 +3784,22 @@ export class LmsComponent implements OnInit {
   abrirExamenEstudiante(cuestionario: any) {
     if (!cuestionario.preguntas) {
       cuestionario.preguntas = [
-        { id: '1', enunciado: '¿Cuál es la capital de Francia?', tipo: 'CERRADA_MULTIPLE', valorPuntos: 2.5, opciones: [ {id: 'o1', texto: 'París'}, {id: 'o2', texto: 'Madrid'} ] },
-        { id: '2', enunciado: 'Escribe un resumen sobre la fotosíntesis', tipo: 'ABIERTA_TEXTO', valorPuntos: 2.5 }
+        {
+          id: '1',
+          enunciado: '¿Cuál es la capital de Francia?',
+          tipo: 'CERRADA_MULTIPLE',
+          valorPuntos: 2.5,
+          opciones: [
+            { id: 'o1', texto: 'París' },
+            { id: 'o2', texto: 'Madrid' },
+          ],
+        },
+        {
+          id: '2',
+          enunciado: 'Escribe un resumen sobre la fotosíntesis',
+          tipo: 'ABIERTA_TEXTO',
+          valorPuntos: 2.5,
+        },
       ];
       cuestionario.limiteTiempoMinutos = 30;
     }
@@ -2737,7 +3812,10 @@ export class LmsComponent implements OnInit {
     // Simula envío a Autocalificador
     setTimeout(() => {
       this.isSaving.set(false);
-      this.toast.success('Examen Enviado', 'Tus respuestas han sido enviadas y pre-calificadas exitosamente.');
+      this.toast.success(
+        'Examen Enviado',
+        'Tus respuestas han sido enviadas y pre-calificadas exitosamente.',
+      );
       this.modalTomarExamen.set(false);
     }, 1000);
   }
@@ -2748,15 +3826,20 @@ export class LmsComponent implements OnInit {
     if (!aulaId) return;
 
     this.isSaving.set(true);
-    this.api.post<any>(`lms/aulas/${aulaId}/cuestionarios/${cuestionarioId}/sincronizar`, {}).subscribe({
-      next: (res) => {
-        this.isSaving.set(false);
-        this.toast.success('¡Sincronización Exitosa!', res.mensaje);
-      },
-      error: () => {
-        this.isSaving.set(false);
-        this.toast.success('¡Sincronización Exitosa!', 'Las notas han impactado la Planilla Académica.');
-      }
-    });
+    this.api
+      .post<any>(`lms/aulas/${aulaId}/cuestionarios/${cuestionarioId}/sincronizar`, {})
+      .subscribe({
+        next: (res) => {
+          this.isSaving.set(false);
+          this.toast.success('¡Sincronización Exitosa!', res.mensaje);
+        },
+        error: () => {
+          this.isSaving.set(false);
+          this.toast.success(
+            '¡Sincronización Exitosa!',
+            'Las notas han impactado la Planilla Académica.',
+          );
+        },
+      });
   }
 }

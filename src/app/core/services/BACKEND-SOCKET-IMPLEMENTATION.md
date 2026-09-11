@@ -27,7 +27,7 @@ import {
   OnGatewayDisconnect,
   OnGatewayInit,
   MessageBody,
-  ConnectedSocket
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards } from '@nestjs/common';
@@ -35,14 +35,12 @@ import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:4200', 'https://app.educoreos.com'],
-    credentials: true
+    origin: ['https://qa-educoreos.secticsolar.site', 'https://app.educoreos.com'],
+    credentials: true,
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
 })
-export class SocketGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -78,24 +76,21 @@ export class SocketGateway
       // Unir al usuario a su sala personal (para mensajes directos)
       client.join(`user:${userId}`);
 
-      this.logger.log(
-        `Cliente conectado: ${client.id} | Usuario: ${userId}`
-      );
+      this.logger.log(`Cliente conectado: ${client.id} | Usuario: ${userId}`);
 
       // Notificar al cliente que está conectado
       client.emit('connected', {
         socketId: client.id,
         userId: userId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Notificar a otros usuarios que este usuario está online
       this.server.emit('user-status-change', {
         userId: userId,
         status: 'online',
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-
     } catch (error) {
       this.logger.error(`Error en conexión: ${error.message}`);
       client.emit('error', { message: 'Token inválido o expirado' });
@@ -108,15 +103,13 @@ export class SocketGateway
     const userId = this.connectedUsers.get(client.id);
 
     if (userId) {
-      this.logger.log(
-        `Cliente desconectado: ${client.id} | Usuario: ${userId}`
-      );
+      this.logger.log(`Cliente desconectado: ${client.id} | Usuario: ${userId}`);
 
       // Notificar a otros usuarios que este usuario está offline
       this.server.emit('user-status-change', {
         userId: userId,
         status: 'offline',
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.connectedUsers.delete(client.id);
@@ -136,7 +129,7 @@ export class SocketGateway
   @SubscribeMessage('authenticate')
   async handleAuthenticate(
     @MessageBody() data: { token: string },
-    @ConnectedSocket() client: Socket
+    @ConnectedSocket() client: Socket,
   ) {
     try {
       const payload = await this.jwtService.verifyAsync(data.token);
@@ -147,12 +140,12 @@ export class SocketGateway
 
       return {
         event: 'authenticated',
-        data: { success: true, userId }
+        data: { success: true, userId },
       };
     } catch (error) {
       return {
         event: 'error',
-        data: { message: 'Token inválido' }
+        data: { message: 'Token inválido' },
       };
     }
   }
@@ -161,7 +154,7 @@ export class SocketGateway
   @SubscribeMessage('send-message')
   handleSendMessage(
     @MessageBody() data: { receiverId: string; content: string },
-    @ConnectedSocket() client: Socket
+    @ConnectedSocket() client: Socket,
   ) {
     const senderId = this.connectedUsers.get(client.id);
 
@@ -176,7 +169,7 @@ export class SocketGateway
       receiverId: data.receiverId,
       content: data.content,
       timestamp: new Date(),
-      read: false
+      read: false,
     };
 
     // Enviar a la sala del receptor
@@ -185,12 +178,10 @@ export class SocketGateway
     // Confirmar al emisor
     client.emit('message-sent', {
       messageId: message.id,
-      timestamp: message.timestamp
+      timestamp: message.timestamp,
     });
 
-    this.logger.log(
-      `Mensaje de ${senderId} a ${data.receiverId}: ${data.content}`
-    );
+    this.logger.log(`Mensaje de ${senderId} a ${data.receiverId}: ${data.content}`);
 
     return { event: 'message-sent', data: { messageId: message.id } };
   }
@@ -201,7 +192,7 @@ export class SocketGateway
     this.server.emit('system-alert', {
       level: 'info',
       message: data.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -227,7 +218,7 @@ export class SocketGateway
    * Envía evento a usuarios específicos
    */
   sendToUsers(userIds: string[], event: string, data: any) {
-    userIds.forEach(userId => {
+    userIds.forEach((userId) => {
       this.server.to(`user:${userId}`).emit(event, data);
     });
     this.logger.log(`Evento ${event} enviado a ${userIds.length} usuarios`);
@@ -268,11 +259,11 @@ import { SocketGateway } from './socket.gateway';
   imports: [
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '7d' }
-    })
+      signOptions: { expiresIn: '7d' },
+    }),
   ],
   providers: [SocketGateway],
-  exports: [SocketGateway]
+  exports: [SocketGateway],
 })
 export class SocketModule {}
 ```
@@ -291,7 +282,7 @@ import { SocketModule } from './socket/socket.module';
 @Module({
   imports: [
     // ... otros módulos
-    SocketModule
+    SocketModule,
   ],
   // ...
 })
@@ -319,7 +310,7 @@ export class NotificationService {
       title,
       message,
       read: false,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
 
     // Enviar en tiempo real por socket
@@ -328,7 +319,7 @@ export class NotificationService {
       title: notification.title,
       message: notification.message,
       type: 'info',
-      createdAt: notification.createdAt
+      createdAt: notification.createdAt,
     });
 
     return notification;
@@ -350,12 +341,12 @@ async function bootstrap() {
   // CORS para HTTP y WebSocket
   app.enableCors({
     origin: [
-      'http://localhost:4200',
+      'https://qa-educoreos.secticsolar.site',
       'https://app.educoreos.com',
-      'https://*.educoreos.com'
+      'https://*.educoreos.com',
     ],
     credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS'
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
 
   // ... resto de la configuración
@@ -464,7 +455,7 @@ npm start
 Abre la consola del navegador y deberías ver:
 
 ```
-[SocketService] Iniciando conexión a: http://localhost:3000
+[SocketService] Iniciando conexión a: /socket.io
 [SocketService] ✅ Conectado con ID: abc123xyz
 [SocketService] Recibido evento: connected {...}
 ```
@@ -496,7 +487,7 @@ afterInit(server: Server) {
     auth: false, // En producción, configurar auth
     mode: 'development'
   });
-  this.logger.log('Socket.IO Admin UI en http://localhost:3000/admin');
+  this.logger.log('Socket.IO Admin UI en /admin/queues');
 }
 ```
 
@@ -569,6 +560,7 @@ async handleSendMessage(
 **¡El Socket Service está listo para usar!** 🚀
 
 Para integrarlo en tu aplicación:
+
 1. Implementa el backend siguiendo esta guía
 2. Instala `socket.io-client` en el frontend: `npm install socket.io-client`
 3. Inicializa el servicio en `app.component.ts`

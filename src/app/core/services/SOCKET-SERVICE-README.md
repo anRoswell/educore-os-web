@@ -57,16 +57,16 @@ import { SocketService } from '@app/core/services/socket.service';
 
 ```typescript
 interface SocketConfig {
-  url: string;                    // URL del servidor (ej: 'http://localhost:3000')
-  path?: string;                  // Path del socket (default: '/socket.io')
-  reconnection?: boolean;         // Habilitar reconexión automática (default: true)
-  reconnectionAttempts?: number;  // Máximo de intentos (default: 5)
-  reconnectionDelay?: number;     // Delay inicial en ms (default: 1000)
-  reconnectionDelayMax?: number;  // Delay máximo en ms (default: 5000)
-  timeout?: number;               // Timeout de conexión en ms (default: 20000)
-  autoConnect?: boolean;          // Conectar automáticamente (default: false)
-  transports?: string[];          // Transportes a usar (default: ['websocket', 'polling'])
-  auth?: Record<string, any>;     // Datos de autenticación (ej: token JWT)
+  url: string; // URL base; vacío usa el dominio actual
+  path?: string; // Path del socket (default: '/socket.io')
+  reconnection?: boolean; // Habilitar reconexión automática (default: true)
+  reconnectionAttempts?: number; // Máximo de intentos (default: 5)
+  reconnectionDelay?: number; // Delay inicial en ms (default: 1000)
+  reconnectionDelayMax?: number; // Delay máximo en ms (default: 5000)
+  timeout?: number; // Timeout de conexión en ms (default: 20000)
+  autoConnect?: boolean; // Conectar automáticamente (default: false)
+  transports?: string[]; // Transportes a usar (default: ['websocket', 'polling'])
+  auth?: Record<string, any>; // Datos de autenticación (ej: token JWT)
 }
 ```
 
@@ -97,7 +97,7 @@ import { SocketService } from '@app/core/services/socket.service';
 
 @Component({
   selector: 'app-root',
-  template: `...`
+  template: `...`,
 })
 export class AppComponent implements OnInit {
   private socketService = inject(SocketService);
@@ -106,9 +106,9 @@ export class AppComponent implements OnInit {
     const token = localStorage.getItem('token');
 
     this.socketService.connect({
-      url: 'http://localhost:3000',
+      url: '',
       path: '/socket.io',
-      auth: { token }
+      auth: { token },
     });
   }
 }
@@ -118,10 +118,9 @@ export class AppComponent implements OnInit {
 
 ```typescript
 // Escuchar un evento y recibir datos tipados
-this.socketService.on$<MessageData>('new-message')
-  .subscribe(message => {
-    console.log('Mensaje recibido:', message);
-  });
+this.socketService.on$<MessageData>('new-message').subscribe((message) => {
+  console.log('Mensaje recibido:', message);
+});
 ```
 
 ### 3. Emitir Eventos
@@ -130,7 +129,7 @@ this.socketService.on$<MessageData>('new-message')
 // Emitir un evento con datos
 this.socketService.emit('send-message', {
   to: 'user123',
-  content: 'Hola mundo'
+  content: 'Hola mundo',
 });
 ```
 
@@ -166,8 +165,8 @@ Inicia la conexión con el servidor Socket.IO.
 
 ```typescript
 this.socketService.connect({
-  url: 'http://localhost:3000',
-  auth: { token: 'jwt-token-here' }
+  url: '',
+  auth: { token: 'jwt-token-here' },
 });
 ```
 
@@ -200,10 +199,10 @@ this.socketService.emit('join-room', { roomId: '123' });
 Emite un evento y espera respuesta del servidor (patrón request-response).
 
 ```typescript
-const response = await this.socketService.emitWithAck<
-  { roomId: string },
-  { success: boolean }
->('join-room', { roomId: '123' });
+const response = await this.socketService.emitWithAck<{ roomId: string }, { success: boolean }>(
+  'join-room',
+  { roomId: '123' },
+);
 
 console.log('Respuesta:', response);
 ```
@@ -213,10 +212,9 @@ console.log('Respuesta:', response);
 Escucha un evento del servidor y retorna un Observable tipado.
 
 ```typescript
-this.socketService.on$<ChatMessage>('new-message')
-  .subscribe(message => {
-    console.log(message);
-  });
+this.socketService.on$<ChatMessage>('new-message').subscribe((message) => {
+  console.log(message);
+});
 ```
 
 #### `once$<T>(event: string): Observable<T>`
@@ -224,10 +222,9 @@ this.socketService.on$<ChatMessage>('new-message')
 Escucha un evento una sola vez y luego se completa.
 
 ```typescript
-this.socketService.once$<{ welcome: string }>('welcome')
-  .subscribe(data => {
-    console.log(data.welcome);
-  });
+this.socketService.once$<{ welcome: string }>('welcome').subscribe((data) => {
+  console.log(data.welcome);
+});
 ```
 
 #### `removeListener(event: string): void`
@@ -264,6 +261,7 @@ if (this.socketService.isSocketConnected()) {
 Signal que contiene el estado actual de la conexión.
 
 Valores posibles:
+
 - `'disconnected'`: Sin conexión
 - `'connecting'`: Intentando conectar
 - `'connected'`: Conectado exitosamente
@@ -306,22 +304,20 @@ export class ChatComponent implements OnInit {
 
   ngOnInit() {
     // Escuchar mensajes nuevos
-    this.socketService.on$<ChatMessage>('new-message')
-      .subscribe(message => {
-        this.messages.push(message);
-      });
+    this.socketService.on$<ChatMessage>('new-message').subscribe((message) => {
+      this.messages.push(message);
+    });
 
     // Escuchar indicador de escritura
-    this.socketService.on$<{ user: string }>('user-typing')
-      .subscribe(data => {
-        console.log(`${data.user} está escribiendo...`);
-      });
+    this.socketService.on$<{ user: string }>('user-typing').subscribe((data) => {
+      console.log(`${data.user} está escribiendo...`);
+    });
   }
 
   sendMessage(content: string) {
     this.socketService.emit('send-message', {
       content,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 }
@@ -335,11 +331,10 @@ export class NotificationsComponent implements OnInit {
   notifications = signal<Notification[]>([]);
 
   ngOnInit() {
-    this.socketService.on$<Notification>('new-notification')
-      .subscribe(notification => {
-        this.notifications.update(current => [...current, notification]);
-        this.showToast(notification);
-      });
+    this.socketService.on$<Notification>('new-notification').subscribe((notification) => {
+      this.notifications.update((current) => [...current, notification]);
+      this.showToast(notification);
+    });
   }
 
   markAsRead(notificationId: string) {
@@ -359,18 +354,17 @@ export class AttendanceComponent implements OnInit {
   private socketService = inject(SocketService);
 
   ngOnInit() {
-    this.socketService.on$<AttendanceEvent>('attendance-updated')
-      .subscribe(event => {
-        this.updateAttendanceGrid(event);
-        this.showNotification(`Asistencia actualizada para ${event.studentId}`);
-      });
+    this.socketService.on$<AttendanceEvent>('attendance-updated').subscribe((event) => {
+      this.updateAttendanceGrid(event);
+      this.showNotification(`Asistencia actualizada para ${event.studentId}`);
+    });
   }
 
   markAttendance(studentId: string, status: string) {
     this.socketService.emit('mark-attendance', {
       studentId,
       status,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -407,7 +401,7 @@ export class AttendanceComponent implements OnInit {
         <button (click)="reconnect()">Reconectar</button>
       }
     </div>
-  `
+  `,
 })
 export class ConnectionStatusComponent {
   private socketService = inject(SocketService);
@@ -443,7 +437,7 @@ export class AppComponent implements OnInit {
     if (token) {
       this.socketService.connect({
         url: environment.socketUrl,
-        auth: { token }
+        auth: { token },
       });
     }
   }
@@ -471,21 +465,19 @@ interface UserTypingEvent {
   roomId: string;
 }
 
-this.socketService.on$<UserTypingEvent>('user-typing')
-  .subscribe(data => {
-    // TypeScript conoce la estructura de 'data'
-    console.log(`${data.userName} está escribiendo`);
-  });
+this.socketService.on$<UserTypingEvent>('user-typing').subscribe((data) => {
+  // TypeScript conoce la estructura de 'data'
+  console.log(`${data.userName} está escribiendo`);
+});
 ```
 
 ### 4. Manejo de Errores
 
 ```typescript
-this.socketService.on$('error')
-  .subscribe(error => {
-    console.error('Socket error:', error);
-    this.showErrorToast('Error de conexión');
-  });
+this.socketService.on$('error').subscribe((error) => {
+  console.error('Socket error:', error);
+  this.showErrorToast('Error de conexión');
+});
 ```
 
 ### 5. Limpieza de Listeners
@@ -504,14 +496,14 @@ ngOnDestroy() {
 // environment.ts
 export const environment = {
   production: false,
-  socketUrl: 'http://localhost:3000',
-  socketPath: '/socket.io'
+  socketUrl: '',
+  socketPath: '/socket.io',
 };
 
 // Uso
 this.socketService.connect({
   url: environment.socketUrl,
-  path: environment.socketPath
+  path: environment.socketPath,
 });
 ```
 
@@ -537,6 +529,7 @@ reconnectWithNewToken(newToken: string) {
 ### Problema: El socket no se conecta
 
 **Solución:**
+
 1. Verifica que el servidor esté corriendo
 2. Verifica la URL y el puerto
 3. Revisa la consola para ver mensajes de error
@@ -545,8 +538,8 @@ reconnectWithNewToken(newToken: string) {
 ```typescript
 // Backend NestJS - Configuración CORS para Socket.IO
 app.enableCors({
-  origin: 'http://localhost:4200',
-  credentials: true
+  origin: 'https://qa-educoreos.secticsolar.site',
+  credentials: true,
 });
 ```
 
@@ -557,8 +550,8 @@ El servicio limita automáticamente las reconexiones a 5 intentos. Si necesitas 
 
 ```typescript
 this.socketService.connect({
-  url: 'http://localhost:3000',
-  reconnectionAttempts: 10  // Aumentar intentos
+  url: '',
+  reconnectionAttempts: 10, // Aumentar intentos
 });
 ```
 
@@ -573,7 +566,7 @@ if (tokenExpired()) {
   this.socketService.disconnect();
   this.socketService.connect({
     url: environment.socketUrl,
-    auth: { token: newToken }
+    auth: { token: newToken },
   });
 }
 ```
@@ -581,6 +574,7 @@ if (tokenExpired()) {
 ### Problema: Eventos no se reciben
 
 **Solución:**
+
 1. Verifica que el evento esté bien escrito (case-sensitive)
 2. Verifica que el servidor esté emitiendo el evento
 3. Usa el logging del servicio para debugging:

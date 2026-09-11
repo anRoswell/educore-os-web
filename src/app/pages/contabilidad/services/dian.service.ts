@@ -1,23 +1,29 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import {
-  DianConfigModel,
-  DocumentoElectronicoModel,
-} from '../models/contabilidad.models';
+import { DianConfigModel, DocumentoElectronicoModel } from '../models/contabilidad.models';
+import { getApiBaseUrl } from '../../../core/config/api-url';
 
 @Injectable({ providedIn: 'root' })
 export class DianService {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:3001/api/v1/contabilidad/dian';
+  private readonly base = `${getApiBaseUrl()}/contabilidad/dian`;
 
-  getConfig(): Observable<{ config: DianConfigModel | null; configurado: boolean; tieneCertificado: boolean }> {
-    return this.http.get<{ config: DianConfigModel | null; configurado: boolean; tieneCertificado: boolean }>(
-      `${this.base}/config`,
-    );
+  getConfig(): Observable<{
+    config: DianConfigModel | null;
+    configurado: boolean;
+    tieneCertificado: boolean;
+  }> {
+    return this.http.get<{
+      config: DianConfigModel | null;
+      configurado: boolean;
+      tieneCertificado: boolean;
+    }>(`${this.base}/config`);
   }
 
-  saveConfig(dto: Partial<DianConfigModel>): Observable<{ success: boolean; message: string; config: DianConfigModel }> {
+  saveConfig(
+    dto: Partial<DianConfigModel>,
+  ): Observable<{ success: boolean; message: string; config: DianConfigModel }> {
     return this.http.post<{ success: boolean; message: string; config: DianConfigModel }>(
       `${this.base}/config`,
       dto,
@@ -37,7 +43,12 @@ export class DianService {
     search?: string;
     page?: number;
     limit?: number;
-  }): Observable<{ items: DocumentoElectronicoModel[]; total: number; page: number; limit: number }> {
+  }): Observable<{
+    items: DocumentoElectronicoModel[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     let params = new HttpParams();
     if (filters?.tipoDocumento) params = params.set('tipoDocumento', filters.tipoDocumento);
     if (filters?.estadoDian) params = params.set('estadoDian', filters.estadoDian);
@@ -45,34 +56,48 @@ export class DianService {
     if (filters?.page) params = params.set('page', filters.page.toString());
     if (filters?.limit) params = params.set('limit', filters.limit.toString());
 
-    return this.http.get<{ items: DocumentoElectronicoModel[]; total: number; page: number; limit: number }>(
-      `${this.base}/documentos`,
-      { params },
-    );
+    return this.http.get<{
+      items: DocumentoElectronicoModel[];
+      total: number;
+      page: number;
+      limit: number;
+    }>(`${this.base}/documentos`, { params });
   }
 
-  emitirFactura(cuentaCobroId: string, sendToDian: boolean = true): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
-    return this.http.post<{ success: boolean; message: string; documento: DocumentoElectronicoModel }>(
-      `${this.base}/facturas/emitir`,
-      { cuentaCobroId, sendToDian },
-    );
+  emitirFactura(
+    cuentaCobroId: string,
+    sendToDian: boolean = true,
+  ): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      documento: DocumentoElectronicoModel;
+    }>(`${this.base}/facturas/emitir`, { cuentaCobroId, sendToDian });
   }
 
-  emitirFacturaDirecta(dto: import('../models/contabilidad.models').EmitirFacturaDirectaModel): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
-    return this.http.post<{ success: boolean; message: string; documento: DocumentoElectronicoModel }>(
-      `${this.base}/facturas/emitir-directa`,
-      dto,
-    );
+  emitirFacturaDirecta(
+    dto: import('../models/contabilidad.models').EmitirFacturaDirectaModel,
+  ): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      documento: DocumentoElectronicoModel;
+    }>(`${this.base}/facturas/emitir-directa`, dto);
   }
 
-  emitirFacturasMasivas(dto: import('../models/contabilidad.models').EmitirFacturasMasivasModel): Observable<import('../models/contabilidad.models').ResultadoFacturasMasivasModel> {
+  emitirFacturasMasivas(
+    dto: import('../models/contabilidad.models').EmitirFacturasMasivasModel,
+  ): Observable<import('../models/contabilidad.models').ResultadoFacturasMasivasModel> {
     return this.http.post<import('../models/contabilidad.models').ResultadoFacturasMasivasModel>(
       `${this.base}/facturas/emitir-masiva`,
       dto,
     );
   }
 
-  enviarFacturaEmail(documentoId: string, dto?: import('../models/contabilidad.models').EnviarFacturaEmailModel): Observable<{ success: boolean; message: string; enviadoA: string }> {
+  enviarFacturaEmail(
+    documentoId: string,
+    dto?: import('../models/contabilidad.models').EnviarFacturaEmailModel,
+  ): Observable<{ success: boolean; message: string; enviadoA: string }> {
     return this.http.post<{ success: boolean; message: string; enviadoA: string }>(
       `${this.base}/documentos/${documentoId}/enviar-email`,
       dto || {},
@@ -85,10 +110,11 @@ export class DianService {
     valorTotal?: number;
     sendToDian?: boolean;
   }): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
-    return this.http.post<{ success: boolean; message: string; documento: DocumentoElectronicoModel }>(
-      `${this.base}/notas-credito/emitir`,
-      dto,
-    );
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      documento: DocumentoElectronicoModel;
+    }>(`${this.base}/notas-credito/emitir`, dto);
   }
 
   emitirNotaDebito(dto: {
@@ -97,10 +123,11 @@ export class DianService {
     valorTotal: number;
     sendToDian?: boolean;
   }): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
-    return this.http.post<{ success: boolean; message: string; documento: DocumentoElectronicoModel }>(
-      `${this.base}/notas-debito/emitir`,
-      dto,
-    );
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      documento: DocumentoElectronicoModel;
+    }>(`${this.base}/notas-debito/emitir`, dto);
   }
 
   emitirDocumentoSoporte(dto: {
@@ -111,17 +138,25 @@ export class DianService {
     cuentaPorPagarId?: string;
     sendToDian?: boolean;
   }): Observable<{ success: boolean; message: string; documento: DocumentoElectronicoModel }> {
-    return this.http.post<{ success: boolean; message: string; documento: DocumentoElectronicoModel }>(
-      `${this.base}/documentos-soporte/emitir`,
-      dto,
-    );
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      documento: DocumentoElectronicoModel;
+    }>(`${this.base}/documentos-soporte/emitir`, dto);
   }
 
-  reconsultar(documentoId: string): Observable<{ success: boolean; estadoDian: string; mensajeRespuesta: string; documento: DocumentoElectronicoModel }> {
-    return this.http.post<{ success: boolean; estadoDian: string; mensajeRespuesta: string; documento: DocumentoElectronicoModel }>(
-      `${this.base}/documentos/${documentoId}/reconsultar`,
-      {},
-    );
+  reconsultar(documentoId: string): Observable<{
+    success: boolean;
+    estadoDian: string;
+    mensajeRespuesta: string;
+    documento: DocumentoElectronicoModel;
+  }> {
+    return this.http.post<{
+      success: boolean;
+      estadoDian: string;
+      mensajeRespuesta: string;
+      documento: DocumentoElectronicoModel;
+    }>(`${this.base}/documentos/${documentoId}/reconsultar`, {});
   }
 
   descargarXml(documentoId: string): Observable<Blob> {

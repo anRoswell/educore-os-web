@@ -7,21 +7,21 @@
 
 /**
  * DESARROLLO LOCAL
- * Backend corriendo en localhost:3000
+ * Backend publicado detrás del dominio actual
  */
 export const environmentDevelopment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api/v1',
+  apiUrl: '/api/v1',
   socket: {
-    url: 'http://localhost:3000',
+    url: '',
     path: '/socket.io',
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
-    transports: ['websocket', 'polling']
-  }
+    transports: ['websocket', 'polling'],
+  },
 };
 
 /**
@@ -41,8 +41,8 @@ export const environmentDevServer = {
     timeout: 20000,
     transports: ['websocket', 'polling'],
     // En HTTPS, preferir websocket
-    secure: true
-  }
+    secure: true,
+  },
 };
 
 /**
@@ -61,8 +61,8 @@ export const environmentStaging = {
     reconnectionDelayMax: 10000,
     timeout: 30000,
     transports: ['websocket', 'polling'],
-    secure: true
-  }
+    secure: true,
+  },
 };
 
 /**
@@ -85,8 +85,8 @@ export const environmentProduction = {
     secure: true,
     // Opciones adicionales de producción
     upgrade: false, // No hacer upgrade de polling a websocket
-    rememberUpgrade: true
-  }
+    rememberUpgrade: true,
+  },
 };
 
 /**
@@ -109,9 +109,9 @@ export const environmentMultiTenant = {
     secure: true,
     auth: {
       token,
-      tenant // Enviar tenant en la autenticación
-    }
-  })
+      tenant, // Enviar tenant en la autenticación
+    },
+  }),
 };
 
 /**
@@ -174,7 +174,7 @@ export class AppComponent implements OnInit {
  *    El servidor NestJS debe permitir conexiones Socket.IO desde el frontend:
  *
  *    app.enableCors({
- *      origin: ['http://localhost:4200', 'https://app.educoreos.com'],
+ *      origin: ['https://qa-educoreos.secticsolar.site', 'https://app.educoreos.com'],
  *      credentials: true
  *    });
  *

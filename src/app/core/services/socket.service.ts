@@ -11,7 +11,7 @@ export enum SocketConnectionState {
   CONNECTING = 'connecting',
   CONNECTED = 'connected',
   RECONNECTING = 'reconnecting',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 /**
@@ -45,7 +45,7 @@ export interface SocketConfig {
  * @example
  * constructor(private socketService: SocketService) {
  *   this.socketService.connect({
- *     url: 'http://localhost:3000',
+ *     url: '',
  *     path: '/socket.io',
  *     auth: { token: 'jwt-token' }
  *   });
@@ -55,7 +55,7 @@ export interface SocketConfig {
  * }
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SocketService {
   private destroyRef = inject(DestroyRef);
@@ -79,7 +79,7 @@ export class SocketService {
     reconnectionDelayMax: 5000,
     timeout: 20000,
     autoConnect: false,
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
   };
 
   constructor() {
@@ -116,7 +116,7 @@ export class SocketService {
         timeout: fullConfig.timeout,
         autoConnect: fullConfig.autoConnect,
         transports: fullConfig.transports,
-        auth: fullConfig.auth
+        auth: fullConfig.auth,
       });
 
       this.setupEventListeners();
@@ -208,7 +208,7 @@ export class SocketService {
 
     return fromEvent<T>(this.socket, event).pipe(
       takeUntil(this.destroy$),
-      tap(data => console.log(`[SocketService] Recibido evento: ${event}`, data))
+      tap((data) => console.log(`[SocketService] Recibido evento: ${event}`, data)),
     );
   }
 

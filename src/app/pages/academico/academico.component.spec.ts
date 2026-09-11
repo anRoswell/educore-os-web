@@ -97,8 +97,22 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
 
   it('3. Debe cargar la planilla de calificaciones y redondear las notas a un decimal', () => {
     const mockPlanillaRaw = [
-      { matriculaId: 'mat-001', estudianteNombre: 'Ana Gómez', documento: '1001', nota: '4.35', desempeno: 'ALTO', observaciones: 'Excelente' },
-      { matriculaId: 'mat-002', estudianteNombre: 'Bernardo Silva', documento: '1002', nota: '2.84', desempeno: 'BAJO', observaciones: 'Plan de mejoramiento' },
+      {
+        matriculaId: 'mat-001',
+        estudianteNombre: 'Ana Gómez',
+        documento: '1001',
+        nota: '4.35',
+        desempeno: 'ALTO',
+        observaciones: 'Excelente',
+      },
+      {
+        matriculaId: 'mat-002',
+        estudianteNombre: 'Bernardo Silva',
+        documento: '1002',
+        nota: '2.84',
+        desempeno: 'BAJO',
+        observaciones: 'Plan de mejoramiento',
+      },
     ];
 
     vi.spyOn(apiService, 'get').mockReturnValue(of(mockPlanillaRaw));
@@ -115,11 +129,20 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
 
   it('4. Debe guardar planilla de calificaciones en lote por HTTP PUT', () => {
     component.planilla.set([
-      { matriculaId: 'mat-001', estudianteNombre: 'Ana Gómez', documento: '1001', nota: 4.5, desempeno: 'ALTO', observaciones: 'Muy buen trabajo' },
+      {
+        matriculaId: 'mat-001',
+        estudianteNombre: 'Ana Gómez',
+        documento: '1001',
+        nota: 4.5,
+        desempeno: 'ALTO',
+        observaciones: 'Muy buen trabajo',
+      },
     ]);
     component.selectedPeriodoId.set('per-1');
 
-    const putSpy = vi.spyOn(apiService, 'put').mockReturnValue(of({ mensaje: 'Planilla guardada correctamente en BD.' }));
+    const putSpy = vi
+      .spyOn(apiService, 'put')
+      .mockReturnValue(of({ mensaje: 'Planilla guardada correctamente en BD.' }));
     const toastSpy = vi.spyOn(toastService, 'success');
 
     component.guardarCalificaciones();
@@ -127,11 +150,12 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
     expect(putSpy).toHaveBeenCalledWith('academico/calificaciones/lote', {
       actividadId: 'fa111111-1111-4111-8111-000000000001',
       periodoId: 'per-1',
-      calificaciones: [
-        { matriculaId: 'mat-001', nota: 4.5, observaciones: 'Muy buen trabajo' }
-      ]
+      calificaciones: [{ matriculaId: 'mat-001', nota: 4.5, observaciones: 'Muy buen trabajo' }],
     });
-    expect(toastSpy).toHaveBeenCalledWith('¡Planilla Guardada!', expect.stringContaining('Planilla guardada'));
+    expect(toastSpy).toHaveBeenCalledWith(
+      '¡Planilla Guardada!',
+      expect.stringContaining('Planilla guardada'),
+    );
   });
 
   it('5. Debe abrir modal y crear un nuevo Periodo Académico', () => {
@@ -143,7 +167,9 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
     expect(component.nuevoPeriodo.numero).toBe(2);
     expect(component.nuevoPeriodo.nombre).toBe('Periodo 2');
 
-    const postSpy = vi.spyOn(apiService, 'post').mockReturnValue(of({ id: 'per-2', nombre: 'Periodo 2', pesoPorcentual: 25 }));
+    const postSpy = vi
+      .spyOn(apiService, 'post')
+      .mockReturnValue(of({ id: 'per-2', nombre: 'Periodo 2', pesoPorcentual: 25 }));
     const toastSpy = vi.spyOn(toastService, 'success');
 
     component.guardarNuevoPeriodo();
@@ -155,7 +181,9 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
 
   it('6. Debe gestionar las reglas SIEE de promoción escolar', () => {
     component.aniosLectivosList.set([{ id: 'anio-2026', nombre: '2026' }]);
-    vi.spyOn(apiService, 'get').mockReturnValue(of([{ materiasReprobadasLimite: 2, notaMinimaAprobacion: 3.5 }]));
+    vi.spyOn(apiService, 'get').mockReturnValue(
+      of([{ materiasReprobadasLimite: 2, notaMinimaAprobacion: 3.5 }]),
+    );
     component.abrirModalReglasSiee();
 
     expect(component.modalReglasSiee()).toBe(true);
@@ -178,7 +206,7 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
     const postBlobSpy = vi.spyOn(apiService, 'postBlob').mockReturnValue(of(mockBlob));
     const toastSpy = vi.spyOn(toastService, 'success');
 
-    const mockUrl = 'blob:http://localhost/mock-uuid';
+    const mockUrl = 'blob:https://qa-educoreos.secticsolar.site/mock-uuid';
     vi.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
@@ -191,7 +219,7 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
     });
     expect(toastSpy).toHaveBeenCalledWith(
       '✅ Cierre de Año Exitoso',
-      expect.stringContaining('Acta de Promoción generada')
+      expect.stringContaining('Acta de Promoción generada'),
     );
     expect(component.modalCierreAno()).toBe(false);
   });
@@ -230,7 +258,7 @@ describe('AcademicoComponent (SIEE, Periodos & Promoción)', () => {
 
     expect(windowSpy).toHaveBeenCalledWith(
       expect.stringContaining('academico/boletines/descargar-masivo/gp-10a/periodo/per-1'),
-      '_blank'
+      '_blank',
     );
   });
 

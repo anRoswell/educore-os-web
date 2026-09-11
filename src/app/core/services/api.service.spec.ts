@@ -6,7 +6,7 @@ import { ApiService } from './api.service';
 describe('ApiService', () => {
   let service: ApiService;
   let httpMock: HttpTestingController;
-  const baseUrl = 'http://localhost:3001/api/v1';
+  const baseUrl = '/api/v1';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -29,7 +29,9 @@ describe('ApiService', () => {
 
   it('2. Debe construir URLs correctamente con getPdfUrl', () => {
     expect(service.getPdfUrl('boletin/123/periodo/1')).toBe(`${baseUrl}/pdf/boletin/123/periodo/1`);
-    expect(service.getPdfUrl('/boletin/123/periodo/1')).toBe(`${baseUrl}/pdf/boletin/123/periodo/1`);
+    expect(service.getPdfUrl('/boletin/123/periodo/1')).toBe(
+      `${baseUrl}/pdf/boletin/123/periodo/1`,
+    );
   });
 
   it('3. Debe realizar peticiones GET con y sin parámetros query', () => {
@@ -45,9 +47,11 @@ describe('ApiService', () => {
     req1.flush(mockData);
 
     // Con params
-    service.get<any[]>('matriculas/estudiantes', { search: 'Carlos', gradoId: 'g1', empty: null }).subscribe((data) => {
-      expect(data).toEqual(mockData);
-    });
+    service
+      .get<any[]>('matriculas/estudiantes', { search: 'Carlos', gradoId: 'g1', empty: null })
+      .subscribe((data) => {
+        expect(data).toEqual(mockData);
+      });
 
     const req2 = httpMock.expectOne(`${baseUrl}/matriculas/estudiantes?search=Carlos&gradoId=g1`);
     expect(req2.request.method).toBe('GET');

@@ -27,7 +27,7 @@ export class AppComponentExample implements OnInit {
 
     // Conectar al servidor
     this.socketService.connect({
-      url: 'http://localhost:3000', // URL del backend
+      url: '', // Usa el dominio actual mediante el proxy
       path: '/socket.io',
       auth: {
         token: token // Enviar token para autenticación
@@ -297,7 +297,7 @@ export class AuthGuardExample {
     if (token && !this.socketService.isSocketConnected()) {
       // Reconectar si hay token pero no hay conexión
       this.socketService.connect({
-        url: 'http://localhost:3000',
+        url: '',
         auth: { token }
       });
     }

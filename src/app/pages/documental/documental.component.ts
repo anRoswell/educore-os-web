@@ -2,6 +2,7 @@ import { Component, signal, computed, inject, OnInit, ViewChild, ElementRef } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
+import { resolveApiResourceUrl } from '../../core/config/api-url';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ModalSolicitudArcoComponent } from '../../shared/components/modal-solicitud-arco.component';
@@ -118,7 +119,8 @@ export interface FlujoItem {
 export interface InstanciaItem {
   id: string;
   consecutivoRadicado: string;
-  estado: 'INICIADO' | 'EN_TRAMITE' | 'PENDIENTE_FIRMA' | 'APROBADO_FINAL' | 'RECHAZADO' | 'CANCELADO';
+  estado:
+    'INICIADO' | 'EN_TRAMITE' | 'PENDIENTE_FIRMA' | 'APROBADO_FINAL' | 'RECHAZADO' | 'CANCELADO';
   flujo: FlujoItem;
   etapaActual?: {
     id: string;
@@ -182,15 +184,23 @@ export interface FirmaUsuarioItem {
           </div>
           <h1>Gestión Documental & Flujos Dinámicos</h1>
           <p class="subtitle">
-            Diseño no-code de circuitos de aprobación, radicación de trámites institucionales, vault de firmas digitales y sellado criptográfico inmutable SHA-256.
+            Diseño no-code de circuitos de aprobación, radicación de trámites institucionales, vault
+            de firmas digitales y sellado criptográfico inmutable SHA-256.
           </p>
         </div>
 
         <div class="header-actions">
           <button class="btn-primary" (click)="vistaActiva.set(VistaDocumental.NUEVO_TRAMITE)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Radicar Nuevo Trámite
           </button>
@@ -296,9 +306,16 @@ export interface FirmaUsuarioItem {
         <div class="kanban-view animate-fadeIn">
           <div class="glass-panel filter-toolbar">
             <div class="search-box">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input
                 type="text"
@@ -366,7 +383,15 @@ export interface FirmaUsuarioItem {
                     [class.success]="inst.estado === EstadoInstanciaDocumental.APROBADO_FINAL"
                     [class.danger]="inst.estado === EstadoInstanciaDocumental.RECHAZADO"
                   >
-                    {{ inst.estado === EstadoInstanciaDocumental.APROBADO_FINAL ? '✅ Aprobado Final' : inst.estado === EstadoInstanciaDocumental.PENDIENTE_FIRMA ? '✍️ Pendiente Firma' : inst.estado === EstadoInstanciaDocumental.RECHAZADO ? '❌ Rechazado' : '⏳ En Trámite' }}
+                    {{
+                      inst.estado === EstadoInstanciaDocumental.APROBADO_FINAL
+                        ? '✅ Aprobado Final'
+                        : inst.estado === EstadoInstanciaDocumental.PENDIENTE_FIRMA
+                          ? '✍️ Pendiente Firma'
+                          : inst.estado === EstadoInstanciaDocumental.RECHAZADO
+                            ? '❌ Rechazado'
+                            : '⏳ En Trámite'
+                    }}
                   </span>
                 </div>
 
@@ -383,12 +408,19 @@ export interface FirmaUsuarioItem {
                 </div>
 
                 <!-- ETAPA ACTUAL -->
-                @if (inst.estado !== EstadoInstanciaDocumental.APROBADO_FINAL && inst.estado !== EstadoInstanciaDocumental.RECHAZADO) {
+                @if (
+                  inst.estado !== EstadoInstanciaDocumental.APROBADO_FINAL &&
+                  inst.estado !== EstadoInstanciaDocumental.RECHAZADO
+                ) {
                   <div class="etapa-actual-box">
                     <div class="etapa-info">
-                      <span class="etapa-label">Paso Actual (Orden {{ inst.etapaActual?.orden }}):</span>
+                      <span class="etapa-label"
+                        >Paso Actual (Orden {{ inst.etapaActual?.orden }}):</span
+                      >
                       <span class="etapa-title">{{ inst.etapaActual?.nombre }}</span>
-                      <span class="rol-badge">Responsable: {{ inst.etapaActual?.rolResponsable }}</span>
+                      <span class="rol-badge"
+                        >Responsable: {{ inst.etapaActual?.rolResponsable }}</span
+                      >
                     </div>
                   </div>
                 }
@@ -396,37 +428,53 @@ export interface FirmaUsuarioItem {
                 <!-- SOLICITANTE & FECHA -->
                 <div class="card-footer-info">
                   <div class="user-solicita">
-                    <span>👤 Solicitado por: <strong>{{ inst.solicitante?.nombres }} {{ inst.solicitante?.apellidos }}</strong></span>
+                    <span
+                      >👤 Solicitado por:
+                      <strong
+                        >{{ inst.solicitante?.nombres }} {{ inst.solicitante?.apellidos }}</strong
+                      ></span
+                    >
                   </div>
-                  <span class="date-text">📅 {{ inst.createdAt | date:'short' }}</span>
+                  <span class="date-text">📅 {{ inst.createdAt | date: 'short' }}</span>
                 </div>
 
                 <!-- BOTONES DE ACCION -->
                 <div class="card-actions">
                   <button class="btn-outline-sm" (click)="verTrazabilidad(inst)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <polyline points="12 6 12 12 16 14"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
                     </svg>
                     Trazabilidad
                   </button>
 
-                  @if (inst.estado === EstadoInstanciaDocumental.EN_TRAMITE || inst.estado === EstadoInstanciaDocumental.PENDIENTE_FIRMA) {
-                    <button
-                      class="btn-success-sm"
-                      (click)="abrirModalAprobar(inst)"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
+                  @if (
+                    inst.estado === EstadoInstanciaDocumental.EN_TRAMITE ||
+                    inst.estado === EstadoInstanciaDocumental.PENDIENTE_FIRMA
+                  ) {
+                    <button class="btn-success-sm" (click)="abrirModalAprobar(inst)">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
                       </svg>
                       {{ inst.etapaActual?.requiereFirma ? 'Firmar con OTP' : 'Aprobar Etapa' }}
                     </button>
 
-                    <button
-                      class="btn-danger-sm"
-                      (click)="abrirModalRechazar(inst)"
-                    >
+                    <button class="btn-danger-sm" (click)="abrirModalRechazar(inst)">
                       Rechazar
                     </button>
                   }
@@ -446,15 +494,28 @@ export interface FirmaUsuarioItem {
             <div class="panel-header">
               <div>
                 <h3>Catálogo de Trámites Institucionales</h3>
-                <p class="subtitle-small">Inicia solicitudes, requerimientos o procesos formales (Derechos de Petición, Certificados, etc.)</p>
+                <p class="subtitle-small">
+                  Inicia solicitudes, requerimientos o procesos formales (Derechos de Petición,
+                  Certificados, etc.)
+                </p>
               </div>
             </div>
 
-            <div class="filter-toolbar" style="margin-bottom: 1.5rem; background: rgba(255, 255, 255, 0.4); padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.5);">
+            <div
+              class="filter-toolbar"
+              style="margin-bottom: 1.5rem; background: rgba(255, 255, 255, 0.4); padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.5);"
+            >
               <div class="search-box" style="width: 100%; max-width: 400px; margin-bottom: 1rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
                   type="text"
@@ -465,19 +526,39 @@ export interface FirmaUsuarioItem {
               </div>
 
               <div class="filter-pills" style="flex-wrap: wrap;">
-                <button class="pill-btn" [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.TODOS" (click)="filtroCategoriaFlujo.set(CategoriaFlujo.TODOS)">
+                <button
+                  class="pill-btn"
+                  [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.TODOS"
+                  (click)="filtroCategoriaFlujo.set(CategoriaFlujo.TODOS)"
+                >
                   Todos
                 </button>
-                <button class="pill-btn" [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.ACADEMICO" (click)="filtroCategoriaFlujo.set(CategoriaFlujo.ACADEMICO)">
+                <button
+                  class="pill-btn"
+                  [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.ACADEMICO"
+                  (click)="filtroCategoriaFlujo.set(CategoriaFlujo.ACADEMICO)"
+                >
                   🎓 Académico & Certificados
                 </button>
-                <button class="pill-btn" [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.ADMINISTRATIVO" (click)="filtroCategoriaFlujo.set(CategoriaFlujo.ADMINISTRATIVO)">
+                <button
+                  class="pill-btn"
+                  [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.ADMINISTRATIVO"
+                  (click)="filtroCategoriaFlujo.set(CategoriaFlujo.ADMINISTRATIVO)"
+                >
                   🏢 Administrativo & Financiero
                 </button>
-                <button class="pill-btn" [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.LEGAL" (click)="filtroCategoriaFlujo.set(CategoriaFlujo.LEGAL)">
+                <button
+                  class="pill-btn"
+                  [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.LEGAL"
+                  (click)="filtroCategoriaFlujo.set(CategoriaFlujo.LEGAL)"
+                >
                   ⚖️ Jurídico & Habeas Data
                 </button>
-                <button class="pill-btn" [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.CONVIVENCIA" (click)="filtroCategoriaFlujo.set(CategoriaFlujo.CONVIVENCIA)">
+                <button
+                  class="pill-btn"
+                  [class.active]="filtroCategoriaFlujo() === CategoriaFlujo.CONVIVENCIA"
+                  (click)="filtroCategoriaFlujo.set(CategoriaFlujo.CONVIVENCIA)"
+                >
                   🤝 Convivencia Escolar
                 </button>
               </div>
@@ -492,28 +573,51 @@ export interface FirmaUsuarioItem {
                 >
                   <span class="flujo-icon">{{ f.icono }}</span>
                   <div class="flujo-details">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                    <div
+                      style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;"
+                    >
                       <h4>{{ f.nombre }}</h4>
-                      <span class="categoria-tag" style="font-size: 0.65rem; background: #e0e7ff; color: #4338ca; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 600; white-space: nowrap;">{{ formatCategoriaFlujo(f.categoria) | uppercase }}</span>
+                      <span
+                        class="categoria-tag"
+                        style="font-size: 0.65rem; background: #e0e7ff; color: #4338ca; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 600; white-space: nowrap;"
+                        >{{ formatCategoriaFlujo(f.categoria) | uppercase }}</span
+                      >
                     </div>
                     <p>{{ f.descripcion }}</p>
-                    <div class="flujo-meta" style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                      <span class="meta-pill" style="font-size: 0.7rem; background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; color: #475569;">
-                        <span>⏱️</span> SLA: {{ f.etapas?.length ? (f.etapas[0].slaHoras || 24) : 24 }}h
+                    <div
+                      class="flujo-meta"
+                      style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;"
+                    >
+                      <span
+                        class="meta-pill"
+                        style="font-size: 0.7rem; background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; color: #475569;"
+                      >
+                        <span>⏱️</span> SLA:
+                        {{ f.etapas?.length ? f.etapas[0].slaHoras || 24 : 24 }}h
                       </span>
-                      <span class="meta-pill" style="font-size: 0.7rem; background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; color: #475569;">
-                        <span>👥</span> {{ f.etapas?.length ? f.etapas[0].rolResponsable : 'Varios' }}
+                      <span
+                        class="meta-pill"
+                        style="font-size: 0.7rem; background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; color: #475569;"
+                      >
+                        <span>👥</span>
+                        {{ f.etapas?.length ? f.etapas[0].rolResponsable : 'Varios' }}
                       </span>
-                      <span class="meta-pill" style="font-size: 0.7rem; background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; color: #475569;">
+                      <span
+                        class="meta-pill"
+                        style="font-size: 0.7rem; background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; color: #475569;"
+                      >
                         <span>📍</span> {{ f.etapas?.length || 0 }} etapas
                       </span>
                     </div>
                   </div>
                 </div>
               }
-              
+
               @if (flujosFiltrados().length === 0) {
-                <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #64748b;">
+                <div
+                  class="empty-state"
+                  style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #64748b;"
+                >
                   <span style="font-size: 2rem; display: block; margin-bottom: 1rem;">🔍</span>
                   <p>No se encontraron trámites que coincidan con la búsqueda.</p>
                 </div>
@@ -536,7 +640,7 @@ export interface FirmaUsuarioItem {
                           <span class="required">*</span>
                         }
                       </label>
-                      
+
                       @if (isFieldType(fld, 'TEXTO', 'TEXT', 'STRING')) {
                         <input
                           type="text"
@@ -584,10 +688,7 @@ export interface FirmaUsuarioItem {
                       }
 
                       @if (isFieldType(fld, 'SELECCION', 'SELECT', 'OPTIONS', 'COMBOBOX')) {
-                        <select
-                          class="input-custom"
-                          [(ngModel)]="formData()[fld.campo]"
-                        >
+                        <select class="input-custom" [(ngModel)]="formData()[fld.campo]">
                           <option value="">-- Seleccionar {{ fld.etiqueta }} --</option>
                           @for (opt of fld.opciones; track opt) {
                             <option [value]="opt">{{ opt }}</option>
@@ -617,7 +718,11 @@ export interface FirmaUsuarioItem {
                 <div class="etapas-preview">
                   <h5>Circuito de Aprobación que seguirá este trámite:</h5>
                   <div class="etapas-timeline">
-                    @for (et of flujoSeleccionado()?.etapas; track et.id || $index; let idx = $index) {
+                    @for (
+                      et of flujoSeleccionado()?.etapas;
+                      track et.id || $index;
+                      let idx = $index
+                    ) {
                       <div class="etapa-step">
                         <div class="step-num">{{ idx + 1 }}</div>
                         <div class="step-desc">
@@ -630,11 +735,20 @@ export interface FirmaUsuarioItem {
                 </div>
 
                 <div class="form-actions">
-                  <button class="btn-secondary" (click)="flujoSeleccionado.set(null)">Cancelar</button>
+                  <button class="btn-secondary" (click)="flujoSeleccionado.set(null)">
+                    Cancelar
+                  </button>
                   <button class="btn-primary" (click)="radicarTramite()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M22 2L11 13"/>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M22 2L11 13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
                     Radicar Trámite y Generar Consecutivo
                   </button>
@@ -654,7 +768,10 @@ export interface FirmaUsuarioItem {
             <div class="panel-header">
               <div>
                 <h3>Diseñador Visual de Flujos & Circuitos BPM</h3>
-                <p class="subtitle-small">Define nuevos circuitos de aprobación sin programar, asignando roles, acciones y SLAs.</p>
+                <p class="subtitle-small">
+                  Define nuevos circuitos de aprobación sin programar, asignando roles, acciones y
+                  SLAs.
+                </p>
               </div>
               <button class="btn-secondary" (click)="abrirModalCrearFlujo()">
                 + Crear Nueva Plantilla de Flujo
@@ -669,10 +786,17 @@ export interface FirmaUsuarioItem {
                     <div class="flujo-details">
                       <h4>{{ fl.nombre }}</h4>
                       <p>{{ fl.descripcion }}</p>
-                      <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
+                      <div
+                        style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;"
+                      >
                         <span class="code-pill">{{ fl.codigo }}</span>
                         @if (fl.trdSerie) {
-                          <span class="trd-chip-mini">📑 TRD: {{ fl.trdSerie.codigoSerie }}.{{ fl.trdSerie.codigoSubserie }} ({{ formatDisposicion(fl.trdSerie.disposicionFinal) }})</span>
+                          <span class="trd-chip-mini"
+                            >📑 TRD: {{ fl.trdSerie.codigoSerie }}.{{
+                              fl.trdSerie.codigoSubserie
+                            }}
+                            ({{ formatDisposicion(fl.trdSerie.disposicionFinal) }})</span
+                          >
                         }
                       </div>
                     </div>
@@ -681,7 +805,11 @@ export interface FirmaUsuarioItem {
                   <div class="flujo-steps-visual">
                     @for (st of fl.etapas; track st.id || $index; let isLast = $last) {
                       <div class="step-pill-wrapper">
-                        <div class="step-pill" [class.firma]="st.requiereFirma" [class.adjunto]="st.requiereAdjunto">
+                        <div
+                          class="step-pill"
+                          [class.firma]="st.requiereFirma"
+                          [class.adjunto]="st.requiereAdjunto"
+                        >
                           <span class="st-num">{{ st.orden }}</span>
                           <span class="st-name">{{ st.nombre }}</span>
                           <span class="st-meta">{{ st.rolResponsable }}</span>
@@ -699,9 +827,13 @@ export interface FirmaUsuarioItem {
                       </div>
                     }
                   </div>
-                  
+
                   <div class="flujo-row-actions" style="margin-left: 1rem;">
-                    <button class="btn-icon" (click)="abrirModalEditarFlujo(fl)" title="Editar Plantilla">
+                    <button
+                      class="btn-icon"
+                      (click)="abrirModalEditarFlujo(fl)"
+                      title="Editar Plantilla"
+                    >
                       ✏️
                     </button>
                   </div>
@@ -726,7 +858,8 @@ export interface FirmaUsuarioItem {
                 </div>
                 <h3>Tablas de Retención Documental (TRD) & Ciclo Vital</h3>
                 <p class="subtitle-small">
-                  Clasificación de series y subseries documentales, tiempos de retención en archivo de gestión / central y disposición final legal para colegios.
+                  Clasificación de series y subseries documentales, tiempos de retención en archivo
+                  de gestión / central y disposición final legal para colegios.
                 </p>
               </div>
 
@@ -806,7 +939,9 @@ export interface FirmaUsuarioItem {
                   @for (trd of trdSeriesFiltradas(); track trd.id) {
                     <tr>
                       <td>
-                        <span class="code-badge font-mono">{{ trd.codigoSerie }}.{{ trd.codigoSubserie }}</span>
+                        <span class="code-badge font-mono"
+                          >{{ trd.codigoSerie }}.{{ trd.codigoSubserie }}</span
+                        >
                       </td>
                       <td>
                         <span class="seccion-chip">{{ formatSeccion(trd.seccion) }}</span>
@@ -818,15 +953,21 @@ export interface FirmaUsuarioItem {
                         </div>
                       </td>
                       <td class="text-center">
-                        <span class="years-pill gestion">{{ trd.retencionGestionAnios }} año(s)</span>
+                        <span class="years-pill gestion"
+                          >{{ trd.retencionGestionAnios }} año(s)</span
+                        >
                       </td>
                       <td class="text-center">
-                        <span class="years-pill central">{{ trd.retencionCentralAnios }} año(s)</span>
+                        <span class="years-pill central"
+                          >{{ trd.retencionCentralAnios }} año(s)</span
+                        >
                       </td>
                       <td class="text-center">
                         <span
                           class="disposicion-badge"
-                          [class.ct]="trd.disposicionFinal === DisposicionFinalTRD.CONSERVACION_TOTAL"
+                          [class.ct]="
+                            trd.disposicionFinal === DisposicionFinalTRD.CONSERVACION_TOTAL
+                          "
                           [class.e]="trd.disposicionFinal === DisposicionFinalTRD.ELIMINACION"
                           [class.d]="trd.disposicionFinal === DisposicionFinalTRD.DIGITALIZACION"
                           [class.s]="trd.disposicionFinal === DisposicionFinalTRD.SELECCION"
@@ -838,10 +979,19 @@ export interface FirmaUsuarioItem {
                         <span class="soporte-badge">{{ trd.soporte }}</span>
                       </td>
                       <td>
-                        <p class="procedimiento-text">{{ trd.procedimiento || 'Custodia y conservación según normativa institucional.' }}</p>
+                        <p class="procedimiento-text">
+                          {{
+                            trd.procedimiento ||
+                              'Custodia y conservación según normativa institucional.'
+                          }}
+                        </p>
                       </td>
                       <td class="text-center">
-                        <button class="btn-icon" (click)="abrirModalEditarTrd(trd)" title="Editar tiempos y disposición">
+                        <button
+                          class="btn-icon"
+                          (click)="abrirModalEditarTrd(trd)"
+                          title="Editar tiempos y disposición"
+                        >
                           ✏️
                         </button>
                       </td>
@@ -927,10 +1077,17 @@ export interface FirmaUsuarioItem {
                     (change)="onSignatureFileSelected($event)"
                   />
                   <div class="drop-signature" (click)="imgInput.click()">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                      <polyline points="21 15 16 10 5 21"/>
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
                     </svg>
                     <span>Haz clic para cargar imagen PNG con fondo transparente</span>
                   </div>
@@ -952,7 +1109,10 @@ export interface FirmaUsuarioItem {
                   [(ngModel)]="nuevaFirmaPin"
                   placeholder="****"
                 />
-                <small class="hint-text">Este PIN te será solicitado cada vez que apruebes un trámite con firma electrónica.</small>
+                <small class="hint-text"
+                  >Este PIN te será solicitado cada vez que apruebes un trámite con firma
+                  electrónica.</small
+                >
               </div>
 
               <div class="form-actions mt-4">
@@ -972,7 +1132,10 @@ export interface FirmaUsuarioItem {
               @if (firmasUsuario().length === 0) {
                 <div class="empty-state">
                   <span>✍️</span>
-                  <p>No tienes firmas registradas aún. Registra tu trazo o sube tu firma escaneada a la izquierda.</p>
+                  <p>
+                    No tienes firmas registradas aún. Registra tu trazo o sube tu firma escaneada a
+                    la izquierda.
+                  </p>
                 </div>
               }
 
@@ -986,20 +1149,14 @@ export interface FirmaUsuarioItem {
 
                     <div class="sig-preview-container">
                       @if (f.firmaImagenUrl) {
-                        <img
-                          [src]="f.firmaImagenUrl"
-                          alt="Firma"
-                          class="sig-img"
-                        />
+                        <img [src]="f.firmaImagenUrl" alt="Firma" class="sig-img" />
                       } @else {
-                        <div class="sig-canvas-placeholder">
-                          ✍️ Trazo Vectorial Registrado
-                        </div>
+                        <div class="sig-canvas-placeholder">✍️ Trazo Vectorial Registrado</div>
                       }
                     </div>
 
                     <div class="sig-footer">
-                      <span>📅 Registrada el {{ f.createdAt | date:'mediumDate' }}</span>
+                      <span>📅 Registrada el {{ f.createdAt | date: 'mediumDate' }}</span>
                       <span class="shield-tag">🛡️ PIN Protegido</span>
                     </div>
                   </div>
@@ -1028,9 +1185,7 @@ export interface FirmaUsuarioItem {
                 placeholder="Ingresa el Hash SHA-256 del documento (64 caracteres hexadecimales)..."
                 [(ngModel)]="hashBusqueda"
               />
-              <button class="btn-primary" (click)="verificarHash()">
-                Verificar Autenticidad
-              </button>
+              <button class="btn-primary" (click)="verificarHash()">Verificar Autenticidad</button>
             </div>
 
             @if (resultadoVerificacion()) {
@@ -1039,7 +1194,10 @@ export interface FirmaUsuarioItem {
                   <span class="icon-verified">🛡️</span>
                   <div>
                     <h4>Documento Auténtico & No Alterado</h4>
-                    <p>El registro coincide 100% con la firma criptográfica sellada en la base de datos institucional.</p>
+                    <p>
+                      El registro coincide 100% con la firma criptográfica sellada en la base de
+                      datos institucional.
+                    </p>
                   </div>
                 </div>
 
@@ -1073,14 +1231,30 @@ export interface FirmaUsuarioItem {
           <div class="glass-modal animate-scaleUp">
             <div class="modal-header">
               <div class="modal-icon-badge success">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </div>
               <div>
-                <h3>{{ instanciaAccion()?.etapaActual?.requiereFirma ? 'Firmar y Autorizar Trámite' : 'Aprobar Etapa Actual' }}</h3>
-                <p class="modal-subtitle">{{ instanciaAccion()?.consecutivoRadicado }} • {{ instanciaAccion()?.etapaActual?.nombre }}</p>
+                <h3>
+                  {{
+                    instanciaAccion()?.etapaActual?.requiereFirma
+                      ? 'Firmar y Autorizar Trámite'
+                      : 'Aprobar Etapa Actual'
+                  }}
+                </h3>
+                <p class="modal-subtitle">
+                  {{ instanciaAccion()?.consecutivoRadicado }} •
+                  {{ instanciaAccion()?.etapaActual?.nombre }}
+                </p>
               </div>
             </div>
 
@@ -1120,8 +1294,12 @@ export interface FirmaUsuarioItem {
                     @if (!archivoAnexoSubido() && !subiendoAnexo()) {
                       <div class="upload-placeholder">
                         <span class="upload-icon">📤</span>
-                        <span class="upload-text">Haz clic aquí para seleccionar y cargar el archivo real</span>
-                        <span class="upload-formats">PDF, Word (DOCX), Excel (XLSX), JPG, PNG (Hasta 20MB)</span>
+                        <span class="upload-text"
+                          >Haz clic aquí para seleccionar y cargar el archivo real</span
+                        >
+                        <span class="upload-formats"
+                          >PDF, Word (DOCX), Excel (XLSX), JPG, PNG (Hasta 20MB)</span
+                        >
                       </div>
                     }
                     @if (subiendoAnexo()) {
@@ -1134,9 +1312,18 @@ export interface FirmaUsuarioItem {
                         <span class="upload-icon">✅</span>
                         <div class="upload-meta">
                           <strong>{{ archivoAnexoSubido()?.originalName }}</strong>
-                          <span>{{ (archivoAnexoSubido()?.size || 0) / 1024 | number:'1.0-1' }} KB • Guardado en el backend</span>
+                          <span
+                            >{{ (archivoAnexoSubido()?.size || 0) / 1024 | number: '1.0-1' }} KB •
+                            Guardado en el backend</span
+                          >
                         </div>
-                        <button type="button" class="btn-icon danger" (click)="$event.stopPropagation(); limpiarAnexoSubido()">✕</button>
+                        <button
+                          type="button"
+                          class="btn-icon danger"
+                          (click)="$event.stopPropagation(); limpiarAnexoSubido()"
+                        >
+                          ✕
+                        </button>
                       </div>
                     }
                   </div>
@@ -1160,7 +1347,11 @@ export interface FirmaUsuarioItem {
             <div class="modal-footer">
               <button class="btn-secondary" (click)="modalAprobarOpen.set(false)">Cancelar</button>
               <button class="btn-success" (click)="confirmarDecision('APROBADO')">
-                {{ instanciaAccion()?.etapaActual?.requiereFirma ? 'Firmar con Certificado' : 'Aprobar y Transferir' }}
+                {{
+                  instanciaAccion()?.etapaActual?.requiereFirma
+                    ? 'Firmar con Certificado'
+                    : 'Aprobar y Transferir'
+                }}
               </button>
             </div>
           </div>
@@ -1173,10 +1364,17 @@ export interface FirmaUsuarioItem {
           <div class="glass-modal animate-scaleUp">
             <div class="modal-header">
               <div class="modal-icon-badge danger">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="15" y1="9" x2="9" y2="15"/>
-                  <line x1="9" y1="9" x2="15" y2="15"/>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
               </div>
               <div>
@@ -1214,7 +1412,10 @@ export interface FirmaUsuarioItem {
             <div class="modal-header">
               <div>
                 <h3>Historial & Trazabilidad de Auditoría</h3>
-                <p class="modal-subtitle">{{ instanciaAccion()?.consecutivoRadicado }} • {{ instanciaAccion()?.flujo?.nombre }}</p>
+                <p class="modal-subtitle">
+                  {{ instanciaAccion()?.consecutivoRadicado }} •
+                  {{ instanciaAccion()?.flujo?.nombre }}
+                </p>
               </div>
               <button class="btn-icon" (click)="modalTrazaOpen.set(false)">✕</button>
             </div>
@@ -1223,16 +1424,24 @@ export interface FirmaUsuarioItem {
               <div class="timeline-box">
                 @for (tz of instanciaAccion()?.trazabilidad; track tz.id || $index) {
                   <div class="timeline-entry">
-                    <div class="tz-dot" [class.success]="tz.accion === 'APROBADO' || tz.accion === 'FIRMADO'" [class.danger]="tz.accion === 'RECHAZADO'"></div>
+                    <div
+                      class="tz-dot"
+                      [class.success]="tz.accion === 'APROBADO' || tz.accion === 'FIRMADO'"
+                      [class.danger]="tz.accion === 'RECHAZADO'"
+                    ></div>
                     <div class="tz-content">
                       <div class="tz-header">
                         <strong>{{ tz.accion }}</strong>
-                        <span class="tz-date">{{ tz.createdAt | date:'medium' }}</span>
+                        <span class="tz-date">{{ tz.createdAt | date: 'medium' }}</span>
                       </div>
                       <p class="tz-comment">{{ tz.comentarios }}</p>
                       @if (tz.archivoAdjuntoUrl) {
                         <div class="tz-adjunto-row">
-                          <a [href]="resolveUrl(tz.archivoAdjuntoUrl)" target="_blank" class="btn-adjunto-link">
+                          <a
+                            [href]="resolveUrl(tz.archivoAdjuntoUrl)"
+                            target="_blank"
+                            class="btn-adjunto-link"
+                          >
                             📎 Ver Documento Adjunto
                           </a>
                         </div>
@@ -1257,13 +1466,24 @@ export interface FirmaUsuarioItem {
           <div class="glass-modal extra-large animate-scaleUp">
             <div class="modal-header">
               <div>
-                <h3>{{ flujoEditandoId() ? 'Editar Plantilla de Flujo' : 'Diseñar Nueva Plantilla de Flujo de Trabajo (BPM)' }}</h3>
-                <p class="modal-subtitle">Configura el circuito de aprobación, roles responsables y formulario inicial.</p>
+                <h3>
+                  {{
+                    flujoEditandoId()
+                      ? 'Editar Plantilla de Flujo'
+                      : 'Diseñar Nueva Plantilla de Flujo de Trabajo (BPM)'
+                  }}
+                </h3>
+                <p class="modal-subtitle">
+                  Configura el circuito de aprobación, roles responsables y formulario inicial.
+                </p>
               </div>
               <button class="btn-icon" (click)="showModalCrearFlujo.set(false)">✕</button>
             </div>
 
-            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding-right: 0.5rem;">
+            <div
+              class="modal-body"
+              style="max-height: 70vh; overflow-y: auto; padding-right: 0.5rem;"
+            >
               <!-- DATOS GENERALES -->
               <div class="fields-grid">
                 <div class="form-field">
@@ -1291,7 +1511,9 @@ export interface FirmaUsuarioItem {
                   <label>Categoría</label>
                   <select class="input-custom" [(ngModel)]="nuevoFlujo.categoria">
                     <option [value]="CategoriaFlujo.ACADEMICO">Académico</option>
-                    <option [value]="CategoriaFlujo.ADMINISTRATIVO">Administrativo & Financiero</option>
+                    <option [value]="CategoriaFlujo.ADMINISTRATIVO">
+                      Administrativo & Financiero
+                    </option>
                     <option [value]="CategoriaFlujo.CONVIVENCIA">Convivencia Escolar</option>
                     <option [value]="CategoriaFlujo.LEGAL">Legal & Directivo</option>
                   </select>
@@ -1300,13 +1522,24 @@ export interface FirmaUsuarioItem {
                 <div class="form-field" style="grid-column: span 2;">
                   <label>Usuarios Permitidos (Si se deja vacío, es Público para todos)</label>
                   <div class="custom-multi-select">
-                    <input type="text" class="input-custom" placeholder="🔍 Buscar por nombre, apellido o correo..." [(ngModel)]="usuariosBusqueda" style="margin-bottom: 0.5rem;" />
+                    <input
+                      type="text"
+                      class="input-custom"
+                      placeholder="🔍 Buscar por nombre, apellido o correo..."
+                      [(ngModel)]="usuariosBusqueda"
+                      style="margin-bottom: 0.5rem;"
+                    />
                     <div class="users-list-scroll">
                       @for (u of usuariosColegioFiltrados(); track u.id) {
-                        <label class="user-item-row" [class.selected]="nuevoFlujo.usuariosPermitidos.includes(u.id)">
-                          <input type="checkbox" 
-                                 [checked]="nuevoFlujo.usuariosPermitidos.includes(u.id)"
-                                 (change)="toggleUsuarioPermitido(u.id)" />
+                        <label
+                          class="user-item-row"
+                          [class.selected]="nuevoFlujo.usuariosPermitidos.includes(u.id)"
+                        >
+                          <input
+                            type="checkbox"
+                            [checked]="nuevoFlujo.usuariosPermitidos.includes(u.id)"
+                            (change)="toggleUsuarioPermitido(u.id)"
+                          />
                           <span class="user-role-icon">{{ getIconForRole(u.rolCodigo) }}</span>
                           <div class="user-info">
                             <strong>{{ u.nombres }} {{ u.apellidos }}</strong>
@@ -1337,7 +1570,8 @@ export interface FirmaUsuarioItem {
                     <option value="">-- Sin vincular a TRD --</option>
                     @for (trd of trdSeries(); track trd.id) {
                       <option [value]="trd.id">
-                        [{{ trd.codigoSerie }}.{{ trd.codigoSubserie }}] {{ trd.nombreSubserie }} ({{ formatDisposicion(trd.disposicionFinal) }})
+                        [{{ trd.codigoSerie }}.{{ trd.codigoSubserie }}]
+                        {{ trd.nombreSubserie }} ({{ formatDisposicion(trd.disposicionFinal) }})
                       </option>
                     }
                   </select>
@@ -1356,15 +1590,23 @@ export interface FirmaUsuarioItem {
 
               <!-- ETAPAS DEL CIRCUITO -->
               <div class="mt-4">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                  <h4 style="font-size: 0.95rem; color: #0f172a; margin: 0; font-weight: 700;">Etapas Secuenciales de Aprobación</h4>
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;"
+                >
+                  <h4 style="font-size: 0.95rem; color: #0f172a; margin: 0; font-weight: 700;">
+                    Etapas Secuenciales de Aprobación
+                  </h4>
                   <button class="btn-outline-sm" (click)="agregarEtapa()">+ Agregar Etapa</button>
                 </div>
 
                 @for (et of nuevasEtapas(); track $index; let idx = $index) {
                   <div class="glass-panel" style="padding: 0.85rem; margin-bottom: 0.6rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                      <strong style="color: #4f46e5; font-size: 0.85rem;">Paso {{ idx + 1 }}</strong>
+                    <div
+                      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;"
+                    >
+                      <strong style="color: #4f46e5; font-size: 0.85rem;"
+                        >Paso {{ idx + 1 }}</strong
+                      >
                       @if (nuevasEtapas().length > 1) {
                         <button class="btn-icon danger" (click)="eliminarEtapa(idx)">✕</button>
                       }
@@ -1373,7 +1615,12 @@ export interface FirmaUsuarioItem {
                     <div class="fields-grid" style="gap: 0.5rem;">
                       <div>
                         <label style="font-size: 0.75rem;">Nombre de la Etapa</label>
-                        <input type="text" class="input-custom" [(ngModel)]="et.nombre" placeholder="ej. Visto Bueno Biblioteca" />
+                        <input
+                          type="text"
+                          class="input-custom"
+                          [(ngModel)]="et.nombre"
+                          placeholder="ej. Visto Bueno Biblioteca"
+                        />
                       </div>
                       <div>
                         <label style="font-size: 0.75rem;">Rol Responsable</label>
@@ -1396,14 +1643,23 @@ export interface FirmaUsuarioItem {
                       </div>
                       <div>
                         <label style="font-size: 0.75rem;">SLA (Horas)</label>
-                        <input type="number" class="input-custom" [(ngModel)]="et.slaHoras" placeholder="24" />
+                        <input
+                          type="number"
+                          class="input-custom"
+                          [(ngModel)]="et.slaHoras"
+                          placeholder="24"
+                        />
                       </div>
                     </div>
 
                     <!-- OPCIONES ADICIONALES DEL PASO -->
                     <div class="etapa-options-row">
                       <label class="toggle-option" [class.active]="et.requiereFirma">
-                        <input type="checkbox" [(ngModel)]="et.requiereFirma" style="display:none" />
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="et.requiereFirma"
+                          style="display:none"
+                        />
                         <span class="toggle-icon">✍️</span>
                         <span>Requiere firma digital</span>
                         @if (et.requiereFirma) {
@@ -1412,7 +1668,11 @@ export interface FirmaUsuarioItem {
                       </label>
 
                       <label class="toggle-option" [class.active]="et.requiereAdjunto">
-                        <input type="checkbox" [(ngModel)]="et.requiereAdjunto" style="display:none" />
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="et.requiereAdjunto"
+                          style="display:none"
+                        />
                         <span class="toggle-icon">📎</span>
                         <span>Requiere adjunto</span>
                         @if (et.requiereAdjunto) {
@@ -1424,7 +1684,10 @@ export interface FirmaUsuarioItem {
                     <!-- Descripción del adjunto (visible solo si requiereAdjunto) -->
                     @if (et.requiereAdjunto) {
                       <div class="adjunto-desc-row">
-                        <label style="font-size: 0.75rem; color: #334155; font-weight: 600;">Descripción del documento a adjuntar <span style="color:#ef4444">*</span></label>
+                        <label style="font-size: 0.75rem; color: #334155; font-weight: 600;"
+                          >Descripción del documento a adjuntar
+                          <span style="color:#ef4444">*</span></label
+                        >
                         <input
                           type="text"
                           class="input-custom"
@@ -1439,8 +1702,12 @@ export interface FirmaUsuarioItem {
 
               <!-- CAMPOS DEL FORMULARIO -->
               <div class="mt-4">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                  <h4 style="font-size: 0.95rem; color: #0f172a; margin: 0; font-weight: 700;">Campos Requeridos al Solicitante</h4>
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;"
+                >
+                  <h4 style="font-size: 0.95rem; color: #0f172a; margin: 0; font-weight: 700;">
+                    Campos Requeridos al Solicitante
+                  </h4>
                   <button class="btn-outline-sm" (click)="agregarCampo()">+ Agregar Campo</button>
                 </div>
 
@@ -1449,7 +1716,13 @@ export interface FirmaUsuarioItem {
                     <div class="fields-grid" style="gap: 0.5rem; align-items: center;">
                       <div>
                         <label style="font-size: 0.75rem;">Etiqueta Visible</label>
-                        <input type="text" class="input-custom" [(ngModel)]="cmp.etiqueta" placeholder="ej. Motivo del Permiso" (input)="cmp.campo = cmp.etiqueta.toLowerCase().replace(/ /g, '_')" />
+                        <input
+                          type="text"
+                          class="input-custom"
+                          [(ngModel)]="cmp.etiqueta"
+                          placeholder="ej. Motivo del Permiso"
+                          (input)="cmp.campo = cmp.etiqueta.toLowerCase().replace(/ /g, '_')"
+                        />
                       </div>
                       <div>
                         <label style="font-size: 0.75rem;">Tipo de Dato</label>
@@ -1460,7 +1733,9 @@ export interface FirmaUsuarioItem {
                           <option value="NUMERO">Número</option>
                         </select>
                       </div>
-                      <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                      <div
+                        style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;"
+                      >
                         <label style="font-size: 0.8rem; margin: 0; color: #334155;">
                           <input type="checkbox" [(ngModel)]="cmp.requerido" /> Obligatorio
                         </label>
@@ -1475,12 +1750,26 @@ export interface FirmaUsuarioItem {
             </div>
 
             <div class="modal-footer">
-              <button class="btn-secondary" (click)="showModalCrearFlujo.set(false)" [disabled]="guardandoFlujo()">Cancelar</button>
-              <button class="btn-primary" (click)="guardarNuevoFlujo()" [disabled]="guardandoFlujo()">
+              <button
+                class="btn-secondary"
+                (click)="showModalCrearFlujo.set(false)"
+                [disabled]="guardandoFlujo()"
+              >
+                Cancelar
+              </button>
+              <button
+                class="btn-primary"
+                (click)="guardarNuevoFlujo()"
+                [disabled]="guardandoFlujo()"
+              >
                 @if (guardandoFlujo()) {
                   <span class="spinner-small"></span> Guardando...
                 } @else {
-                  {{ flujoEditandoId() ? 'Actualizar Plantilla de Flujo' : 'Guardar Plantilla de Flujo' }}
+                  {{
+                    flujoEditandoId()
+                      ? 'Actualizar Plantilla de Flujo'
+                      : 'Guardar Plantilla de Flujo'
+                  }}
                 }
               </button>
             </div>
@@ -1494,13 +1783,22 @@ export interface FirmaUsuarioItem {
           <div class="glass-modal large animate-scaleUp">
             <div class="modal-header">
               <div>
-                <h3>{{ modalTrdEditando() ? 'Editar Subserie TRD' : 'Registrar Nueva Subserie en TRD' }}</h3>
-                <p class="modal-subtitle">Tabla de Retención Documental — Norma AGN Ley 594 de 2000 & Acuerdo 004 de 2019</p>
+                <h3>
+                  {{
+                    modalTrdEditando() ? 'Editar Subserie TRD' : 'Registrar Nueva Subserie en TRD'
+                  }}
+                </h3>
+                <p class="modal-subtitle">
+                  Tabla de Retención Documental — Norma AGN Ley 594 de 2000 & Acuerdo 004 de 2019
+                </p>
               </div>
               <button class="btn-icon" (click)="showModalTrd.set(false)">✕</button>
             </div>
 
-            <div class="modal-body" style="max-height: 520px; overflow-y: auto; padding-right: 0.5rem;">
+            <div
+              class="modal-body"
+              style="max-height: 520px; overflow-y: auto; padding-right: 0.5rem;"
+            >
               <div class="fields-grid">
                 <div class="form-field">
                   <label>Sección / Unidad Productora <span class="required">*</span></label>
@@ -1658,11 +1956,12 @@ export class DocumentalComponent implements OnInit {
     const search = this.usuariosBusqueda().toLowerCase().trim();
     const users = this.usuariosColegio();
     if (!search) return users;
-    return users.filter(u => 
-      (u.nombres?.toLowerCase().includes(search)) ||
-      (u.apellidos?.toLowerCase().includes(search)) ||
-      (u.email?.toLowerCase().includes(search)) ||
-      (u.rolNombre?.toLowerCase().includes(search))
+    return users.filter(
+      (u) =>
+        u.nombres?.toLowerCase().includes(search) ||
+        u.apellidos?.toLowerCase().includes(search) ||
+        u.email?.toLowerCase().includes(search) ||
+        u.rolNombre?.toLowerCase().includes(search),
     );
   });
   instancias = signal<InstanciaItem[]>([]);
@@ -1682,8 +1981,14 @@ export class DocumentalComponent implements OnInit {
     const search = this.busquedaFlujoTexto().toLowerCase().trim();
 
     return list.filter((f) => {
-      const matchCat = cat === CategoriaFlujo.TODOS || f.categoria === cat || (cat === CategoriaFlujo.LEGAL && f.categoria === CategoriaFlujo.JURIDICO_REGULATORIO);
-      const matchSearch = !search || f.nombre.toLowerCase().includes(search) || f.descripcion.toLowerCase().includes(search);
+      const matchCat =
+        cat === CategoriaFlujo.TODOS ||
+        f.categoria === cat ||
+        (cat === CategoriaFlujo.LEGAL && f.categoria === CategoriaFlujo.JURIDICO_REGULATORIO);
+      const matchSearch =
+        !search ||
+        f.nombre.toLowerCase().includes(search) ||
+        f.descripcion.toLowerCase().includes(search);
       return matchCat && matchSearch;
     });
   });
@@ -1763,11 +2068,16 @@ export class DocumentalComponent implements OnInit {
     const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
     return {
       activos: list.filter(
-        (i) => i.estado === EstadoInstanciaDocumental.EN_TRAMITE || i.estado === EstadoInstanciaDocumental.INICIADO
+        (i) =>
+          i.estado === EstadoInstanciaDocumental.EN_TRAMITE ||
+          i.estado === EstadoInstanciaDocumental.INICIADO,
       ).length,
-      pendientesFirma: list.filter((i) => i.estado === EstadoInstanciaDocumental.PENDIENTE_FIRMA).length,
+      pendientesFirma: list.filter((i) => i.estado === EstadoInstanciaDocumental.PENDIENTE_FIRMA)
+        .length,
       completados: list.filter(
-        (i) => i.estado === EstadoInstanciaDocumental.APROBADO_FINAL && new Date(i.createdAt) >= inicioMes
+        (i) =>
+          i.estado === EstadoInstanciaDocumental.APROBADO_FINAL &&
+          new Date(i.createdAt) >= inicioMes,
       ).length,
     };
   });
@@ -1800,14 +2110,17 @@ export class DocumentalComponent implements OnInit {
     const colegioId = this.auth.colegio()?.id;
     if (colegioId) {
       this.api.get<any[]>(`tenants/${colegioId}/usuarios`).subscribe({
-        next: (data) => this.usuariosColegio.set(data.map(d => ({
-          id: d.user.id,
-          nombres: d.user.nombres,
-          apellidos: d.user.apellidos,
-          email: d.user.email,
-          rolCodigo: d.role?.codigo,
-          rolNombre: d.role?.nombre
-        }))),
+        next: (data) =>
+          this.usuariosColegio.set(
+            data.map((d) => ({
+              id: d.user.id,
+              nombres: d.user.nombres,
+              apellidos: d.user.apellidos,
+              email: d.user.email,
+              rolCodigo: d.role?.codigo,
+              rolNombre: d.role?.nombre,
+            })),
+          ),
       });
     }
   }
@@ -1853,7 +2166,10 @@ export class DocumentalComponent implements OnInit {
     // Validación de campos requeridos
     if (f.formularioSchema && Array.isArray(f.formularioSchema)) {
       for (const field of f.formularioSchema) {
-        if (field.requerido && (!this.formData()[field.campo] || !String(this.formData()[field.campo]).trim())) {
+        if (
+          field.requerido &&
+          (!this.formData()[field.campo] || !String(this.formData()[field.campo]).trim())
+        ) {
           this.toast.warning('Campo Requerido', `Por favor complete el campo "${field.etiqueta}".`);
           return;
         }
@@ -1867,7 +2183,9 @@ export class DocumentalComponent implements OnInit {
 
     this.api.post<InstanciaItem>('documental/instancias/iniciar', dto).subscribe({
       next: (res) => {
-        this.toast.success(`Trámite radicado exitosamente con consecutivo ${res.consecutivoRadicado}.`);
+        this.toast.success(
+          `Trámite radicado exitosamente con consecutivo ${res.consecutivoRadicado}.`,
+        );
         this.cargarDatos();
         this.vistaActiva.set(VistaDocumental.KANBAN);
         this.flujoSeleccionado.set(null);
@@ -1945,7 +2263,7 @@ export class DocumentalComponent implements OnInit {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     const clean = url.startsWith('/') ? url : `/${url}`;
-    return `http://localhost:3001${clean}`;
+    return resolveApiResourceUrl(clean);
   }
 
   verTrazabilidad(inst: InstanciaItem) {
@@ -1957,7 +2275,11 @@ export class DocumentalComponent implements OnInit {
     const inst = this.instanciaAccion();
     if (!inst) return;
 
-    if (decision === 'APROBADO' && inst.etapaActual?.requiereAdjunto && !this.archivoAnexoSubido()) {
+    if (
+      decision === 'APROBADO' &&
+      inst.etapaActual?.requiereAdjunto &&
+      !this.archivoAnexoSubido()
+    ) {
       this.toast.warning(
         `Esta etapa requiere adjuntar un documento obligatorio (${inst.etapaActual.descripcionAdjunto || 'Evidencia'}).`,
       );
@@ -2049,7 +2371,8 @@ export class DocumentalComponent implements OnInit {
     const dto = {
       cargo: this.nuevaFirmaCargo,
       tipoFirma: this.tipoFirmaTab() === 'TRAZO' ? 'TRAZO_DIGITAL' : 'IMAGEN_SUBIDA',
-      firmaImagenUrl: firmaDataUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=firma-docente',
+      firmaImagenUrl:
+        firmaDataUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=firma-docente',
       pinSeguridad: this.nuevaFirmaPin || '1234',
     };
 
@@ -2094,17 +2417,19 @@ export class DocumentalComponent implements OnInit {
     trdSerieId: '',
   };
 
-  nuevasEtapas = signal<Array<{
-    id?: string;
-    orden: number;
-    nombre: string;
-    rolResponsable: string;
-    tipoAccion: string;
-    slaHoras: number;
-    requiereFirma: boolean;
-    requiereAdjunto: boolean;
-    descripcionAdjunto: string;
-  }>>([
+  nuevasEtapas = signal<
+    Array<{
+      id?: string;
+      orden: number;
+      nombre: string;
+      rolResponsable: string;
+      tipoAccion: string;
+      slaHoras: number;
+      requiereFirma: boolean;
+      requiereAdjunto: boolean;
+      descripcionAdjunto: string;
+    }>
+  >([
     {
       orden: 1,
       nombre: 'Revisión y Visto Bueno',
@@ -2127,12 +2452,14 @@ export class DocumentalComponent implements OnInit {
     },
   ]);
 
-  nuevosCampos = signal<Array<{
-    campo: string;
-    etiqueta: string;
-    tipo: 'TEXTO' | 'NUMERO' | 'FECHA' | 'TEXTAREA';
-    requerido: boolean;
-  }>>([
+  nuevosCampos = signal<
+    Array<{
+      campo: string;
+      etiqueta: string;
+      tipo: 'TEXTO' | 'NUMERO' | 'FECHA' | 'TEXTAREA';
+      requerido: boolean;
+    }>
+  >([
     {
       campo: 'motivo_solicitud',
       etiqueta: 'Motivo de la Solicitud',
@@ -2156,11 +2483,34 @@ export class DocumentalComponent implements OnInit {
       trdSerieId: '',
     };
     this.nuevasEtapas.set([
-      { orden: 1, nombre: 'Revisión y Visto Bueno', rolResponsable: 'COORDINADOR_ACADEMICO', tipoAccion: 'APROBACION_SIMPLE', slaHoras: 24, requiereFirma: false, requiereAdjunto: false, descripcionAdjunto: '' },
-      { orden: 2, nombre: 'Autorización y Firma Final', rolResponsable: 'RECTOR', tipoAccion: 'FIRMA_DIGITAL_OTP', slaHoras: 48, requiereFirma: true, requiereAdjunto: false, descripcionAdjunto: '' }
+      {
+        orden: 1,
+        nombre: 'Revisión y Visto Bueno',
+        rolResponsable: 'COORDINADOR_ACADEMICO',
+        tipoAccion: 'APROBACION_SIMPLE',
+        slaHoras: 24,
+        requiereFirma: false,
+        requiereAdjunto: false,
+        descripcionAdjunto: '',
+      },
+      {
+        orden: 2,
+        nombre: 'Autorización y Firma Final',
+        rolResponsable: 'RECTOR',
+        tipoAccion: 'FIRMA_DIGITAL_OTP',
+        slaHoras: 48,
+        requiereFirma: true,
+        requiereAdjunto: false,
+        descripcionAdjunto: '',
+      },
     ]);
     this.nuevosCampos.set([
-      { campo: 'motivo_solicitud', etiqueta: 'Motivo de la Solicitud', tipo: 'TEXTAREA', requerido: true }
+      {
+        campo: 'motivo_solicitud',
+        etiqueta: 'Motivo de la Solicitud',
+        tipo: 'TEXTAREA',
+        requerido: true,
+      },
     ]);
     this.showModalCrearFlujo.set(true);
   }
@@ -2177,66 +2527,81 @@ export class DocumentalComponent implements OnInit {
       descripcion: fl.descripcion,
       trdSerieId: fl.trdSerieId || '',
     };
-    
+
     if (fl.etapas && fl.etapas.length > 0) {
-      this.nuevasEtapas.set(fl.etapas.map(e => ({
-        id: e.id,
-        orden: e.orden,
-        nombre: e.nombre,
-        rolResponsable: e.rolResponsable,
-        tipoAccion: e.tipoAccion,
-        slaHoras: e.slaHoras,
-        requiereFirma: e.requiereFirma,
-        requiereAdjunto: e.requiereAdjunto,
-        descripcionAdjunto: e.descripcionAdjunto || ''
-      })));
+      this.nuevasEtapas.set(
+        fl.etapas.map((e) => ({
+          id: e.id,
+          orden: e.orden,
+          nombre: e.nombre,
+          rolResponsable: e.rolResponsable,
+          tipoAccion: e.tipoAccion,
+          slaHoras: e.slaHoras,
+          requiereFirma: e.requiereFirma,
+          requiereAdjunto: e.requiereAdjunto,
+          descripcionAdjunto: e.descripcionAdjunto || '',
+        })),
+      );
     } else {
       this.nuevasEtapas.set([]);
     }
 
     if (fl.formularioSchema && fl.formularioSchema.length > 0) {
-      this.nuevosCampos.set(fl.formularioSchema.map(f => ({
-        campo: f.campo,
-        etiqueta: f.etiqueta,
-        tipo: f.tipo as any,
-        requerido: f.requerido
-      })));
+      this.nuevosCampos.set(
+        fl.formularioSchema.map((f) => ({
+          campo: f.campo,
+          etiqueta: f.etiqueta,
+          tipo: f.tipo as any,
+          requerido: f.requerido,
+        })),
+      );
     } else {
       this.nuevosCampos.set([]);
     }
-    
+
     this.showModalCrearFlujo.set(true);
   }
   toggleUsuarioPermitido(userId: string) {
     const permitidos = this.nuevoFlujo.usuariosPermitidos || [];
     if (permitidos.includes(userId)) {
-      this.nuevoFlujo.usuariosPermitidos = permitidos.filter(id => id !== userId);
+      this.nuevoFlujo.usuariosPermitidos = permitidos.filter((id) => id !== userId);
     } else {
       this.nuevoFlujo.usuariosPermitidos = [...permitidos, userId];
     }
   }
 
   getIconForRole(rolCodigo: string): string {
-    switch(rolCodigo) {
-      case 'RECTOR': return '👨‍⚖️';
-      case 'COORDINADOR': 
-      case 'COORDINADOR_ACADEMICO': return '📋';
-      case 'DOCENTE': return '👨‍🏫';
-      case 'ESTUDIANTE': return '🎒';
-      case 'ACUDIENTE': return '👨‍👩‍👧';
-      case 'SECRETARIA': return '👩‍💻';
-      case 'TESORERO': return '💰';
-      case 'ADMIN': return '⚙️';
-      default: return '👤';
+    switch (rolCodigo) {
+      case 'RECTOR':
+        return '👨‍⚖️';
+      case 'COORDINADOR':
+      case 'COORDINADOR_ACADEMICO':
+        return '📋';
+      case 'DOCENTE':
+        return '👨‍🏫';
+      case 'ESTUDIANTE':
+        return '🎒';
+      case 'ACUDIENTE':
+        return '👨‍👩‍👧';
+      case 'SECRETARIA':
+        return '👩‍💻';
+      case 'TESORERO':
+        return '💰';
+      case 'ADMIN':
+        return '⚙️';
+      default:
+        return '👤';
     }
   }
   autogenerarCodigoFlujo() {
-    this.nuevoFlujo.codigo = 'FLUJO_' + this.nuevoFlujo.nombre
-      .toUpperCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^A-Z0-9]/g, '_')
-      .replace(/_+/g, '_');
+    this.nuevoFlujo.codigo =
+      'FLUJO_' +
+      this.nuevoFlujo.nombre
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Z0-9]/g, '_')
+        .replace(/_+/g, '_');
   }
 
   agregarEtapa() {
@@ -2287,11 +2652,11 @@ export class DocumentalComponent implements OnInit {
 
     // Validar descripcionAdjunto cuando requiereAdjunto es true
     const etapasInvalidas = this.nuevasEtapas().filter(
-      (e) => e.requiereAdjunto && !e.descripcionAdjunto?.trim()
+      (e) => e.requiereAdjunto && !e.descripcionAdjunto?.trim(),
     );
     if (etapasInvalidas.length > 0) {
       this.toast.warning(
-        `El paso "${etapasInvalidas[0].nombre}" requiere adjunto pero no tiene descripción del documento.`
+        `El paso "${etapasInvalidas[0].nombre}" requiere adjunto pero no tiene descripción del documento.`,
       );
       return;
     }
@@ -2302,18 +2667,20 @@ export class DocumentalComponent implements OnInit {
       ...this.nuevoFlujo,
       etapas: this.nuevasEtapas(),
       formularioSchema: this.nuevosCampos(),
-      usuariosPermitidos: this.nuevoFlujo.usuariosPermitidos
+      usuariosPermitidos: this.nuevoFlujo.usuariosPermitidos,
     };
 
     const id = this.flujoEditandoId();
-    const req = id 
+    const req = id
       ? this.api.put<any>(`documental/flujos/${id}`, dto)
       : this.api.post<any>('documental/flujos', dto);
 
     req.subscribe({
       next: (res) => {
         this.guardandoFlujo.set(false);
-        this.toast.success(`Plantilla "${res.nombre}" ${id ? 'actualizada' : 'creada'} exitosamente.`);
+        this.toast.success(
+          `Plantilla "${res.nombre}" ${id ? 'actualizada' : 'creada'} exitosamente.`,
+        );
         this.showModalCrearFlujo.set(false);
         this.cargarDatos();
       },
@@ -2499,9 +2866,7 @@ export class DocumentalComponent implements OnInit {
     if (this.customKeyLabels[normalizedKey]) {
       return this.customKeyLabels[normalizedKey];
     }
-    const withSpaces = key
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/_/g, ' ');
+    const withSpaces = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ');
     return withSpaces
       .split(' ')
       .filter((w) => w.length > 0)

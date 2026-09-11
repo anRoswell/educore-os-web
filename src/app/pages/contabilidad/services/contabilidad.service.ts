@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { getApiBaseUrl } from '../../../core/config/api-url';
 import {
   PucCuenta,
   Tercero,
@@ -59,7 +60,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ContabilidadService {
   private readonly http = inject(HttpClient);
-  private readonly base = 'http://localhost:3001/api/v1/contabilidad';
+  private readonly base = `${getApiBaseUrl()}/contabilidad`;
 
   // ─── PUC (Plan Único de Cuentas) ─────────────────────────────────────────
   getPucTree(): Observable<PucCuenta[]> {
@@ -107,9 +108,9 @@ export class ContabilidadService {
   getTerceros(search?: string, limit: number = 100): Observable<Tercero[]> {
     let params = new HttpParams().set('limit', limit.toString());
     if (search) params = params.set('search', search);
-    return this.http.get<any>(`${this.base}/terceros`, { params }).pipe(
-      map((res) => (Array.isArray(res) ? res : res.data ?? [])),
-    );
+    return this.http
+      .get<any>(`${this.base}/terceros`, { params })
+      .pipe(map((res) => (Array.isArray(res) ? res : (res.data ?? []))));
   }
 
   crearTercero(dto: Partial<Tercero>): Observable<Tercero> {
@@ -117,7 +118,10 @@ export class ContabilidadService {
   }
 
   syncTerceros(): Observable<{ message: string; sincronizados?: number }> {
-    return this.http.post<{ message: string; sincronizados?: number }>(`${this.base}/terceros/sync`, {});
+    return this.http.post<{ message: string; sincronizados?: number }>(
+      `${this.base}/terceros/sync`,
+      {},
+    );
   }
 
   sincronizarTerceros(): Observable<{ message: string; sincronizados?: number }> {
@@ -125,17 +129,19 @@ export class ContabilidadService {
   }
 
   // ─── Asientos y Comprobantes ─────────────────────────────────────────────
-  getComprobantes(params: {
-    fechaInicio?: string;
-    fechaFin?: string;
-    tipo?: string;
-    tipoComprobante?: string;
-    estado?: string;
-    terceroId?: string;
-    search?: string;
-    page?: number;
-    limit?: number;
-  } = {}): Observable<AsientosPaginados> {
+  getComprobantes(
+    params: {
+      fechaInicio?: string;
+      fechaFin?: string;
+      tipo?: string;
+      tipoComprobante?: string;
+      estado?: string;
+      terceroId?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
+    } = {},
+  ): Observable<AsientosPaginados> {
     let httpParams = new HttpParams();
     if (params.fechaInicio) httpParams = httpParams.set('fechaInicio', params.fechaInicio);
     if (params.fechaFin) httpParams = httpParams.set('fechaFin', params.fechaFin);
@@ -227,10 +233,16 @@ export class ContabilidadService {
     });
   }
 
-  getEstadoResultados(fechaInicio: string, fechaFin: string, centroCostoId?: string): Observable<EstadoResultados> {
+  getEstadoResultados(
+    fechaInicio: string,
+    fechaFin: string,
+    centroCostoId?: string,
+  ): Observable<EstadoResultados> {
     let p = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
     if (centroCostoId) p = p.set('centroCostoId', centroCostoId);
-    return this.http.get<EstadoResultados>(`${this.base}/reportes/estado-resultados`, { params: p });
+    return this.http.get<EstadoResultados>(`${this.base}/reportes/estado-resultados`, {
+      params: p,
+    });
   }
 
   getLibroDiario(fechaInicio: string, fechaFin: string): Observable<LibroDiarioItem[]> {
@@ -238,17 +250,28 @@ export class ContabilidadService {
     return this.http.get<LibroDiarioItem[]>(`${this.base}/reportes/libro-diario`, { params });
   }
 
-  getLibroMayor(fechaInicio: string, fechaFin: string, codigoCuenta?: string): Observable<LibroMayorCuenta[]> {
+  getLibroMayor(
+    fechaInicio: string,
+    fechaFin: string,
+    codigoCuenta?: string,
+  ): Observable<LibroMayorCuenta[]> {
     let p = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
     if (codigoCuenta) p = p.set('codigoCuenta', codigoCuenta);
     return this.http.get<LibroMayorCuenta[]>(`${this.base}/reportes/libro-mayor`, { params: p });
   }
 
-  getAuxiliarTercero(fechaInicio: string, fechaFin: string, terceroId?: string, codigoCuenta?: string): Observable<AuxiliarTerceroReporte> {
+  getAuxiliarTercero(
+    fechaInicio: string,
+    fechaFin: string,
+    terceroId?: string,
+    codigoCuenta?: string,
+  ): Observable<AuxiliarTerceroReporte> {
     let p = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
     if (terceroId) p = p.set('terceroId', terceroId);
     if (codigoCuenta) p = p.set('codigoCuenta', codigoCuenta);
-    return this.http.get<AuxiliarTerceroReporte>(`${this.base}/reportes/auxiliar-tercero`, { params: p });
+    return this.http.get<AuxiliarTerceroReporte>(`${this.base}/reportes/auxiliar-tercero`, {
+      params: p,
+    });
   }
 
   descargarBlob(blob: Blob, nombreArchivo: string): void {
@@ -311,7 +334,8 @@ export class ContabilidadService {
       responseType: 'blob',
     });
     obs.subscribe({
-      next: (blob) => this.descargarBlob(blob, `Certificado_Tributario_${anio}_${estudianteId}.pdf`),
+      next: (blob) =>
+        this.descargarBlob(blob, `Certificado_Tributario_${anio}_${estudianteId}.pdf`),
       error: (err) => console.error('Error descargando certificado tributario:', err),
     });
     return obs;
@@ -432,9 +456,7 @@ export class ContabilidadService {
     if (anio) params = params.set('anio', String(anio));
     return this.http.get<any>(`${this.base}/ingresos-diferidos`, { params }).pipe(
       map((res) => {
-        const rawList: any[] = Array.isArray(res)
-          ? res
-          : (res?.diferidos ?? res?.data ?? []);
+        const rawList: any[] = Array.isArray(res) ? res : (res?.diferidos ?? res?.data ?? []);
         return rawList.map((raw) => this.mapIngresoDiferido(raw));
       }),
     );
@@ -444,7 +466,9 @@ export class ContabilidadService {
     return this.http.post<any>(`${this.base}/ingresos-diferidos/amortizar-mes`, { mes, anio });
   }
 
-  crearIngresoDiferido(data: Partial<IngresoDiferidoModel> & Record<string, any>): Observable<IngresoDiferidoModel> {
+  crearIngresoDiferido(
+    data: Partial<IngresoDiferidoModel> & Record<string, any>,
+  ): Observable<IngresoDiferidoModel> {
     const payload = {
       ...data,
       numeroMeses: data.cuotasPactadas || data['numeroMeses'] || 10,
@@ -452,9 +476,9 @@ export class ContabilidadService {
       cuentaPasivo: data.cuentaPasivoCodigo || data['cuentaPasivo'] || '270505',
       cuentaIngreso: data.cuentaIngresoCodigo || data['cuentaIngreso'] || '416005',
     };
-    return this.http.post<any>(`${this.base}/ingresos-diferidos`, payload).pipe(
-      map((res) => this.mapIngresoDiferido(res)),
-    );
+    return this.http
+      .post<any>(`${this.base}/ingresos-diferidos`, payload)
+      .pipe(map((res) => this.mapIngresoDiferido(res)));
   }
 
   private mapIngresoDiferido(raw: any): IngresoDiferidoModel {
@@ -464,29 +488,44 @@ export class ContabilidadService {
       mes: Number(c.mes),
       anio: Number(c.anio),
       monto: Number(c.valorCuota ?? c.monto ?? 0),
-      estado: (c.estado === 'AMORTIZADO' || c.estado === 'AMORTIZADA') ? 'AMORTIZADA' : (c.estado || 'PENDIENTE'),
-      fechaAmortizacion: c.fechaAmortizado ? String(c.fechaAmortizado).split('T')[0] : (c.fechaAmortizacion || undefined),
+      estado:
+        c.estado === 'AMORTIZADO' || c.estado === 'AMORTIZADA'
+          ? 'AMORTIZADA'
+          : c.estado || 'PENDIENTE',
+      fechaAmortizacion: c.fechaAmortizado
+        ? String(c.fechaAmortizado).split('T')[0]
+        : c.fechaAmortizacion || undefined,
       asientoId: c.asientoId || undefined,
     }));
 
     cuotas.sort((a, b) => a.mes - b.mes);
 
     const cuotasAmortizadasCount = cuotas.filter((c) => c.estado === 'AMORTIZADA').length;
-    const cuotasPactadasCount = Number(raw?.numeroMeses ?? raw?.cuotasPactadas ?? (cuotas.length > 0 ? cuotas.length : 10));
+    const cuotasPactadasCount = Number(
+      raw?.numeroMeses ?? raw?.cuotasPactadas ?? (cuotas.length > 0 ? cuotas.length : 10),
+    );
 
     return {
       id: raw?.id || '',
       colegioId: raw?.colegioId || '',
       estudianteId: raw?.estudianteId || undefined,
       matriculaId: raw?.matriculaId || raw?.contratoId || undefined,
-      estudianteNombre: raw?.estudianteNombre || (raw?.estudiante ? `${raw.estudiante.primerNombre || ''} ${raw.estudiante.primerApellido || ''}`.trim() : undefined) || 'Estudiante Institucional',
+      estudianteNombre:
+        raw?.estudianteNombre ||
+        (raw?.estudiante
+          ? `${raw.estudiante.primerNombre || ''} ${raw.estudiante.primerApellido || ''}`.trim()
+          : undefined) ||
+        'Estudiante Institucional',
       concepto: raw?.concepto || 'Diferido Matrícula Escolar NIIF 15',
       valorTotal: Number(raw?.valorTotal ?? 0),
       cuotasPactadas: cuotasPactadasCount,
-      cuotasAmortizadas: raw?.cuotasAmortizadas !== undefined ? Number(raw.cuotasAmortizadas) : cuotasAmortizadasCount,
+      cuotasAmortizadas:
+        raw?.cuotasAmortizadas !== undefined
+          ? Number(raw.cuotasAmortizadas)
+          : cuotasAmortizadasCount,
       saldoPendiente: Number(raw?.saldoPendiente ?? 0),
       anioLectivo: Number(raw?.anio ?? raw?.anioLectivo ?? new Date().getFullYear()),
-      estado: raw?.estado === 'AMORTIZADO_TOTAL' ? 'LIQUIDADO' : (raw?.estado || 'ACTIVO'),
+      estado: raw?.estado === 'AMORTIZADO_TOTAL' ? 'LIQUIDADO' : raw?.estado || 'ACTIVO',
       cuentaPasivoCodigo: raw?.cuentaPasivo || raw?.cuentaPasivoCodigo || '270505',
       cuentaIngresoCodigo: raw?.cuentaIngreso || raw?.cuentaIngresoCodigo || '416005',
       cuotas: cuotas.length > 0 ? cuotas : undefined,
@@ -497,7 +536,9 @@ export class ContabilidadService {
   // ─── Nómina Contable NIC 19 ───────────────────────────────────────────────
   getResumenNomina(mes: number, anio: number): Observable<NominaResumenModel> {
     let params = new HttpParams().set('anio', String(anio));
-    return this.http.get<NominaResumenModel>(`${this.base}/nomina/resumen-periodo/${mes}`, { params });
+    return this.http.get<NominaResumenModel>(`${this.base}/nomina/resumen-periodo/${mes}`, {
+      params,
+    });
   }
 
   causarNomina(mes: number, anio: number): Observable<any> {
@@ -521,7 +562,9 @@ export class ContabilidadService {
   // ─── Cierre Anual Periodo 13 & Apertura APE ───────────────────────────────
   getBalancePrevioCierre(anio: number): Observable<BalancePrevioCierreModel> {
     let params = new HttpParams().set('anio', String(anio));
-    return this.http.get<BalancePrevioCierreModel>(`${this.base}/cierre/balance-previo`, { params });
+    return this.http.get<BalancePrevioCierreModel>(`${this.base}/cierre/balance-previo`, {
+      params,
+    });
   }
 
   ejecutarCierreAnual(anio: number): Observable<ResultadoCierreModel> {
@@ -555,11 +598,18 @@ export class ContabilidadService {
 
   // ─── Certificados a Proveedores Art. 381 & Formulario 350 ─────────────────
   getProveedoresRetenciones(anio: number): Observable<ProveedorRetencionModel[]> {
-    return this.http.get<ProveedorRetencionModel[]>(`${this.base}/certificados-proveedores/${anio}`);
+    return this.http.get<ProveedorRetencionModel[]>(
+      `${this.base}/certificados-proveedores/${anio}`,
+    );
   }
 
-  getCertificadoProveedor(terceroId: string, anio: number): Observable<CertificadoProveedorResumenModel> {
-    return this.http.get<CertificadoProveedorResumenModel>(`${this.base}/certificados-proveedores/${anio}/detalle/${terceroId}`);
+  getCertificadoProveedor(
+    terceroId: string,
+    anio: number,
+  ): Observable<CertificadoProveedorResumenModel> {
+    return this.http.get<CertificadoProveedorResumenModel>(
+      `${this.base}/certificados-proveedores/${anio}/detalle/${terceroId}`,
+    );
   }
 
   descargarPdfCertificadoProveedor(terceroId: string, anio: number): Observable<Blob> {
@@ -569,7 +619,10 @@ export class ContabilidadService {
   }
 
   enviarEmailCertificadoProveedor(terceroId: string, anio: number): Observable<any> {
-    return this.http.post<any>(`${this.base}/certificados-proveedores/${anio}/enviar-email/${terceroId}`, {});
+    return this.http.post<any>(
+      `${this.base}/certificados-proveedores/${anio}/enviar-email/${terceroId}`,
+      {},
+    );
   }
 
   getFormulario350(anio: number, mes: number): Observable<Formulario350ResumenModel> {
@@ -582,8 +635,15 @@ export class ContabilidadService {
     return this.http.get<MatrizDeterioroModel>(`${this.base}/deterioro/matriz`, { params });
   }
 
-  generarAsientoDeterioro(dto: { fechaCorte: string; observacion?: string; colegioId?: string }): Observable<ResultadoAsientoDeterioroModel> {
-    return this.http.post<ResultadoAsientoDeterioroModel>(`${this.base}/deterioro/generar-asiento`, dto);
+  generarAsientoDeterioro(dto: {
+    fechaCorte: string;
+    observacion?: string;
+    colegioId?: string;
+  }): Observable<ResultadoAsientoDeterioroModel> {
+    return this.http.post<ResultadoAsientoDeterioroModel>(
+      `${this.base}/deterioro/generar-asiento`,
+      dto,
+    );
   }
 
   // ─── Activos Fijos & Desvalorización NIIF ──────────────────────────────────
@@ -594,7 +654,9 @@ export class ContabilidadService {
   }
 
   getResumenPatrimonialActivos(): Observable<ResumenPatrimonialActivosModel> {
-    return this.http.get<ResumenPatrimonialActivosModel>(`${this.base}/activos-fijos/resumen-patrimonial`);
+    return this.http.get<ResumenPatrimonialActivosModel>(
+      `${this.base}/activos-fijos/resumen-patrimonial`,
+    );
   }
 
   getActivoFijoPorId(id: string): Observable<ActivoFijoModel> {
@@ -606,11 +668,19 @@ export class ContabilidadService {
   }
 
   depreciarMesActivos(dto: DepreciarMesModel): Observable<ResultadoDepreciacionMesModel> {
-    return this.http.post<ResultadoDepreciacionMesModel>(`${this.base}/activos-fijos/depreciar-mes`, dto);
+    return this.http.post<ResultadoDepreciacionMesModel>(
+      `${this.base}/activos-fijos/depreciar-mes`,
+      dto,
+    );
   }
 
-  registrarDeterioroActivo(dto: RegistrarDeterioroActivoModel): Observable<ActivoFijoDeterioroModel> {
-    return this.http.post<ActivoFijoDeterioroModel>(`${this.base}/activos-fijos/registrar-deterioro`, dto);
+  registrarDeterioroActivo(
+    dto: RegistrarDeterioroActivoModel,
+  ): Observable<ActivoFijoDeterioroModel> {
+    return this.http.post<ActivoFijoDeterioroModel>(
+      `${this.base}/activos-fijos/registrar-deterioro`,
+      dto,
+    );
   }
 
   darDeBajaActivo(id: string, motivo: string): Observable<ActivoFijoModel> {
@@ -619,9 +689,7 @@ export class ContabilidadService {
 
   // ─── Flujo de Efectivo NIC 7 & Notas NIIF ──────────────────────────────────
   getFlujoEfectivo(fechaInicio: string, fechaFin: string): Observable<FlujoEfectivoModel> {
-    const params = new HttpParams()
-      .set('fechaInicio', fechaInicio)
-      .set('fechaFin', fechaFin);
+    const params = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
     return this.http.get<FlujoEfectivoModel>(`${this.base}/reportes/flujo-efectivo`, { params });
   }
 
@@ -631,9 +699,7 @@ export class ContabilidadService {
   }
 
   descargarFlujoEfectivoPdf(fechaInicio: string, fechaFin: string): Observable<Blob> {
-    const params = new HttpParams()
-      .set('fechaInicio', fechaInicio)
-      .set('fechaFin', fechaFin);
+    const params = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
     return this.http.get(`${this.base}/reportes/flujo-efectivo/pdf`, {
       params,
       responseType: 'blob',
@@ -641,9 +707,7 @@ export class ContabilidadService {
   }
 
   descargarFlujoEfectivoExcel(fechaInicio: string, fechaFin: string): Observable<Blob> {
-    const params = new HttpParams()
-      .set('fechaInicio', fechaInicio)
-      .set('fechaFin', fechaFin);
+    const params = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
     return this.http.get(`${this.base}/reportes/flujo-efectivo/excel`, {
       params,
       responseType: 'blob',
@@ -682,7 +746,10 @@ export class ContabilidadService {
   }
 
   anularDocumentoSoporte(id: string, motivo: string): Observable<DocumentoSoporteNotaModel> {
-    return this.http.post<DocumentoSoporteNotaModel>(`${this.base}/documento-soporte/${id}/anular`, { motivo });
+    return this.http.post<DocumentoSoporteNotaModel>(
+      `${this.base}/documento-soporte/${id}/anular`,
+      { motivo },
+    );
   }
 
   // ─── Nómina Electrónica UBL DIAN ─────────────────────────────────────────
@@ -705,19 +772,30 @@ export class ContabilidadService {
   }
 
   crearNominaIndividual(dto: CrearNominaIndividualModel): Observable<NominaElectronicaModel> {
-    return this.http.post<NominaElectronicaModel>(`${this.base}/nomina-electronica/individual`, dto);
+    return this.http.post<NominaElectronicaModel>(
+      `${this.base}/nomina-electronica/individual`,
+      dto,
+    );
   }
 
   generarNominaMasiva(dto: GenerarNominaMasivaModel): Observable<ResultadoNominaMasivaModel> {
-    return this.http.post<ResultadoNominaMasivaModel>(`${this.base}/nomina-electronica/masiva`, dto);
+    return this.http.post<ResultadoNominaMasivaModel>(
+      `${this.base}/nomina-electronica/masiva`,
+      dto,
+    );
   }
 
   // ─── Dispersión Bancaria Masiva H2H ───────────────────────────────────────
-  listarLotesDispersion(filtros?: { tipo?: string; estado?: string }): Observable<DispersionLoteModel[]> {
+  listarLotesDispersion(filtros?: {
+    tipo?: string;
+    estado?: string;
+  }): Observable<DispersionLoteModel[]> {
     let params = new HttpParams();
     if (filtros?.tipo) params = params.set('tipo', filtros.tipo);
     if (filtros?.estado) params = params.set('estado', filtros.estado);
-    return this.http.get<DispersionLoteModel[]>(`${this.base}/dispersion-bancaria/lotes`, { params });
+    return this.http.get<DispersionLoteModel[]>(`${this.base}/dispersion-bancaria/lotes`, {
+      params,
+    });
   }
 
   obtenerLoteDispersion(id: string): Observable<DispersionLoteModel> {
@@ -734,16 +812,22 @@ export class ContabilidadService {
     });
   }
 
-  confirmarLoteDispersion(id: string, dto: ConfirmarDispersionLoteModel): Observable<{ lote: DispersionLoteModel; asientoId: string; numeroComprobante: string }> {
-    return this.http.post<{ lote: DispersionLoteModel; asientoId: string; numeroComprobante: string }>(
-      `${this.base}/dispersion-bancaria/lotes/${id}/confirmar`,
-      dto,
-    );
+  confirmarLoteDispersion(
+    id: string,
+    dto: ConfirmarDispersionLoteModel,
+  ): Observable<{ lote: DispersionLoteModel; asientoId: string; numeroComprobante: string }> {
+    return this.http.post<{
+      lote: DispersionLoteModel;
+      asientoId: string;
+      numeroComprobante: string;
+    }>(`${this.base}/dispersion-bancaria/lotes/${id}/confirmar`, dto);
   }
 
   obtenerPendientesDispersion(tipo = 'PROVEEDORES'): Observable<DispersionItemModel[]> {
     const params = new HttpParams().set('tipo', tipo);
-    return this.http.get<DispersionItemModel[]>(`${this.base}/dispersion-bancaria/pendientes`, { params });
+    return this.http.get<DispersionItemModel[]>(`${this.base}/dispersion-bancaria/pendientes`, {
+      params,
+    });
   }
 
   // ─── Conciliación Bancaria con AI Fuzzy Match ────────────────────────────
@@ -753,7 +837,10 @@ export class ContabilidadService {
     toleranciaMonto?: number;
     umbralConfianzaMinimo?: number;
   }): Observable<AutoMatchFuzzyResultadoModel> {
-    return this.http.post<AutoMatchFuzzyResultadoModel>(`${this.base}/conciliacion/auto-match-fuzzy`, dto);
+    return this.http.post<AutoMatchFuzzyResultadoModel>(
+      `${this.base}/conciliacion/auto-match-fuzzy`,
+      dto,
+    );
   }
 
   aplicarSugerenciaConciliacion(dto: {
@@ -769,7 +856,3 @@ export class ContabilidadService {
     );
   }
 }
-
-
-
-

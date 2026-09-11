@@ -1017,28 +1017,7 @@ export class AsistenciaComponent implements OnInit {
     esImagen: false,
   });
 
-  excusasList = signal<ExcusaMedicaItem[]>([
-    {
-      id: 'exc-demo-001',
-      estudianteNombre: 'Felipe García',
-      fechaInicio: '2026-08-12',
-      fechaFin: '2026-08-14',
-      motivo: 'MEDICA',
-      descripcion: 'Gastroenteritis aguda certificada por EPS Sura',
-      urlSoporte: '/uploads/excusas/certificado_medico.pdf',
-      estado: 'PENDIENTE',
-    },
-    {
-      id: 'exc-demo-002',
-      estudianteNombre: 'Mariana López',
-      fechaInicio: '2026-08-15',
-      fechaFin: '2026-08-16',
-      motivo: 'CALAMIDAD',
-      descripcion: 'Calamidad familiar justificada',
-      urlSoporte: '/uploads/excusas/calamidad.pdf',
-      estado: 'APROBADA',
-    },
-  ]);
+  excusasList = signal<ExcusaMedicaItem[]>([]);
 
   // COMPUTEDS
   cargaSeleccionadaObj = computed(() => {

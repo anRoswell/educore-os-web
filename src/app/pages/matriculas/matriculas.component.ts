@@ -195,15 +195,15 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
                 </div>
                 <div class="detail-item">
                   <span class="label">Grupo Sanguíneo RH</span>
-                  <strong>{{ selectedEstudiante()?.grupoSanguineoRh || 'O+' }}</strong>
+                  <strong>{{ selectedEstudiante()?.grupoSanguineoRh || 'No registrado' }}</strong>
                 </div>
                 <div class="detail-item">
                   <span class="label">EPS Afiliada</span>
-                  <strong>{{ selectedEstudiante()?.eps || 'Sura EPS' }}</strong>
+                  <strong>{{ selectedEstudiante()?.eps || 'No registrada' }}</strong>
                 </div>
                 <div class="detail-item">
                   <span class="label">Teléfono Emergencia</span>
-                  <strong>{{ selectedEstudiante()?.telefonoEmergencia || '3001234567' }}</strong>
+                  <strong>{{ selectedEstudiante()?.telefonoEmergencia || 'No registrado' }}</strong>
                 </div>
               </div>
 

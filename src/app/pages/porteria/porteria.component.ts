@@ -80,18 +80,31 @@ export interface VehiculoIngresoItem {
             <app-help-badge term="CONTROL_ACCESO"></app-help-badge>
           </h1>
           <p class="subtitle">
-            Minuta digital de visitantes con asignación de gafete, lectura de torniquetes QR y validación segura de salidas de estudiantes.
+            Minuta digital de visitantes con asignación de gafete, lectura de torniquetes QR y
+            validación segura de salidas de estudiantes.
           </p>
         </div>
 
         <div class="header-actions">
-          <button (click)="abrirModalIngresoVisitante()" class="btn btn-primary" title="Registrar nuevo visitante en minuta">
+          <button
+            (click)="abrirModalIngresoVisitante()"
+            class="btn btn-primary"
+            title="Registrar nuevo visitante en minuta"
+          >
             <span>➕ Registrar Visitante</span>
           </button>
-          <button (click)="abrirModalMarcacionTorniquete()" class="btn btn-secondary" title="Simular lectura de torniquete QR">
+          <button
+            (click)="abrirModalMarcacionTorniquete()"
+            class="btn btn-secondary"
+            title="Simular lectura de torniquete QR"
+          >
             <span>🎟️ Marcación Torniquete QR</span>
           </button>
-          <button (click)="abrirModalAutorizacionSalida()" class="btn btn-secondary" title="Crear permiso de salida de estudiante">
+          <button
+            (click)="abrirModalAutorizacionSalida()"
+            class="btn btn-secondary"
+            title="Crear permiso de salida de estudiante"
+          >
             <span>🏃 Salida de Estudiante</span>
           </button>
         </div>
@@ -204,7 +217,11 @@ export interface VehiculoIngresoItem {
 
               <div class="filter-group">
                 <label>Estado Visita:</label>
-                <select class="form-select" [(ngModel)]="filtroEstadoVisitante" (change)="aplicarFiltrosVisitantes()">
+                <select
+                  class="form-select"
+                  [(ngModel)]="filtroEstadoVisitante"
+                  (change)="aplicarFiltrosVisitantes()"
+                >
                   <option value="TODOS">Todos los Visitantes</option>
                   <option value="EN_CAMPUS">En Campus (Abiertos)</option>
                   <option value="FINALIZADO">Salida Registrada</option>
@@ -224,7 +241,10 @@ export interface VehiculoIngresoItem {
               <div class="empty-state">
                 <span class="empty-icon">🛡️</span>
                 <h3>No hay registros de visitantes</h3>
-                <p>No se encontraron visitas con los criterios seleccionados. Puede registrar un ingreso con el botón superior.</p>
+                <p>
+                  No se encontraron visitas con los criterios seleccionados. Puede registrar un
+                  ingreso con el botón superior.
+                </p>
                 <button (click)="abrirModalIngresoVisitante()" class="btn btn-primary mt-3">
                   ➕ Registrar Primer Visitante
                 </button>
@@ -249,7 +269,12 @@ export interface VehiculoIngresoItem {
                       <td>
                         <div class="visitor-cell">
                           @if (v.fotoUrl || v.fotoBase64) {
-                            <img [src]="v.fotoUrl || v.fotoBase64" alt="Foto" class="visitor-avatar-img" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; flex-shrink: 0;" />
+                            <img
+                              [src]="v.fotoUrl || v.fotoBase64"
+                              alt="Foto"
+                              class="visitor-avatar-img"
+                              style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; flex-shrink: 0;"
+                            />
                           } @else {
                             <div class="visitor-avatar">
                               {{ v.nombreCompleto?.charAt(0) || 'V' }}
@@ -257,33 +282,47 @@ export interface VehiculoIngresoItem {
                           }
                           <div>
                             <strong class="visitor-name">{{ v.nombreCompleto }}</strong>
-                            <span class="visitor-doc">{{ v.tipoDocumento }} {{ v.numeroDocumento }}</span>
+                            <span class="visitor-doc"
+                              >{{ v.tipoDocumento }} {{ v.numeroDocumento }}</span
+                            >
                           </div>
                         </div>
                       </td>
                       <td>{{ v.empresaEntidad || 'Particular / Acudiente' }}</td>
                       <td>{{ v.motivoVisita }}</td>
-                      <td><strong>{{ v.personaAVisitar }}</strong></td>
+                      <td>
+                        <strong>{{ v.personaAVisitar }}</strong>
+                      </td>
                       <td>
                         <span class="badge badge-secondary">{{ v.gafeteAsignado || 'S/G' }}</span>
                       </td>
                       <td>
-                        <span class="text-xs">{{ v.fechaIngreso | date:'dd/MM/yyyy HH:mm' }}</span>
+                        <span class="text-xs">{{ v.fechaIngreso | date: 'dd/MM/yyyy HH:mm' }}</span>
                       </td>
                       <td>
                         @if (!v.fechaSalida) {
                           <span class="status-chip chip-green">🟢 En Campus</span>
                         } @else {
-                          <span class="status-chip chip-slate">Salida: {{ v.fechaSalida | date:'HH:mm' }}</span>
+                          <span class="status-chip chip-slate"
+                            >Salida: {{ v.fechaSalida | date: 'HH:mm' }}</span
+                          >
                         }
                       </td>
                       <td style="text-align: right;">
                         <div class="actions-group">
-                          <button (click)="verDetalleVisitante(v)" class="btn btn-secondary btn-sm" title="Ver Detalle / Gafete">
+                          <button
+                            (click)="verDetalleVisitante(v)"
+                            class="btn btn-secondary btn-sm"
+                            title="Ver Detalle / Gafete"
+                          >
                             👁️ Ver Ficha
                           </button>
                           @if (!v.fechaSalida) {
-                            <button (click)="registrarSalidaVisitante(v.id)" class="btn btn-primary btn-sm ml-2" title="Registrar Salida">
+                            <button
+                              (click)="registrarSalidaVisitante(v.id)"
+                              class="btn btn-primary btn-sm ml-2"
+                              title="Registrar Salida"
+                            >
                               🚪 Salida
                             </button>
                           }
@@ -307,7 +346,10 @@ export interface VehiculoIngresoItem {
             <div class="flex-between">
               <div>
                 <h3>🎟️ Registro de Marcaciones de Torniquetes y Lectores QR</h3>
-                <p class="text-sm">Lectura instantánea de carnets digitales estudiantiles y control de aforo por puntos de acceso perimetrales.</p>
+                <p class="text-sm">
+                  Lectura instantánea de carnets digitales estudiantiles y control de aforo por
+                  puntos de acceso perimetrales.
+                </p>
               </div>
               <button (click)="abrirModalMarcacionTorniquete()" class="btn btn-primary">
                 ➕ Simular Marcación QR
@@ -332,15 +374,23 @@ export interface VehiculoIngresoItem {
                   <tr>
                     <td>
                       <strong>{{ m.estudianteNombre || 'Estudiante Autorizado' }}</strong>
-                      <div class="text-xs text-slate-500">ID: {{ m.estudianteId?.slice(0, 13) }}...</div>
+                      <div class="text-xs text-slate-500">
+                        ID: {{ m.estudianteId?.slice(0, 13) }}...
+                      </div>
                     </td>
                     <td>
-                      <span class="badge" [class.badge-success]="m.tipoMarcacion === 'ENTRADA'" [class.badge-danger]="m.tipoMarcacion === 'SALIDA'">
+                      <span
+                        class="badge"
+                        [class.badge-success]="m.tipoMarcacion === 'ENTRADA'"
+                        [class.badge-danger]="m.tipoMarcacion === 'SALIDA'"
+                      >
                         {{ m.tipoMarcacion === 'ENTRADA' ? '🟢 ENTRADA' : '🔴 SALIDA' }}
                       </span>
                     </td>
-                    <td><code>{{ m.puntoAcceso }}</code></td>
-                    <td>{{ m.fechaHora | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                    <td>
+                      <code>{{ m.puntoAcceso }}</code>
+                    </td>
+                    <td>{{ m.fechaHora | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
                     <td>
                       <span class="status-chip chip-green">✓ Validado (200 OK)</span>
                     </td>
@@ -372,7 +422,10 @@ export interface VehiculoIngresoItem {
             <div class="flex-between">
               <div>
                 <h3>🏃 Protocolo de Salida Segura de Estudiantes</h3>
-                <p class="text-sm">Autorizaciones emitidas por coordinación académica para retiros anticipados con validación de documento y persona autorizada.</p>
+                <p class="text-sm">
+                  Autorizaciones emitidas por coordinación académica para retiros anticipados con
+                  validación de documento y persona autorizada.
+                </p>
               </div>
               <button (click)="abrirModalAutorizacionSalida()" class="btn btn-primary">
                 ➕ Nueva Autorización
@@ -398,21 +451,35 @@ export interface VehiculoIngresoItem {
                   <tr>
                     <td>
                       <strong>{{ a.estudianteNombre || 'Estudiante Matriculado' }}</strong>
-                      <div class="text-xs text-slate-500">Matrícula: {{ a.matriculaId?.slice(0, 13) }}...</div>
+                      <div class="text-xs text-slate-500">
+                        Matrícula: {{ a.matriculaId?.slice(0, 13) }}...
+                      </div>
                     </td>
-                    <td><strong>{{ a.personaRetiraNombre }}</strong></td>
-                    <td><code>{{ a.personaRetiraDocumento }}</code></td>
+                    <td>
+                      <strong>{{ a.personaRetiraNombre }}</strong>
+                    </td>
+                    <td>
+                      <code>{{ a.personaRetiraDocumento }}</code>
+                    </td>
                     <td>{{ a.motivo }}</td>
                     <td>{{ a.fechaSalida }} {{ a.horaSalidaEstimada }}</td>
                     <td>
-                      <span class="badge" [class.badge-warning]="a.estado === 'AUTORIZADO'" [class.badge-success]="a.estado === 'EJECUTADO'" [class.badge-danger]="a.estado === 'CANCELADO'">
+                      <span
+                        class="badge"
+                        [class.badge-warning]="a.estado === 'AUTORIZADO'"
+                        [class.badge-success]="a.estado === 'EJECUTADO'"
+                        [class.badge-danger]="a.estado === 'CANCELADO'"
+                      >
                         {{ a.estado }}
                       </span>
                     </td>
                     <td style="text-align: right;">
                       <div class="actions-group">
                         @if (a.estado === 'AUTORIZADO') {
-                          <button (click)="validarSalidaEstudiante(a.id)" class="btn btn-primary btn-sm">
+                          <button
+                            (click)="validarSalidaEstudiante(a.id)"
+                            class="btn btn-primary btn-sm"
+                          >
                             ✅ Validar Salida
                           </button>
                         }
@@ -444,7 +511,10 @@ export interface VehiculoIngresoItem {
             <div class="flex-between">
               <div>
                 <h3>🚗 Registro de Ingreso Vehicular & Parqueadero Institucional</h3>
-                <p class="text-sm">Control de acceso automotor para rutas escolares, proveedores, docentes y visitantes con bahía asignada.</p>
+                <p class="text-sm">
+                  Control de acceso automotor para rutas escolares, proveedores, docentes y
+                  visitantes con bahía asignada.
+                </p>
               </div>
               <button (click)="abrirModalNuevoVehiculo()" class="btn btn-primary">
                 ➕ Registrar Vehículo
@@ -468,8 +538,16 @@ export interface VehiculoIngresoItem {
               <tbody>
                 @for (veh of vehiculosList(); track veh.id) {
                   <tr>
-                    <td><span class="badge badge-primary" style="font-size: 0.9rem; font-weight: 800;">{{ veh.placa }}</span></td>
-                    <td><strong>{{ veh.conductorNombre }}</strong></td>
+                    <td>
+                      <span
+                        class="badge badge-primary"
+                        style="font-size: 0.9rem; font-weight: 800;"
+                        >{{ veh.placa }}</span
+                      >
+                    </td>
+                    <td>
+                      <strong>{{ veh.conductorNombre }}</strong>
+                    </td>
                     <td>{{ veh.tipoVehiculo }}</td>
                     <td>{{ veh.destino }}</td>
                     <td>{{ veh.horaIngreso }}</td>
@@ -482,7 +560,10 @@ export interface VehiculoIngresoItem {
                     </td>
                     <td style="text-align: right;">
                       @if (veh.estado === 'DENTRO') {
-                        <button (click)="registrarSalidaVehiculo(veh.id)" class="btn btn-secondary btn-sm">
+                        <button
+                          (click)="registrarSalidaVehiculo(veh.id)"
+                          class="btn btn-secondary btn-sm"
+                        >
                           🚪 Marcar Salida
                         </button>
                       }
@@ -507,7 +588,10 @@ export interface VehiculoIngresoItem {
             </div>
 
             <div class="modal-body">
-              <div class="grid-cols-2" style="display: grid; grid-template-columns: 1fr 2fr; gap: 0.75rem;">
+              <div
+                class="grid-cols-2"
+                style="display: grid; grid-template-columns: 1fr 2fr; gap: 0.75rem;"
+              >
                 <div class="form-group">
                   <label class="form-label">Tipo Doc *</label>
                   <select class="form-select" [(ngModel)]="nuevoVisitanteForm.tipoDocumento">
@@ -518,54 +602,131 @@ export interface VehiculoIngresoItem {
                 </div>
                 <div class="form-group">
                   <label class="form-label">Número Documento *</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevoVisitanteForm.numeroDocumento" placeholder="Ej: 52876123" />
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoVisitanteForm.numeroDocumento"
+                    placeholder="Ej: 52876123"
+                  />
                 </div>
               </div>
 
               <div class="form-group mt-3">
                 <label class="form-label">Nombre Completo del Visitante *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoVisitanteForm.nombreCompleto" placeholder="Ej: Dra. Claudia Restrepo" />
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoVisitanteForm.nombreCompleto"
+                  placeholder="Ej: Dra. Claudia Restrepo"
+                />
               </div>
 
               <div class="form-group mt-3">
                 <label class="form-label">Empresa / Entidad</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoVisitanteForm.empresaEntidad" placeholder="Ej: Secretaría de Educación Distrital / Proveedor" />
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoVisitanteForm.empresaEntidad"
+                  placeholder="Ej: Secretaría de Educación Distrital / Proveedor"
+                />
               </div>
 
               <div class="form-group mt-3">
                 <label class="form-label">Motivo de Visita *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoVisitanteForm.motivoVisita" placeholder="Ej: Auditoría presencial de estándares de calidad" />
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoVisitanteForm.motivoVisita"
+                  placeholder="Ej: Auditoría presencial de estándares de calidad"
+                />
               </div>
 
-              <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem;">
+              <div
+                class="grid-cols-2 mt-3"
+                style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem;"
+              >
                 <div class="form-group">
                   <label class="form-label">Persona / Área a Visitar *</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevoVisitanteForm.personaAVisitar" placeholder="Ej: Rectoría / Coordinación" />
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoVisitanteForm.personaAVisitar"
+                    placeholder="Ej: Rectoría / Coordinación"
+                  />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Gafete Asignado *</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevoVisitanteForm.gafeteAsignado" placeholder="Ej: GAFETE-12" />
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevoVisitanteForm.gafeteAsignado"
+                    placeholder="Ej: GAFETE-12"
+                  />
                 </div>
               </div>
 
               <!-- CAPTURA FOTOGRÁFICA / CÁMARA SEGURIDAD -->
               <div class="form-group mt-3 camera-section">
                 <label class="form-label">📷 Fotografía del Visitante (Control de Seguridad)</label>
-                <div class="camera-container" style="background: #1e293b; border-radius: 8px; padding: 0.75rem; text-align: center; color: white;">
+                <div
+                  class="camera-container"
+                  style="background: #1e293b; border-radius: 8px; padding: 0.75rem; text-align: center; color: white;"
+                >
                   @if (fotoCapturada()) {
-                    <div class="photo-preview-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                      <img [src]="fotoCapturada()" alt="Foto Visitante" class="snapshot-img" style="max-height: 140px; border-radius: 6px; border: 2px solid #10b981;" />
-                      <button type="button" (click)="retomarFoto()" class="btn btn-secondary btn-xs">🔄 Retomar Foto</button>
+                    <div
+                      class="photo-preview-wrapper"
+                      style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;"
+                    >
+                      <img
+                        [src]="fotoCapturada()"
+                        alt="Foto Visitante"
+                        class="snapshot-img"
+                        style="max-height: 140px; border-radius: 6px; border: 2px solid #10b981;"
+                      />
+                      <button
+                        type="button"
+                        (click)="retomarFoto()"
+                        class="btn btn-secondary btn-xs"
+                      >
+                        🔄 Retomar Foto
+                      </button>
                     </div>
                   } @else {
-                    <div class="video-preview-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                      <video #videoElement autoplay playsinline muted style="width: 100%; max-height: 140px; border-radius: 6px; background: #0f172a; object-fit: cover;"></video>
+                    <div
+                      class="video-preview-wrapper"
+                      style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;"
+                    >
+                      <video
+                        #videoElement
+                        autoplay
+                        playsinline
+                        muted
+                        style="width: 100%; max-height: 140px; border-radius: 6px; background: #0f172a; object-fit: cover;"
+                      ></video>
                       <div class="camera-actions flex justify-center gap-2 mt-1">
                         @if (!cameraActive()) {
-                          <button type="button" (click)="iniciarCamara()" class="btn btn-secondary btn-xs">▶️ Activar Cámara</button>
+                          <button
+                            type="button"
+                            (click)="iniciarCamara()"
+                            class="btn btn-secondary btn-xs"
+                          >
+                            ▶️ Activar Cámara
+                          </button>
                         } @else {
-                          <button type="button" (click)="capturarFoto()" class="btn btn-success btn-xs btn-capturar-foto">📸 Capturar Snapshot</button>
-                          <button type="button" (click)="detenerCamara()" class="btn btn-secondary btn-xs">⏹️ Apagar</button>
+                          <button
+                            type="button"
+                            (click)="capturarFoto()"
+                            class="btn btn-success btn-xs btn-capturar-foto"
+                          >
+                            📸 Capturar Snapshot
+                          </button>
+                          <button
+                            type="button"
+                            (click)="detenerCamara()"
+                            class="btn btn-secondary btn-xs"
+                          >
+                            ⏹️ Apagar
+                          </button>
                         }
                       </div>
                     </div>
@@ -575,7 +736,11 @@ export interface VehiculoIngresoItem {
             </div>
 
             <div class="modal-footer">
-              <button (click)="guardarIngresoVisitante()" class="btn btn-primary" [disabled]="isSaving()">
+              <button
+                (click)="guardarIngresoVisitante()"
+                class="btn btn-primary"
+                [disabled]="isSaving()"
+              >
                 {{ isSaving() ? 'Guardando...' : '💾 Registrar Ingreso' }}
               </button>
               <button (click)="cerrarModalVisitante()" class="btn btn-secondary">Cancelar</button>
@@ -590,16 +755,21 @@ export interface VehiculoIngresoItem {
           <div class="modal-card card card-glass" style="max-width: 500px;">
             <div class="modal-header">
               <h3>🎟️ Marcación Torniquete QR</h3>
-              <button (click)="modalMarcacionTorniquete.set(false)" class="close-btn">&times;</button>
+              <button (click)="modalMarcacionTorniquete.set(false)" class="close-btn">
+                &times;
+              </button>
             </div>
 
             <div class="modal-body">
               <div class="form-group">
                 <label class="form-label">Estudiante para Marcación *</label>
                 <select class="form-select" [(ngModel)]="nuevaMarcacionForm.estudianteId">
-                  <option value="11111111-1111-4111-8111-000000000001">Gómez Pérez Carlos Andrés (10-A)</option>
-                  <option value="11111111-1111-4111-8111-000000000002">Moreno Morales Juan Diego (9-B)</option>
-                  <option value="11111111-1111-4111-8111-000000000003">Castro Rojas Mariana (11-A)</option>
+                  <option value="" disabled>Seleccione un estudiante</option>
+                  @for (estudiante of estudiantesMatriculados(); track estudiante.id) {
+                    <option [value]="estudiante.id">
+                      {{ estudiante.nombre }} ({{ estudiante.grupo || 'Sin grupo' }})
+                    </option>
+                  }
                 </select>
               </div>
 
@@ -614,7 +784,9 @@ export interface VehiculoIngresoItem {
               <div class="form-group mt-3">
                 <label class="form-label">Punto de Acceso *</label>
                 <select class="form-select" [(ngModel)]="nuevaMarcacionForm.puntoAcceso">
-                  <option value="TORNIQUETE_PEATONAL_PRINCIPAL">Torniquete Peatonal Principal</option>
+                  <option value="TORNIQUETE_PEATONAL_PRINCIPAL">
+                    Torniquete Peatonal Principal
+                  </option>
                   <option value="TORNIQUETE_SECUNDARIO_NORTE">Torniquete Secundario Norte</option>
                   <option value="PUERTA_VEHICULAR">Puerta Vehicular / Rutas</option>
                 </select>
@@ -622,10 +794,16 @@ export interface VehiculoIngresoItem {
             </div>
 
             <div class="modal-footer">
-              <button (click)="guardarMarcacionTorniquete()" class="btn btn-primary" [disabled]="isSaving()">
+              <button
+                (click)="guardarMarcacionTorniquete()"
+                class="btn btn-primary"
+                [disabled]="isSaving()"
+              >
                 {{ isSaving() ? 'Marcando...' : '🔄 Ejecutar Marcación QR' }}
               </button>
-              <button (click)="modalMarcacionTorniquete.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="modalMarcacionTorniquete.set(false)" class="btn btn-secondary">
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
@@ -637,53 +815,100 @@ export interface VehiculoIngresoItem {
           <div class="modal-card card card-glass" style="max-width: 540px;">
             <div class="modal-header">
               <h3>🏃 Autorizar Salida Temprana de Estudiante</h3>
-              <button (click)="modalAutorizacionSalida.set(false)" class="close-btn">&times;</button>
+              <button (click)="modalAutorizacionSalida.set(false)" class="close-btn">
+                &times;
+              </button>
             </div>
 
             <div class="modal-body">
               <div class="form-group">
                 <label class="form-label">Estudiante Matriculado *</label>
                 <select class="form-select" [(ngModel)]="nuevaSalidaForm.matriculaId">
-                  <option value="11111111-1111-4111-8111-000000000001">García Mariana (11-A)</option>
+                  <option value="11111111-1111-4111-8111-000000000001">
+                    García Mariana (11-A)
+                  </option>
                   <option value="11111111-1111-4111-8111-000000000002">López David (10-A)</option>
                   <option value="11111111-1111-4111-8111-000000000003">Castro Sofía (9-B)</option>
                   <option value="11111111-1111-4111-8111-000000000004">Pérez Carlos (10-A)</option>
                 </select>
               </div>
 
-              <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <div
+                class="grid-cols-2 mt-3"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;"
+              >
                 <div class="form-group">
                   <label class="form-label">Fecha de Salida *</label>
-                  <input type="text" appFlatpickr class="form-control" [(ngModel)]="nuevaSalidaForm.fechaSalida" placeholder="dd/mm/aaaa" />
+                  <input
+                    type="text"
+                    appFlatpickr
+                    class="form-control"
+                    [(ngModel)]="nuevaSalidaForm.fechaSalida"
+                    placeholder="dd/mm/aaaa"
+                  />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Hora Estimada *</label>
-                  <input type="text" appFlatpickr [enableTime]="true" [noCalendar]="true" [time24hr]="true" dateFormat="H:i" class="form-control" [(ngModel)]="nuevaSalidaForm.horaSalidaEstimada" placeholder="hh:mm" />
+                  <input
+                    type="text"
+                    appFlatpickr
+                    [enableTime]="true"
+                    [noCalendar]="true"
+                    [time24hr]="true"
+                    dateFormat="H:i"
+                    class="form-control"
+                    [(ngModel)]="nuevaSalidaForm.horaSalidaEstimada"
+                    placeholder="hh:mm"
+                  />
                 </div>
               </div>
 
               <div class="form-group mt-3">
                 <label class="form-label">Motivo de Salida *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevaSalidaForm.motivo" placeholder="Ej: Cita médica especialista pediatría" />
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevaSalidaForm.motivo"
+                  placeholder="Ej: Cita médica especialista pediatría"
+                />
               </div>
 
-              <div class="grid-cols-2 mt-3" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem;">
+              <div
+                class="grid-cols-2 mt-3"
+                style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem;"
+              >
                 <div class="form-group">
                   <label class="form-label">Persona que Retira *</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevaSalidaForm.personaRetiraNombre" placeholder="Ej: Carolina Restrepo (Madre)" />
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaSalidaForm.personaRetiraNombre"
+                    placeholder="Ej: Carolina Restrepo (Madre)"
+                  />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Doc. Identidad *</label>
-                  <input type="text" class="form-control" [(ngModel)]="nuevaSalidaForm.personaRetiraDocumento" placeholder="Ej: 52876123" />
+                  <input
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="nuevaSalidaForm.personaRetiraDocumento"
+                    placeholder="Ej: 52876123"
+                  />
                 </div>
               </div>
             </div>
 
             <div class="modal-footer">
-              <button (click)="guardarAutorizacionSalida()" class="btn btn-primary" [disabled]="isSaving()">
+              <button
+                (click)="guardarAutorizacionSalida()"
+                class="btn btn-primary"
+                [disabled]="isSaving()"
+              >
                 {{ isSaving() ? 'Autorizando...' : '🚀 Autorizar Salida' }}
               </button>
-              <button (click)="modalAutorizacionSalida.set(false)" class="btn btn-secondary">Cancelar</button>
+              <button (click)="modalAutorizacionSalida.set(false)" class="btn btn-secondary">
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
@@ -699,24 +924,43 @@ export interface VehiculoIngresoItem {
             </div>
 
             <div class="modal-body">
-              <div class="carnet-preview-box" style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 1.25rem; background: #f8fafc; text-align: center;">
+              <div
+                class="carnet-preview-box"
+                style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 1.25rem; background: #f8fafc; text-align: center;"
+              >
                 @if (visitanteDetalle()?.fotoUrl || visitanteDetalle()?.fotoBase64) {
                   <div class="foto-box text-center mb-3">
-                    <img [src]="visitanteDetalle()?.fotoUrl || visitanteDetalle()?.fotoBase64" alt="Foto Visitante" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 0.5rem; border: 2px solid #6366f1;" />
+                    <img
+                      [src]="visitanteDetalle()?.fotoUrl || visitanteDetalle()?.fotoBase64"
+                      alt="Foto Visitante"
+                      style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 0.5rem; border: 2px solid #6366f1;"
+                    />
                   </div>
                 } @else {
                   <div style="font-size: 2.5rem;">🪪</div>
                 }
-                <h4 style="color: #0f172a; margin: 0.5rem 0;">{{ visitanteDetalle()?.nombreCompleto }}</h4>
-                <p class="text-sm text-slate-500">{{ visitanteDetalle()?.tipoDocumento }}: {{ visitanteDetalle()?.numeroDocumento }}</p>
+                <h4 style="color: #0f172a; margin: 0.5rem 0;">
+                  {{ visitanteDetalle()?.nombreCompleto }}
+                </h4>
+                <p class="text-sm text-slate-500">
+                  {{ visitanteDetalle()?.tipoDocumento }}: {{ visitanteDetalle()?.numeroDocumento }}
+                </p>
                 <div class="badge badge-primary mt-2" style="font-size: 0.9rem;">
                   GAFETE: {{ visitanteDetalle()?.gafeteAsignado || 'GAFETE-PROVISIONAL' }}
                 </div>
                 <div class="mt-3 text-xs text-slate-600">
-                  <p><strong>Entidad:</strong> {{ visitanteDetalle()?.empresaEntidad || 'Particular' }}</p>
-                  <p><strong>Persona a Visitar:</strong> {{ visitanteDetalle()?.personaAVisitar }}</p>
+                  <p>
+                    <strong>Entidad:</strong>
+                    {{ visitanteDetalle()?.empresaEntidad || 'Particular' }}
+                  </p>
+                  <p>
+                    <strong>Persona a Visitar:</strong> {{ visitanteDetalle()?.personaAVisitar }}
+                  </p>
                   <p><strong>Motivo:</strong> {{ visitanteDetalle()?.motivoVisita }}</p>
-                  <p><strong>Hora de Ingreso:</strong> {{ visitanteDetalle()?.fechaIngreso | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+                  <p>
+                    <strong>Hora de Ingreso:</strong>
+                    {{ visitanteDetalle()?.fechaIngreso | date: 'dd/MM/yyyy HH:mm:ss' }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -740,11 +984,21 @@ export interface VehiculoIngresoItem {
             <div class="modal-body">
               <div class="form-group">
                 <label class="form-label">Placa del Vehículo *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoVehiculoForm.placa" placeholder="Ej: ABC-123" />
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoVehiculoForm.placa"
+                  placeholder="Ej: ABC-123"
+                />
               </div>
               <div class="form-group mt-3">
                 <label class="form-label">Nombre Conductor *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoVehiculoForm.conductorNombre" placeholder="Ej: Pedro Martínez" />
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoVehiculoForm.conductorNombre"
+                  placeholder="Ej: Pedro Martínez"
+                />
               </div>
               <div class="form-group mt-3">
                 <label class="form-label">Tipo de Vehículo *</label>
@@ -757,7 +1011,12 @@ export interface VehiculoIngresoItem {
               </div>
               <div class="form-group mt-3">
                 <label class="form-label">Destino / Área *</label>
-                <input type="text" class="form-control" [(ngModel)]="nuevoVehiculoForm.destino" placeholder="Ej: Parqueadero Principal / Rectoría" />
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="nuevoVehiculoForm.destino"
+                  placeholder="Ej: Parqueadero Principal / Rectoría"
+                />
               </div>
             </div>
 
@@ -772,301 +1031,335 @@ export interface VehiculoIngresoItem {
       }
     </div>
   `,
-  styles: [`
-    .porteria-page-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
+  styles: [
+    `
+      .porteria-page-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
 
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
 
-    .header-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #6366f1;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.25rem;
-    }
+      .header-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6366f1;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+      }
 
-    .badge-tag {
-      background: rgba(99, 102, 241, 0.1);
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-      border: 1px solid rgba(99, 102, 241, 0.2);
-    }
+      .badge-tag {
+        background: rgba(99, 102, 241, 0.1);
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+      }
 
-    .page-header h1 {
-      font-size: 1.75rem;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+      .page-header h1 {
+        font-size: 1.75rem;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-    .subtitle {
-      font-size: 0.9rem;
-      color: #64748b;
-      max-width: 800px;
-    }
+      .subtitle {
+        font-size: 0.9rem;
+        color: #64748b;
+        max-width: 800px;
+      }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      flex-wrap: wrap;
-    }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+      }
 
-    /* KPI GRID */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-    }
+      /* KPI GRID */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+      }
 
-    .kpi-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      padding: 1.25rem;
-    }
+      .kpi-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.25rem;
+      }
 
-    .kpi-icon-badge {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      flex-shrink: 0;
-    }
+      .kpi-icon-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+      }
 
-    .color-indigo { background: #e0e7ff; color: #4338ca; }
-    .color-green { background: #dcfce7; color: #15803d; }
-    .color-amber { background: #fef3c7; color: #b45309; }
-    .color-purple { background: #f3e8ff; color: #7e22ce; }
+      .color-indigo {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+      .color-green {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .color-amber {
+        background: #fef3c7;
+        color: #b45309;
+      }
+      .color-purple {
+        background: #f3e8ff;
+        color: #7e22ce;
+      }
 
-    .kpi-content {
-      display: flex;
-      flex-direction: column;
-    }
+      .kpi-content {
+        display: flex;
+        flex-direction: column;
+      }
 
-    .kpi-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+      .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
 
-    .kpi-value {
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: #0f172a;
-      margin: 0.2rem 0;
-    }
+      .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0.2rem 0;
+      }
 
-    .kpi-hint {
-      font-size: 0.75rem;
-      color: #94a3b8;
-    }
+      .kpi-hint {
+        font-size: 0.75rem;
+        color: #94a3b8;
+      }
 
-    /* TABS */
-    .tabs-nav {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 0.5rem;
-    }
+      /* TABS */
+      .tabs-nav {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+      }
 
-    .tab-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.65rem 1.25rem;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      background: transparent;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #64748b;
-      cursor: pointer;
-      transition: all 150ms ease;
-    }
+      .tab-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 150ms ease;
+      }
 
-    .tab-btn:hover {
-      background: #f1f5f9;
-      color: #0f172a;
-    }
+      .tab-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
 
-    .tab-btn.active {
-      background: #ffffff;
-      color: #4f46e5;
-      border-color: #e2e8f0;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
+      .tab-btn.active {
+        background: #ffffff;
+        color: #4f46e5;
+        border-color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
 
-    .tab-badge {
-      background: #e2e8f0;
-      color: #475569;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.1rem 0.45rem;
-      border-radius: 9999px;
-    }
+      .tab-badge {
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.1rem 0.45rem;
+        border-radius: 9999px;
+      }
 
-    .tab-btn.active .tab-badge {
-      background: #e0e7ff;
-      color: #4338ca;
-    }
+      .tab-btn.active .tab-badge {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
 
-    /* FILTERS */
-    .filters-card {
-      padding: 1rem 1.25rem;
-    }
+      /* FILTERS */
+      .filters-card {
+        padding: 1rem 1.25rem;
+      }
 
-    .filters-grid {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
+      .filters-grid {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
 
-    .search-box {
-      flex: 1;
-      min-width: 280px;
-      position: relative;
-    }
+      .search-box {
+        flex: 1;
+        min-width: 280px;
+        position: relative;
+      }
 
-    .search-icon {
-      position: absolute;
-      left: 0.85rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #94a3b8;
-    }
+      .search-icon {
+        position: absolute;
+        left: 0.85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+      }
 
-    .search-input {
-      width: 100%;
-      padding: 0.55rem 0.85rem 0.55rem 2.4rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      outline: none;
-    }
+      .search-input {
+        width: 100%;
+        padding: 0.55rem 0.85rem 0.55rem 2.4rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        outline: none;
+      }
 
-    .filter-group {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+      .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-    .filter-group label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #475569;
-      white-space: nowrap;
-    }
+      .filter-group label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #475569;
+        white-space: nowrap;
+      }
 
-    /* VISITOR CELL */
-    .visitor-cell {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
+      /* VISITOR CELL */
+      .visitor-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
 
-    .visitor-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #6366f1;
-      color: white;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-    }
+      .visitor-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #6366f1;
+        color: white;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+      }
 
-    .visitor-name {
-      display: block;
-      font-size: 0.875rem;
-      color: #0f172a;
-    }
+      .visitor-name {
+        display: block;
+        font-size: 0.875rem;
+        color: #0f172a;
+      }
 
-    .visitor-doc {
-      font-size: 0.75rem;
-      color: #64748b;
-    }
+      .visitor-doc {
+        font-size: 0.75rem;
+        color: #64748b;
+      }
 
-    .status-chip {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
+      .status-chip {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
 
-    .chip-green { background: #dcfce7; color: #166534; }
-    .chip-slate { background: #f1f5f9; color: #475569; }
+      .chip-green {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .chip-slate {
+        background: #f1f5f9;
+        color: #475569;
+      }
 
-    .actions-group {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 0.4rem;
-    }
+      .actions-group {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.4rem;
+      }
 
-    .empty-state {
-      padding: 3rem 1.5rem;
-      text-align: center;
-      color: #64748b;
-    }
+      .empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+        color: #64748b;
+      }
 
-    .empty-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
+      .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
 
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid #e2e8f0;
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      animation: spin 800ms linear infinite;
-      margin: 0 auto 1rem;
-    }
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #e2e8f0;
+        border-top-color: #6366f1;
+        border-radius: 50%;
+        animation: spin 800ms linear infinite;
+        margin: 0 auto 1rem;
+      }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-    .flex-between {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-    .mt-3 { margin-top: 0.75rem; }
-    .ml-2 { margin-left: 0.5rem; }
-    .text-xs { font-size: 0.75rem; }
-    .text-sm { font-size: 0.85rem; }
-    .text-slate-500 { color: #64748b; }
-    .text-slate-600 { color: #475569; }
-  `]
+      .mt-3 {
+        margin-top: 0.75rem;
+      }
+      .ml-2 {
+        margin-left: 0.5rem;
+      }
+      .text-xs {
+        font-size: 0.75rem;
+      }
+      .text-sm {
+        font-size: 0.85rem;
+      }
+      .text-slate-500 {
+        color: #64748b;
+      }
+      .text-slate-600 {
+        color: #475569;
+      }
+    `,
+  ],
 })
 export class PorteriaComponent implements OnInit {
   private readonly api = inject(ApiService);
@@ -1083,27 +1376,10 @@ export class PorteriaComponent implements OnInit {
   readonly visitantesList = signal<MinutaVisitanteItem[]>([]);
   readonly marcacionesList = signal<MarcacionTorniqueteItem[]>([]);
   readonly autorizacionesList = signal<AutorizacionSalidaItem[]>([]);
-  readonly vehiculosList = signal<VehiculoIngresoItem[]>([
-    {
-      id: 'veh-1',
-      placa: 'ABC-123',
-      conductorNombre: 'Pedro Martínez',
-      tipoVehiculo: 'Automóvil Particular',
-      destino: 'Rectoría / Parqueadero Principal',
-      horaIngreso: '07:30 AM',
-      estado: 'DENTRO',
-    },
-    {
-      id: 'veh-2',
-      placa: 'XYZ-789',
-      conductorNombre: 'Ruta Escolar #4',
-      tipoVehiculo: 'Ruta Escolar',
-      destino: 'Bahía de Desembarque',
-      horaIngreso: '06:45 AM',
-      horaSalida: '07:15 AM',
-      estado: 'SALIO',
-    },
-  ]);
+  readonly estudiantesMatriculados = signal<Array<{ id: string; nombre: string; grupo?: string }>>(
+    [],
+  );
+  readonly vehiculosList = signal<VehiculoIngresoItem[]>([]);
 
   // Modal signals
   modalIngresoVisitante = signal(false);
@@ -1130,7 +1406,7 @@ export class PorteriaComponent implements OnInit {
   };
 
   nuevaMarcacionForm = {
-    estudianteId: '11111111-1111-4111-8111-000000000001',
+    estudianteId: '',
     tipoMarcacion: 'ENTRADA',
     puntoAcceso: 'TORNIQUETE_PEATONAL_PRINCIPAL',
   };
@@ -1153,7 +1429,7 @@ export class PorteriaComponent implements OnInit {
 
   // KPIs Computados
   totalVisitantesEnCampus = computed(() => {
-    return this.visitantesList().filter(v => !v.fechaSalida).length;
+    return this.visitantesList().filter((v) => !v.fechaSalida).length;
   });
 
   totalMarcacionesHoy = computed(() => {
@@ -1161,29 +1437,30 @@ export class PorteriaComponent implements OnInit {
   });
 
   totalSalidasPendientes = computed(() => {
-    return this.autorizacionesList().filter(a => a.estado === 'AUTORIZADO').length;
+    return this.autorizacionesList().filter((a) => a.estado === 'AUTORIZADO').length;
   });
 
   totalVehiculosDentro = computed(() => {
-    return this.vehiculosList().filter(v => v.estado === 'DENTRO').length;
+    return this.vehiculosList().filter((v) => v.estado === 'DENTRO').length;
   });
 
   // Filtros de Visitantes
   visitantesFiltrados = computed(() => {
     let list = this.visitantesList();
     if (this.filtroEstadoVisitante === 'EN_CAMPUS') {
-      list = list.filter(v => !v.fechaSalida);
+      list = list.filter((v) => !v.fechaSalida);
     } else if (this.filtroEstadoVisitante === 'FINALIZADO') {
-      list = list.filter(v => !!v.fechaSalida);
+      list = list.filter((v) => !!v.fechaSalida);
     }
 
     if (this.filtroTextoVisitantes.trim()) {
       const q = this.filtroTextoVisitantes.toLowerCase();
-      list = list.filter(v =>
-        v.nombreCompleto?.toLowerCase().includes(q) ||
-        v.numeroDocumento?.includes(q) ||
-        v.empresaEntidad?.toLowerCase().includes(q) ||
-        v.gafeteAsignado?.toLowerCase().includes(q)
+      list = list.filter(
+        (v) =>
+          v.nombreCompleto?.toLowerCase().includes(q) ||
+          v.numeroDocumento?.includes(q) ||
+          v.empresaEntidad?.toLowerCase().includes(q) ||
+          v.gafeteAsignado?.toLowerCase().includes(q),
       );
     }
 
@@ -1198,6 +1475,26 @@ export class PorteriaComponent implements OnInit {
     this.cargarVisitantes();
     this.cargarMarcaciones();
     this.cargarAutorizaciones();
+    this.cargarEstudiantesMatriculados();
+  }
+
+  cargarEstudiantesMatriculados(): void {
+    this.api.get<any[]>('convivencia/estudiantes-matriculados').subscribe({
+      next: (items) =>
+        this.estudiantesMatriculados.set(
+          (items || [])
+            .map((item) => ({
+              id: item.estudiante_id || item.id,
+              nombre:
+                `${item.primer_nombre || ''} ${item.segundo_nombre || ''} ${item.primer_apellido || ''} ${item.segundo_apellido || ''}`
+                  .replace(/\s+/g, ' ')
+                  .trim(),
+              grupo: item.grupo_nombre,
+            }))
+            .filter((item) => !!item.id),
+        ),
+      error: () => this.estudiantesMatriculados.set([]),
+    });
   }
 
   cargarVisitantes(): void {
@@ -1271,7 +1568,9 @@ export class PorteriaComponent implements OnInit {
       }
     }
     // Fallback valid image data URL
-    this.fotoCapturada.set('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAADklEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    this.fotoCapturada.set(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAADklEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    );
     this.detenerCamara();
   }
 
@@ -1282,7 +1581,7 @@ export class PorteriaComponent implements OnInit {
 
   detenerCamara(): void {
     if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach(t => t.stop());
+      this.mediaStream.getTracks().forEach((t) => t.stop());
       this.mediaStream = null;
     }
     this.cameraActive.set(false);
@@ -1343,7 +1642,7 @@ export class PorteriaComponent implements OnInit {
           fechaIngreso: new Date().toISOString(),
           fotoBase64: this.fotoCapturada() || undefined,
         };
-        this.visitantesList.update(list => [newItem, ...list]);
+        this.visitantesList.update((list) => [newItem, ...list]);
         this.modalIngresoVisitante.set(false);
         this.toast.success('Ingreso de visitante registrado exitosamente.');
       },
@@ -1387,7 +1686,9 @@ export class PorteriaComponent implements OnInit {
   }
 
   verDetalleMarcacion(m: MarcacionTorniqueteItem): void {
-    this.toast.info(`Marcación ${m.tipoMarcacion} registrada el ${new Date(m.fechaHora).toLocaleString()}`);
+    this.toast.info(
+      `Marcación ${m.tipoMarcacion} registrada el ${new Date(m.fechaHora).toLocaleString()}`,
+    );
   }
 
   abrirModalAutorizacionSalida(): void {
@@ -1408,7 +1709,10 @@ export class PorteriaComponent implements OnInit {
       return;
     }
 
-    const hora = this.nuevaSalidaForm.horaSalidaEstimada.length === 5 ? `${this.nuevaSalidaForm.horaSalidaEstimada}:00` : this.nuevaSalidaForm.horaSalidaEstimada;
+    const hora =
+      this.nuevaSalidaForm.horaSalidaEstimada.length === 5
+        ? `${this.nuevaSalidaForm.horaSalidaEstimada}:00`
+        : this.nuevaSalidaForm.horaSalidaEstimada;
 
     const payload = {
       ...this.nuevaSalidaForm,
@@ -1443,7 +1747,9 @@ export class PorteriaComponent implements OnInit {
   }
 
   verDetalleSalida(a: AutorizacionSalidaItem): void {
-    this.toast.info(`Autorización para ${a.personaRetiraNombre} (Doc. ${a.personaRetiraDocumento}) - Estado: ${a.estado}`);
+    this.toast.info(
+      `Autorización para ${a.personaRetiraNombre} (Doc. ${a.personaRetiraDocumento}) - Estado: ${a.estado}`,
+    );
   }
 
   abrirModalNuevoVehiculo(): void {
@@ -1472,14 +1778,22 @@ export class PorteriaComponent implements OnInit {
       estado: 'DENTRO',
     };
 
-    this.vehiculosList.update(list => [nuevo, ...list]);
+    this.vehiculosList.update((list) => [nuevo, ...list]);
     this.modalVehiculo.set(false);
     this.toast.success(`Vehículo ${nuevo.placa} registrado en parqueadero.`);
   }
 
   registrarSalidaVehiculo(id: string): void {
-    this.vehiculosList.update(list =>
-      list.map(v => v.id === id ? { ...v, estado: 'SALIO', horaSalida: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) } : v)
+    this.vehiculosList.update((list) =>
+      list.map((v) =>
+        v.id === id
+          ? {
+              ...v,
+              estado: 'SALIO',
+              horaSalida: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }
+          : v,
+      ),
     );
     this.toast.success('Salida de vehículo registrada.');
   }

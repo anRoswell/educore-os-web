@@ -10,11 +10,12 @@ import { HelpBadgeComponent } from '../../shared/components/help-badge.component
 import { ParametrosService, Parametro } from '../../core/services/parametros.service';
 import { ModalBarridoMateriasPerdidasComponent } from './modales/modal-barrido-materias-perdidas.component';
 import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive';
+import { AcademicoAdminComponent } from './admin/academico-admin.component';
 
 @Component({
   selector: 'app-academico',
   standalone: true,
-  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalBarridoMateriasPerdidasComponent, FlatpickrDirective],
+  imports: [CommonModule, FormsModule, HelpBadgeComponent, ModalBarridoMateriasPerdidasComponent, FlatpickrDirective, AcademicoAdminComponent],
   template: `
     <div class="academico-container">
       <!-- Header -->
@@ -24,6 +25,13 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
           <p>Estructura curricular, registro y control de calificaciones, escala nacional y consolidación de boletines</p>
         </div>
         <div class="header-actions-wrapper">
+          <button
+            (click)="viewMode.set(viewMode() === 'wizard' ? 'admin' : 'wizard')"
+            [class]="viewMode() === 'admin' ? 'btn btn-secondary' : 'btn btn-outline'"
+            title="Administrar Estructura"
+          >
+            <span>⚙️ {{ viewMode() === 'admin' ? 'Volver al Wizard' : 'Administrar Estructura' }}</span>
+          </button>
           <button
             (click)="mostrarGuiaPasos.set(!mostrarGuiaPasos())"
             [class]="mostrarGuiaPasos() ? 'btn btn-secondary' : 'btn btn-outline'"
@@ -50,6 +58,9 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
           </button>
         </div>
       </div>
+
+      <!-- Wrapper de vistas -->
+      @if (viewMode() === 'wizard') {
 
       <!-- Guía Interactiva de Creación Cronológica (Paso a Paso) -->
       @if (mostrarGuiaPasos()) {
@@ -942,7 +953,7 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
       <!-- ========================================== -->
       @if (modalNuevoPeriodo()) {
         <div class="modal-backdrop animate-fade-in" [style.z-index]="modalManager.getZIndex('nuevoPeriodo')">
-          <div class="modal-card card card-glass" style="max-width: 520px;">
+          <div class="modal-card card card-glass" style="max-width: 720px;">
             <div class="modal-header">
               <div>
                 <h3>
@@ -1035,10 +1046,10 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
                   <input
                     type="text"
                     appFlatpickr
+                    [enableTime]="true"
                     [minDate]="nuevoPeriodo.fechaInicio"
-                    [maxDate]="nuevoPeriodo.fechaFin"
                     class="form-control"
-                    placeholder="dd/mm/aaaa"
+                    placeholder="dd/mm/aaaa --:--"
                     [(ngModel)]="nuevoPeriodo.fechaLimiteDocentes"
                   />
                 </div>
@@ -1214,6 +1225,9 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
           (sweepCompleted)="onBarridoCompletado($event)"
         ></app-modal-barrido-materias-perdidas>
       }
+      } @else {
+        <app-academico-admin></app-academico-admin>
+      }
     </div>
   `,
   styles: [`
@@ -1246,21 +1260,24 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
     /* Barra de Tarjetas de Acción Rápida */
     .action-buttons-bar {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 0.65rem;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 0.75rem;
     }
 
     .action-card-btn {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 0.75rem;
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 0.65rem 0.85rem;
+      padding: 0.75rem 0.95rem;
+      min-height: 68px;
+      box-sizing: border-box;
       cursor: pointer;
       text-align: left;
-      transition: all 0.2s ease-in-out;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
 
     .action-card-btn:hover {
@@ -1271,7 +1288,7 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
     }
 
     .ac-icon {
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       flex-shrink: 0;
     }
 
@@ -1279,23 +1296,25 @@ import { FlatpickrDirective } from '../../shared/directives/flatpickr.directive'
       display: flex;
       flex-direction: column;
       min-width: 0;
+      flex: 1;
     }
 
     .ac-title {
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       font-weight: 700;
       color: #1e293b;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: visible;
+      line-height: 1.25;
     }
 
     .ac-hint {
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       color: #64748b;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      overflow: visible;
+      line-height: 1.25;
+      margin-top: 2px;
     }
 
     /* Guía de Pasos */
@@ -1599,6 +1618,7 @@ export class AcademicoComponent implements OnInit {
   private readonly parametrosService = inject(ParametrosService);
 
   // Control de interfaz y Guía de Pasos (dinámica, oculta por defecto para vista despejada)
+  readonly viewMode = signal<'wizard' | 'admin'>('wizard');
   readonly mostrarGuiaPasos = signal<boolean>(false);
 
   // Listas de datos para filtros

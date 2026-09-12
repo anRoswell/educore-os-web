@@ -2,6 +2,8 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContabilidadService } from '../services/contabilidad.service';
+import { ConfigGuideComponent, ConfigRequirement } from '../components/config-guide.component';
+import { ContabilidadComponent } from '../contabilidad.component';
 import {
   BalanceGeneral,
   EstadoResultados,
@@ -20,7 +22,7 @@ type ReporteActivo = 'graficas' | 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxi
 @Component({
   selector: 'app-contabilidad-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule, FlatpickrDirective],
+  imports: [CommonModule, FormsModule, ConfigGuideComponent, FlatpickrDirective],
   styles: [`
     .stat-card {
       background: #ffffff;
@@ -271,8 +273,17 @@ type ReporteActivo = 'graficas' | 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxi
     }
   `],
   template: `
-    <div class="tab-content" data-testid="tab-content-reportes">
-      <!-- Selector de reporte -->
+    @if (faltanRequisitos()) {
+      <div class="p-6">
+        <app-config-guide 
+          title="Configuración Requerida para Reportes" 
+          description="Para generar informes financieros y gerenciales, debes configurar previamente el Plan de Cuentas (PUC) y los Periodos Contables."
+          [requirements]="requisitosFaltantes()"
+          (onNavigate)="navegarA($event)" />
+      </div>
+    } @else {
+      <div class="tab-content" data-testid="tab-content-reportes">
+        <!-- Selector de reporte -->
       <div class="tabs-nav mb-5 flex-wrap" data-testid="nav-reportes">
         @for (r of reportes; track r.key) {
           <button
@@ -323,30 +334,36 @@ type ReporteActivo = 'graficas' | 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxi
 
                 <div class="reportes-filter-group">
                   <label class="reportes-filter-label">Modo de Comparación</label>
-                  <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100 shadow-2xs">
+                  <div class="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-100 shadow-sm">
                     <button
                       type="button"
-                      class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer"
-                      [class.bg-white]="dashboardModo() === 'MENSUAL'"
-                      [class.text-indigo-700]="dashboardModo() === 'MENSUAL'"
-                      [class.shadow-xs]="dashboardModo() === 'MENSUAL'"
-                      [class.text-slate-600]="dashboardModo() !== 'MENSUAL'"
+                      class="px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5"
+                      [class.bg-indigo-600]="dashboardModo() === 'MENSUAL'"
+                      [class.text-white]="dashboardModo() === 'MENSUAL'"
+                      [class.shadow-md]="dashboardModo() === 'MENSUAL'"
+                      [class.text-slate-500]="dashboardModo() !== 'MENSUAL'"
+                      [class.hover:text-slate-700]="dashboardModo() !== 'MENSUAL'"
+                      [class.hover:bg-slate-200]="dashboardModo() !== 'MENSUAL'"
                       data-testid="btn-modo-mensual"
                       (click)="setDashboardModo('MENSUAL')"
                     >
-                      📅 Mensual (12 Meses)
+                      <span>📅</span>
+                      <span>Mensual (12 Meses)</span>
                     </button>
                     <button
                       type="button"
-                      class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer"
-                      [class.bg-white]="dashboardModo() === 'TRIMESTRAL'"
-                      [class.text-indigo-700]="dashboardModo() === 'TRIMESTRAL'"
-                      [class.shadow-xs]="dashboardModo() === 'TRIMESTRAL'"
-                      [class.text-slate-600]="dashboardModo() !== 'TRIMESTRAL'"
+                      class="px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5"
+                      [class.bg-indigo-600]="dashboardModo() === 'TRIMESTRAL'"
+                      [class.text-white]="dashboardModo() === 'TRIMESTRAL'"
+                      [class.shadow-md]="dashboardModo() === 'TRIMESTRAL'"
+                      [class.text-slate-500]="dashboardModo() !== 'TRIMESTRAL'"
+                      [class.hover:text-slate-700]="dashboardModo() !== 'TRIMESTRAL'"
+                      [class.hover:bg-slate-200]="dashboardModo() !== 'TRIMESTRAL'"
                       data-testid="btn-modo-trimestral"
                       (click)="setDashboardModo('TRIMESTRAL')"
                     >
-                      📈 Trimestral (T1 - T4)
+                      <span>📈</span>
+                      <span>Trimestral (T1 - T4)</span>
                     </button>
                   </div>
                 </div>
@@ -2601,11 +2618,13 @@ type ReporteActivo = 'graficas' | 'balance' | 'pyg' | 'diario' | 'mayor' | 'auxi
           </tfoot>
         </table>
       </ng-template>
-    </div>
+      </div>
+    }
   `,
 })
 export class ContabilidadReportesComponent implements OnInit {
   private readonly svc = inject(ContabilidadService);
+  private readonly contabilidadHost = inject(ContabilidadComponent, { optional: true });
   readonly Math = Math;
 
   readonly cargando = signal<boolean>(false);
@@ -2725,9 +2744,53 @@ export class ContabilidadReportesComponent implements OnInit {
     return Math.round(this.libroDiario().reduce((s, r) => s + (Number(r.credito) || 0), 0) * 100) / 100;
   });
 
+  readonly faltanRequisitos = computed(() => {
+    const status = this.svc.configStatus;
+    if (status.loading()) return false;
+    return status.hasPuc() === false || status.hasPeriodos() === false;
+  });
+
+  readonly requisitosFaltantes = computed<ConfigRequirement[]>(() => {
+    const reqs: ConfigRequirement[] = [];
+    const status = this.svc.configStatus;
+    
+    if (status.hasPuc() !== null) {
+      reqs.push({
+        id: 'puc',
+        title: 'Plan de Cuentas (PUC)',
+        description: status.hasPuc() ? 'Cuentas configuradas correctamente.' : 'No hay cuentas registradas en el Plan Único de Cuentas.',
+        actionText: status.hasPuc() ? '' : 'Ir a Configurar PUC',
+        actionTab: 'puc',
+        completed: !!status.hasPuc()
+      });
+    }
+
+    if (status.hasPeriodos() !== null) {
+      reqs.push({
+        id: 'periodos',
+        title: 'Periodos Contables',
+        description: status.hasPeriodos() ? 'Periodos configurados correctamente.' : 'Debes iniciar o crear al menos un periodo contable activo.',
+        actionText: status.hasPeriodos() ? '' : 'Ir a Periodos',
+        actionTab: 'periodos',
+        completed: !!status.hasPeriodos()
+      });
+    }
+
+    return reqs;
+  });
+
   ngOnInit(): void {
-    this.cargarDashboardGerencial();
+    this.svc.verificarEstadoConfiguracion();
     this.cargarTerceros();
+    if (this.reporteActivo() === 'graficas' && !this.dashboardGerencial()) {
+      this.cargarDashboardGerencial();
+    }
+  }
+
+  navegarA(tabId: string): void {
+    if (this.contabilidadHost) {
+      this.contabilidadHost.setTab(tabId as any);
+    }
   }
 
   cargarDashboardGerencial(anio?: number): void {

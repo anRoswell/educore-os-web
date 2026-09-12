@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -61,6 +61,43 @@ import {
 export class ContabilidadService {
   private readonly http = inject(HttpClient);
   private readonly base = `${getApiBaseUrl()}/contabilidad`;
+
+  // ─── Estado de Configuración Contable (Signals) ─────────────────────────
+  public readonly configStatus = {
+    hasPuc: signal<boolean | null>(null),
+    hasPeriodos: signal<boolean | null>(null),
+    loading: signal<boolean>(false),
+  };
+
+  /**
+   * Verifica si existen configuraciones base (PUC, Periodos) en la base de datos.
+   * Actualiza las signals reactivamente.
+   */
+  verificarEstadoConfiguracion(): void {
+    if (this.configStatus.hasPuc() !== null && this.configStatus.hasPeriodos() !== null) {
+      return; // Ya fue validado en esta sesión
+    }
+    
+    this.configStatus.loading.set(true);
+    
+    this.getPucList().subscribe({
+      next: (cuentas) => {
+        this.configStatus.hasPuc.set(cuentas && cuentas.length > 0);
+        this.configStatus.loading.set(false);
+      },
+      error: () => {
+        this.configStatus.hasPuc.set(false);
+        this.configStatus.loading.set(false);
+      }
+    });
+
+    this.getPeriodos(new Date().getFullYear()).subscribe({
+      next: (periodos) => {
+        this.configStatus.hasPeriodos.set(periodos && periodos.length > 0);
+      },
+      error: () => this.configStatus.hasPeriodos.set(false)
+    });
+  }
 
   // ─── PUC (Plan Único de Cuentas) ─────────────────────────────────────────
   getPucTree(): Observable<PucCuenta[]> {

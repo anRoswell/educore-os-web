@@ -349,4 +349,96 @@ test.describe('DocMD-01: Gestión Académica & Curricular Decreto 1290 (Exhausti
 
     sniffer.assertZeroErrors();
   });
+  
+  /**
+   * SUITE 6: Panel Administrar Estructura (CRUD Modales) y Borrado Lógico
+   * Cumpliendo requisito Anti-Regression de probar TODOS los tabs, modales y DB persistencia.
+   */
+  test('1.6 Panel Administrar Estructura: Interacción de pestañas, Modales de Edición y Borrado Lógico en PostgreSQL', async ({ page }) => {
+    const sniffer = attachStrictErrorSniffer(page);
+    await page.goto('/academico');
+    await page.waitForLoadState('networkidle');
+
+    // 1. Activar el Modo de Administrar Estructura
+    const btnAdmin = page.locator('button:has-text("Administrar Estructura")');
+    await btnAdmin.click();
+    await page.waitForTimeout(500);
+
+    // 2. Verificar que se renderiza el componente Admin
+    await expect(page.locator('h2').filter({ hasText: 'Administrar Estructura Académica' })).toBeVisible();
+
+    // 3. Barrido interactivo de todas las pestañas para validar la refactorización CSS y carga (Zero Exceptions)
+    const tabsToTest = ['Niveles', 'Grados', 'Grupos', 'Áreas', 'Asignaturas', 'Periodos'];
+    for (const tabName of tabsToTest) {
+      await page.locator(`button:has-text("${tabName}")`).click();
+      await page.waitForTimeout(300);
+      // Validar que la tabla sí cargue datos y no tire error en el sniffer
+      await expect(page.locator('table.data-table')).toBeVisible();
+    }
+
+    // Volver a Niveles para la prueba CRUD
+    await page.locator(`button:has-text("Niveles")`).click();
+    await page.waitForTimeout(500);
+
+    // Preparar un registro de prueba temporal en BD para validar CRUD sin alterar los niveles canónicos institucionales
+    const timestamp = Date.now().toString().slice(-6);
+    const initialName = `Nivel Prueba ${timestamp}`;
+    const testCode = `T${timestamp.slice(-3)}`;
+    await queryDb("INSERT INTO aca_niveles (id, colegio_id, codigo, nombre, orden, estado) VALUES (gen_random_uuid(), '11111111-2222-3333-4444-555555555555', $1, $2, 99, 'ACTIVO')", [testCode, initialName]);
+
+    // Recargar pestaña Niveles para ver el nuevo registro
+    await page.locator(`button:has-text("Niveles")`).click();
+    await page.waitForTimeout(500);
+
+    // Ubicar la fila de prueba
+    const testRow = page.locator(`table.data-table tbody tr:has-text("${initialName}")`).first();
+    await expect(testRow).toBeVisible();
+    
+    // Iniciar edición con el modal específico
+    const btnEditar = testRow.locator('button[title="Editar"]');
+    await btnEditar.click();
+
+    // El Modal centrado debería verse
+    const modalCard = page.locator('.modal-card');
+    await expect(modalCard).toBeVisible();
+    await expect(modalCard).toContainText('Editar Nivel Educativo');
+    
+    // Cambiar nombre usando el primer campo del modal específico
+    const newName = `Nivel E2E ${timestamp}`;
+    const inputNombre = modalCard.locator('input[type="text"]').first();
+    await inputNombre.fill(newName);
+    
+    // Guardar
+    const btnGuardar = modalCard.locator('button:has-text("Guardar Cambios")');
+    await btnGuardar.click();
+    await page.waitForTimeout(800);
+    await expect(modalCard).not.toBeVisible();
+    
+    // Validar en Base de Datos que se guardó!
+    const dbCheckEdit = await queryDb('SELECT id, nombre, estado FROM aca_niveles WHERE nombre = $1', [newName]);
+    expect(dbCheckEdit.length).toBeGreaterThan(0);
+    expect(dbCheckEdit[0].nombre).toBe(newName);
+    const fullUuid = dbCheckEdit[0].id;
+    
+    // Validar el Borrado Lógico
+    const updatedRow = page.locator(`table.data-table tbody tr:has-text("${newName}")`).first();
+    await expect(updatedRow).toBeVisible();
+    const btnEliminar = updatedRow.locator('button[title="Eliminar"]');
+    await btnEliminar.click();
+    
+    // Modal Confirmación
+    await expect(modalCard).toBeVisible();
+    await expect(modalCard).toContainText('Confirmar Eliminación');
+    
+    const btnConfirmarEliminar = modalCard.locator('button:has-text("Sí, Eliminar")');
+    await btnConfirmarEliminar.click();
+    await page.waitForTimeout(800);
+    
+    // Verificar en BD que el estado cambió a ELIMINADO
+    const dbCheckDelete = await queryDb('SELECT estado FROM aca_niveles WHERE id = $1', [fullUuid]);
+    expect(dbCheckDelete.length).toBeGreaterThan(0);
+    expect(dbCheckDelete[0].estado).toBe('ELIMINADO');
+
+    sniffer.assertZeroErrors();
+  });
 });
